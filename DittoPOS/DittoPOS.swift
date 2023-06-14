@@ -1,15 +1,15 @@
 ///
-//  DittoBaseApp.swift
-//  DittoBase
+//  DittoPOSApp.swift
+//  DittoPOS
 //
 //  Created by Eric Turner on 6/6/23.
 //
-//  Copyright © 2023 ___ORGANIZATIONNAME___. All rights reserved.
+//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import SwiftUI
 
 @main
-struct DittoBaseApp: App {
+struct DittoPOS: App {    
     var body: some Scene {
         WindowGroup {
             ContentView()
