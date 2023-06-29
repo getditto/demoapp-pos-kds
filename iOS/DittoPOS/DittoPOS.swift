@@ -9,10 +9,11 @@
 import SwiftUI
 
 @main
-struct DittoPOS: App {    
+struct DittoPOS: App {
+    @ObservedObject var dataVM = DataViewModel.shared
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView($dataVM.selectedTab)
         }
     }
 }
