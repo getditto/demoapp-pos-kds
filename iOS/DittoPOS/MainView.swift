@@ -21,33 +21,32 @@ class MainVM: ObservableObject {
 
 struct MainView: View {
     @StateObject private var viewModel = MainVM()
+    @ObservedObject var dataVM = DataViewModel.shared
     @Binding var selectedTab: TabViews
     init(_ tab: Binding<TabViews>) {
         self._selectedTab = tab
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            POSView()
-                .tabItem {
-                    Label("POS", systemImage: "dot.squareshape")
-                }
-                .tag(TabViews.pos)//.rawValue)
-//                .tag(0)
-            
-            KDSView()
-                .tabItem {
-                    Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
-                }
-                .tag(TabViews.kds)//.rawValue)
-//                .tag(1)
-            
-            LocationsView()
+        NavigationStack{
+            TabView(selection: $selectedTab) {
+                POSView()
                     .tabItem {
-                    Label("Locations", systemImage: "globe")
-                }
-                .tag(TabViews.locations)//.rawValue)
-//                    .tag(2)
+                        Label("POS", systemImage: "dot.squareshape")
+                    }
+                    .tag(TabViews.pos)
+                
+                KDSView()
+                    .tabItem {
+                        Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
+                    }
+                    .tag(TabViews.kds)
+                
+                LocationsView()
+                    .tabItem {
+                        Label("Locations", systemImage: "globe")
+                    }
+                    .tag(TabViews.locations)
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarLeading ) {
@@ -62,12 +61,23 @@ struct MainView: View {
                 SettingsView()
             }
             .onAppear { print("MainView.onAppear") }
+            .navigationBarTitle(barTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationViewStyle(StackNavigationViewStyle())
+        }
+    }
+    
+    var barTitle: String {
+        if let locName = dataVM.currentLocation?.name {
+            return locName
+        } else {
+            return "Please Select Location"
+        }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         MainView(.constant(DataViewModel.shared.selectedTab))
-//        MainView()
     }
 }

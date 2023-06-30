@@ -21,6 +21,9 @@ extension UIScreen {
     static var isLandscape: Bool {
         UIScreen.main.bounds.width > UIScreen.main.bounds.height
     }
+    static var isPortrait: Bool {
+        UIScreen.main.bounds.width < UIScreen.main.bounds.height
+    }
 }
 
 extension View {
@@ -68,11 +71,6 @@ extension UIDeviceOrientation: CustomStringConvertible {
             return "unknown case"
         }
     }
-}
-
-extension Double {
-//    static var priceFormatter =
-//    var cash: String {
 }
 
 // https://www.swiftbysundell.com/articles/reducers-in-swift/

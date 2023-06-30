@@ -29,13 +29,13 @@ class DataViewModel: ObservableObject {
     
     private init() {
         if let _ = storedLocationId(), let tab = storedSelectedTab() {
-            print("DVM.\(#function): stored locationId && stored selectedTab found -> SET selectedTab: \(tab)")
+//            print("DVM.\(#function): stored locationId && stored selectedTab found -> SET selectedTab: \(tab)")
             selectedTab = tab
         }
 
         $selectedTab
             .sink {[weak self] tab in
-                print("DVM.$selectedTab: SAVE selectedTab: \(tab)")
+//                print("DVM.$selectedTab.sink: SAVE selectedTab: \(tab)")
                 self?.saveSelectedTab(tab)
             }
             .store(in: &cancellables)
@@ -46,23 +46,13 @@ class DataViewModel: ObservableObject {
         $currentLocationId
             .sink {[weak self] id in
                 if !id.isEmpty {
+//                    print("DVM.$currentLocationId.sink: currentLocationId not empty --> call setupCurrentLocation")
                     self?.setupCurrentLocation(id: id)
-                    // Following code is to automatically switch tab view after location selection
-//                    if let storedTab = self?.storedSelectedTab() {
-//                        DispatchQueue.main.async {[weak self] in
-//                            print("DataVM. currentLocationID.sink - stored Tab: \(storedTab))")
-//                            self?.selectedTab = TabViews.pos//storedTab == TabViews.locations.rawValue ? TabViews.pos.rawValue : storedTab
-//                            print("DataVM. currentLocationID.sink - set selectedTab: \(self!.selectedTab))")
-//                        }
-//                    } else {
-//                        self?.selectedTab = .locations
-//                        print("DataVM. currentLocationID.sink - SET selectedTab \(self!.selectedTab)")
-//                    }
                 }
             }
             .store(in: &cancellables)
         
-        print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
+//        print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
         self.currentLocationId = storedLocationId() ?? ""
         
         setupDemoLocations()
@@ -70,7 +60,7 @@ class DataViewModel: ObservableObject {
     }
     
     func setupCurrentLocation(id: String) {
-        guard !id.isEmpty else { return }
+//        guard !id.isEmpty else { print("DVM.\(#function) location id isEmpty -> return"); return }
         
         if let doc = dittoService.locationDocs.findByID(id).exec() {
             let loc = Location(doc: doc)
@@ -85,8 +75,22 @@ class DataViewModel: ObservableObject {
         if location.orderIds.isEmpty {
             let order = Order.new(locationId: location.id)
             self.currentOrder = order
+            do {
+                try dittoService.orderDocs.upsert(order.docDictionary())
+                
+                var location = location
+                location.orderIds[order.id] = order.createdOnStr
+                dittoService.addOrderToLocation(order)
+                
+//                print("CHECK: saved orderDoc: \(String(describing: dittoService.orderDoc(for: order)))")
+//                print("CHECK: saved locationDoc: \(String(describing: dittoService.locationDocs.findByID(location.id).exec()))")
+                
+                self.currentLocation = location
+            } catch {
+                print("Error upserting order with title: \(order.title)")
+            }
         } else {
-            self.currentOrder = orders(for: location).first ?? nil
+            self.currentOrder = dittoService.orders(for: location).first
         }
     }
     
@@ -99,35 +103,6 @@ class DataViewModel: ObservableObject {
     func currentOrderTotal() -> Double {
         guard let _ = currentOrder else { return 0.0 }
         return orderItems.sum(\.price.amount)
-    }
-    
-    //    func menuItemFor(id: String) -> MenuItem? {
-    //        menuItems.first(where: { $0.id == id })
-    //    }
-    
-    /*
-    func setupLocation(_ loc: Location) {
-        // get previously selected location if saved
-        if var storedLocation = getStoredLocation() {
-            // TMP: create a new empty order if location has no existing orders
-            if storedLocation.orderIDs.isEmpty {
-                let order = Order(
-                    id: UUID().uuidString,
-                    locationID: storedLocation.id,
-                    createdOn: Date(),
-                    status: .incomplete
-                )
-                self.currentOrder = order
-                
-                storedLocation.orderIDs = [order.id: DateFormatter.isoDate.string(from: order.createdOn)]
-            }
-            self.currentLocation = storedLocation
-        }
-    }
-     */
-    
-    func orders(for loc: Location) -> [Order] {
-        dittoService.orders(for: loc)
     }
     
     func setupDemoLocations() {
@@ -150,16 +125,16 @@ extension DataViewModel {
         UserDefaults.standard.storedLocationId = newId
     }
 
-    func storedSelectedTab() -> TabViews? {//Int? {
+    func storedSelectedTab() -> TabViews? {
         if let tabInt = UserDefaults.standard.storedSelectedTab {
-            print("DVM.\(#function): return: \(tabInt)")
+//            print("DVM.\(#function): return: \(tabInt)")
             return TabViews(rawValue: tabInt)
         }
         print("DVM.\(#function): return nil")
         return nil
     }
-    func saveSelectedTab(_ tab: TabViews) {//Int) {
-        print("DVM.\(#function): store: \(tab)")
+    func saveSelectedTab(_ tab: TabViews) {
+//        print("DVM.\(#function): store: \(tab)")
         UserDefaults.standard.storedSelectedTab = tab.rawValue
     }
 

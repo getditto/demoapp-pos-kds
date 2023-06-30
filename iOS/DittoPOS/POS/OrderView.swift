@@ -39,12 +39,13 @@ struct OrderView: View {
                 
                 // order total and pay buttons
                 OrderTotalView()
-                    .padding(.bottom, 16)
+//                    .padding(.bottom, 16)
             }
+//            .border(.purple)
     }
     
     var barTitle: String {
-        "Order #\(dataVM.currentOrder?.id ?? "...")"
+        "Order #\(dataVM.currentOrder?.title ?? "...")"
     }
     
 }

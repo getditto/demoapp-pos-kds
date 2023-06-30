@@ -80,8 +80,8 @@ class DittoService: ObservableObject {
     var transactionDocs: DittoCollection {
         ditto.store["transactions"]
     }
-
-//    private var cancellables = Set<AnyCancellable>()
+    
+    //    private var cancellables = Set<AnyCancellable>()
     
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
@@ -96,7 +96,7 @@ class DittoService: ObservableObject {
     }
     
     func updateAllLocationsPublisher() {
-        allLocationsCancellable = ditto.store["locations"]
+        allLocationsCancellable = locationDocs
             .findAll()
             .liveQueryPublisher()
             .receive(on: DispatchQueue.main)
@@ -106,8 +106,8 @@ class DittoService: ObservableObject {
             .assign(to: \.allLocationsDocs, on: self)
     }
     
-    func locationPublisher(for id: String) -> AnyPublisher<Location, Never> {
-        ditto.store["locations"]
+    func locationPublisher(forId id: String) -> AnyPublisher<Location, Never> {
+        locationDocs
             .findByID(id)
             .singleDocumentLiveQueryPublisher()
             .compactMap { doc, _ in return doc }
@@ -117,8 +117,9 @@ class DittoService: ObservableObject {
     
     func orders(for loc: Location) -> [Order] {
         guard !loc.orderIds.isEmpty else { return [] }
+        
         var orders = [Order]()
-        for id in loc.orderIds {
+        for id in loc.orderIds.keys {
             if let doc = orderDocs
                 .findByID(
                     DittoDocumentID(value: ["id": id, "locationId": loc.id] as [String : Any])
@@ -130,15 +131,34 @@ class DittoService: ObservableObject {
         return orders.sorted(by: { $0.createdOn < $1.createdOn })
     }
     
-    /* Rae
-    for (id in order.payments.keys()) {
-      let doc = ditto.store.collection("payments")
-        .findById(DocumentID({
-          "id": id,
-          "locationId": 456,
-          "orderId": "abc123"
-        }).exec()
-        paymentsForOrder.append(doc)
+    func addOrderToLocation(_ order: Order) {
+        locationDocs.findByID(order.locationId).update { mutableDoc in
+            mutableDoc?["orderIds"][order.id].set(order.createdOnStr)
+        }
     }
-     */
+    
+    func addItemToOrder(item: MenuItem, _ order: Order) {
+        
+    }
+    
+    func orderDoc(for order: Order) -> DittoDocument? {
+        orderDocs
+            .findByID(
+                DittoDocumentID(value: order._id)// as [String : Any])//["id": id, "locationId": loc.id] as [String : Any])
+            ).exec()
+    }
+    
 }
+
+/* Rae
+for (id in order.payments.keys()) {
+  let doc = ditto.store.collection("payments")
+    .findById(DocumentID({
+      "id": id,
+      "locationId": 456,
+      "orderId": "abc123"
+    }).exec()
+    paymentsForOrder.append(doc)
+}
+ */
+

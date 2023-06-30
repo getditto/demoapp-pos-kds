@@ -14,18 +14,22 @@ enum OrderStatus: String, Codable {
 }
 
 struct Order: Identifiable, Hashable, Equatable {
-    let id: String
-    let locationId: String
+    let _id: [String: String] // id, locationId
     var menuItemIds = [String: Double]() //id, price
     var transactionIds = [String: TransactionStatus]()
     let createdOn: Date
     var status: OrderStatus
+    var id: String { _id["id"]! }
+    var locationId: String { _id["locationId"]! }
+    var createdOnStr: String { DateFormatter.isoDate.string(from: createdOn) }
+    var title: String { String(id.prefix(8)) }
 }
+
+extension Order: Codable {}
 
 extension Order {
     init(doc: DittoDocument) {
-        self.id = doc["_id"].stringValue
-        self.locationId = doc["locationID"].stringValue
+        self._id = doc["_id"].dictionaryValue as! [String: String]
         self.menuItemIds = doc["menuItemIDs"]
             .dictionary as? [String: Double] ?? [String: Double]()
         self.transactionIds = doc["transactionIDs"]
@@ -36,18 +40,45 @@ extension Order {
     }
 }
 
-extension Order: Codable {}
+extension Order {
+    func docDictionary() -> [String: Any?] {
+        [
+            "_id": _id,
+            "menuItemIds": menuItemIds,
+            "transactionIds": transactionIds,
+            "createdOn": DateFormatter.isoDate.string(from: createdOn),
+            "status": status
+        ]
+    }
+}
 
+
+
+//extension Order {
+//    static func new(
+//        _id: [String: String],
+////        locationId: String,
+//        createdOn: Date = Date(),
+//        status: OrderStatus = .incomplete
+//    ) -> Order {
+////        Order(id: id, locationId: locationId, createdOn: createdOn, status: status)
+//        Order(_id: _id, createdOn: createdOn, status: status)
+//    }
+//}
 extension Order {
     static func new(
-        id: String = UUID().uuidString,
         locationId: String,
         createdOn: Date = Date(),
         status: OrderStatus = .incomplete
     ) -> Order {
-        Order(id: id, locationId: locationId, createdOn: createdOn, status: status)
+        Order(_id: Self._id(locId: locationId), createdOn: createdOn, status: status)
+    }
+    
+    static func _id(locId: String) -> [String: String] {
+        ["id": UUID().uuidString, "locationId": locId]
     }
 }
+
 
 // Convenience object to avoid unnecessary db lookups
 //struct OrderItem: Identifiable, Hashable, Equatable {

@@ -9,26 +9,29 @@
 import SwiftUI
 
 struct OrderTotalView: View {
+//    @Environment(\.horizontalSizeClass) private var HsizeClass
     @ObservedObject var dataVM = DataViewModel.shared
+//    @State var cancelBtnTitle: String = ""
     
     var body: some View {
-        VStack {
-            HStack {
+        VStack(spacing: 0) {
+            divider()
+            HStack(alignment: .bottom, spacing: 0) {
                 Text("Total")
                 Spacer()
                 Text(dataVM.currentOrderTotal().toCurrency())
             }
-            divider()
-                .padding(.bottom, 8)
+//            divider()
+                .padding(.bottom, 4)
             
             HStack {
                 Button {
                     print("Cancel button tapped")
                 } label: {
-                    Text("Cancel")
+//                    Text(cancelBtnTitle)
+                    Text("X").font(.largeTitle)
                 }
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.roundedRectangle)
+                .clipShape(Circle())
                 .tint(.red)
 
                 Spacer()
@@ -37,13 +40,23 @@ struct OrderTotalView: View {
                     print("Pay button tapped")
                 } label: {
                     Text("Pay")
+                        .frame(maxWidth: .infinity, maxHeight: 36.0)
                 }
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.roundedRectangle)
                 .tint(.green)
             }
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.roundedRectangle)
         }
+//        .onRotate { _ in
+//            DispatchQueue.main.async {
+//                cancelBtnTitle = updateCancelTitle()
+//            }
+//        }
     }
+    
+//    func updateCancelTitle() -> String {
+//        HsizeClass == .compact && UIScreen.isPortrait ? "X" : "Cancel"
+//    }
 }
 
 struct OrderTotalView_Previews: PreviewProvider {

@@ -24,8 +24,8 @@ extension Location {
         self.id = doc["_id"].stringValue
         self.name = doc["name"].stringValue
 //        self.details = doc["details"].string
-        self.orderIds = doc["orders"].dictionaryValue as! [String: String]
-        self.menuItemIds = doc["orders"].dictionaryValue as! [String: Double]
+        self.orderIds = doc["orderIds"].dictionaryValue as! [String: String]
+        self.menuItemIds = doc["menuItemIds"].dictionaryValue as! [String: Double]
     }
 }
 
