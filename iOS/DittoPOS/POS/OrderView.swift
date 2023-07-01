@@ -23,7 +23,7 @@ struct OrderView: View {
                 // Order items scrollview
                 ScrollView(showsIndicators: false) {
                     Section {
-                        ForEach(dataVM.orderItems, id: \.self) { item in
+                        ForEach(dataVM.currentOrderItems, id: \.self) { item in
                             OrderItemView(item)
 
                             divider()

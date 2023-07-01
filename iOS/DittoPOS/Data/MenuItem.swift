@@ -13,7 +13,7 @@ struct MenuItem: Identifiable {
     let id: String
     let title: String
     let imageName: String
-    var imageToken: DittoAttachmentToken?
+    var imageToken: DittoAttachmentToken? //not yet implemented
     let price: Price
 }
 

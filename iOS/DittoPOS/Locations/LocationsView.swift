@@ -41,12 +41,12 @@ class LocationsVM: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        dataVM.$allLocationsDocs
+        dataVM.$allLocationDocs
             .sink {[weak self] docs in
                 print("LocationsVM.sink --> in map LocationRowItems from location docs")
                 self?.locationItems = docs.map { LocationRowItem(doc: $0) }
                 self?.selectedItem = self?.locationItems.first(
-                    where: { $0.locationID == self?.dataVM.currentLocationId }
+                    where: { $0.locationID == self?.dataVM.selectedLocationId }
                 )
             }
             .store(in: &cancellables)
@@ -55,8 +55,8 @@ class LocationsVM: ObservableObject {
             .sink {[weak self] item in
                 guard let item = item else { return }
                 print("LocationsVM.sink selectedItem change")
-                if item.locationID != self?.dataVM.currentLocationId {
-                    self?.dataVM.currentLocationId = item.locationID
+                if item.locationID != self?.dataVM.selectedLocationId {
+                    self?.dataVM.selectedLocationId = item.locationID
                 }
             }
             .store(in: &cancellables)
@@ -68,16 +68,7 @@ struct LocationsView: View {
         
     var body: some View {
         VStack {
-//            Group {
-//                if let currentLoc = viewModel.currentLocation {
-//                    Text(currentLoc.name)
-//                } else {
-//                    Text("Please select a location")
-//                }
-//            }//.frame(maxWidth: .infinity, maxHeight: 32)
-
             List(vm.locationItems, id: \.self, selection: $vm.selectedItem) { item in
-//                Text(loc.name)
                 LocationRowView(rowItem: item)
             }
             Spacer()

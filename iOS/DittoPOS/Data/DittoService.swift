@@ -60,8 +60,12 @@ class DittoInstance: ObservableObject {
 }
 
 class DittoService: ObservableObject {
-    @Published var allLocationsDocs = [DittoDocument]()
+    @Published var currentLocationId: String = ""
+    private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
+    
+    @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
+    private var cancellables = Set<AnyCancellable>()
     
     private var locationsSubscription: DittoSubscription
     private var menuItemsSubscription: DittoSubscription
@@ -81,7 +85,9 @@ class DittoService: ObservableObject {
         ditto.store["transactions"]
     }
     
-    //    private var cancellables = Set<AnyCancellable>()
+    func currentLocationPublisher() -> AnyPublisher<Location?, Never> {
+        currentLocationSubject.eraseToAnyPublisher()
+    }
     
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
@@ -92,7 +98,26 @@ class DittoService: ObservableObject {
         self.ordersSubscription = ditto.store["orders"].findAll().subscribe()
         self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
         
+        $currentLocationId
+            .sink {[weak self] locId in
+                print("DS.currentLocationId changed to: \(locId)")
+                self?.updateAllLocationsPublisher()
+            }
+            .store(in: &cancellables)
+
         updateAllLocationsPublisher()
+        
+        $allLocationDocs
+            .sink {[weak self] docs in
+                print("DS.$allLocationDocs.sink: docs in count: \(docs.count)")
+                if let locId = self?.currentLocationId,
+                    let locDoc = docs.first(where: { $0.id == DittoDocumentID(value: locId) }) {
+                    let loc = Location(doc: locDoc)
+                    print("DS.$allLocationDocs.sink: FOUND Location doc for currentLocationId: \(loc.name)")
+                    self?.currentLocationSubject.value = loc
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func updateAllLocationsPublisher() {
@@ -103,10 +128,10 @@ class DittoService: ObservableObject {
             .map { docs, _ in
                 docs.map { $0 }
             }
-            .assign(to: \.allLocationsDocs, on: self)
+            .assign(to: \.allLocationDocs, on: self)
     }
-    
-    func locationPublisher(forId id: String) -> AnyPublisher<Location, Never> {
+
+    func locationPublisher(forId id: String) -> AnyPublisher<Location?, Never> {
         locationDocs
             .findByID(id)
             .singleDocumentLiveQueryPublisher()
@@ -120,10 +145,9 @@ class DittoService: ObservableObject {
         
         var orders = [Order]()
         for id in loc.orderIds.keys {
-            if let doc = orderDocs
-                .findByID(
-                    DittoDocumentID(value: ["id": id, "locationId": loc.id] as [String : Any])
-                ).exec() {
+            if let doc = orderDocs.findByID(
+                DittoDocumentID(value: ["id": id, "locationId": loc.id])
+            ).exec() {
                 let order = Order(doc: doc)
                 orders.append(order)
             }
@@ -142,10 +166,8 @@ class DittoService: ObservableObject {
     }
     
     func orderDoc(for order: Order) -> DittoDocument? {
-        orderDocs
-            .findByID(
-                DittoDocumentID(value: order._id)// as [String : Any])//["id": id, "locationId": loc.id] as [String : Any])
-            ).exec()
+        orderDocs.findByID(DittoDocumentID(value: order._id)).exec()
+        // as [String : Any]) //["id": id, "locationId": loc.id] as [String : Any])
     }
     
 }
