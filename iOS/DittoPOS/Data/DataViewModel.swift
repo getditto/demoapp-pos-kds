@@ -15,13 +15,16 @@ class DataViewModel: ObservableObject {
     @Published var selectedLocationId: String = ""
     @Published var selectedTab: TabViews = .locations
     
+    @Published var menuItems: [MenuItem] = MenuItem.demoItems // for menu display
 //    @Published var locations = [Location]() // all locations for list selection
 //    @Published var orders = [Order]() // all orders for KDS(?)
     @Published var currentLocation: Location?
     private var currentLocationPublisher: AnyPublisher<Location?, Never>
+    
     @Published var currentOrder: Order?
-    @Published var currentOrderItems = [MenuItem]()
-    @Published var menuItems: [MenuItem] = MenuItem.demoItems // for menu display
+    private var currentOrderPublisher: AnyPublisher<Order?, Never>
+
+    @Published var currentOrderItems = [OrderItem]()
     
     private var cancellables = Set<AnyCancellable>()
     private let dittoService = DittoService.shared
@@ -30,17 +33,46 @@ class DataViewModel: ObservableObject {
     
     private init() {
         self.currentLocationPublisher = dittoService.currentLocationPublisher()
+        self.currentOrderPublisher = dittoService.currentOrderPublisher()
+        
+        setupDemoLocations()
+        
         currentLocationPublisher
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] loc in
                 if let loc = loc {
                     print("DVM.init(): currentLocationPublisher fired with \(loc.name)")
                     self?.currentLocation = loc
-                    self?.setupCurrentOrder(location: loc)
+                    if loc.orderIds.isEmpty {
+                        DispatchQueue.main.async {
+                            print("DVM.init(): currentLocationPublisher - CALL to create/add NEW ORDER")
+                            self?.dittoService.addOrderToLocation(Order.new(locationId: loc.id))
+                        }
+                    }
                 }
             }
             .store(in: &cancellables)
 
-        setupDemoLocations()
+        currentOrderPublisher
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] order in
+                guard let order = order else {
+                    print("DVM.$currentOrderPublisher.sink: WARNING received NIL order --> RETURN")
+                    return
+                }
+                print("DVM.$currenOrderPublisher: order changed: \(order)")
+                var items = [OrderItem]()
+                for (timestamp, id) in order.orderItems {
+                    if let menuItem = self?.menuItem(for: id) {
+                        var orderItem = OrderItem(menuItem: menuItem)
+                        orderItem.createdOn = DateFormatter.isoDate.date(from: timestamp)!
+                        items.append(orderItem)
+                    }
+                }
+                self?.currentOrderItems = items.sorted(by: { $0.createdOn < $1.createdOn })
+                self?.currentOrder = order
+            }
+            .store(in: &cancellables)
         
         if let selectedLocId = storedLocationId() {
             print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
@@ -62,59 +94,41 @@ class DataViewModel: ObservableObject {
             .store(in: &cancellables)
                 
         $selectedLocationId
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] id in
                 if !id.isEmpty {
 //                    print("DVM.$currentLocationId.sink: currentLocationId not empty --> call setupCurrentLocation")
                     self?.dittoService.currentLocationId = id
+                    self?.saveLocationID(id)
                 }
             }
             .store(in: &cancellables)
         
         dittoService.$allLocationDocs
+            .receive(on: DispatchQueue.main)
             .assign(to: &$allLocationDocs)
         
-    }
+//        $currentOrder // update currentOrderItems / TODO: transactions
+//            .sink {[weak self] order in
+//                print("DVM.$currentOrder.sink: orderDoc.orderItems: \()")
+//            }
+//            .store(in: &cancellables)
+        
+//        $currentLocation
+//            .sink {loc in //[weak self] loc in
+//                print("DVM.$currentLocation: loc changed: \(loc.debugDescription )")
+//            }
+//            .store(in: &cancellables)
+    }    
     
-    
-//    func setupCurrentLocation(id: String) {
-//        guard !id.isEmpty else { print("DVM.\(#function) location id isEmpty -> return"); return }
-//        
-//        if let doc = dittoService.locationDocs.findByID(id).exec() {
-//            let loc = Location(doc: doc)
-//            self.currentLocation = loc
-//            saveLocationID(id)
-//            setupCurrentOrder(location: loc)
-//        }
-//    }
-    
-    func setupCurrentOrder(location: Location) {
-        // set current order or create new if needed
-        if location.orderIds.isEmpty {
-            let order = Order.new(locationId: location.id)
-            self.currentOrder = order
-            do {
-                try dittoService.orderDocs.upsert(order.docDictionary())
-                
-                var location = location
-                location.orderIds[order.id] = order.createdOnStr
-                dittoService.addOrderToLocation(order)
-                
-//                print("CHECK: saved orderDoc: \(String(describing: dittoService.orderDoc(for: order)))")
-//                print("CHECK: saved locationDoc: \(String(describing: dittoService.locationDocs.findByID(location.id).exec()))")
-                
-                self.currentLocation = location
-            } catch {
-                print("Error upserting order with title: \(order.title)")
-            }
-        } else {
-            self.currentOrder = dittoService.orders(for: location).first
-        }
-    }
-    
-    
-    func addOrderItem(_  item: MenuItem) {
-        guard var _ = currentOrder else { print("Cannot add item: current order is NIL\n\n"); return }
-        currentOrderItems.append(item)
+    func addOrderItem(_  menuItem: MenuItem) {
+        //TODO: alert user to select location
+        guard let curOrder = currentOrder else { print("Cannot add item: current order is NIL\n\n"); return }
+        
+//        let orderItem = OrderItem(orderId: currentOrder!.id, menuItemId: menuItem.id, price: menuItem.price)
+        let orderItem = OrderItem(menuItem: menuItem)
+        print("DVM.\(#function): CALL DS to add OrderItem: \(orderItem)")
+        dittoService.addItemToOrder(item: orderItem, order: curOrder)
     }
     
     func currentOrderTotal() -> Double {
@@ -122,11 +136,15 @@ class DataViewModel: ObservableObject {
         return currentOrderItems.sum(\.price.amount)
     }
     
+    func menuItem(for id: String) -> MenuItem {
+        menuItems.first( where: { $0.id == id } )!
+    }
+    
     func setupDemoLocations() {
         for loc in Location.demoLocations {
             try! dittoService.locationDocs.upsert(
-                loc.docDictionary(),
-                writeStrategy: .insertDefaultIfAbsent
+                loc.docDictionary()
+//                writeStrategy: .insertDefaultIfAbsent
             )
         }
     }

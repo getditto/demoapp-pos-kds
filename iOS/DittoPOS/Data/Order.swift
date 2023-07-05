@@ -10,12 +10,12 @@ import DittoSwift
 import Foundation
 
 enum OrderStatus: String, Codable {
-    case incomplete, inProcess, complete, delivered, canceled
+    case open, inProcess, complete, delivered, canceled
 }
 
 struct Order: Identifiable, Hashable, Equatable {
     let _id: [String: String] // id, locationId
-    var menuItemIds = [String: Double]() //id, price
+    var orderItems = [String: String]() //timestamp, menuItemId
     var transactionIds = [String: TransactionStatus]()
     let createdOn: Date
     var status: OrderStatus
@@ -30,13 +30,13 @@ extension Order: Codable {}
 extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
-        self.menuItemIds = doc["menuItemIDs"]
-            .dictionary as? [String: Double] ?? [String: Double]()
+        self.orderItems = doc["orderItems"]
+            .dictionary as? [String: String] ?? [String: String]()
         self.transactionIds = doc["transactionIDs"]
             .dictionary as? [String: TransactionStatus] ?? [String: TransactionStatus]()
         self.createdOn = DateFormatter.isoDate
             .date(from: doc["createdOn"].stringValue) ?? Date()
-        self.status = OrderStatus(rawValue: doc["status"].stringValue) ?? .incomplete
+        self.status = OrderStatus(rawValue: doc["status"].stringValue) ?? .open
     }
 }
 
@@ -44,7 +44,7 @@ extension Order {
     func docDictionary() -> [String: Any?] {
         [
             "_id": _id,
-            "menuItemIds": menuItemIds,
+            "orderItems": orderItems,
             "transactionIds": transactionIds,
             "createdOn": DateFormatter.isoDate.string(from: createdOn),
             "status": status
@@ -52,38 +52,16 @@ extension Order {
     }
 }
 
-
-
-//extension Order {
-//    static func new(
-//        _id: [String: String],
-////        locationId: String,
-//        createdOn: Date = Date(),
-//        status: OrderStatus = .incomplete
-//    ) -> Order {
-////        Order(id: id, locationId: locationId, createdOn: createdOn, status: status)
-//        Order(_id: _id, createdOn: createdOn, status: status)
-//    }
-//}
 extension Order {
     static func new(
         locationId: String,
         createdOn: Date = Date(),
-        status: OrderStatus = .incomplete
+        status: OrderStatus = .open
     ) -> Order {
-        Order(_id: Self._id(locId: locationId), createdOn: createdOn, status: status)
+        Order(_id: Self.makeId(locId: locationId), createdOn: createdOn, status: status)
     }
     
-    static func _id(locId: String) -> [String: String] {
+    static func makeId(locId: String) -> [String: String] {
         ["id": UUID().uuidString, "locationId": locId]
     }
 }
-
-
-// Convenience object to avoid unnecessary db lookups
-//struct OrderItem: Identifiable, Hashable, Equatable {
-//    let menuItem: MenuItem
-//    var id: String { menuItem.id }
-//    var title: String { menuItem.title }
-//    var price: Double { menuItem.price }
-//}

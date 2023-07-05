@@ -18,10 +18,14 @@ class DittoInstance: ObservableObject {
     let ditto: Ditto
 
     private init() {
-        self.loggingOption = DittoLogger.LoggingOptions(rawValue: DittoLogger.LoggingOptions.disabled.rawValue)!
+        self.loggingOption = DittoLogger.LoggingOptions(
+            rawValue: DittoLogger.LoggingOptions.disabled.rawValue
+        )!
         
         ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID, token: Env.DITTO_PLAYGROUND_TOKEN
+            appID: Env.DITTO_APP_ID,
+            token: Env.DITTO_PLAYGROUND_TOKEN,
+            enableDittoCloudSync: false // disabed for now for dev
         ))
         
         // Logging turned off for now to watch for dev UI logs
@@ -45,6 +49,7 @@ class DittoInstance: ObservableObject {
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         if !isPreview {
             try! ditto.startSync()
+            
         }
     }
 
@@ -60,18 +65,19 @@ class DittoInstance: ObservableObject {
 }
 
 class DittoService: ObservableObject {
-    @Published var currentLocationId: String = ""
+    @Published var currentLocationId: String?// = ""
     private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
+    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)
     
     @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
     private var cancellables = Set<AnyCancellable>()
-    
+
     private var locationsSubscription: DittoSubscription
     private var menuItemsSubscription: DittoSubscription
     private var ordersSubscription: DittoSubscription
     private var transactionsSubscription: DittoSubscription
-    
+
     var locationDocs: DittoCollection {
         ditto.store["locations"]
     }
@@ -89,6 +95,10 @@ class DittoService: ObservableObject {
         currentLocationSubject.eraseToAnyPublisher()
     }
     
+    func currentOrderPublisher() -> AnyPublisher<Order?, Never> {
+        currentOrderSubject.eraseToAnyPublisher()
+    }
+    
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
     
@@ -100,7 +110,7 @@ class DittoService: ObservableObject {
         
         $currentLocationId
             .sink {[weak self] locId in
-                print("DS.currentLocationId changed to: \(locId)")
+                print("DS.currentLocationId changed to: \(locId ?? "NIL")")
                 self?.updateAllLocationsPublisher()
             }
             .store(in: &cancellables)
@@ -115,6 +125,9 @@ class DittoService: ObservableObject {
                     let loc = Location(doc: locDoc)
                     print("DS.$allLocationDocs.sink: FOUND Location doc for currentLocationId: \(loc.name)")
                     self?.currentLocationSubject.value = loc
+                    
+                    print("DS.$allLocationDocs.sink: SET currentOrder or NIL")
+                    self?.currentOrderSubject.value = self?.orders(for: loc).first
                 }
             }
             .store(in: &cancellables)
@@ -130,7 +143,7 @@ class DittoService: ObservableObject {
             }
             .assign(to: \.allLocationDocs, on: self)
     }
-
+/*
     func locationPublisher(forId id: String) -> AnyPublisher<Location?, Never> {
         locationDocs
             .findByID(id)
@@ -139,35 +152,57 @@ class DittoService: ObservableObject {
             .map { Location(doc: $0) }
             .eraseToAnyPublisher()
     }
+  */
     
     func orders(for loc: Location) -> [Order] {
         guard !loc.orderIds.isEmpty else { return [] }
         
         var orders = [Order]()
         for id in loc.orderIds.keys {
-            if let doc = orderDocs.findByID(
-                DittoDocumentID(value: ["id": id, "locationId": loc.id])
-            ).exec() {
+                if let doc = orderDocForId(id, locId: loc.id) {
                 let order = Order(doc: doc)
                 orders.append(order)
+            } else {
+                print("DS.\(#function): WARNING - could not find OrderDoc for id: \(id)")
             }
         }
         return orders.sorted(by: { $0.createdOn < $1.createdOn })
     }
     
     func addOrderToLocation(_ order: Order) {
-        locationDocs.findByID(order.locationId).update { mutableDoc in
+        do {
+            print("DS.\(#function): add Order(\(order.title)) to Orders collection")
+            try orderDocs.upsert(order.docDictionary())
+        } catch {
+            print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
+        }
+        
+        print("DS.\(#function): add Order \(order.title) to location: \(order.locationId)")
+        locationDocs.findByID(order.locationId).update { [self] mutableDoc in
             mutableDoc?["orderIds"][order.id].set(order.createdOnStr)
+            print("DS.\(#function): order(\(order.title)) added to mutableDoc.orderIds: \(mutableDoc!["orderIds"])")
+            
+            let loc = Location(doc: locationDocs.findByID(order.locationId).exec()!)
+            print("DS.\(#function): CHECK for order added to loc: \(loc)")
         }
     }
     
-    func addItemToOrder(item: MenuItem, _ order: Order) {
-        
+    func addItemToOrder(item: OrderItem, order: Order) {
+        orderDocs.findByID(order._id).update {mutableDoc in
+            print("DS.\(#function): add (\(order.title)) to mutableDoc.orderItems)")
+            mutableDoc?["orderItems"][item.createdOnStr].set(item.menuItem.id) //[timestamp: menuItemId]
+        }
+        if order.id == currentOrderSubject.value?.id, let orderDoc = orderDoc(for: order) {
+            currentOrderSubject.value = Order(doc: orderDoc)
+        }
+    }
+    
+    func orderDocForId(_ id: String, locId: String) -> DittoDocument? {
+        orderDocs.findByID(DittoDocumentID(value: ["id": id, "locationId": locId])).exec()
     }
     
     func orderDoc(for order: Order) -> DittoDocument? {
         orderDocs.findByID(DittoDocumentID(value: order._id)).exec()
-        // as [String : Any]) //["id": id, "locationId": loc.id] as [String : Any])
     }
     
 }

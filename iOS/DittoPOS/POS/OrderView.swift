@@ -12,7 +12,6 @@ struct OrderView: View {
     @ObservedObject var dataVM = DataViewModel.shared
     
     var body: some View {
-//        NavigationView {
             VStack(spacing: 0) {
                 // title view
                 Text(barTitle)
@@ -23,14 +22,10 @@ struct OrderView: View {
                 // Order items scrollview
                 ScrollView(showsIndicators: false) {
                     Section {
-                        ForEach(dataVM.currentOrderItems, id: \.self) { item in
+                        ForEach(dataVM.currentOrderItems) { item in
                             OrderItemView(item)
 
                             divider()
-                                .onTapGesture {
-//                                    print("\(item) tapped")
-                                    dataVM.addOrderItem(item)
-                                }
                         }
                     }
                 }
@@ -39,7 +34,6 @@ struct OrderView: View {
                 
                 // order total and pay buttons
                 OrderTotalView()
-//                    .padding(.bottom, 16)
             }
 //            .border(.purple)
     }
@@ -47,7 +41,6 @@ struct OrderView: View {
     var barTitle: String {
         "Order #\(dataVM.currentOrder?.title ?? "...")"
     }
-    
 }
 
 struct OrderView_Previews: PreviewProvider {

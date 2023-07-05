@@ -8,18 +8,22 @@
 
 import SwiftUI
 
+extension OrderItemView: Identifiable {
+    var id: String { item.createdOnStr }
+}
+
 struct OrderItemView: View {
-    let menuItem: MenuItem
-    
-    init(_ item: MenuItem) {
-        self.menuItem = item
+    let item: OrderItem
+
+    init(_ item: OrderItem) {
+        self.item = item        
     }
     
     var body: some View {
         HStack {
-            Text(menuItem.title)
+            Text(item.title)
             Spacer()
-            Text(menuItem.price.description)
+            Text(item.price.description)
         }
         .padding(.horizontal, 16)
     }
@@ -27,6 +31,8 @@ struct OrderItemView: View {
 
 struct OrderItemView_Previews: PreviewProvider {
     static var previews: some View {
-        OrderItemView(MenuItem.demoItems[0])
+        OrderItemView(
+            OrderItem(menuItem: MenuItem.demoItems[0])
+        )
     }
 }
