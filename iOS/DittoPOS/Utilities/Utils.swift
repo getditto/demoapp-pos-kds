@@ -91,6 +91,7 @@ extension DateFormatter {
 
     static var isoDate: ISO8601DateFormatter {
         let f = ISO8601DateFormatter()
+        f.formatOptions.insert(.withFractionalSeconds)
         return f
     }
     

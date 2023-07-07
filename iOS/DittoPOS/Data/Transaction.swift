@@ -12,7 +12,7 @@ enum TransactionType: Int, Codable {
     case cash, credit, debit, refund
 }
 
-enum TransactionStatus: Int, Codable {
+enum TransactionStatus: Int, CaseIterable, Codable {
     case incomplete, inProcess, complete, failed
 }
 
@@ -26,12 +26,24 @@ struct Transaction: Identifiable, Hashable, Equatable {
 }
 
 extension Transaction {
+    func docDictionary() -> [String: Any?] {
+        [
+            "_id": _id,
+            "createdOn": DateFormatter.isoDate.string(from: createdOn),
+            "type": type,
+            "status": status,
+            "amount": amount
+        ]
+    }
+}
+
+extension Transaction {
     static func new(
         locationId: String,
         orderId: String,
         createdOn: Date = Date(),
         type: TransactionType = .cash,
-        status: TransactionStatus = .incomplete,
+        status: TransactionStatus = .complete, // default all new transactions to .complete, at least for now
         amount: Double
     ) -> Transaction {
         Transaction(
@@ -45,5 +57,11 @@ extension Transaction {
     
     static func _id(locId: String, orderId: String) -> [String: String] {
         ["id": UUID().uuidString, "locationId": locId, "orderId": orderId]
+    }
+}
+
+extension Transaction {
+    static func statusDict(_ dict: [String: Int]) -> [String: TransactionStatus] {
+        dict.mapValues { TransactionStatus(rawValue: $0)! }
     }
 }

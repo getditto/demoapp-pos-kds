@@ -43,7 +43,7 @@ extension Price: CustomStringConvertible {
 }
 
 extension Double {
-    func toCurrency() -> String {
+    func currencyFormatted() -> String {
         Price(self).description
     }
 }

@@ -65,14 +65,18 @@ class DittoInstance: ObservableObject {
 }
 
 class DittoService: ObservableObject {
-    @Published var currentLocationId: String?// = ""
-    private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
-    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)
-    
     @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
-    private var cancellables = Set<AnyCancellable>()
 
+    @Published var currentLocationId: String?// = ""
+    private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
+
+    @Published private(set) var allOrderDocs = [DittoDocument]()
+    private var allOrdersCancellable = AnyCancellable({})
+    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)
+
+    private var cancellables = Set<AnyCancellable>()
+    
     private var locationsSubscription: DittoSubscription
     private var menuItemsSubscription: DittoSubscription
     private var ordersSubscription: DittoSubscription
@@ -111,11 +115,11 @@ class DittoService: ObservableObject {
         $currentLocationId
             .sink {[weak self] locId in
                 print("DS.currentLocationId changed to: \(locId ?? "NIL")")
-                self?.updateAllLocationsPublisher()
+                self?.updateAllLocations()
             }
             .store(in: &cancellables)
 
-        updateAllLocationsPublisher()
+        updateAllLocations()
         
         $allLocationDocs
             .sink {[weak self] docs in
@@ -127,46 +131,49 @@ class DittoService: ObservableObject {
                     self?.currentLocationSubject.value = loc
                     
                     print("DS.$allLocationDocs.sink: SET currentOrder or NIL")
-                    self?.currentOrderSubject.value = self?.orders(for: loc).first
+                    let locOrders = self?.orders(for: loc)
+                    self?.currentOrderSubject.value = locOrders?.first
                 }
             }
             .store(in: &cancellables)
+        
+        $allOrderDocs
+            .sink {[weak self] docs in
+                guard let doc = self?.currentOrderSubject.value else {
+                    print("DS.$allOrderDocs.sink: no currentOrder --> return");
+                    return
+                }
+                
+                  if let dbDoc = docs.first(where: { $0.id == doc.docId() }) {
+//                    print("DS.$allOrderDocs.sink: FOUND dbDoc: \(dbDoc)")
+                    let updatedOrder = Order(doc: dbDoc)
+//                      print("DS.$allOrderDocs.sink: SET updatedOrder: \(updatedOrder)")
+                    self?.currentOrderSubject.value = updatedOrder
+                }
+            }
+            .store(in: &cancellables)
+        
+        updateAllOrders()
     }
     
-    func updateAllLocationsPublisher() {
+    func updateAllLocations() {
         allLocationsCancellable = locationDocs
             .findAll()
             .liveQueryPublisher()
-            .receive(on: DispatchQueue.main)
             .map { docs, _ in
                 docs.map { $0 }
             }
             .assign(to: \.allLocationDocs, on: self)
     }
-/*
-    func locationPublisher(forId id: String) -> AnyPublisher<Location?, Never> {
-        locationDocs
-            .findByID(id)
-            .singleDocumentLiveQueryPublisher()
-            .compactMap { doc, _ in return doc }
-            .map { Location(doc: $0) }
-            .eraseToAnyPublisher()
-    }
-  */
     
-    func orders(for loc: Location) -> [Order] {
-        guard !loc.orderIds.isEmpty else { return [] }
-        
-        var orders = [Order]()
-        for id in loc.orderIds.keys {
-                if let doc = orderDocForId(id, locId: loc.id) {
-                let order = Order(doc: doc)
-                orders.append(order)
-            } else {
-                print("DS.\(#function): WARNING - could not find OrderDoc for id: \(id)")
+    func updateAllOrders() {
+        allOrdersCancellable = orderDocs
+            .findAll()
+            .liveQueryPublisher()
+            .map { docs, _ in
+                docs.map { $0 }
             }
-        }
-        return orders.sorted(by: { $0.createdOn < $1.createdOn })
+            .assign(to: \.allOrderDocs, on: self)
     }
     
     func addOrderToLocation(_ order: Order) {
@@ -188,13 +195,29 @@ class DittoService: ObservableObject {
     }
     
     func addItemToOrder(item: OrderItem, order: Order) {
-        orderDocs.findByID(order._id).update {mutableDoc in
-            print("DS.\(#function): add (\(order.title)) to mutableDoc.orderItems)")
-            mutableDoc?["orderItems"][item.createdOnStr].set(item.menuItem.id) //[timestamp: menuItemId]
+        orderDocs.findByID(order._id).update { mutableDoc in //[weak self] mutableDoc in
+//            print("DS.\(#function): add (\(order.title)) to mutableDoc.orderItems)")
+//            mutableDoc?["orderItems"][item.createdOnStr].set(item.menuItem.id) //[timestamp: menuItemId]
+            
+            print("DS.\(#function): UPDATE mutableDoc.orderItems: \(item.id))")
+            mutableDoc?["orderItems"][item.id].set(item.menuItem.id) //[uuid_createdOn: menuItemId]
+            mutableDoc?["status"].set(order.status.rawValue)
         }
-        if order.id == currentOrderSubject.value?.id, let orderDoc = orderDoc(for: order) {
-            currentOrderSubject.value = Order(doc: orderDoc)
+    }
+        
+    func orders(for loc: Location) -> [Order] {
+        guard !loc.orderIds.isEmpty else { return [] }
+        
+        var orders = [Order]()
+        for id in loc.orderIds.keys {
+                if let doc = orderDocForId(id, locId: loc.id) {
+                let order = Order(doc: doc)
+                orders.append(order)
+            } else {
+                print("DS.\(#function): WARNING - could not find OrderDoc for id: \(id)")
+            }
         }
+        return orders.sorted(by: { $0.createdOn > $1.createdOn })
     }
     
     func orderDocForId(_ id: String, locId: String) -> DittoDocument? {
@@ -205,6 +228,29 @@ class DittoService: ObservableObject {
         orderDocs.findByID(DittoDocumentID(value: order._id)).exec()
     }
     
+    func updateOrder(_ order: Order, with transx: Transaction) {
+        ditto.store.write { transaction in
+            let transactions = transaction.scoped(toCollectionNamed: "transactions")
+            let orders = transaction.scoped(toCollectionNamed: "orders")
+            do {
+                try transactions.upsert(transx.docDictionary())
+
+                orders.findByID(order._id).update { mutableDoc in
+                    print("DS.\(#function): add (\(transx.id)) to mutableDoc.transactionIds)")
+                    mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]
+//                    mutableDoc?["status"].set(order.status.rawValue)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
+    func updateCurrentOrder(_ fullId: DittoDocumentID) {
+        if let doc = orderDocs.findByID(fullId).exec() {
+            currentOrderSubject.value = Order(doc: doc)
+        }
+    }
 }
 
 /* Rae
