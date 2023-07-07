@@ -51,6 +51,13 @@ struct DeviceRotationViewModifier: ViewModifier {
 }
 
 extension UIDeviceOrientation: CustomStringConvertible {
+    public var isLandscape: Bool {
+        self == .landscapeLeft || self == .landscapeRight
+    }
+    public var isPortrait: Bool {
+        self == .portrait || self == .portraitUpsideDown
+    }
+    
     public var description: String {
         switch self {
         case .unknown:

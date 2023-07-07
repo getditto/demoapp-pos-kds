@@ -37,11 +37,13 @@ struct MenuGridView: View {
         }
         .onAppear { print("MenuGrid.onAppear"); columns = cols() }
 //        .onDisappear { print("MenuGrid.onDisappear"); tapCount = 0}
-        .onRotate { newOrientation in
-            DispatchQueue.main.async {
-                columns = cols()
-            }
-        }
+//        .onRotate { orient in
+//            guard orient.isLandscape || orient.isPortrait else { return }
+//            print("MenuGrid.onRotate: orientation: \(orient.description)")
+//            DispatchQueue.main.async {
+//                columns = cols()
+//            }
+//        }
     }
     
     func cols() -> [GridItem] {

@@ -114,7 +114,7 @@ class DataViewModel: ObservableObject {
         //TODO: alert user to select location
         guard var curOrder = currentOrder else {
             print("Cannot add item: current order is NIL\n\n");
-            return            
+            return
         }
         
         let orderItem = OrderItem(menuItem: menuItem)

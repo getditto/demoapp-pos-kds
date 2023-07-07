@@ -43,8 +43,9 @@ struct POSView: View {
                     .frame(width: vm.orderViewWidth)
 //                .border(.green)
             }
-            .onAppear { print("POSView.onAppear") }
-            .onRotate { newOrientation in
+//            .onAppear { print("POSView.onAppear") }
+            .onRotate { orient in
+                guard orient.isLandscape || orient.isPortrait else { return }
                 DispatchQueue.main.async {
                     vm.updateWidths()
                 }
