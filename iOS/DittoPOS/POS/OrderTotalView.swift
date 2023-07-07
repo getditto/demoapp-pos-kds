@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 class OrderTotalVM: ObservableObject {
-    @Published var orderIsPaid: Bool = false
+    @Published var orderIsPaid: Bool = false    
     private var cancellables = Set<AnyCancellable>()
     private var dataVM = DataViewModel.shared
     

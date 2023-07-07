@@ -30,21 +30,11 @@ class DataViewModel: ObservableObject {
     
     static var shared = DataViewModel()
     
-    @Published var test: String = ""
-    
     private init() {
         self.currentLocationPublisher = dittoService.currentLocationPublisher()
         self.currentOrderPublisher = dittoService.currentOrderPublisher()
         
         setupDemoLocations()
-        
-        //------------------------------------------------------------------------------------------
-        // TEST
-        $test.sink { str in
-            print("DVM.$test.sink: change to \(str)")
-        }
-        .store(in: &cancellables)
-        //------------------------------------------------------------------------------------------
         
         currentLocationPublisher
             .receive(on: DispatchQueue.main)
@@ -55,7 +45,7 @@ class DataViewModel: ObservableObject {
                     if loc.orderIds.isEmpty {
                         DispatchQueue.main.async {
                             print("DVM.init(): currentLocationPublisher - CALL to create/add NEW ORDER")
-                            self?.dittoService.addOrderToLocation(Order.new(locationId: loc.id))
+                            self?.addNewCurrentOrder()
                         }
                     }
                 }
@@ -71,13 +61,11 @@ class DataViewModel: ObservableObject {
                 }
 //                print("DVM.$currenOrderPublisher: order changed: \(order)")
                 var items = [OrderItem]()
-//                for (timestamp, id) in order.orderItems {
+
                 for (compoundStringId, menuItemId) in order.orderItems {
-//                    if let menuItem = self?.menuItem(for: id) {
                     if let menuItem = self?.menuItem(for: menuItemId) {
                         let orderItem = OrderItem(id: compoundStringId, menuItem: menuItem)
-//                        orderItem.createdOn = DateFormatter.isoDate.date(from: timestamp)!
-                        print("DVM.$currenOrderPublisher: orderItem --> OUT: \(orderItem.id)")
+//                        print("DVM.$currenOrderPublisher: orderItem --> OUT: \(orderItem.id)")
                         items.append(orderItem)
                     }
                 }
@@ -87,7 +75,7 @@ class DataViewModel: ObservableObject {
             .store(in: &cancellables)
         
         if let selectedLocId = storedLocationId() {
-            print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
+//            print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
             self.selectedLocationId = selectedLocId
             self.dittoService.currentLocationId = selectedLocId
         }
@@ -124,11 +112,13 @@ class DataViewModel: ObservableObject {
     
     func addOrderItem(_  menuItem: MenuItem) {
         //TODO: alert user to select location
-        guard var curOrder = currentOrder else { print("Cannot add item: current order is NIL\n\n"); return }
+        guard var curOrder = currentOrder else {
+            print("Cannot add item: current order is NIL\n\n");
+            return            
+        }
         
         let orderItem = OrderItem(menuItem: menuItem)
-//        print("DVM.\(#function): CALL DS to add OrderItem: \(orderItem)")
-        print("DVM.\(#function): orderItem --> IN: \(orderItem.id)")
+//        print("DVM.\(#function): orderItem --> IN: \(orderItem.id)")
         // set order status to inProcess for every item added
         curOrder.status = .inProcess
         dittoService.addItemToOrder(item: orderItem, order: curOrder)
@@ -145,24 +135,31 @@ class DataViewModel: ObservableObject {
             orderId: order.id,
             amount: currentOrderTotal()
         )
-//        // set order status to next
-//        let status = order.status.rawValue + 1 //N.B. not checking for out-of-bounds condition
-//        order.status = OrderStatus(rawValue: status)!
-        dittoService.updateOrder(order, with: tx)
         
-        if let loc = currentLocation {
-            // wait a second to show current order updated to PAID
+        dittoService.updateOrder(order, with: tx)
+            // wait a moment to show current order updated to PAID
             // then create new order automatically
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
                 print("DVM.\(#function): ORDER PAID - CALL to create/add NEW ORDER")
-                self?.dittoService.addOrderToLocation(Order.new(locationId: loc.id))
+                self?.addNewCurrentOrder()
             }
+    }
+    
+    func addNewCurrentOrder() {
+        if let loc = currentLocation {
+            dittoService.addOrderToLocation(Order.new(locationId: loc.id))
         }
     }
     
     func cancelCurrentOrder() {
-        print("DVM.\(#function): NOT YET IMPLEMENTED")
+        print("DVM.\(#function): --> in")
+        dittoService.cancelCurrentOrder()
+        DispatchQueue.main.async {[weak self] in
+            print("DVM.\(#function):  CALL to create/add NEW ORDER")
+            self?.addNewCurrentOrder()
+        }
     }
+    
     
     //MARK: Utilities
     func currentOrderTotal() -> Double {

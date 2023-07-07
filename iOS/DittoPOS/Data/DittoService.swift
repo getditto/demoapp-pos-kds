@@ -114,7 +114,7 @@ class DittoService: ObservableObject {
         
         $currentLocationId
             .sink {[weak self] locId in
-                print("DS.currentLocationId changed to: \(locId ?? "NIL")")
+//                print("DS.currentLocationId changed to: \(locId ?? "NIL")")
                 self?.updateAllLocations()
             }
             .store(in: &cancellables)
@@ -123,15 +123,16 @@ class DittoService: ObservableObject {
         
         $allLocationDocs
             .sink {[weak self] docs in
-                print("DS.$allLocationDocs.sink: docs in count: \(docs.count)")
+//                print("DS.$allLocationDocs.sink: docs in count: \(docs.count)")
                 if let locId = self?.currentLocationId,
                     let locDoc = docs.first(where: { $0.id == DittoDocumentID(value: locId) }) {
                     let loc = Location(doc: locDoc)
-                    print("DS.$allLocationDocs.sink: FOUND Location doc for currentLocationId: \(loc.name)")
+//                    print("DS.$allLocationDocs.sink: FOUND Location doc for currentLocationId: \(loc.name)")
                     self?.currentLocationSubject.value = loc
                     
-                    print("DS.$allLocationDocs.sink: SET currentOrder or NIL")
+//                    print("DS.$allLocationDocs.sink: SET currentOrder or NIL")
                     let locOrders = self?.orders(for: loc)
+                    // make latest order the current order
                     self?.currentOrderSubject.value = locOrders?.first
                 }
             }
@@ -143,11 +144,9 @@ class DittoService: ObservableObject {
                     print("DS.$allOrderDocs.sink: no currentOrder --> return");
                     return
                 }
-                
-                  if let dbDoc = docs.first(where: { $0.id == doc.docId() }) {
-//                    print("DS.$allOrderDocs.sink: FOUND dbDoc: \(dbDoc)")
+                                
+                if let dbDoc = docs.first(where: { $0.id == doc.docId() }) {
                     let updatedOrder = Order(doc: dbDoc)
-//                      print("DS.$allOrderDocs.sink: SET updatedOrder: \(updatedOrder)")
                     self?.currentOrderSubject.value = updatedOrder
                 }
             }
@@ -178,28 +177,19 @@ class DittoService: ObservableObject {
     
     func addOrderToLocation(_ order: Order) {
         do {
-            print("DS.\(#function): add Order(\(order.title)) to Orders collection")
             try orderDocs.upsert(order.docDictionary())
         } catch {
             print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
         }
         
-        print("DS.\(#function): add Order \(order.title) to location: \(order.locationId)")
-        locationDocs.findByID(order.locationId).update { [self] mutableDoc in
+        locationDocs.findByID(order.locationId).update { mutableDoc in
             mutableDoc?["orderIds"][order.id].set(order.createdOnStr)
-            print("DS.\(#function): order(\(order.title)) added to mutableDoc.orderIds: \(mutableDoc!["orderIds"])")
-            
-            let loc = Location(doc: locationDocs.findByID(order.locationId).exec()!)
-            print("DS.\(#function): CHECK for order added to loc: \(loc)")
         }
     }
     
     func addItemToOrder(item: OrderItem, order: Order) {
-        orderDocs.findByID(order._id).update { mutableDoc in //[weak self] mutableDoc in
-//            print("DS.\(#function): add (\(order.title)) to mutableDoc.orderItems)")
-//            mutableDoc?["orderItems"][item.createdOnStr].set(item.menuItem.id) //[timestamp: menuItemId]
-            
-            print("DS.\(#function): UPDATE mutableDoc.orderItems: \(item.id))")
+        orderDocs.findByID(order._id).update { mutableDoc in
+//            print("DS.\(#function): UPDATE mutableDoc.orderItems: \(item.id))")
             mutableDoc?["orderItems"][item.id].set(item.menuItem.id) //[uuid_createdOn: menuItemId]
             mutableDoc?["status"].set(order.status.rawValue)
         }
@@ -236,9 +226,8 @@ class DittoService: ObservableObject {
                 try transactions.upsert(transx.docDictionary())
 
                 orders.findByID(order._id).update { mutableDoc in
-                    print("DS.\(#function): add (\(transx.id)) to mutableDoc.transactionIds)")
+//                    print("DS.\(#function): add (\(transx.id)) to mutableDoc.transactionIds)")
                     mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]
-//                    mutableDoc?["status"].set(order.status.rawValue)
                 }
             } catch {
                 print(error.localizedDescription)
@@ -246,22 +235,20 @@ class DittoService: ObservableObject {
         }
     }
     
-    func updateCurrentOrder(_ fullId: DittoDocumentID) {
-        if let doc = orderDocs.findByID(fullId).exec() {
-            currentOrderSubject.value = Order(doc: doc)
+    func cancelCurrentOrder() {
+        print("DS.\(#function): --> in")
+        if let currOrder = currentOrderSubject.value {
+            let canceled = OrderStatus(rawValue: OrderStatus.canceled.rawValue)
+            orderDocs.findByID(currOrder._id).update { mutableDoc in
+                print("DS.\(#function): SET CURRENT ORDER STATUS CANCEL")
+                mutableDoc?["status"].set(canceled)
+            }
         }
     }
+    
+//    func updateCurrentOrder(_ fullId: DittoDocumentID) {
+//        if let doc = orderDocs.findByID(fullId).exec() {
+//            currentOrderSubject.value = Order(doc: doc)
+//        }
+//    }
 }
-
-/* Rae
-for (id in order.payments.keys()) {
-  let doc = ditto.store.collection("payments")
-    .findById(DocumentID({
-      "id": id,
-      "locationId": 456,
-      "orderId": "abc123"
-    }).exec()
-    paymentsForOrder.append(doc)
-}
- */
-
