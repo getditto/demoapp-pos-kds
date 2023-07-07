@@ -9,7 +9,6 @@
 import SwiftUI
 
 struct MenuItemView: View {
-//    @Environment(\.horizontalSizeClass) private var HsizeClass
 //    @Environment(\.colorScheme) private var colorScheme
     @State var titleScale: Double
     let item: MenuItem
@@ -27,7 +26,7 @@ struct MenuItemView: View {
             Image(item.imageName)
                 .resizable()
                 
-            ItemTitle(item.title, scaleFactor: $titleScale)
+            ScalingText(item.title, scaleFactor: $titleScale)
         }
         .lineLimit(1)
         .onRotate { _ in
@@ -36,7 +35,7 @@ struct MenuItemView: View {
     }
 }
 
-struct ItemTitle: View {
+struct ScalingText: View {
     @ScaledMetric var scale: CGFloat = 0.5
     @Binding var factor: Double
     let text: String

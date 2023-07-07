@@ -10,20 +10,36 @@ import Combine
 import SwiftUI
 
 class OrderTotalVM: ObservableObject {
-    @Published var orderIsPaid: Bool = false    
+    @Published var orderIsPaid: Bool = false
+    @Published var orderIsEmpty: Bool
     private var cancellables = Set<AnyCancellable>()
     private var dataVM = DataViewModel.shared
     
     init() {
+        let dvm = DataViewModel.shared
+        if let currOrder = dvm.currentOrder {
+            self.orderIsEmpty = currOrder.orderItems.isEmpty
+        } else {
+            self.orderIsEmpty = true
+        }
+        
         // Pay/Cancel button enablement
         dataVM.$currentOrder
             .sink {[weak self] order in
                 guard let order = order else { return }
+                
+                if self?.orderIsEmpty != order.orderItems.isEmpty {
+                    self?.orderIsEmpty.toggle()
+                }
                 if self?.orderIsPaid != order.isPaid {
-                    self?.orderIsPaid = order.isPaid
+                    self?.orderIsPaid.toggle()
                 }
             }
             .store(in: &cancellables)
+    }
+    
+    var disableButtons: Bool {
+        orderIsPaid || orderIsEmpty
     }
     
     func payOrder() {
@@ -31,7 +47,10 @@ class OrderTotalVM: ObservableObject {
     }
     
     func cancelOrder() {
-        dataVM.cancelCurrentOrder()
+//        dataVM.cancelCurrentOrderAndRefresh()
+        if let items = dataVM.currentOrder?.orderItems, !items.isEmpty {
+            dataVM.clearCurrentOrderIems()
+        }
     }
 }
 
@@ -58,7 +77,7 @@ struct OrderTotalView: View {
                 }
                 .clipShape(Circle())
                 .tint(.red)
-                .disabled(vm.orderIsPaid)
+                .disabled(vm.disableButtons)
 
                 Spacer()
                 
@@ -70,7 +89,7 @@ struct OrderTotalView: View {
                         .frame(maxWidth: .infinity, maxHeight: 36.0)
                 }
                 .tint(.green)
-                .disabled(vm.orderIsPaid)
+                .disabled(vm.disableButtons)
             }
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.roundedRectangle)

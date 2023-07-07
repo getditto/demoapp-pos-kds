@@ -24,8 +24,8 @@ class DittoInstance: ObservableObject {
         
         ditto = Ditto(identity: .onlinePlayground(
             appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: false // disabed for now for dev
+            token: Env.DITTO_PLAYGROUND_TOKEN
+//            enableDittoCloudSync: false // disabled for now for dev
         ))
         
         // Logging turned off for now to watch for dev UI logs
@@ -68,12 +68,14 @@ class DittoService: ObservableObject {
     @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
 
-    @Published var currentLocationId: String?// = ""
+    @Published var currentLocationId: String?
     private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
-
+    
     @Published private(set) var allOrderDocs = [DittoDocument]()
     private var allOrdersCancellable = AnyCancellable({})
-    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)
+
+    @Published var currentOrderId: String?
+    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)    
 
     private var cancellables = Set<AnyCancellable>()
     
@@ -114,26 +116,29 @@ class DittoService: ObservableObject {
         
         $currentLocationId
             .sink {[weak self] locId in
-//                print("DS.currentLocationId changed to: \(locId ?? "NIL")")
                 self?.updateAllLocations()
             }
             .store(in: &cancellables)
 
         updateAllLocations()
-        
+                
         $allLocationDocs
             .sink {[weak self] docs in
-//                print("DS.$allLocationDocs.sink: docs in count: \(docs.count)")
                 if let locId = self?.currentLocationId,
                     let locDoc = docs.first(where: { $0.id == DittoDocumentID(value: locId) }) {
                     let loc = Location(doc: locDoc)
-//                    print("DS.$allLocationDocs.sink: FOUND Location doc for currentLocationId: \(loc.name)")
                     self?.currentLocationSubject.value = loc
-                    
-//                    print("DS.$allLocationDocs.sink: SET currentOrder or NIL")
-                    let locOrders = self?.orders(for: loc)
-                    // make latest order the current order
-                    self?.currentOrderSubject.value = locOrders?.first
+                }
+            }
+            .store(in: &cancellables)
+        
+        $currentOrderId
+            .sink{[weak self] orderId in
+                print("DS.currentOrderId changed to: \(orderId ?? "NIL")")
+                if let id = orderId,
+                   let loc = self?.currentLocationSubject.value,
+                   let orderDoc = self?.orderDocForId(id, locId: loc.id) {
+                    self?.currentOrderSubject.value = Order(doc: orderDoc)
                 }
             }
             .store(in: &cancellables)
@@ -175,16 +180,24 @@ class DittoService: ObservableObject {
             .assign(to: \.allOrderDocs, on: self)
     }
     
-    func addOrderToLocation(_ order: Order) {
+    func addOrder(_ order: Order) {
         do {
             try orderDocs.upsert(order.docDictionary())
         } catch {
             print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
         }
-        
-        locationDocs.findByID(order.locationId).update { mutableDoc in
-            mutableDoc?["orderIds"][order.id].set(order.createdOnStr)
-        }
+    }
+    
+    func orderPublisher(_ order: Order) -> AnyPublisher<Order?, Never> {
+        orderDocs.findByID(DittoDocumentID(value: order._id))
+            .singleDocumentLiveQueryPublisher()
+            .map {doc, _ in
+                if let doc = doc {
+                    return Order(doc: doc)
+                }
+                return nil
+            }
+            .eraseToAnyPublisher()
     }
     
     func addItemToOrder(item: OrderItem, order: Order) {
@@ -196,18 +209,8 @@ class DittoService: ObservableObject {
     }
         
     func orders(for loc: Location) -> [Order] {
-        guard !loc.orderIds.isEmpty else { return [] }
-        
-        var orders = [Order]()
-        for id in loc.orderIds.keys {
-                if let doc = orderDocForId(id, locId: loc.id) {
-                let order = Order(doc: doc)
-                orders.append(order)
-            } else {
-                print("DS.\(#function): WARNING - could not find OrderDoc for id: \(id)")
-            }
-        }
-        return orders.sorted(by: { $0.createdOn > $1.createdOn })
+        orderDocs.find("_id.locationId == '\(loc.id)'").exec()
+            .map { Order(doc: $0) }
     }
     
     func orderDocForId(_ id: String, locId: String) -> DittoDocument? {
@@ -235,20 +238,28 @@ class DittoService: ObservableObject {
         }
     }
     
-    func cancelCurrentOrder() {
-        print("DS.\(#function): --> in")
+    func clearCurrentOrderIems() {
         if let currOrder = currentOrderSubject.value {
-            let canceled = OrderStatus(rawValue: OrderStatus.canceled.rawValue)
-            orderDocs.findByID(currOrder._id).update { mutableDoc in
-                print("DS.\(#function): SET CURRENT ORDER STATUS CANCEL")
-                mutableDoc?["status"].set(canceled)
+            let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
+            orderDocs.findByID(DittoDocumentID(value: currOrder._id)).update { mutableDoc in
+//                print("DS.\(#function): CLEAR CURRENT ORDER ITEMS")
+                for id in currOrder.orderItems.keys {
+                    mutableDoc?["orderItems"][id].remove()
+                }
+                mutableDoc?["status"].set(open)
             }
         }
     }
     
-//    func updateCurrentOrder(_ fullId: DittoDocumentID) {
-//        if let doc = orderDocs.findByID(fullId).exec() {
-//            currentOrderSubject.value = Order(doc: doc)
-//        }
-//    }
+    // cancel order feature replaced by ^^ clearCurrrentOrderItems() to avoid accumulating many
+    // empty orders. "Cancel" button action is now implemented as "Clear order items"
+    func cancelCurrentOrder() {
+        if let currOrder = currentOrderSubject.value {
+            let canceled = OrderStatus(rawValue: OrderStatus.canceled.rawValue)
+            orderDocs.findByID(currOrder._id).update { mutableDoc in
+//                print("DS.\(#function): SET CURRENT ORDER STATUS CANCEL")
+                mutableDoc?["status"].set(canceled)
+            }
+        }
+    }
 }

@@ -20,7 +20,7 @@ class DataViewModel: ObservableObject {
     private var currentLocationPublisher: AnyPublisher<Location?, Never>
     
     @Published var currentOrder: Order?
-    private var currentOrderPublisher: AnyPublisher<Order?, Never>
+    private var currentOrderPublisher: AnyPublisher<Order?, Never>?
 
     @Published var menuItems: [MenuItem] = MenuItem.demoItems // for menu display
     @Published var currentOrderItems = [OrderItem]()
@@ -42,26 +42,21 @@ class DataViewModel: ObservableObject {
                 if let loc = loc {
                     print("DVM.init(): currentLocationPublisher fired with \(loc.name)")
                     self?.currentLocation = loc
-                    if loc.orderIds.isEmpty {
-                        DispatchQueue.main.async {
-                            print("DVM.init(): currentLocationPublisher - CALL to create/add NEW ORDER")
-                            self?.addNewCurrentOrder()
-                        }
+                    // if there is a current order and location is changing, cancel the order
+                    if let _ = self?.currentOrder {
+                        self?.cancelCurrentOrder()
                     }
+                    self?.addNewCurrentOrder()
                 }
             }
             .store(in: &cancellables)
 
-        currentOrderPublisher        
+        currentOrderPublisher?
             .receive(on: DispatchQueue.main)
             .sink {[weak self] order in
-                guard let order = order else {
-                    print("DVM.$currentOrderPublisher.sink: WARNING received NIL order --> RETURN")
-                    return
-                }
+                guard let order = order else { return }
 //                print("DVM.$currenOrderPublisher: order changed: \(order)")
                 var items = [OrderItem]()
-
                 for (compoundStringId, menuItemId) in order.orderItems {
                     if let menuItem = self?.menuItem(for: menuItemId) {
                         let orderItem = OrderItem(id: compoundStringId, menuItem: menuItem)
@@ -74,11 +69,6 @@ class DataViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
-        if let selectedLocId = storedLocationId() {
-//            print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
-            self.selectedLocationId = selectedLocId
-            self.dittoService.currentLocationId = selectedLocId
-        }
         
         // Set stored selected tab if we have a locationId, else it will default to Locations tab
         if let _ = storedLocationId(), let tab = storedSelectedTab() {
@@ -92,7 +82,13 @@ class DataViewModel: ObservableObject {
                 self?.saveSelectedTab(tab)
             }
             .store(in: &cancellables)
-                
+        
+        if let selectedLocId = storedLocationId() {
+//            print("DVM.\(#function): SET currentLocationId to storedLocation() or NIL")
+            self.selectedLocationId = selectedLocId
+            self.dittoService.currentLocationId = selectedLocId
+        }
+        
         $selectedLocationId
             .receive(on: DispatchQueue.main)
             .sink {[weak self] id in
@@ -103,7 +99,7 @@ class DataViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         dittoService.$allLocationDocs
             .receive(on: DispatchQueue.main)
             .assign(to: &$allLocationDocs)
@@ -123,8 +119,7 @@ class DataViewModel: ObservableObject {
         curOrder.status = .inProcess
         dittoService.addItemToOrder(item: orderItem, order: curOrder)
     }
-    
-    
+        
     func payCurrentOrder() {
         guard let loc = currentLocation, let order = currentOrder else {
             print("DVM.\(#function): ERROR - either current Location or Order is nil --> return")
@@ -147,19 +142,33 @@ class DataViewModel: ObservableObject {
     
     func addNewCurrentOrder() {
         if let loc = currentLocation {
-            dittoService.addOrderToLocation(Order.new(locationId: loc.id))
+            let newOrder = Order.new(locationId: loc.id)
+            dittoService.addOrder(newOrder)
+            dittoService.currentOrderId = newOrder.id
         }
     }
     
-    func cancelCurrentOrder() {
+    func clearCurrentOrderIems() {
+        dittoService.clearCurrentOrderIems()
+    }
+    
+    // ---------------------------------------------------------------------------------------------
+    // cancel order feature replaced by ^^ clearCurrrentOrderItems() to avoid accumulating many
+    // empty orders. "Cancel" button action is now implemented as "Clear order items"
+    func cancelCurrentOrderAndRefresh() {
         print("DVM.\(#function): --> in")
-        dittoService.cancelCurrentOrder()
+        cancelCurrentOrder()
         DispatchQueue.main.async {[weak self] in
             print("DVM.\(#function):  CALL to create/add NEW ORDER")
             self?.addNewCurrentOrder()
         }
     }
-    
+
+    func cancelCurrentOrder() {
+        print("DVM.\(#function): --> in")
+        dittoService.cancelCurrentOrder()
+    }
+    // ---------------------------------------------------------------------------------------------
     
     //MARK: Utilities
     func currentOrderTotal() -> Double {
@@ -174,8 +183,8 @@ class DataViewModel: ObservableObject {
     func setupDemoLocations() {
         for loc in Location.demoLocations {
             try! dittoService.locationDocs.upsert(
-                loc.docDictionary()
-//                writeStrategy: .insertDefaultIfAbsent
+                loc.docDictionary(),
+                writeStrategy: .insertDefaultIfAbsent
             )
         }
     }

@@ -9,7 +9,7 @@
 import SwiftUI
 
 extension OrderItemView: Identifiable {
-    var id: String { item.createdOnStr }
+    var id: String { item.id }
 }
 
 struct OrderItemView: View {

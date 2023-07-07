@@ -43,7 +43,7 @@ class LocationsVM: ObservableObject {
     init() {
         dataVM.$allLocationDocs
             .sink {[weak self] docs in
-                print("LocationsVM.sink --> in map LocationRowItems from location docs")
+//                print("LocationsVM.sink --> in map LocationRowItems from location docs")
                 self?.locationItems = docs.map { LocationRowItem(doc: $0) }
                 self?.selectedItem = self?.locationItems.first(
                     where: { $0.locationID == self?.dataVM.selectedLocationId }
@@ -54,7 +54,7 @@ class LocationsVM: ObservableObject {
         $selectedItem
             .sink {[weak self] item in
                 guard let item = item else { return }
-                print("LocationsVM.sink selectedItem change")
+//                print("LocationsVM.sink selectedItem change")
                 if item.locationID != self?.dataVM.selectedLocationId {
                     self?.dataVM.selectedLocationId = item.locationID
                 }
