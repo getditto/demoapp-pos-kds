@@ -1,95 +1,102 @@
 ///
 //  SettingsView.swift
-//  DittoPOS
 //
-//  Created by Eric Turner on 6/6/23.
+//  Created by Eric Turner on 1/31/23.
 //®
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import DittoDataBrowser
 import DittoDiskUsage
+import DittoExportData
 import DittoExportLogs
-import DittoPresenceViewer
 import DittoPeersList
+import DittoPresenceViewer
 import DittoSwift
 import SwiftUI
 
+
 class SettingsVM: ObservableObject {
-//    @ObservedObject var dittoInstance = dittoInstance.shared
-    @ObservedObject var dittoInstance = DittoInstance.shared
-    @Published var showExportLogsSheet = false
+    @Published var presentExportDataShare: Bool = false
+    @Published var presentExportDataAlert: Bool = false
 }
 
 struct SettingsView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @StateObject private var vm = SettingsVM()
-
+    @ObservedObject var dittoService = DittoService.shared
+    private let ditto = DittoService.shared.ditto
+    
+    private var textColor: Color {
+        colorScheme == .dark ? .white : .black
+    }
+    
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text("Reset All Data")
-                        .onTapGesture {
-                            print("RESET ALL DATA - not yet implemented")
+        NavigationView {
+            List{
+                Section(header: Text("Viewers")) {
+                    NavigationLink(destination: DataBrowser(ditto: ditto)) {
+                        DittoToolsListItem(title: "Data Browser", systemImage: "photo", color: .orange)
+                    }
+                    
+                    NavigationLink(destination: PeersListView(ditto: ditto)) {
+                            DittoToolsListItem(title: "Peers List", systemImage: "network", color: .blue)
+                    }
+                    
+                    NavigationLink(destination: PresenceView(ditto: ditto)) {
+                        DittoToolsListItem(title: "Presence Viewer", systemImage: "network", color: .pink)
+                    }
+                    
+                    NavigationLink(destination: DittoDiskUsageView(ditto: ditto)) {
+                        DittoToolsListItem(title: "Disk Usage", systemImage: "opticaldiscdrive", color: .secondary)
+                    }
+                }
+                Section(header: Text("Exports")) {
+                    NavigationLink(destination: LoggingDetailsView(loggingOption: $dittoService.loggingOption)) {
+                        DittoToolsListItem(title: "Logging", systemImage: "square.split.1x2", color: .green)
+                    }
+
+                    // Export Ditto db Directory
+                    // N.B. The export Logs feature is in DittoSwiftTools pkg, DittoExportLogs module,
+                    // exposed in LoggingDetailsView ^^
+                    Button(action: {
+                        vm.presentExportDataAlert.toggle()
+                    }) {
+                        HStack {
+                            DittoToolsListItem(title: "Export Data Directory", systemImage: "square.and.arrow.up", color: .green)
+                            Spacer()
+                            Image(systemName: "square.and.arrow.up")
                         }
-                } header: {
-                    Text("App Settings").font(.subheadline)
-                }
-
-                Section {
-                    NavigationLink {
-                        PresenceView(ditto: vm.dittoInstance.ditto)
-                    } label: {
-                        Text("Presence Viewer")
                     }
-
-                    NavigationLink {
-                        PeersListView(ditto: vm.dittoInstance.ditto)
-                    } label: {
-                        Text("Peers List")
-                    }
-
-                    NavigationLink {
-                        DataBrowser(ditto: vm.dittoInstance.ditto)
-                    } label: {
-                        Text("Data Browser")
-                    }
-                    
-                    NavigationLink {
-                        DittoDiskUsageView(ditto: vm.dittoInstance.ditto)
-                    } label: {
-                        Text("Disk Usage")
-                    }
-                    
-                    NavigationLink {
-                        LoggingDetailsView($vm.dittoInstance.loggingOption)
-                    } label: {
-                        Text("Logging")
-                    }
-                }
-                header: {
-                    Text("Ditto Tools").font(.subheadline)
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle")
+                    .foregroundColor(textColor)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .sheet(isPresented: $vm.presentExportDataShare) {
+                        ExportData(ditto: ditto)
                     }
                 }
             }
-            .listStyle(.insetGrouped)
-            .navigationBarTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $vm.showExportLogsSheet) {
-                ExportLogs()
+            .listStyle(InsetGroupedListStyle())
+            .navigationViewStyle(StackNavigationViewStyle())
+            .navigationTitle("Ditto Tools")
+            .alert("Export Ditto Directory", isPresented: $vm.presentExportDataAlert) {
+                Button("Export") {
+                    vm.presentExportDataShare = true
+                }
+                Button("Cancel", role: .cancel) {}
+
+                } message: {
+                    Text("Compressing log data may take a while.")
+                }
             }
-        }
+        
+        Spacer()
+    
+        VStack {
+            Text("SDK Version: \(ditto.sdkVersion)")
+        }.padding()
     }
 }
+
 
 struct DittoToolsListView_Previews: PreviewProvider {
     static var previews: some View {

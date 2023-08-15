@@ -6,72 +6,44 @@
 //
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
+import DittoSwift
 import Foundation
 
 extension UserDefaults {
-    
+    public enum UserDefaultsKeys: String {
+        case loggingOption = "live.ditto.DittoPOS.loggingOption"
+        case currentLocationId = "live.ditto.DittoPOS.currentLocationId"
+        case selectedTab = "live.ditto.DittoPOS.selectedTab"
+    }
+
     var storedLocationId: String? {
         get {
-            return string(forKey: "ditto.currentLocationId")
+            return string(forKey: UserDefaultsKeys.currentLocationId.rawValue)
         }
         set(value) {
-            set(value, forKey: "ditto.currentLocationId")
+            set(value, forKey: UserDefaultsKeys.currentLocationId.rawValue)
         }
     }
     
     var storedSelectedTab: Int? {
         get {
-            return integer(forKey: "ditto.selectedTab")
+            return integer(forKey: UserDefaultsKeys.selectedTab.rawValue)
         }
         set(value) {
-            set(value, forKey: "ditto.selectedTab")
-        }
-    }
-    /*
-    var storedLocation: Location? {
-        get {
-            guard let jsonData = object(forKey: "ditto.currentLocation") as? Data else { return nil }
-            return decodeObjFromData(jsonData)
-        }
-        set(value) {
-            if let loc = value {
-               if let jsonData = encodedObject(loc) {
-                    set(jsonData, forKey: "ditto.currentLocation")
-               } else { print("storedLocation JSON encoding failed") }
-            } else {
-                UserDefaults.standard.removeObject(forKey: "ditto.currentLocation")
-            }
+            set(value, forKey: UserDefaultsKeys.selectedTab.rawValue)
         }
     }
     
-    var currentOrder: Order? {
+    var storedLoggingOption: DittoLogger.LoggingOptions {
         get {
-            guard let jsonData = object(forKey: "ditto.currentOrder") as? Data else { return nil }
-            return decodeObjFromData(jsonData)
+            let logOption = integer(forKey: UserDefaultsKeys.loggingOption.rawValue)
+            guard logOption != 0 else {
+                return DittoLogger.LoggingOptions(rawValue: defaultLoggingOption.rawValue)!
+            }
+            return DittoLogger.LoggingOptions(rawValue: logOption)!
         }
         set(value) {
-            if let order = value, let jsonData = encodedObject(order) {
-                set(jsonData, forKey: "ditto.currentOrder")
-            }
+            set(value.rawValue, forKey: UserDefaultsKeys.loggingOption.rawValue)
         }
     }
-    
-    private func encodedObject<T: Codable>(_ obj: T) -> Data? {
-        let encoder = JSONEncoder()
-        guard let jsonData = try? encoder.encode(obj) else {
-            print("UserDefaults.\(#function): ERROR encoding \(T.self)")
-            return nil
-        }
-        return jsonData
-    }
-
-    private func decodeObjFromData<T: Codable>(_ jsonData: Data) -> T? {
-        let decoder = JSONDecoder()
-        guard let obj = try? decoder.decode(T.self, from: jsonData) else {
-            print("UserDefaults.\(#function): ERROR decoding type: \(T.self) from json data")
-            return nil
-        }
-        return obj
-    }
-     */
 }

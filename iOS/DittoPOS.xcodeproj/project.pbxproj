@@ -15,7 +15,8 @@
 		142B27CD2A3A310600C09751 /* DittoExportLogs in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CC2A3A310600C09751 /* DittoExportLogs */; };
 		142B27CF2A3A310600C09751 /* DittoPeersList in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CE2A3A310600C09751 /* DittoPeersList */; };
 		142B27D12A3A310600C09751 /* DittoPresenceViewer in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27D02A3A310600C09751 /* DittoPresenceViewer */; };
-		149CABC42A32C1A900729331 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149CABC32A32C1A900729331 /* SettingsView.swift */; };
+		148071162A8C2E930091EC03 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071152A8C2E930091EC03 /* SettingsView.swift */; };
+		148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */; };
 		149CABC62A32C43700729331 /* Env.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149CABC52A32C43700729331 /* Env.swift */; };
 		14BF8C7A2A534550006F82A4 /* OrderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BF8C792A534550006F82A4 /* OrderItem.swift */; };
 		14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */; };
@@ -45,7 +46,8 @@
 /* Begin PBXFileReference section */
 		14039BED2A465F37001903ED /* OrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
-		149CABC32A32C1A900729331 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		148071152A8C2E930091EC03 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DittoToolsListItem.swift; sourceTree = "<group>"; };
 		149CABC52A32C43700729331 /* Env.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Env.swift; sourceTree = "<group>"; };
 		14BF8C792A534550006F82A4 /* OrderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderItem.swift; sourceTree = "<group>"; };
 		14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DittoPOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -199,7 +201,8 @@
 		14DECF0B2A3BDC0A005BC2AE /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				149CABC32A32C1A900729331 /* SettingsView.swift */,
+				148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */,
+				148071152A8C2E930091EC03 /* SettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -319,7 +322,6 @@
 				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* MenuItemView.swift in Sources */,
-				149CABC42A32C1A900729331 /* SettingsView.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* MenuItem.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
@@ -328,6 +330,8 @@
 				14DECF212A3D16DF005BC2AE /* OrdersStatusView.swift in Sources */,
 				14BF8C7A2A534550006F82A4 /* OrderItem.swift in Sources */,
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
+				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
+				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* MenuGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* DataViewModel.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* OrderItemView.swift in Sources */,
@@ -550,7 +554,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools.git";
 			requirement = {
-				branch = "et/peers-list_v4";
+				branch = et/clean_v4;
 				kind = branch;
 			};
 		};
@@ -559,7 +563,7 @@
 			repositoryURL = "https://github.com/getditto/DittoSwiftPackage";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.2.1;
+				minimumVersion = 4.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

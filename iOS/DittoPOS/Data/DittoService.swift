@@ -7,64 +7,16 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
+import DittoExportLogs
 import DittoSwift
 import SwiftUI
 
-class DittoInstance: ObservableObject {
-    @Published var loggingOption: DittoLogger.LoggingOptions
-    private var cancellables = Set<AnyCancellable>()
-    
-    static var shared = DittoInstance()
-    let ditto: Ditto
-
-    private init() {
-        self.loggingOption = DittoLogger.LoggingOptions(
-            rawValue: DittoLogger.LoggingOptions.disabled.rawValue
-        )!
-        
-        ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN
-//            enableDittoCloudSync: false // disabled for now for dev
-        ))
-        
-        // Logging turned off for now to watch for dev UI logs
-//        if let logOption = UserDefaults.standard.object(forKey: "dittoLoggingOption") as? Int {
-//            self.loggingOption = DittoLogger.LoggingOptions(rawValue: logOption)!
-//        } else {
-//            self.loggingOption = DittoLogger.LoggingOptions(
-//                rawValue: DittoLogger.LoggingOptions.debug.rawValue
-//            )!
-//        }
-        
-        // make sure our log level is set _before_ starting ditto.
-        $loggingOption
-            .sink {[weak self] option in
-                UserDefaults.standard.set(option.rawValue, forKey: "dittoLoggingOption")
-                self?.setupLogging(option)
-            }
-            .store(in: &cancellables)
-        
-        // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
-        let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        if !isPreview {
-            try! ditto.startSync()
-            
-        }
-    }
-
-    func setupLogging(_ logOption: DittoLogger.LoggingOptions) {
-        switch logOption {
-        case .disabled:
-            DittoLogger.enabled = false
-        default:
-            DittoLogger.enabled = true
-            DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
-        }
-    }
-}
+let defaultLoggingOption: DittoLogger.LoggingOptions = .error
 
 class DittoService: ObservableObject {
+    @Published var loggingOption: DittoLogger.LoggingOptions
+    private var cancellables = Set<AnyCancellable>()
+
     @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
 
@@ -75,9 +27,7 @@ class DittoService: ObservableObject {
     private var allOrdersCancellable = AnyCancellable({})
 
     @Published var currentOrderId: String?
-    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)    
-
-    private var cancellables = Set<AnyCancellable>()
+    private let currentOrderSubject = CurrentValueSubject<Order?, Never>(nil)
     
     private var locationsSubscription: DittoSubscription
     private var menuItemsSubscription: DittoSubscription
@@ -114,6 +64,15 @@ class DittoService: ObservableObject {
         self.ordersSubscription = ditto.store["orders"].findAll().subscribe()
         self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
         
+        // make sure our log level is set _before_ starting ditto.
+        self.loggingOption = UserDefaults.standard.storedLoggingOption
+        $loggingOption
+            .sink {[weak self] option in
+                UserDefaults.standard.storedLoggingOption = option
+                self?.resetLogging()
+            }
+            .store(in: &cancellables)
+
         $currentLocationId
             .sink {[weak self] locId in
                 self?.updateAllLocations()
@@ -145,6 +104,7 @@ class DittoService: ObservableObject {
         
         $allOrderDocs
             .sink {[weak self] docs in
+                print("\n\nCOUNT: DS.$allOrderDocs.sink: docs.count: \(docs.count)\n\n")
                 guard let doc = self?.currentOrderSubject.value else {
                     print("DS.$allOrderDocs.sink: no currentOrder --> return");
                     return
@@ -260,6 +220,43 @@ class DittoService: ObservableObject {
 //                print("DS.\(#function): SET CURRENT ORDER STATUS CANCEL")
                 mutableDoc?["status"].set(canceled)
             }
+        }
+    }
+}
+extension DittoService {
+}
+
+extension DittoService {
+    fileprivate func resetLogging() {
+        let logOption = UserDefaults.standard.storedLoggingOption
+        switch logOption {
+        case .disabled:
+            DittoLogger.enabled = false
+        default:
+            DittoLogger.enabled = true
+            DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
+            if let logFileURL = DittoLogManager.shared.logFileURL {
+                DittoLogger.setLogFileURL(logFileURL)
+            }
+        }
+    }
+}
+
+class DittoInstance {
+    static var shared = DittoInstance()
+    let ditto: Ditto
+
+    private init() {
+        ditto = Ditto(identity: .onlinePlayground(
+            appID: Env.DITTO_APP_ID,
+            token: Env.DITTO_PLAYGROUND_TOKEN
+//            enableDittoCloudSync: false // disabled for now for dev
+        ))
+        
+        // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
+        let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        if !isPreview {
+            try! ditto.startSync()
         }
     }
 }
