@@ -21,7 +21,8 @@ class MainVM: ObservableObject {
 
 struct MainView: View {
     @StateObject private var viewModel = MainVM()
-    @ObservedObject var dataVM = DataViewModel.shared
+//    @ObservedObject var dataVM = POS_VM.shared
+    @ObservedObject var dittoService = DittoService.shared
     @Binding var selectedTab: TabViews
     init(_ tab: Binding<TabViews>) {
         self._selectedTab = tab
@@ -68,16 +69,17 @@ struct MainView: View {
     }
     
     var barTitle: String {
-        if let locName = dataVM.currentLocation?.name {
-            return locName
-        } else {
-            return "Please Select Location"
-        }
+//        if let locName = dittoService.currentLocation?.name {
+//            return locName
+//        } else {
+//            return "Please Select Location"
+//        }
+        dittoService.currentLocation?.name ?? "Please Select Location"
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(.constant(DataViewModel.shared.selectedTab))
+        MainView(.constant(POS_VM.shared.selectedTab))
     }
 }

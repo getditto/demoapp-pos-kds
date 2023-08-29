@@ -27,9 +27,10 @@ enum OrderStatus: Int, CaseIterable, Codable {
 
 struct Order: Identifiable, Hashable, Equatable {
     let _id: [String: String] // id, locationId
+    let deviceId: String
     var orderItems = [String: String]() //timestamp, menuItemId
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
-    let createdOn: Date
+    var createdOn: Date
     var status: OrderStatus
     
     var id: String { _id["id"]! }
@@ -48,8 +49,8 @@ extension Order: Codable {}
 extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
-        self.orderItems = doc["orderItems"]
-            .dictionaryValue as! [String: String]
+        self.deviceId = doc["deviceId"].stringValue
+        self.orderItems = doc["orderItems"].dictionaryValue as! [String: String]
         self.transactionIds = Transaction.statusDict(
             doc["transactionIds"].dictionaryValue as! [String: Int]
         )
@@ -63,6 +64,7 @@ extension Order {
     func docDictionary() -> [String: Any?] {
         [
             "_id": _id,
+            "deviceId": deviceId,
             "orderItems": orderItems,
             "transactionIds": transactionIds,
             "createdOn": DateFormatter.isoDate.string(from: createdOn),
@@ -77,7 +79,12 @@ extension Order {
         createdOn: Date = Date(),
         status: OrderStatus = .open
     ) -> Order {
-        Order(_id: Self.newId(locId: locationId), createdOn: createdOn, status: status)
+        Order(
+            _id: Self.newId(locId: locationId),
+            deviceId: DittoService.shared.deviceId,
+            createdOn: createdOn,
+            status: status
+        )
     }
     
     static func newId(locId: String) -> [String: String] {
@@ -90,5 +97,11 @@ extension Order {
     
     static func docId(_ orderId: String, _ locId: String) -> DittoDocumentID {
         DittoDocumentID(value: ["id": orderId, "locationId": locId])
+    }
+}
+
+extension Order {
+    static func preview() -> Order {
+        Order.new(locationId: "PreviewLocationId")
     }
 }

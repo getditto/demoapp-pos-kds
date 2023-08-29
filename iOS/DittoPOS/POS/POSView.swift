@@ -38,7 +38,7 @@ struct POSView: View {
                 
                 Divider()
                 
-                OrderView()
+                MenuOrderView()
                     .padding(8)
                     .frame(width: vm.orderViewWidth)
 //                .border(.green)

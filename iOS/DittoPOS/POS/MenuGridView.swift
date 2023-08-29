@@ -10,7 +10,7 @@ import SwiftUI
 
 struct MenuGridView: View {
     @Environment(\.horizontalSizeClass) private var HsizeClass
-    @ObservedObject var dataVM = DataViewModel.shared
+    @ObservedObject var dataVM = POS_VM.shared
     @State var columns = [GridItem]()
     //TEST
 //    @State var tapCount = 0

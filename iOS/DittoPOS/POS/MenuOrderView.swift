@@ -1,5 +1,5 @@
 ///
-//  OrderView.swift
+//  MenuOrderView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/16/23.
@@ -8,8 +8,8 @@
 
 import SwiftUI
 
-struct OrderView: View {
-    @ObservedObject var dataVM = DataViewModel.shared
+struct MenuOrderView: View {
+    @ObservedObject var dataVM = POS_VM.shared
     
     var body: some View {
             VStack(spacing: 0) {
@@ -43,8 +43,8 @@ struct OrderView: View {
     }
 }
 
-struct OrderView_Previews: PreviewProvider {
+struct MenuOrderView_Previews: PreviewProvider {
     static var previews: some View {
-        OrderView()
+        MenuOrderView()
     }
 }

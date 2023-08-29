@@ -14,11 +14,7 @@ struct LocationRowItem: Hashable {
     let locationID: String
     let name: String
     let details: String?
-//    init(_ location: Location) {
-//        self.locationID = location.id
-//        self.name = location.name
-//        self.details = location.details
-//    }
+
     init(doc: DittoDocument) {
         self.locationID = doc["_id"].stringValue
         self.name = doc["name"].stringValue
@@ -35,7 +31,8 @@ struct LocationRowView: View {
 }
 
 class LocationsVM: ObservableObject {
-    @ObservedObject var dataVM = DataViewModel.shared
+//    @ObservedObject var dataVM = POS_VM.shared
+    @ObservedObject var dataVM = DittoService.shared
     @Published var selectedItem: LocationRowItem?
     @Published var locationItems = [LocationRowItem]()
     private var cancellables = Set<AnyCancellable>()
@@ -46,7 +43,8 @@ class LocationsVM: ObservableObject {
 //                print("LocationsVM.sink --> in map LocationRowItems from location docs")
                 self?.locationItems = docs.map { LocationRowItem(doc: $0) }
                 self?.selectedItem = self?.locationItems.first(
-                    where: { $0.locationID == self?.dataVM.selectedLocationId }
+//                    where: { $0.locationID == self?.dataVM.selectedLocationId }
+                    where: { $0.locationID == self?.dataVM.currentLocationId }
                 )
             }
             .store(in: &cancellables)
@@ -55,8 +53,12 @@ class LocationsVM: ObservableObject {
             .sink {[weak self] item in
                 guard let item = item else { return }
 //                print("LocationsVM.sink selectedItem change")
-                if item.locationID != self?.dataVM.selectedLocationId {
-                    self?.dataVM.selectedLocationId = item.locationID
+//                if item.locationID != self?.dataVM.selectedLocationId {
+//                    self?.dataVM.selectedLocationId = item.locationID
+//                }
+                if item.locationID != self?.dataVM.currentLocationId {
+                    print("LocationsVM.$selectedItem.sink --> SET dittoService.currentLocationId: \(item.locationID)")
+                    self?.dataVM.currentLocationId = item.locationID
                 }
             }
             .store(in: &cancellables)

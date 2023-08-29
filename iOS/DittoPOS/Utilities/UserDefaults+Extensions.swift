@@ -7,6 +7,7 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import DittoSwift
+import DittoExportLogs
 import Foundation
 
 extension UserDefaults {

@@ -9,10 +9,8 @@
 import SwiftUI
 
 struct KDSView: View {
-    @ObservedObject var dataVM = DataViewModel.shared
-    
     var body: some View {
-        OrdersStatusView()
+        OrdersGridView()
     }
 }
 

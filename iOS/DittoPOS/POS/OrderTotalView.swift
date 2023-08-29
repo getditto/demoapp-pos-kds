@@ -13,10 +13,10 @@ class OrderTotalVM: ObservableObject {
     @Published var orderIsPaid: Bool = false
     @Published var orderIsEmpty: Bool
     private var cancellables = Set<AnyCancellable>()
-    private var dataVM = DataViewModel.shared
+    private var dataVM = POS_VM.shared
     
     init() {
-        let dvm = DataViewModel.shared
+        let dvm = POS_VM.shared
         if let currOrder = dvm.currentOrder {
             self.orderIsEmpty = currOrder.orderItems.isEmpty
         } else {
@@ -47,7 +47,6 @@ class OrderTotalVM: ObservableObject {
     }
     
     func cancelOrder() {
-//        dataVM.cancelCurrentOrderAndRefresh()
         if let items = dataVM.currentOrder?.orderItems, !items.isEmpty {
             dataVM.clearCurrentOrderIems()
         }
@@ -55,14 +54,14 @@ class OrderTotalVM: ObservableObject {
 }
 
 struct OrderTotalView: View {
-    @ObservedObject var dataVM = DataViewModel.shared
+    @ObservedObject var dataVM = POS_VM.shared
     @StateObject var vm = OrderTotalVM()
     
     var body: some View {
         VStack(spacing: 0) {
             divider()
             HStack(alignment: .bottom, spacing: 0) {
-                Text("Total")//   count: \(dataVM.currentOrderItems.count)")
+                Text("Total")
                 Spacer()
                 Text(dataVM.currentOrderTotal().currencyFormatted())
             }
