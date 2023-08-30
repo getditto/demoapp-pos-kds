@@ -32,7 +32,7 @@ struct OrderItemView: View {
 struct OrderItemView_Previews: PreviewProvider {
     static var previews: some View {
         OrderItemView(
-            OrderItem(menuItem: MenuItem.demoItems[0])
+            OrderItem(saleItem: SaleItem.demoItems[0])
         )
     }
 }

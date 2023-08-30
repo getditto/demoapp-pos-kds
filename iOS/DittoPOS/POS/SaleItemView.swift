@@ -1,5 +1,5 @@
 ///
-//  MenuItemView.swift
+//  POSItemView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/16/23.
@@ -8,14 +8,14 @@
 
 import SwiftUI
 
-struct MenuItemView: View {
+struct SaleItemView: View {
 //    @Environment(\.colorScheme) private var colorScheme
     @State var titleScale: Double
-    let item: MenuItem
+    let item: SaleItem
     let length: CGFloat
     private let factor = 0.24
     
-    init(_ item: MenuItem, length: CGFloat) {
+    init(_ item: SaleItem, length: CGFloat) {
         self.item = item
         self.length = length
         self._titleScale = .init(initialValue: length * factor)
@@ -52,8 +52,8 @@ struct ScalingText: View {
     }
 }
 
-struct MenuItemView_Previews: PreviewProvider {
+struct POSItemView_Previews: PreviewProvider {
     static var previews: some View {
-        MenuItemView(MenuItem.demoItems.first!, length: 80)
+        SaleItemView(SaleItem.demoItems.first!, length: 80)
     }
 }

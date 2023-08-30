@@ -43,17 +43,14 @@ struct KDSOrderView: View {
                     .padding(.bottom, 8)
                 
                 Text("\(vm.order.orderItems.count) items")
-                // Order items scrollview
-//                ScrollView(showsIndicators: false) {
-//                    Section {
-//                        ForEach(vm.currentOrderItems) { item in
-//                            OrderItemView(item)
-//
-//                            divider()
-//                        }
-//                    }
-//                }
-//                .listStyle(.plain)
+                divider()
+                
+                // Order items
+                ForEach(vm.order.orderItems) { item in
+                    OrderItemView(item)
+
+                    divider()
+                }
 //                .border(.blue)
             }
 //            .border(.purple)

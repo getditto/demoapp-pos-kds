@@ -35,10 +35,10 @@
 		14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF0E2A3BDC31005BC2AE /* KDSView.swift */; };
 		14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF102A3BDC3A005BC2AE /* LocationsView.swift */; };
 		14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF142A3CCAB6005BC2AE /* POS_VM.swift */; };
-		14DECF172A3CFF7D005BC2AE /* MenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF162A3CFF7D005BC2AE /* MenuItem.swift */; };
-		14DECF192A3D1254005BC2AE /* MenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF182A3D1254005BC2AE /* MenuItemView.swift */; };
-		14DECF1B2A3D13CF005BC2AE /* MenuGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1A2A3D13CF005BC2AE /* MenuGridView.swift */; };
-		14DECF1D2A3D13D9005BC2AE /* MenuOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1C2A3D13D9005BC2AE /* MenuOrderView.swift */; };
+		14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF162A3CFF7D005BC2AE /* SaleItem.swift */; };
+		14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF182A3D1254005BC2AE /* SaleItemView.swift */; };
+		14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */; };
+		14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */; };
 		14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1E2A3D13F0005BC2AE /* Utils.swift */; };
 		14DECF212A3D16DF005BC2AE /* OrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* OrdersGridView.swift */; };
 		14FFFEEF2A43639A00DD6806 /* OrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */; };
@@ -68,10 +68,10 @@
 		14DECF0E2A3BDC31005BC2AE /* KDSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSView.swift; sourceTree = "<group>"; };
 		14DECF102A3BDC3A005BC2AE /* LocationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsView.swift; sourceTree = "<group>"; };
 		14DECF142A3CCAB6005BC2AE /* POS_VM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POS_VM.swift; sourceTree = "<group>"; };
-		14DECF162A3CFF7D005BC2AE /* MenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItem.swift; sourceTree = "<group>"; };
-		14DECF182A3D1254005BC2AE /* MenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemView.swift; sourceTree = "<group>"; };
-		14DECF1A2A3D13CF005BC2AE /* MenuGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGridView.swift; sourceTree = "<group>"; };
-		14DECF1C2A3D13D9005BC2AE /* MenuOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuOrderView.swift; sourceTree = "<group>"; };
+		14DECF162A3CFF7D005BC2AE /* SaleItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItem.swift; sourceTree = "<group>"; };
+		14DECF182A3D1254005BC2AE /* SaleItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemView.swift; sourceTree = "<group>"; };
+		14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSGridView.swift; sourceTree = "<group>"; };
+		14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderView.swift; sourceTree = "<group>"; };
 		14DECF1E2A3D13F0005BC2AE /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		14DECF202A3D16DF005BC2AE /* OrdersGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersGridView.swift; sourceTree = "<group>"; };
 		14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderItemView.swift; sourceTree = "<group>"; };
@@ -100,13 +100,13 @@
 		14039BEC2A465ECC001903ED /* POS */ = {
 			isa = PBXGroup;
 			children = (
-				14DECF1A2A3D13CF005BC2AE /* MenuGridView.swift */,
-				14DECF182A3D1254005BC2AE /* MenuItemView.swift */,
-				14DECF1C2A3D13D9005BC2AE /* MenuOrderView.swift */,
+				14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */,
 				14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */,
 				14039BED2A465F37001903ED /* OrderTotalView.swift */,
+				14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */,
 				14DECF142A3CCAB6005BC2AE /* POS_VM.swift */,
 				14DECF0C2A3BDC27005BC2AE /* POSView.swift */,
+				14DECF182A3D1254005BC2AE /* SaleItemView.swift */,
 			);
 			path = POS;
 			sourceTree = "<group>";
@@ -196,7 +196,7 @@
 			children = (
 				14CD51BE2A2FE3EE0018DE87 /* DittoService.swift */,
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
-				14DECF162A3CFF7D005BC2AE /* MenuItem.swift */,
+				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
 				14BF8C792A534550006F82A4 /* OrderItem.swift */,
 				14DECF092A3B92D5005BC2AE /* Transaction.swift */,
@@ -324,13 +324,13 @@
 			files = (
 				14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */,
 				1460E33D2A93DCC8007A2A6D /* KDS_VM.swift in Sources */,
-				14DECF1D2A3D13D9005BC2AE /* MenuOrderView.swift in Sources */,
+				14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */,
 				14CD51BF2A2FE3EE0018DE87 /* DittoService.swift in Sources */,
 				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
-				14DECF192A3D1254005BC2AE /* MenuItemView.swift in Sources */,
+				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
-				14DECF172A3CFF7D005BC2AE /* MenuItem.swift in Sources */,
+				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
 				14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */,
 				1460E33B2A93DA5D007A2A6D /* KDSOrderView.swift in Sources */,
@@ -340,7 +340,7 @@
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
-				14DECF1B2A3D13CF005BC2AE /* MenuGridView.swift in Sources */,
+				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* OrderItemView.swift in Sources */,
 				14DECF082A3A7F76005BC2AE /* Order.swift in Sources */,

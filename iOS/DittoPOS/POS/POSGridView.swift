@@ -1,5 +1,5 @@
 ///
-//  MenuGridView.swift
+//  POSGridView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/16/23.
@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct MenuGridView: View {
+struct POSGridView: View {
     @Environment(\.horizontalSizeClass) private var HsizeClass
     @ObservedObject var dataVM = POS_VM.shared
     @State var columns = [GridItem]()
@@ -19,8 +19,8 @@ struct MenuGridView: View {
         NavigationView {
             ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 24) {
-                    ForEach(dataVM.menuItems, id: \.self) { item in
-                        MenuItemView(item, length: itemSide)
+                    ForEach(dataVM.saleItems, id: \.self) { item in
+                        SaleItemView(item, length: itemSide)
                             .frame(width: itemSide, height: itemSide + 8)
                             .onTapGesture {
                                 print("\(item) tapped")
@@ -35,7 +35,7 @@ struct MenuGridView: View {
 //            .navigationBarTitle(Text(String(tapCount)))
 //            .navigationBarTitleDisplayMode(.inline)
         }
-        .onAppear { print("MenuGrid.onAppear"); columns = cols() }
+        .onAppear { print("POSGridView.onAppear"); columns = cols() }
 //        .onDisappear { print("MenuGrid.onDisappear"); tapCount = 0}
 //        .onRotate { orient in
 //            guard orient.isLandscape || orient.isPortrait else { return }
@@ -55,8 +55,8 @@ struct MenuGridView: View {
     }
 }
 
-struct MenuGridView_Previews: PreviewProvider {
+struct POSGridView_Previews: PreviewProvider {
     static var previews: some View {
-        MenuGridView()
+        POSGridView()
     }
 }

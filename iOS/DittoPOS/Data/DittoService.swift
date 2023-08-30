@@ -30,15 +30,15 @@ class DittoService: ObservableObject {
     var deviceId: String //ditto.siteID as String to partition ordering to devices
     
     private var locationsSubscription: DittoSubscription
-    private var menuItemsSubscription: DittoSubscription
+    private var saleItemsSubscription: DittoSubscription
     private var ordersSubscription: DittoSubscription
     private var transactionsSubscription: DittoSubscription
 
     var locationDocs: DittoCollection {
         ditto.store["locations"]
     }
-    var menuItemDocs: DittoCollection {
-        ditto.store["menuItems"]
+    var saleItemsDocs: DittoCollection {
+        ditto.store["saleItems"]
     }
     var orderDocs: DittoCollection {
         ditto.store["orders"]
@@ -56,7 +56,7 @@ class DittoService: ObservableObject {
     
     private init() {
         self.locationsSubscription = ditto.store["locations"].findAll().subscribe()
-        self.menuItemsSubscription = ditto.store["menuItems"].findAll().subscribe()
+        self.saleItemsSubscription = ditto.store["saleItems"].findAll().subscribe()
         self.ordersSubscription = ditto.store["orders"].findAll().subscribe()
         self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
         self.deviceId = String(ditto.siteID)
@@ -152,8 +152,8 @@ class DittoService: ObservableObject {
     
     func addItemToOrder(item: OrderItem, order: Order) {
         orderDocs.findByID(order._id).update { mutableDoc in
-            print("DS.\(#function): UPDATE mutableDoc.orderItems: \(item.id))")
-            mutableDoc?["orderItems"][item.id].set(item.menuItem.id) //[uuid_createdOn: menuItemId]
+            print("DS.\(#function): UPDATE mutableDoc.saleItemIds: \(item.id))")
+            mutableDoc?["saleItemIds"][item.id].set(item.saleItem.id) //[uuid_createdOn: saleItemId]
             mutableDoc?["status"].set(order.status.rawValue)
         }
     }
@@ -188,11 +188,11 @@ class DittoService: ObservableObject {
         }
     }
 
-    func clearOrderIems(_ order: Order) {
+    func clearOrderSaleItemIds(_ order: Order) {
         orderDocs.findByID(DittoDocumentID(value: order._id)).update { mutableDoc in
 //                print("DS.\(#function): CLEAR ORDER ITEMS")
-            for id in order.orderItems.keys {
-                mutableDoc?["orderItems"][id].remove()
+            for id in order.saleItemIds.keys {
+                mutableDoc?["saleItemIds"][id].remove()
             }
             let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
             mutableDoc?["status"].set(open)

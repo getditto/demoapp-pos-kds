@@ -28,7 +28,7 @@ enum OrderStatus: Int, CaseIterable, Codable {
 struct Order: Identifiable, Hashable, Equatable {
     let _id: [String: String] // id, locationId
     let deviceId: String
-    var orderItems = [String: String]() //timestamp, menuItemId
+    var saleItemIds = [String: String]() //timestamp, saleItemId
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
     var createdOn: Date
     var status: OrderStatus
@@ -50,7 +50,7 @@ extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
         self.deviceId = doc["deviceId"].stringValue
-        self.orderItems = doc["orderItems"].dictionaryValue as! [String: String]
+        self.saleItemIds = doc["saleItemIds"].dictionaryValue as! [String: String]
         self.transactionIds = Transaction.statusDict(
             doc["transactionIds"].dictionaryValue as! [String: Int]
         )
@@ -65,7 +65,7 @@ extension Order {
         [
             "_id": _id,
             "deviceId": deviceId,
-            "orderItems": orderItems,
+            "saleItemIds": saleItemIds,
             "transactionIds": transactionIds,
             "createdOn": DateFormatter.isoDate.string(from: createdOn),
             "status": status
@@ -97,6 +97,27 @@ extension Order {
     
     static func docId(_ orderId: String, _ locId: String) -> DittoDocumentID {
         DittoDocumentID(value: ["id": orderId, "locationId": locId])
+    }
+}
+
+extension Order {
+    var orderItems: [OrderItem] {
+        var items = [OrderItem]()
+        for (compoundStringId, saleItemId) in self.saleItemIds {
+            //NOTE: in this draft implementation we're relying on using the SaleItem demoItems
+            // collection, where locationId is not relevant
+            let draftSaleItemsArray = SaleItem.demoItems
+            if let saleItem = draftSaleItemsArray.first( where: { $0.id == saleItemId } ) {
+                let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
+                items.append(orderItem)
+            }
+        }
+//        return items.sorted(by: { $0.createdOn < $1.createdOn })
+        return items
+    }
+    
+    var total: Double {
+        orderItems.sum(\.price.amount)
     }
 }
 

@@ -1,5 +1,5 @@
 ///
-//  MenuOrderView.swift
+//  POSOrderView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/16/23.
@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct MenuOrderView: View {
+struct POSOrderView: View {
     @ObservedObject var dataVM = POS_VM.shared
     
     var body: some View {
@@ -22,10 +22,12 @@ struct MenuOrderView: View {
                 // Order items scrollview
                 ScrollView(showsIndicators: false) {
                     Section {
-                        ForEach(dataVM.currentOrderItems) { item in
-                            OrderItemView(item)
-
-                            divider()
+//                        ForEach(dataVM.currentOrderItems) { item in
+                        if let orderItems = dataVM.currentOrder?.orderItems {
+                            ForEach(orderItems) { item in
+                                OrderItemView(item)                                
+                                divider()
+                            }
                         }
                     }
                 }
@@ -43,8 +45,8 @@ struct MenuOrderView: View {
     }
 }
 
-struct MenuOrderView_Previews: PreviewProvider {
+struct POSOrderView_Previews: PreviewProvider {
     static var previews: some View {
-        MenuOrderView()
+        POSOrderView()
     }
 }

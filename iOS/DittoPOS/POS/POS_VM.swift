@@ -14,8 +14,8 @@ class POS_VM: ObservableObject {
     @Published var selectedTab: TabViews = .locations
     @Published private(set) var currentOrder: Order?
 
-    @Published var menuItems: [MenuItem] = MenuItem.demoItems // for menu display
-    @Published var currentOrderItems = [OrderItem]()
+    @Published var saleItems: [SaleItem] = SaleItem.demoItems // for menu display
+//    @Published var currentOrderItems = [OrderItem]()
     
     private var cancellables = Set<AnyCancellable>()
     private let dittoService = DittoService.shared
@@ -38,35 +38,33 @@ class POS_VM: ObservableObject {
         NotificationCenter.default
             .publisher(for: UIApplication.willTerminateNotification, object: nil)
             .sink {[weak self] _ in
-                self?.clearCurrentOrderIems()
-//                print("POS_VM.init(): received willTerminateNotification --> call clearCurrentOrderItems()")
+                self?.clearCurrentOrderSaleItemIds()
+//                print("POS_VM.init(): received willTerminateNotification --> call clearCurrentOrderSaleItemIds()")
             }
             .store(in: &cancellables)
-        
+        /*
         $currentOrder
             .receive(on: DispatchQueue.main)
             .sink {[weak self] order in
                 guard let self = self else { return }
-                guard let order = order else {
+                guard var order = order else {
                     print("POS_VM.$currentOrder.sink: NIL order in --> RETURN")
                     return
                 }
-                print("POS_VM.$currentOrder.sink: order changed: \(order)")
-                var items = [OrderItem]()
-                for (compoundStringId, menuItemId) in order.orderItems {
-                    if let menuItem = menuItem(for: menuItemId) {
-                        let orderItem = OrderItem(id: compoundStringId, menuItem: menuItem)
-//                        print("POS_VM.$currenOrder.sink: ADD orderItem: \(orderItem.id)")
-                        items.append(orderItem)
-                    }
-                }
-                currentOrderItems = items.sorted(by: { $0.createdOn < $1.createdOn })
-                print("POS_VM.$currentOrder.sink: SET currentOrderItems - count:\(currentOrderItems.count)")
-                
-//                print("POS_VM.$currentOrder.sink: SET currentOrder")
-//                currentOrder = order
+//                print("POS_VM.$currentOrder.sink: order changed: \(order)")
+//                var items = [OrderItem]()
+//                for (compoundStringId, saleItemId) in order.orderItemIds {
+//                    if let saleItem = saleItem(for: saleItemId) {
+//                        let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
+////                        print("POS_VM.$currenOrder.sink: ADD orderItem: \(orderItem.id)")
+//                        items.append(orderItem)
+//                    }
+//                }
+//                currentOrderItems = items.sorted(by: { $0.createdOn < $1.createdOn })
+//                print("POS_VM.$currentOrder.sink: SET currentOrder.currentOrderItems - count:\(currentOrderItems.count)")
             }
             .store(in: &cancellables)
+        */
         
         dittoService.$currentLocation
             .sink {[weak self] loc in
@@ -183,14 +181,14 @@ class POS_VM: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func addOrderItem(_  menuItem: MenuItem) {
+    func addOrderItem(_ saleItem: SaleItem) {
         //TODO: alert user to select location
         guard var curOrder = currentOrder else {
             print("Cannot add item: current order is NIL\n\n");
             return
         }
         
-        let orderItem = OrderItem(menuItem: menuItem)
+        let orderItem = OrderItem(saleItem: saleItem)
 //        print("POS_VM.\(#function): orderItem --> IN: \(orderItem.id)")
         // set order status to inProcess for every item added
         curOrder.status = .inProcess
@@ -205,7 +203,7 @@ class POS_VM: ObservableObject {
         let tx = Transaction.new(
             locationId: locId,
             orderId: order.id,
-            amount: currentOrderTotal()
+            amount: order.total//currentOrderTotal()
         )
 
         dittoService.updateOrder(order, with: tx)
@@ -228,13 +226,13 @@ class POS_VM: ObservableObject {
         return newOrder
     }
     
-    func clearCurrentOrderIems() {
+    func clearCurrentOrderSaleItemIds() {
         guard let order = currentOrder else {
             print("POS_VM.\(#function): NIL currentOrder --> RETURN")
             return
         }
         // Note DS function side-effect sets status to .open
-        dittoService.clearOrderIems(order)
+        dittoService.clearOrderSaleItemIds(order)
     }
 
     func restoredIncompleteOrder(for locId: String?) -> Order? {
@@ -287,14 +285,14 @@ class POS_VM: ObservableObject {
     }
     
     //MARK: Utilities
-    func currentOrderTotal() -> Double {
-        guard let _ = currentOrder else { return 0.0 }
-        return currentOrderItems.sum(\.price.amount)
-    }
+//    func currentOrderTotal() -> Double {
+//        guard let _ = currentOrder else { return 0.0 }
+//        return currentOrderItems.sum(\.price.amount)
+//    }
     
-    func menuItem(for id: String) -> MenuItem? {
-        menuItems.first( where: { $0.id == id } )!
-    }
+//    func saleItem(for id: String) -> SaleItem? {
+//        saleItems.first( where: { $0.id == id } )!
+//    }
 }
 
 

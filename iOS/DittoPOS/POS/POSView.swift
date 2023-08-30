@@ -32,13 +32,13 @@ struct POSView: View {
     
     var body: some View {
             HStack {
-                MenuGridView()
+                POSGridView()
                     .frame(width: vm.menuViewWidth)
 //                .border(.red)
                 
                 Divider()
                 
-                MenuOrderView()
+                POSOrderView()
                     .padding(8)
                     .frame(width: vm.orderViewWidth)
 //                .border(.green)

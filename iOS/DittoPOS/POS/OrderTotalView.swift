@@ -12,13 +12,14 @@ import SwiftUI
 class OrderTotalVM: ObservableObject {
     @Published var orderIsPaid: Bool = false
     @Published var orderIsEmpty: Bool
+    @Published var orderTotal: Double = 0.0
     private var cancellables = Set<AnyCancellable>()
     private var dataVM = POS_VM.shared
     
     init() {
         let dvm = POS_VM.shared
         if let currOrder = dvm.currentOrder {
-            self.orderIsEmpty = currOrder.orderItems.isEmpty
+            self.orderIsEmpty = currOrder.saleItemIds.isEmpty
         } else {
             self.orderIsEmpty = true
         }
@@ -26,13 +27,15 @@ class OrderTotalVM: ObservableObject {
         // Pay/Cancel button enablement
         dataVM.$currentOrder
             .sink {[weak self] order in
+                guard let self = self else { return }
                 guard let order = order else { return }
                 
-                if self?.orderIsEmpty != order.orderItems.isEmpty {
-                    self?.orderIsEmpty.toggle()
+                orderTotal = order.total
+                if orderIsEmpty != order.saleItemIds.isEmpty {
+                    orderIsEmpty.toggle()
                 }
-                if self?.orderIsPaid != order.isPaid {
-                    self?.orderIsPaid.toggle()
+                if orderIsPaid != order.isPaid {
+                    orderIsPaid.toggle()
                 }
             }
             .store(in: &cancellables)
@@ -47,8 +50,8 @@ class OrderTotalVM: ObservableObject {
     }
     
     func cancelOrder() {
-        if let items = dataVM.currentOrder?.orderItems, !items.isEmpty {
-            dataVM.clearCurrentOrderIems()
+        if let items = dataVM.currentOrder?.saleItemIds, !items.isEmpty {
+            dataVM.clearCurrentOrderSaleItemIds()
         }
     }
 }
@@ -63,7 +66,8 @@ struct OrderTotalView: View {
             HStack(alignment: .bottom, spacing: 0) {
                 Text("Total")
                 Spacer()
-                Text(dataVM.currentOrderTotal().currencyFormatted())
+//                Text(dataVM.currentOrderTotal().currencyFormatted())
+                Text(vm.orderTotal.currencyFormatted())
             }
                 .padding(.bottom, 4)
             
