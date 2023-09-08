@@ -1,5 +1,5 @@
 ///
-//  OrderTotalView.swift
+//  POSOrderTotalView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/23/23.
@@ -9,7 +9,7 @@
 import Combine
 import SwiftUI
 
-class OrderTotalVM: ObservableObject {
+class POSOrderTotalVM: ObservableObject {
     @Published var orderIsPaid: Bool = false
     @Published var orderIsEmpty: Bool
     @Published var orderTotal: Double = 0.0
@@ -38,7 +38,7 @@ class OrderTotalVM: ObservableObject {
                     orderIsPaid.toggle()
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &cancellables)        
     }
     
     var disableButtons: Bool {
@@ -56,9 +56,8 @@ class OrderTotalVM: ObservableObject {
     }
 }
 
-struct OrderTotalView: View {
-    @ObservedObject var dataVM = POS_VM.shared
-    @StateObject var vm = OrderTotalVM()
+struct POSOrderTotalView: View {
+    @StateObject var vm = POSOrderTotalVM()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -66,7 +65,6 @@ struct OrderTotalView: View {
             HStack(alignment: .bottom, spacing: 0) {
                 Text("Total")
                 Spacer()
-//                Text(dataVM.currentOrderTotal().currencyFormatted())
                 Text(vm.orderTotal.currencyFormatted())
             }
                 .padding(.bottom, 4)
@@ -102,7 +100,7 @@ struct OrderTotalView: View {
 
 struct OrderTotalView_Previews: PreviewProvider {
     static var previews: some View {
-        OrderTotalView()
+        POSOrderTotalView()
             .frame(width: .screenWidth * 0.8)
     }
 }

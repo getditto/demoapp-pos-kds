@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		14039BEE2A465F37001903ED /* OrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* OrderTotalView.swift */; };
+		14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* POSOrderTotalView.swift */; };
 		14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
+		1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */; };
 		142B27C92A3A310600C09751 /* DittoDiskUsage in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27C82A3A310600C09751 /* DittoDiskUsage */; };
 		142B27CB2A3A310600C09751 /* DittoExportData in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CA2A3A310600C09751 /* DittoExportData */; };
 		142B27CD2A3A310600C09751 /* DittoExportLogs in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CC2A3A310600C09751 /* DittoExportLogs */; };
@@ -21,7 +22,6 @@
 		148071162A8C2E930091EC03 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071152A8C2E930091EC03 /* SettingsView.swift */; };
 		148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */; };
 		149CABC62A32C43700729331 /* Env.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149CABC52A32C43700729331 /* Env.swift */; };
-		14BF8C7A2A534550006F82A4 /* OrderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BF8C792A534550006F82A4 /* OrderItem.swift */; };
 		14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */; };
 		14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51B22A2FE2D50018DE87 /* MainView.swift */; };
 		14CD51B52A2FE2D60018DE87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14CD51B42A2FE2D60018DE87 /* Assets.xcassets */; };
@@ -40,20 +40,20 @@
 		14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */; };
 		14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */; };
 		14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1E2A3D13F0005BC2AE /* Utils.swift */; };
-		14DECF212A3D16DF005BC2AE /* OrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* OrdersGridView.swift */; };
-		14FFFEEF2A43639A00DD6806 /* OrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */; };
+		14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */; };
+		14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */; };
 		14FFFEF12A43732400DD6806 /* UserDefaults+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEF02A43732400DD6806 /* UserDefaults+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		14039BED2A465F37001903ED /* OrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderTotalView.swift; sourceTree = "<group>"; };
+		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
+		1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderItemView.swift; sourceTree = "<group>"; };
 		1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderView.swift; sourceTree = "<group>"; };
 		1460E33C2A93DCC8007A2A6D /* KDS_VM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDS_VM.swift; sourceTree = "<group>"; };
 		148071152A8C2E930091EC03 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DittoToolsListItem.swift; sourceTree = "<group>"; };
 		149CABC52A32C43700729331 /* Env.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Env.swift; sourceTree = "<group>"; };
-		14BF8C792A534550006F82A4 /* OrderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderItem.swift; sourceTree = "<group>"; };
 		14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DittoPOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS.swift; sourceTree = "<group>"; };
 		14CD51B22A2FE2D50018DE87 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -73,8 +73,8 @@
 		14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSGridView.swift; sourceTree = "<group>"; };
 		14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderView.swift; sourceTree = "<group>"; };
 		14DECF1E2A3D13F0005BC2AE /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		14DECF202A3D16DF005BC2AE /* OrdersGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersGridView.swift; sourceTree = "<group>"; };
-		14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderItemView.swift; sourceTree = "<group>"; };
+		14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrdersGridView.swift; sourceTree = "<group>"; };
+		14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderItemView.swift; sourceTree = "<group>"; };
 		14FFFEF02A43732400DD6806 /* UserDefaults+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -100,11 +100,11 @@
 		14039BEC2A465ECC001903ED /* POS */ = {
 			isa = PBXGroup;
 			children = (
-				14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */,
-				14FFFEEE2A43639A00DD6806 /* OrderItemView.swift */,
-				14039BED2A465F37001903ED /* OrderTotalView.swift */,
-				14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */,
 				14DECF142A3CCAB6005BC2AE /* POS_VM.swift */,
+				14DECF1A2A3D13CF005BC2AE /* POSGridView.swift */,
+				14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */,
+				14039BED2A465F37001903ED /* POSOrderTotalView.swift */,
+				14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */,
 				14DECF0C2A3BDC27005BC2AE /* POSView.swift */,
 				14DECF182A3D1254005BC2AE /* SaleItemView.swift */,
 			);
@@ -123,9 +123,10 @@
 			isa = PBXGroup;
 			children = (
 				1460E33C2A93DCC8007A2A6D /* KDS_VM.swift */,
-				14DECF0E2A3BDC31005BC2AE /* KDSView.swift */,
+				14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */,
+				1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */,
 				1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */,
-				14DECF202A3D16DF005BC2AE /* OrdersGridView.swift */,
+				14DECF0E2A3BDC31005BC2AE /* KDSView.swift */,
 			);
 			path = KDS;
 			sourceTree = "<group>";
@@ -198,7 +199,6 @@
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
-				14BF8C792A534550006F82A4 /* OrderItem.swift */,
 				14DECF092A3B92D5005BC2AE /* Transaction.swift */,
 			);
 			path = Data;
@@ -330,23 +330,23 @@
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
+				1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
 				14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */,
 				1460E33B2A93DA5D007A2A6D /* KDSOrderView.swift in Sources */,
 				14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */,
-				14DECF212A3D16DF005BC2AE /* OrdersGridView.swift in Sources */,
-				14BF8C7A2A534550006F82A4 /* OrderItem.swift in Sources */,
+				14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */,
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */,
-				14FFFEEF2A43639A00DD6806 /* OrderItemView.swift in Sources */,
+				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,
 				14DECF082A3A7F76005BC2AE /* Order.swift in Sources */,
 				14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */,
 				14FFFEF12A43732400DD6806 /* UserDefaults+Extensions.swift in Sources */,
-				14039BEE2A465F37001903ED /* OrderTotalView.swift in Sources */,
+				14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */,
 				14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

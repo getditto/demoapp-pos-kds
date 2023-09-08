@@ -11,12 +11,9 @@ import DittoSwift
 import SwiftUI
 
 class POS_VM: ObservableObject {
-    @Published var selectedTab: TabViews = .locations
+//    @Published var selectedTab: TabViews = .locations
     @Published private(set) var currentOrder: Order?
-
-    @Published var saleItems: [SaleItem] = SaleItem.demoItems // for menu display
-//    @Published var currentOrderItems = [OrderItem]()
-    
+    @Published var saleItems: [SaleItem] = SaleItem.demoItems // demo collection for order display
     private var cancellables = Set<AnyCancellable>()
     private let dittoService = DittoService.shared
     
@@ -27,82 +24,26 @@ class POS_VM: ObservableObject {
     }
 
     private init() {
-        print("POS_VM.init() --> in")
+        // Try to restore an order from UserDefaults before $currentLocation fires
         if let previousOrder = restoredIncompleteOrder(for: nil) {
             currentOrder = previousOrder
         }
-        
-        // Clean up an unpaid order for reuse when app is terminated
-        // NOTE: doesn't always (ever?) work it seems, maybe something to do with having background
-        // mode enabled willTerminate is not called?
-        NotificationCenter.default
-            .publisher(for: UIApplication.willTerminateNotification, object: nil)
-            .sink {[weak self] _ in
-                self?.clearCurrentOrderSaleItemIds()
-//                print("POS_VM.init(): received willTerminateNotification --> call clearCurrentOrderSaleItemIds()")
-            }
-            .store(in: &cancellables)
-        /*
-        $currentOrder
-            .receive(on: DispatchQueue.main)
-            .sink {[weak self] order in
-                guard let self = self else { return }
-                guard var order = order else {
-                    print("POS_VM.$currentOrder.sink: NIL order in --> RETURN")
-                    return
-                }
-//                print("POS_VM.$currentOrder.sink: order changed: \(order)")
-//                var items = [OrderItem]()
-//                for (compoundStringId, saleItemId) in order.orderItemIds {
-//                    if let saleItem = saleItem(for: saleItemId) {
-//                        let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
-////                        print("POS_VM.$currenOrder.sink: ADD orderItem: \(orderItem.id)")
-//                        items.append(orderItem)
-//                    }
-//                }
-//                currentOrderItems = items.sorted(by: { $0.createdOn < $1.createdOn })
-//                print("POS_VM.$currentOrder.sink: SET currentOrder.currentOrderItems - count:\(currentOrderItems.count)")
-            }
-            .store(in: &cancellables)
-        */
-        
+                
         dittoService.$currentLocation
             .sink {[weak self] loc in
                 guard let loc = loc else {
                     print("POS_VM.$currentLocation.sink: NIL currentLocation --> RETURN")
                     return
                 }
-                print("POS_VM.$currentLocation.sink: fired with \(loc.name)")
+//                print("POS_VM.$currentLocation.sink: fired with \(loc.name)")
 
                 if let order = self?.currentOrder,
                    order.locationId == loc.id && !order.isPaid {
                         print("POS_VM.$currentLocation.sink: CURRENT ORDER VALIDATED --> RETURN")
                         return
                     }
-
-                /*
-                if let order = self?.currentOrder {
-                    // Case 1. The call `restoredIncompleteOrder` (above) sets a recycled
-                    // order as current order at launch, before DittoService sets currentLocation
-                    // from stored value. In that case we check if this is the right location and
-                    // not paid/final. If so, simply return, already all set.
-                    
-                    //Nother case: peer has completed an open order and paid and created a new
-                    // order-in-progress. Now self peer has switched location and we are here. In
-                    // some cases (indeterminate?) the dittoService.$locationOrderDocs.sink fires
-                    // before this $currentLocation.sink (As currently implemented
-                    // below), in the dittoService.$locationOrderDocs.sink the search in the docs
-                    // for the currentOrderID will fail because the currentOrder is for another
-                    // location and currentOrder remains unchanged.
- 
-                    if order.locationId == loc.id && !order.isPaid {
-                        print("POS_VM.$currentLocation.sink: CURRENT ORDER VALIDATED --> RETURN")
-                        return
-                    }
-                }
-                 */
                 
-                // Case 2. Try to restore an incomplete order for the current location and set
+                // Try to restore an incomplete order for the current location and set
                 // it as the currentOrder and return. If there is none, execution will fall
                 // through and a new order will be added and set.
                 if let restoredOrder = self?.restoredIncompleteOrder(for: loc.id) {
@@ -122,8 +63,8 @@ class POS_VM: ObservableObject {
             .sink {[weak self] docs in
                 guard let self = self else { print("POS_VM.$locationOrderDocs.sink:  NO SELF --> RETURN"); return }
                 
-                print("POS_VM.$locationOrderDocs.sink --> in")
-                print("POS_VM.$locationOrderDocs.sink: docs.count: \(docs.count)")
+//                print("POS_VM.$locationOrderDocs.sink --> in")
+//                print("POS_VM.$locationOrderDocs.sink: docs.count: \(docs.count)")
                 
                 // If empty [DittoDocument] value comes through, e.g. at first DittoService initialization,
                 // theres nothing to do; return.
@@ -157,26 +98,13 @@ class POS_VM: ObservableObject {
                 let docID = Order.docId(docId, locId)
                 if let dbDoc = docs.first(where: { $0.id == docID }) {
                     // Last case: should be an order item update - set as currentOrder
-                    print("POS_VM.$locationOrderDocs.sink: SET currentOrder from UPDATED dbDoc")
+//                    print("POS_VM.$locationOrderDocs.sink: SET currentOrder from UPDATED dbDoc")
                     currentOrder = Order(doc: dbDoc)
                 } else {
                     print("POS_VM.$locationOrderDocs.sink: ERROR(?) - matching doc not found for " +
                           "(docId:\(docId), locId:\(locId))"
                     )
                 }
-            }
-            .store(in: &cancellables)
-
-        // Set stored selected tab if we have a locationId, else it will default to Locations tab
-        if let _ = dittoService.currentLocationId, let storedTab = storedSelectedTab() {
-//            print("POS_VM.\(#function): stored locationId && stored selectedTab found -> SET selectedTab: \(tab)")
-            selectedTab = storedTab
-        }
-
-        $selectedTab
-            .sink {[weak self] tab in
-//                print("POS_VM.$selectedTab.sink: SAVE selectedTab: \(tab)")
-                self?.saveSelectedTab(tab)
             }
             .store(in: &cancellables)
     }
@@ -203,10 +131,10 @@ class POS_VM: ObservableObject {
         let tx = Transaction.new(
             locationId: locId,
             orderId: order.id,
-            amount: order.total//currentOrderTotal()
+            amount: order.total
         )
 
-        dittoService.updateOrder(order, with: tx)
+        dittoService.updateOrderTransaction(order, with: tx)
             // wait a moment to show current order updated to PAID
             // then create new order automatically
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
@@ -254,12 +182,19 @@ class POS_VM: ObservableObject {
             return order
         }
         
-        print("POS_VM.\(#function): RETURN --> refurbishedEmptyOrder()")
-        return refurbishedEmptyOrder(for: locId)
+//        print("POS_VM.\(#function): RETURN --> refurbishedEmptyOrder()")
+//        return refurbishedEmptyOrder(for: locId)
+        print("POS_VM.\(#function): RETURN --> NIL")
+        return nil
     }
-    
+
+    /*
+    // I think this only ever fires on launch, before location is set:
+    // wouldn't this be superceded by restoredIncompleteOrder() above? where we look for incomplete
+    // orders regardless of status? Or if we need at some point to consider status we could add
+    // that filtering to the restoredIncompleteOrder()... leaving in with a breakpoint for now
     func refurbishedEmptyOrder(for locId: String) -> Order? {
-        // call DS to search for order-for-loc where status is .open and reset createdAttimestamp
+        // call DS to search for order-for-loc where status is .open and reset createdAt timestamp
         let emptyOrderDocs = dittoService.orderDocs.find(
             "_id.locationId == '\(locId)' " +
             "&& deviceId == '\(deviceId)' " +
@@ -275,6 +210,7 @@ class POS_VM: ObservableObject {
         }
         return nil
     }
+     */
     
     func updateOrderCreatedDate(_ order: Order, date: Date = Date()) {
         dittoService.orderDocs.findByID(order.id).update {mutableDoc in
@@ -282,30 +218,5 @@ class POS_VM: ObservableObject {
             print("POS_VM.\(#function): UPDATE reusableDoc.createdOn: \(newDateStr)")
             mutableDoc?["createdOn"].set(newDateStr)
         }
-    }
-    
-    //MARK: Utilities
-//    func currentOrderTotal() -> Double {
-//        guard let _ = currentOrder else { return 0.0 }
-//        return currentOrderItems.sum(\.price.amount)
-//    }
-    
-//    func saleItem(for id: String) -> SaleItem? {
-//        saleItems.first( where: { $0.id == id } )!
-//    }
-}
-
-
-// Local Storage
-extension POS_VM {
-    func storedSelectedTab() -> TabViews? {
-        if let tabInt = UserDefaults.standard.storedSelectedTab {
-            return TabViews(rawValue: tabInt)
-        }
-        print("POS_VM.\(#function): return nil")
-        return nil
-    }
-    func saveSelectedTab(_ tab: TabViews) {
-        UserDefaults.standard.storedSelectedTab = tab.rawValue
     }
 }

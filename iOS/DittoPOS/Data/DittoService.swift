@@ -110,7 +110,6 @@ class DittoService: ObservableObject {
             .findAll()
             .liveQueryPublisher()
             .map { docs, _ in
-//                print("DS.\(#function): SET allLocationDocs.count: \(docs.count)")
                 return docs.map { $0 }
             }
             .assign(to: \.allLocationDocs, on: self)
@@ -128,16 +127,11 @@ class DittoService: ObservableObject {
             .assign(to: \.locationOrderDocs, on: self)
     }
     
-    func addOrder(_ order: Order) {
-        do {
-            print("DS.\(#function): try add order: \(order.id)")
-            try orderDocs.upsert(order.docDictionary())
-        } catch {
-            print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
-        }
+    func orders(for loc: Location) -> [Order] {
+        orderDocs.find("_id.locationId == '\(loc.id)'").exec()
+            .map { Order(doc: $0) }
     }
     
-
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
         orderDocs.findByID(DittoDocumentID(value: order._id))
             .singleDocumentLiveQueryPublisher()
@@ -150,6 +144,15 @@ class DittoService: ObservableObject {
             .eraseToAnyPublisher()
     }
     
+    func addOrder(_ order: Order) {
+        do {
+            print("DS.\(#function): try add order: \(order.id)")
+            try orderDocs.upsert(order.docDictionary())
+        } catch {
+            print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
+        }
+    }
+
     func addItemToOrder(item: OrderItem, order: Order) {
         orderDocs.findByID(order._id).update { mutableDoc in
             print("DS.\(#function): UPDATE mutableDoc.saleItemIds: \(item.id))")
@@ -157,21 +160,19 @@ class DittoService: ObservableObject {
             mutableDoc?["status"].set(order.status.rawValue)
         }
     }
-        
-    func orders(for loc: Location) -> [Order] {
-        orderDocs.find("_id.locationId == '\(loc.id)'").exec()
-            .map { Order(doc: $0) }
+    
+    func updateOrderStatus(_ order: Order, with status: OrderStatus) {
+        orderDocs.findByID(order._id).update { mutableDoc in
+            let oldStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
+            print("DS.\(#function): try UPDATE mutableDoc.status from \(oldStatus.title) to \(status.title)")
+            mutableDoc?["status"].set(status.rawValue)
+//            print("DS.\(#function): mutableDoc.status UPDATED to \(status.title)")
+            let newStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
+            print("DS.\(#function): mutableDoc.status UPDATED to \(newStatus.title)")
+        }
     }
-    
-//    func orderDocForId(_ id: String, locId: String) -> DittoDocument? {
-//        orderDocs.findByID(DittoDocumentID(value: ["id": id, "locationId": locId])).exec()
-//    }
-    
-    func orderDoc(for order: Order) -> DittoDocument? {
-        orderDocs.findByID(DittoDocumentID(value: order._id)).exec()
-    }
-    
-    func updateOrder(_ order: Order, with transx: Transaction) {
+
+    func updateOrderTransaction(_ order: Order, with transx: Transaction) {
         ditto.store.write { transaction in
             let transactions = transaction.scoped(toCollectionNamed: "transactions")
             let orders = transaction.scoped(toCollectionNamed: "orders")
@@ -180,14 +181,14 @@ class DittoService: ObservableObject {
 
                 orders.findByID(order._id).update { mutableDoc in
 //                    print("DS.\(#function): add (\(transx.id)) to mutableDoc.transactionIds)")
-                    mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]
+                    mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]                    
                 }
             } catch {
                 print(error.localizedDescription)
             }
         }
     }
-
+    
     func clearOrderSaleItemIds(_ order: Order) {
         orderDocs.findByID(DittoDocumentID(value: order._id)).update { mutableDoc in
 //                print("DS.\(#function): CLEAR ORDER ITEMS")

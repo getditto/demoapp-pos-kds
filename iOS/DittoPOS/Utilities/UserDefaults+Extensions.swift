@@ -16,7 +16,7 @@ extension UserDefaults {
         case currentLocationId = "live.ditto.DittoPOS.currentLocationId"
         case selectedTab = "live.ditto.DittoPOS.selectedTab"
     }
-
+    
     var storedLocationId: String? {
         get {
             return string(forKey: UserDefaultsKeys.currentLocationId.rawValue)
@@ -28,6 +28,7 @@ extension UserDefaults {
     
     var storedSelectedTab: Int? {
         get {
+            guard integer(forKey: UserDefaultsKeys.selectedTab.rawValue) > 0 else { return nil }
             return integer(forKey: UserDefaultsKeys.selectedTab.rawValue)
         }
         set(value) {

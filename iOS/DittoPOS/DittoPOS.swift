@@ -10,10 +10,9 @@ import SwiftUI
 
 @main
 struct DittoPOS: App {
-    @ObservedObject var dataVM = POS_VM.shared
     var body: some Scene {
         WindowGroup {
-            MainView($dataVM.selectedTab)
+            MainView()
         }
     }
 }

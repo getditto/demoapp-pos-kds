@@ -31,7 +31,6 @@ struct LocationRowView: View {
 }
 
 class LocationsVM: ObservableObject {
-//    @ObservedObject var dataVM = POS_VM.shared
     @ObservedObject var dataVM = DittoService.shared
     @Published var selectedItem: LocationRowItem?
     @Published var locationItems = [LocationRowItem]()
@@ -40,10 +39,8 @@ class LocationsVM: ObservableObject {
     init() {
         dataVM.$allLocationDocs
             .sink {[weak self] docs in
-//                print("LocationsVM.sink --> in map LocationRowItems from location docs")
                 self?.locationItems = docs.map { LocationRowItem(doc: $0) }
                 self?.selectedItem = self?.locationItems.first(
-//                    where: { $0.locationID == self?.dataVM.selectedLocationId }
                     where: { $0.locationID == self?.dataVM.currentLocationId }
                 )
             }
@@ -52,10 +49,6 @@ class LocationsVM: ObservableObject {
         $selectedItem
             .sink {[weak self] item in
                 guard let item = item else { return }
-//                print("LocationsVM.sink selectedItem change")
-//                if item.locationID != self?.dataVM.selectedLocationId {
-//                    self?.dataVM.selectedLocationId = item.locationID
-//                }
                 if item.locationID != self?.dataVM.currentLocationId {
                     print("LocationsVM.$selectedItem.sink --> SET dittoService.currentLocationId: \(item.locationID)")
                     self?.dataVM.currentLocationId = item.locationID

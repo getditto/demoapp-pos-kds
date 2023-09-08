@@ -1,5 +1,5 @@
 ///
-//  OrderItemView.swift
+//  POSOrderItemView.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 6/21/23.
@@ -8,11 +8,11 @@
 
 import SwiftUI
 
-extension OrderItemView: Identifiable {
+extension POSOrderItemView: Identifiable {
     var id: String { item.id }
 }
 
-struct OrderItemView: View {
+struct POSOrderItemView: View {
     let item: OrderItem
 
     init(_ item: OrderItem) {
@@ -29,9 +29,9 @@ struct OrderItemView: View {
     }
 }
 
-struct OrderItemView_Previews: PreviewProvider {
+struct POSOrderItemView_Previews: PreviewProvider {
     static var previews: some View {
-        OrderItemView(
+        POSOrderItemView(
             OrderItem(saleItem: SaleItem.demoItems[0])
         )
     }

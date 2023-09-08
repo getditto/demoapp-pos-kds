@@ -11,6 +11,7 @@ import SwiftUI
 
 class KDSOrderVM: ObservableObject {
     @Published var order: Order
+    @Published var orderItems = OrderItemsSummary()//[String:Int]
     private var cancelleables = Set<AnyCancellable>()
         
     init(_ order: Order) {
@@ -19,9 +20,18 @@ class KDSOrderVM: ObservableObject {
         DittoService.shared.orderPublisher(order)
             .filter( {$0.status == .inProcess || $0.status == .processed} )
             .sink {[weak self] updatedOrder in
+//                print("KDSOrderViewVM.$orderPublisher --> ORDER UPDATED: \(updatedOrder)")
                 self?.order = updatedOrder
+//                print("KDSOrderViewVM.$orderPublisher --> ORDER UPDATED with items.summary: \(order.summary.count)")
+                self?.orderItems = order.summary
             }
             .store(in: &cancelleables)
+    }
+    
+    func incrementOrderStatus() {
+        let newStatus = OrderStatus(rawValue: order.status.rawValue + 1)!
+//        print("KDSOrderViewVM.\(#function): increment order.\(order.status.title) to \(newStatus.title)")
+        DittoService.shared.updateOrderStatus(order, with: newStatus)
     }
 }
 
@@ -30,34 +40,52 @@ struct KDSOrderView: View {
     
     init(_ order: Order) {
         self._vm = StateObject(wrappedValue: KDSOrderVM(order))
-        
-        print("KDSOrderView.init() --> order.items: \(order.orderItems.count)")
+//        print("KDSOrderView.init() --> order.items: \(order.orderItems.count)")
     }
     
     var body: some View {
-            VStack(spacing: 0) {
-                // title view
-                Text(titleBarText)
-                    .padding(.bottom, 8)
-                divider()
-                    .padding(.bottom, 8)
-                
-                Text("\(vm.order.orderItems.count) items")
-                divider()
-                
-                // Order items
-                ForEach(vm.order.orderItems) { item in
-                    OrderItemView(item)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("\(timestampText) | \(titleText)")
+                .padding(4)
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(maxWidth: .infinity)                
+                .border(vm.order.status.color, width: 2)
 
-                    divider()
-                }
-//                .border(.blue)
+            ForEach(vm.order.summary.sorted(by: >), id: \.key) { key, value in
+                divider()
+                KDSOrderItemView(title: key, count: value)
             }
-//            .border(.purple)
+
+            HStack(spacing: 0) {
+                Spacer()
+                if vm.order.isPaid {
+                    Group {
+                        Image(systemName: "dollarsign")
+                        Image(systemName: "dollarsign")
+                    }
+                    .foregroundColor(.yellow)
+                    .padding(0)
+                }
+            }
+            .frame(height: 20)
+            .frame(maxWidth: .infinity)
+            .background(vm.order.status.color)
+        }
+        .padding(4)
+        .onTapGesture {
+//            print("KDSOrderView.onTap: CALL vm.incrementOrderStatus()")
+            vm.incrementOrderStatus()
+        }
+//        .onAppear {
+//            print("KDSOrderView.onAppear --> status.color: \(vm.order.status.color)")
+//        }
     }
-    
-    var titleBarText: String {
-        "\(DateFormatter.shortTime.string(from: vm.order.createdOn)) | \(vm.order.title)"
+
+    var titleText: String {
+        "\(vm.order.title)"
+    }
+    var timestampText: String {
+        "\(DateFormatter.shortTime.string(from: vm.order.createdOn))"
     }
 }
 

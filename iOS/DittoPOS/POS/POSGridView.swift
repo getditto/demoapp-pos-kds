@@ -9,11 +9,9 @@
 import SwiftUI
 
 struct POSGridView: View {
-    @Environment(\.horizontalSizeClass) private var HsizeClass
+    @Environment(\.horizontalSizeClass) private var HsizeClass    
     @ObservedObject var dataVM = POS_VM.shared
     @State var columns = [GridItem]()
-    //TEST
-//    @State var tapCount = 0
 
     var body: some View {
         NavigationView {
@@ -25,18 +23,13 @@ struct POSGridView: View {
                             .onTapGesture {
                                 print("\(item) tapped")
                                 dataVM.addOrderItem(item)
-//                                tapCount += 1
                             }
-//                            .border(.purple)
                     }
                 }
                 .padding(.vertical, 16)
             }
-//            .navigationBarTitle(Text(String(tapCount)))
-//            .navigationBarTitleDisplayMode(.inline)
         }
         .onAppear { print("POSGridView.onAppear"); columns = cols() }
-//        .onDisappear { print("MenuGrid.onDisappear"); tapCount = 0}
 //        .onRotate { orient in
 //            guard orient.isLandscape || orient.isPortrait else { return }
 //            print("MenuGrid.onRotate: orientation: \(orient.description)")

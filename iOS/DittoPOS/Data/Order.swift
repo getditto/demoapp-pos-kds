@@ -7,11 +7,58 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import DittoSwift
-import Foundation
+import SwiftUI
 
-//enum OrderStatus: String, Codable {
+//--------------------------------------------------------------------------------------------------
+// OrderItem
+//--------------------------------------------------------------------------------------------------
+/// A UI model object, not used with ditto, with unique ID, representing a saleItem
+struct OrderItem: Identifiable {
+    let id: String
+    let saleItem: SaleItem
+    var price: Price { saleItem.price }
+    var title: String { saleItem.title }
+    let createdOnStr: String
+    let createdOn: Date
+}
+
+extension OrderItem {
+    // for initializing from Order.saleItemIds keys
+    init(id: String, saleItem: SaleItem) { // initialized with string format as "uuid_timestamp"
+        let parts = id.split(separator: "_")
+        
+        assert(parts.count == 2, "OrderItem id string initialization error")
+        
+        self.id = String(parts[0])
+        self.createdOnStr = String(parts[1])
+        self.createdOn = DateFormatter.isoDate.date(from: createdOnStr)!
+        self.saleItem = saleItem
+    }
+    
+    // for initializing new orderItem object with a saleItem selected from POS
+    init(saleItem: SaleItem) {
+        self.createdOn = Date()
+        self.createdOnStr = DateFormatter.isoDate.string(from: createdOn)
+        self.id = "\(UUID().uuidString)_\(createdOnStr)"
+        self.saleItem = saleItem
+    }
+}
+
+extension OrderItem: Equatable, Hashable {
+    static func == (lhs: OrderItem, rhs: OrderItem) -> Bool {
+        lhs.saleItem == rhs.saleItem
+    }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(saleItem)
+    }
+}
+//--------------------------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------------------------
+// OrderStatus
+//--------------------------------------------------------------------------------------------------
 enum OrderStatus: Int, CaseIterable, Codable {
-    // "processed" means order is processed by kitchen, ready for delivery
+    // "processed" means order is processed (e.g. by kitchen), ready for delivery
     case open = 0, inProcess, processed, delivered, canceled
     
     var title: String {
@@ -23,13 +70,28 @@ enum OrderStatus: Int, CaseIterable, Codable {
         case .canceled: return "canceled"
         }
     }
+    
+    var color: Color {
+        switch self {
+        case .open: return Color.gray
+        case .inProcess: return Color.blue
+        case .processed: return Color.green
+        case .delivered: return Color.black
+        case .canceled: return Color.orange
+        }
+    }
 }
+//--------------------------------------------------------------------------------------------------
 
+//--------------------------------------------------------------------------------------------------
+// Order
+//--------------------------------------------------------------------------------------------------
 struct Order: Identifiable, Hashable, Equatable {
     let _id: [String: String] // id, locationId
     let deviceId: String
     var saleItemIds = [String: String]() //timestamp, saleItemId
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
+    var orderItems = [OrderItem]()
     var createdOn: Date
     var status: OrderStatus
     
@@ -44,8 +106,6 @@ struct Order: Identifiable, Hashable, Equatable {
     }
 }
 
-extension Order: Codable {}
-
 extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
@@ -57,6 +117,7 @@ extension Order {
         self.createdOn = DateFormatter.isoDate
             .date(from: doc["createdOn"].stringValue) ?? Date()
         self.status = OrderStatus(rawValue: doc["status"].intValue) ?? .open
+        self.orderItems = getOrderItems()
     }
 }
 
@@ -68,7 +129,7 @@ extension Order {
             "saleItemIds": saleItemIds,
             "transactionIds": transactionIds,
             "createdOn": DateFormatter.isoDate.string(from: createdOn),
-            "status": status
+            "status": status //should this be .rawValue?
         ]
     }
 }
@@ -101,7 +162,7 @@ extension Order {
 }
 
 extension Order {
-    var orderItems: [OrderItem] {
+    func getOrderItems() -> [OrderItem] {
         var items = [OrderItem]()
         for (compoundStringId, saleItemId) in self.saleItemIds {
             //NOTE: in this draft implementation we're relying on using the SaleItem demoItems
@@ -109,17 +170,43 @@ extension Order {
             let draftSaleItemsArray = SaleItem.demoItems
             if let saleItem = draftSaleItemsArray.first( where: { $0.id == saleItemId } ) {
                 let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
+                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
                 items.append(orderItem)
             }
         }
-//        return items.sorted(by: { $0.createdOn < $1.createdOn })
-        return items
+        print("Order.getOrderItems(): return \(items.count)")
+        return items.sorted(by: { $0.createdOn < $1.createdOn })
     }
     
     var total: Double {
         orderItems.sum(\.price.amount)
     }
 }
+
+extension Order {
+    static func isPaid(_ doc: DittoDocument) -> Bool {
+        doc["transactionIds"].dictionaryValue.count > 0
+    }
+}
+
+typealias OrderItemsSummary = [String:Int]
+extension Order {
+    var summary: OrderItemsSummary {
+        var items = OrderItemsSummary()
+        let orderItems = getOrderItems()
+        for item in orderItems {
+            if let val = items.updateValue(1, forKey: item.title) {
+                items[item.title] = val + 1
+            } else {
+                items.updateValue(1, forKey: item.title)
+            }
+        }
+        return items
+    }
+}
+//--------------------------------------------------------------------------------------------------
+
+
 
 extension Order {
     static func preview() -> Order {

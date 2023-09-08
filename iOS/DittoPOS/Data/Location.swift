@@ -11,6 +11,12 @@ import Foundation
 
 extension Location: Codable {}
 
+/*
+ NOTE:
+ Each Location should have its own collection of SaleItems, which is not (yet?) implemented.
+ This demo app uses the SaletItem.demoItems collection for all locations.
+ */
+
 struct Location: Identifiable, Hashable, Equatable {
     let id: String
     let name: String

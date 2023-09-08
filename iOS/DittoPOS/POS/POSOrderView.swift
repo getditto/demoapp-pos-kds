@@ -6,42 +6,63 @@
 //
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
+import Combine
 import SwiftUI
 
-struct POSOrderView: View {
+class POSOrderVM: ObservableObject {
     @ObservedObject var dataVM = POS_VM.shared
+    @Published var orderItems = [OrderItem]()
+    var cancellables = Set<AnyCancellable>()
+    init() {
+        dataVM.$currentOrder
+            .sink {[weak self] order in
+                guard let self = self, let order = order else { return }
+                orderItems = order.orderItems
+            }
+            .store(in: &cancellables)
+    }
+    
+    var barTitle: String {
+        "Order #\(dataVM.currentOrder?.title ?? "...")"
+    }
+}
+
+struct POSOrderView: View {
+    @StateObject var vm = POSOrderVM()
     
     var body: some View {
             VStack(spacing: 0) {
                 // title view
-                Text(barTitle)
+                Text(vm.barTitle)
                     .padding(.bottom, 8)
                 divider()
                     .padding(.bottom, 8)
                 
                 // Order items scrollview
                 ScrollView(showsIndicators: false) {
-                    Section {
-//                        ForEach(dataVM.currentOrderItems) { item in
-                        if let orderItems = dataVM.currentOrder?.orderItems {
-                            ForEach(orderItems) { item in
-                                OrderItemView(item)                                
+                    ScrollViewReader { svr in
+                        Section {
+                            ForEach(vm.orderItems) { item in
+                                POSOrderItemView(item)
                                 divider()
+                            }
+                            .onChange(of: vm.orderItems.count) { _ in
+                                print("POSOrderView.onChange(of vm.orderItems.count: \(vm.orderItems.count) FIRED")
+                                if let itemId = vm.orderItems.last?.id {
+                                    withAnimation {
+                                        svr.scrollTo(itemId)//, anchor: .bottom)
+                                    }
+                                }
                             }
                         }
                     }
                 }
-//                .border(.blue)
+                
                 .listStyle(.plain)
                 
                 // order total and pay buttons
-                OrderTotalView()
+                POSOrderTotalView()
             }
-//            .border(.purple)
-    }
-    
-    var barTitle: String {
-        "Order #\(dataVM.currentOrder?.title ?? "...")"
     }
 }
 

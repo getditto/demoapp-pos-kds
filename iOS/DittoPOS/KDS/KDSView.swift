@@ -10,7 +10,7 @@ import SwiftUI
 
 struct KDSView: View {
     var body: some View {
-        OrdersGridView()
+        KDSOrdersGridView()
     }
 }
 

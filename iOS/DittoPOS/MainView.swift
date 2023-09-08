@@ -10,27 +10,62 @@ import Combine
 import SwiftUI
 
 enum TabViews: Int, Identifiable {
-    case pos, kds, locations
+    case pos=1, kds, locations
     var id: Self { self }
 }
 
 class MainVM: ObservableObject {
+    @Published var selectedTab: TabViews = MainVM.storedSelectedTab() ?? .locations
     @Published var presentSettingsView = false
     private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        $selectedTab
+            .dropFirst()
+            .sink { tab in
+//                print("MainVM.$selectedTab.sink: SAVE selectedTab: \(tab)")
+                Self.saveSelectedTab(tab)
+            }
+            .store(in: &cancellables)
+        
+        DittoService.shared.$currentLocationId
+            .dropFirst()
+            .sink {[weak self] locId in
+                guard let self = self else { return }
+                guard let _ = locId else {
+//                    print("MainVN.$currentLocation: locId NIL --> RETURN");
+                    return
+                }
+                
+//                print("MainVN.$currentLocationId: SET selectedTab .pos")
+                selectedTab = .pos
+            }
+            .store(in: &cancellables)
+    }
+}
+
+extension MainVM {
+    static func storedSelectedTab() -> TabViews? {
+        if let tabInt = UserDefaults.standard.storedSelectedTab {
+//            print("MainVM.storedSelectedTab: return \(TabViews(rawValue: tabInt)!)")
+            return TabViews(rawValue: tabInt)
+        }
+//        print("MainVM.storedSelectedTab: return NIL")
+        return nil
+    }
+    static func saveSelectedTab(_ tab: TabViews) {
+//        print("MainVM.saveSelectedTab: SAVE \(tab)")
+        UserDefaults.standard.storedSelectedTab = tab.rawValue
+    }
 }
 
 struct MainView: View {
-    @StateObject private var viewModel = MainVM()
-//    @ObservedObject var dataVM = POS_VM.shared
+    @StateObject private var vm = MainVM()
     @ObservedObject var dittoService = DittoService.shared
-    @Binding var selectedTab: TabViews
-    init(_ tab: Binding<TabViews>) {
-        self._selectedTab = tab
-    }
     
     var body: some View {
         NavigationStack{
-            TabView(selection: $selectedTab) {
+            TabView(selection: $vm.selectedTab) {
                 POSView()
                     .tabItem {
                         Label("POS", systemImage: "dot.squareshape")
@@ -52,13 +87,13 @@ struct MainView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarLeading ) {
                     Button {
-                        viewModel.presentSettingsView = true
+                        vm.presentSettingsView = true
                     } label: {
                         Image(systemName: "gearshape")
                     }
                 }
             }
-            .sheet(isPresented: $viewModel.presentSettingsView) {
+            .sheet(isPresented: $vm.presentSettingsView) {
                 SettingsView()
             }
             .onAppear { print("MainView.onAppear") }
@@ -69,17 +104,12 @@ struct MainView: View {
     }
     
     var barTitle: String {
-//        if let locName = dittoService.currentLocation?.name {
-//            return locName
-//        } else {
-//            return "Please Select Location"
-//        }
         dittoService.currentLocation?.name ?? "Please Select Location"
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(.constant(POS_VM.shared.selectedTab))
+        MainView()
     }
 }

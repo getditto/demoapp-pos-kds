@@ -11,7 +11,6 @@ import SwiftUI
 
 struct SaleItem {
     let _id: [String: String] // [id: String, locationId: String]
-//    let id: String
     let title: String
     let imageName: String // this should be temporary in favor of imageToken
     var imageToken: DittoAttachmentToken? //not yet implemented
@@ -20,7 +19,6 @@ struct SaleItem {
 
 extension SaleItem {
     init(doc: DittoDocument) {
-//        self.id = doc["_id"].stringValue
         self._id = doc["_id"].dictionaryValue as! [String:String]
         self.title = doc["title"].stringValue
         self.imageName = doc["imageName"].string ?? "ellipsis"
