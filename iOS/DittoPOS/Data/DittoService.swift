@@ -70,6 +70,13 @@ class DittoService: ObservableObject {
             }
             .store(in: &cancellables)
         
+        
+        // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
+        let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        if !isPreview {
+            try! ditto.startSync()
+        }
+        
         self.currentLocationId = self.storedLocationId()
         
         $currentLocationId
@@ -247,11 +254,5 @@ class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN
 //            enableDittoCloudSync: false // disabled for now for dev
         ))
-        
-        // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
-        let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        if !isPreview {
-            try! ditto.startSync()
-        }
     }
 }
