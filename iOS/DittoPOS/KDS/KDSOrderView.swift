@@ -51,7 +51,7 @@ struct KDSOrderView: View {
                 .frame(maxWidth: .infinity)                
                 .border(vm.order.status.color, width: 2)
 
-            ForEach(vm.order.summary.sorted(by: >), id: \.key) { key, value in
+            ForEach(vm.order.summary.sorted(by: <), id: \.key) { key, value in
                 divider()
                 KDSOrderItemView(title: key, count: value)
             }
