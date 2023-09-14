@@ -12,6 +12,7 @@ import SwiftUI
 class POSOrderVM: ObservableObject {
     @ObservedObject var dataVM = POS_VM.shared
     @Published var orderItems = [OrderItem]()
+    @Published var barTitle = "Order #\(POS_VM.shared.currentOrder?.title ?? "...")"
     var cancellables = Set<AnyCancellable>()
     init() {
         dataVM.$currentOrder
@@ -20,10 +21,6 @@ class POSOrderVM: ObservableObject {
                 orderItems = order.orderItems
             }
             .store(in: &cancellables)
-    }
-    
-    var barTitle: String {
-        "Order #\(dataVM.currentOrder?.title ?? "...")"
     }
 }
 

@@ -17,7 +17,7 @@ struct KDSOrdersGridView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: columns) {//, spacing: 24) {
-                    ForEach(vm.orders) { order in
+                    ForEach(vm.orders) { order in                        
                         KDSOrderView(order)
                     }
                 }

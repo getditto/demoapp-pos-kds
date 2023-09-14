@@ -107,5 +107,15 @@ extension DateFormatter {
         f.formatOptions = [.withFullDate]
         return f
     }
+    
+    static var iso24HoursAgoString: String {
+        // https://stackoverflow.com/questions/27251644/how-to-get-1-hour-ago-from-a-date-in-ios-swift
+        isoDate.string(
+            from: Calendar.current.date(
+                byAdding: DateComponents(hour: -24),
+                to: Date()
+            )!
+        )
+    }
 }
 

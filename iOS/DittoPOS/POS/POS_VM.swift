@@ -11,7 +11,6 @@ import DittoSwift
 import SwiftUI
 
 class POS_VM: ObservableObject {
-//    @Published var selectedTab: TabViews = .locations
     @Published private(set) var currentOrder: Order?
     @Published var saleItems: [SaleItem] = SaleItem.demoItems // demo collection for order display
     private var cancellables = Set<AnyCancellable>()
@@ -30,6 +29,7 @@ class POS_VM: ObservableObject {
         }
                 
         dittoService.$currentLocation
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] loc in
                 guard let loc = loc else {
                     print("POS_VM.$currentLocation.sink: NIL currentLocation --> RETURN")
@@ -52,7 +52,7 @@ class POS_VM: ObservableObject {
                     return
                 }
 
-                print("POS_VM.$currentLocation.sink: CALL addNewCurrentOrder()")
+//                print("POS_VM.$currentLocation.sink: CALL addNewCurrentOrder()")
                 self?.addNewCurrentOrder(for: loc.id)
             }
             .store(in: &cancellables)
@@ -60,6 +60,7 @@ class POS_VM: ObservableObject {
         // Monitor changes in docs for current location, published from DittoService, to update
         // our published currentOrder, which will cause appropriate UI changes in subscribers.
         dittoService.$locationOrderDocs
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] docs in
                 guard let self = self else { print("POS_VM.$locationOrderDocs.sink:  NO SELF --> RETURN"); return }
                 
@@ -170,7 +171,9 @@ class POS_VM: ObservableObject {
         }
         
         let incompleteOrderDocs = dittoService.orderDocs.find(
-            "_id.locationId == '\(locId)' && deviceId == '\(deviceId)' && length(keys(transactionIds)) == 0"
+            "_id.locationId == '\(locId)'" +
+            " && deviceId == '\(deviceId)'" +
+            " && length(keys(transactionIds)) == 0"
         ).exec().sorted(by: { $0["createdOn"].stringValue < $1["createdOn"].stringValue })
 
         print("POS_VM.\(#function): incompleteOrderDocs.count: \(incompleteOrderDocs.count)")
@@ -182,40 +185,14 @@ class POS_VM: ObservableObject {
             return order
         }
         
-//        print("POS_VM.\(#function): RETURN --> refurbishedEmptyOrder()")
-//        return refurbishedEmptyOrder(for: locId)
         print("POS_VM.\(#function): RETURN --> NIL")
         return nil
     }
-
-    /*
-    // I think this only ever fires on launch, before location is set:
-    // wouldn't this be superceded by restoredIncompleteOrder() above? where we look for incomplete
-    // orders regardless of status? Or if we need at some point to consider status we could add
-    // that filtering to the restoredIncompleteOrder()... leaving in with a breakpoint for now
-    func refurbishedEmptyOrder(for locId: String) -> Order? {
-        // call DS to search for order-for-loc where status is .open and reset createdAt timestamp
-        let emptyOrderDocs = dittoService.orderDocs.find(
-            "_id.locationId == '\(locId)' " +
-            "&& deviceId == '\(deviceId)' " +
-            "&& status == \(OrderStatus.open.rawValue)"
-        ).exec()
-        if let gotOne = emptyOrderDocs.first {
-            print("POS_VM.\(#function): FOUND reusable open order: \(gotOne).createdOn \(gotOne["createdOn"].stringValue)")
-            var refurbOrder = Order(doc: gotOne)
-            refurbOrder.createdOn = Date()
-
-            updateOrderCreatedDate(refurbOrder)
-            return refurbOrder
-        }
-        return nil
-    }
-     */
     
     func updateOrderCreatedDate(_ order: Order, date: Date = Date()) {
         dittoService.orderDocs.findByID(order.id).update {mutableDoc in
             let newDateStr = DateFormatter.isoDate.string(from: date)
-            print("POS_VM.\(#function): UPDATE reusableDoc.createdOn: \(newDateStr)")
+//            print("POS_VM.\(#function): UPDATE reusableDoc.createdOn: \(newDateStr)")
             mutableDoc?["createdOn"].set(newDateStr)
         }
     }
