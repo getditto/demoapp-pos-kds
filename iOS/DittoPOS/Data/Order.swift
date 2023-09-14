@@ -170,11 +170,11 @@ extension Order {
             let draftSaleItemsArray = SaleItem.demoItems
             if let saleItem = draftSaleItemsArray.first( where: { $0.id == saleItemId } ) {
                 let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
-                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
+//                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
                 items.append(orderItem)
             }
         }
-        print("Order.getOrderItems(): return \(items.count)")
+//        print("Order.getOrderItems(): return \(items.count)")
         return items.sorted(by: { $0.createdOn < $1.createdOn })
     }
     

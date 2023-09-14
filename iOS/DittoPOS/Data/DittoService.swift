@@ -57,7 +57,8 @@ class DittoService: ObservableObject {
     private init() {
         self.locationsSubscription = ditto.store["locations"].findAll().subscribe()
         self.saleItemsSubscription = ditto.store["saleItems"].findAll().subscribe()
-        self.ordersSubscription = ditto.store["orders"].findAll().subscribe()
+        //initial subscription query will find zero matches
+        self.ordersSubscription = ditto.store["orders"].find("_id.locationId == '00000'").subscribe()
         self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
         self.deviceId = String(ditto.siteID)
         
@@ -85,9 +86,13 @@ class DittoService: ObservableObject {
                     print("DS.$currentLocationId.sink: value in is NIL --> return");
                     return
                 }
-                self?.saveLocationId(locId)
-                self?.subscribeAllOrders(locId)
-                self?.updateAllLocations() //Is this needed? to update all locations for each id change?
+                guard let self = self else { return }
+                saveLocationId(locId)
+
+                ordersSubscription.cancel()
+                ordersSubscription = orderDocs.find(ordersQueryFromYesterday(locId: locId)).subscribe()
+                updateOrdersPublisher(locId)
+                updateAllLocations() //Is this needed? to update all locations for each id change?
             }
             .store(in: &cancellables)
 
@@ -108,7 +113,7 @@ class DittoService: ObservableObject {
             .store(in: &cancellables)
 
         if let locId = currentLocationId {
-            subscribeAllOrders(locId)
+            updateOrdersPublisher(locId)
         }
     }
     
@@ -122,10 +127,10 @@ class DittoService: ObservableObject {
             .assign(to: \.allLocationDocs, on: self)
     }
     
-    func subscribeAllOrders(_ locId: String) {
+    func updateOrdersPublisher(_ locId: String) {
         print("DS.\(#function) --> in")
         allOrdersCancellable = orderDocs
-            .find("_id.locationId == '\(locId)'")
+            .find(ordersSubscription.query)
             .liveQueryPublisher()
             .map { docs, _ in
                 print("DS.\(#function): locationOrderDocs publisher fired with count: \(docs.count)")
@@ -133,10 +138,10 @@ class DittoService: ObservableObject {
             }
             .assign(to: \.locationOrderDocs, on: self)
     }
-    
-    func orders(for loc: Location) -> [Order] {
-        orderDocs.find("_id.locationId == '\(loc.id)'").exec()
-            .map { Order(doc: $0) }
+        
+    func ordersQueryFromYesterday(locId: String) -> String {
+        "_id.locationId == '\(locId)' && " +
+        "createdOn > '\(DateFormatter.iso24HoursAgoString)'"
     }
     
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {

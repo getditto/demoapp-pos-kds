@@ -30,6 +30,7 @@ class POS_VM: ObservableObject {
         }
                 
         dittoService.$currentLocation
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] loc in
                 guard let loc = loc else {
                     print("POS_VM.$currentLocation.sink: NIL currentLocation --> RETURN")
@@ -60,6 +61,7 @@ class POS_VM: ObservableObject {
         // Monitor changes in docs for current location, published from DittoService, to update
         // our published currentOrder, which will cause appropriate UI changes in subscribers.
         dittoService.$locationOrderDocs
+            .receive(on: DispatchQueue.main)
             .sink {[weak self] docs in
                 guard let self = self else { print("POS_VM.$locationOrderDocs.sink:  NO SELF --> RETURN"); return }
                 
