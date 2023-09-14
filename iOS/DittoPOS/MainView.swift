@@ -17,28 +17,36 @@ enum TabViews: Int, Identifiable {
 class MainVM: ObservableObject {
     @Published var selectedTab: TabViews = MainVM.storedSelectedTab() ?? .locations
     @Published var presentSettingsView = false
+    @Published var mainTitle = DittoService.shared.currentLocation?.name ?? "Please Select Location"
     private var cancellables = Set<AnyCancellable>()
     
     init() {
         $selectedTab
             .dropFirst()
             .sink { tab in
-//                print("MainVM.$selectedTab.sink: SAVE selectedTab: \(tab)")
                 Self.saveSelectedTab(tab)
             }
             .store(in: &cancellables)
         
+        // Switch to POS view after location is selected
         DittoService.shared.$currentLocationId
             .dropFirst()
             .sink {[weak self] locId in
                 guard let self = self else { return }
                 guard let _ = locId else {
-//                    print("MainVN.$currentLocation: locId NIL --> RETURN");
                     return
                 }
-                
-//                print("MainVN.$currentLocationId: SET selectedTab .pos")
                 selectedTab = .pos
+            }
+            .store(in: &cancellables)
+        
+        // Update main navbar title with current location name
+        DittoService.shared.$currentLocation
+            .sink {[weak self] loc in
+                guard let self = self else { return }
+                guard let loc = loc else { return }
+                print("MainView.$currentLocation: SET mainTitle: \(loc.name)")
+                mainTitle = loc.name
             }
             .store(in: &cancellables)
     }
@@ -97,7 +105,7 @@ struct MainView: View {
                 SettingsView()
             }
             .onAppear { print("MainView.onAppear") }
-            .navigationBarTitle(barTitle)
+            .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(StackNavigationViewStyle())
         }

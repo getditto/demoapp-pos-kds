@@ -30,16 +30,13 @@ class DittoService: ObservableObject {
     var deviceId: String //ditto.siteID as String to partition ordering to devices
     
     private var locationsSubscription: DittoSubscription
-    private var saleItemsSubscription: DittoSubscription
     private var ordersSubscription: DittoSubscription
     private var transactionsSubscription: DittoSubscription
 
     var locationDocs: DittoCollection {
         ditto.store["locations"]
     }
-    var saleItemsDocs: DittoCollection {
-        ditto.store["saleItems"]
-    }
+
     var orderDocs: DittoCollection {
         ditto.store["orders"]
     }
@@ -56,7 +53,6 @@ class DittoService: ObservableObject {
     
     private init() {
         self.locationsSubscription = ditto.store["locations"].findAll().subscribe()
-        self.saleItemsSubscription = ditto.store["saleItems"].findAll().subscribe()
         //initial subscription query will find zero matches
         self.ordersSubscription = ditto.store["orders"].find("_id.locationId == '00000'").subscribe()
         self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
@@ -78,46 +74,33 @@ class DittoService: ObservableObject {
             try! ditto.startSync()
         }
         
-        self.currentLocationId = self.storedLocationId()
-        
+        setupDemoLocationDocs()
+        updateLocationsPublisher()
+
         $currentLocationId
             .sink {[weak self] locId in
                 guard let locId = locId else {
-                    print("DS.$currentLocationId.sink: value in is NIL --> return");
+//                    print("DS.$currentLocationId.sink: value in is NIL --> return")
                     return
                 }
                 guard let self = self else { return }
                 saveLocationId(locId)
 
                 ordersSubscription.cancel()
-                ordersSubscription = orderDocs.find(ordersQueryFromYesterday(locId: locId)).subscribe()
+                ordersSubscription = orderDocs.find(ordersQuerySinceYesterday(locId: locId)).subscribe()
                 updateOrdersPublisher(locId)
-                updateAllLocations() //Is this needed? to update all locations for each id change?
+                updateCurrentLocation(locId)
             }
             .store(in: &cancellables)
-
-        setupDemoLocations()
-        updateAllLocations()
-                
-        // I think we should be able to just listen to locationId change (after initial setup of
-        // location collection docs) and then just do a findByID to set the location object????????????
-        $allLocationDocs
-            .sink {[weak self] docs in
-                if let locId = self?.currentLocationId,
-                    let locDoc = docs.first(where: { $0.id == DittoDocumentID(value: locId) }) {
-                    let loc = Location(doc: locDoc)
-                    self?.currentLocation = loc
-                    self?.currentLocationSubject.value = loc
-                }
-            }
-            .store(in: &cancellables)
-
+        
+        self.currentLocationId = self.storedLocationId()
         if let locId = currentLocationId {
             updateOrdersPublisher(locId)
+            updateCurrentLocation(locId)
         }
     }
     
-    func updateAllLocations() {
+    func updateLocationsPublisher() {
         allLocationsCancellable = locationDocs
             .findAll()
             .liveQueryPublisher()
@@ -133,13 +116,13 @@ class DittoService: ObservableObject {
             .find(ordersSubscription.query)
             .liveQueryPublisher()
             .map { docs, _ in
-                print("DS.\(#function): locationOrderDocs publisher fired with count: \(docs.count)")
+//                print("DS.\(#function): locationOrderDocs publisher fired with count: \(docs.count)")
                 return docs.map { $0 }
             }
             .assign(to: \.locationOrderDocs, on: self)
     }
         
-    func ordersQueryFromYesterday(locId: String) -> String {
+    func ordersQuerySinceYesterday(locId: String) -> String {
         "_id.locationId == '\(locId)' && " +
         "createdOn > '\(DateFormatter.iso24HoursAgoString)'"
     }
@@ -158,7 +141,7 @@ class DittoService: ObservableObject {
     
     func addOrder(_ order: Order) {
         do {
-            print("DS.\(#function): try add order: \(order.id)")
+//            print("DS.\(#function): try add order: \(order.id)")
             try orderDocs.upsert(order.docDictionary())
         } catch {
             print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
@@ -167,7 +150,7 @@ class DittoService: ObservableObject {
 
     func addItemToOrder(item: OrderItem, order: Order) {
         orderDocs.findByID(order._id).update { mutableDoc in
-            print("DS.\(#function): UPDATE mutableDoc.saleItemIds: \(item.id))")
+//            print("DS.\(#function): UPDATE mutableDoc.saleItemIds: \(item.id))")
             mutableDoc?["saleItemIds"][item.id].set(item.saleItem.id) //[uuid_createdOn: saleItemId]
             mutableDoc?["status"].set(order.status.rawValue)
         }
@@ -175,12 +158,13 @@ class DittoService: ObservableObject {
     
     func updateOrderStatus(_ order: Order, with status: OrderStatus) {
         orderDocs.findByID(order._id).update { mutableDoc in
-            let oldStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
-            print("DS.\(#function): try UPDATE mutableDoc.status from \(oldStatus.title) to \(status.title)")
+//            let oldStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
+//            print("DS.\(#function): try UPDATE mutableDoc.status from \(oldStatus.title) to \(status.title)")
+
             mutableDoc?["status"].set(status.rawValue)
-//            print("DS.\(#function): mutableDoc.status UPDATED to \(status.title)")
-            let newStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
-            print("DS.\(#function): mutableDoc.status UPDATED to \(newStatus.title)")
+
+//            let newStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
+//            print("DS.\(#function): mutableDoc.status UPDATED to \(newStatus.title)")
         }
     }
 
@@ -214,12 +198,21 @@ class DittoService: ObservableObject {
 }
 
 extension DittoService {
-    func setupDemoLocations() {
+    func setupDemoLocationDocs() {
         for loc in Location.demoLocations {
             try! locationDocs.upsert(
                 loc.docDictionary(),
                 writeStrategy: .insertDefaultIfAbsent
             )
+        }
+    }
+    
+    func updateCurrentLocation(_ locId: String?) {
+        guard let locId = locId else { return }
+        if let locDoc = locationDocs.findByID(DittoDocumentID(value: locId)).exec() {
+            let loc = Location(doc: locDoc)
+            currentLocation = loc
+            currentLocationSubject.value = loc
         }
     }
 }
