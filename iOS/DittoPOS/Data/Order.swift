@@ -106,6 +106,12 @@ struct Order: Identifiable, Hashable, Equatable {
     }
 }
 
+//extension Order {
+//    static func isPaid(_ doc: DittoDocument) -> Bool {
+//        doc["transactionIds"].dictionaryValue.count > 0
+//    }
+//}
+
 extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
@@ -170,22 +176,16 @@ extension Order {
             let draftSaleItemsArray = SaleItem.demoItems
             if let saleItem = draftSaleItemsArray.first( where: { $0.id == saleItemId } ) {
                 let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
-                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
+//                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
                 items.append(orderItem)
             }
         }
-        print("Order.getOrderItems(): return \(items.count)")
+//        print("Order.getOrderItems(): return \(items.count)")
         return items.sorted(by: { $0.createdOn < $1.createdOn })
     }
     
     var total: Double {
         orderItems.sum(\.price.amount)
-    }
-}
-
-extension Order {
-    static func isPaid(_ doc: DittoDocument) -> Bool {
-        doc["transactionIds"].dictionaryValue.count > 0
     }
 }
 
