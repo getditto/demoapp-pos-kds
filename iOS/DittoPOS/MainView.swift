@@ -45,7 +45,7 @@ class MainVM: ObservableObject {
             .sink {[weak self] loc in
                 guard let self = self else { return }
                 guard let loc = loc else { return }
-                print("MainView.$currentLocation: SET mainTitle: \(loc.name)")
+//                print("MainView.$currentLocation: SET mainTitle: \(loc.name)")
                 mainTitle = loc.name
             }
             .store(in: &cancellables)

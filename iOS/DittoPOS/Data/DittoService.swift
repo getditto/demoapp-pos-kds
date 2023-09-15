@@ -12,6 +12,7 @@ import DittoSwift
 import SwiftUI
 
 let defaultLoggingOption: DittoLogger.LoggingOptions = .error
+let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
 class DittoService: ObservableObject {
     @Published var loggingOption: DittoLogger.LoggingOptions
@@ -79,15 +80,11 @@ class DittoService: ObservableObject {
 
         $currentLocationId
             .sink {[weak self] locId in
-                guard let locId = locId else {
-//                    print("DS.$currentLocationId.sink: value in is NIL --> return")
-                    return
-                }
-                guard let self = self else { return }
+                guard let locId = locId, let self = self else { return }
                 saveLocationId(locId)
-
+                // reset subscription for new location
                 ordersSubscription.cancel()
-                ordersSubscription = orderDocs.find(ordersQuerySinceYesterday(locId: locId)).subscribe()
+                ordersSubscription = orderDocs.find(ordersQuerySinceTTL(locId: locId)).subscribe()
                 updateOrdersPublisher(locId)
                 updateCurrentLocation(locId)
             }
@@ -111,20 +108,18 @@ class DittoService: ObservableObject {
     }
     
     func updateOrdersPublisher(_ locId: String) {
-        print("DS.\(#function) --> in")
         allOrdersCancellable = orderDocs
             .find(ordersSubscription.query)
             .liveQueryPublisher()
             .map { docs, _ in
-//                print("DS.\(#function): locationOrderDocs publisher fired with count: \(docs.count)")
                 return docs.map { $0 }
             }
             .assign(to: \.locationOrderDocs, on: self)
     }
         
-    func ordersQuerySinceYesterday(locId: String) -> String {
+    func ordersQuerySinceTTL(locId: String) -> String {
         "_id.locationId == '\(locId)' && " +
-        "createdOn > '\(DateFormatter.iso24HoursAgoString)'"
+        "createdOn > '\(DateFormatter.isoTimeFromNowString(-OrderTTL))'"
     }
     
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
@@ -141,7 +136,6 @@ class DittoService: ObservableObject {
     
     func addOrder(_ order: Order) {
         do {
-//            print("DS.\(#function): try add order: \(order.id)")
             try orderDocs.upsert(order.docDictionary())
         } catch {
             print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
@@ -150,7 +144,6 @@ class DittoService: ObservableObject {
 
     func addItemToOrder(item: OrderItem, order: Order) {
         orderDocs.findByID(order._id).update { mutableDoc in
-//            print("DS.\(#function): UPDATE mutableDoc.saleItemIds: \(item.id))")
             mutableDoc?["saleItemIds"][item.id].set(item.saleItem.id) //[uuid_createdOn: saleItemId]
             mutableDoc?["status"].set(order.status.rawValue)
         }
@@ -158,13 +151,7 @@ class DittoService: ObservableObject {
     
     func updateOrderStatus(_ order: Order, with status: OrderStatus) {
         orderDocs.findByID(order._id).update { mutableDoc in
-//            let oldStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
-//            print("DS.\(#function): try UPDATE mutableDoc.status from \(oldStatus.title) to \(status.title)")
-
             mutableDoc?["status"].set(status.rawValue)
-
-//            let newStatus = OrderStatus(rawValue: mutableDoc!["status"].intValue)!
-//            print("DS.\(#function): mutableDoc.status UPDATED to \(newStatus.title)")
         }
     }
 
@@ -176,7 +163,6 @@ class DittoService: ObservableObject {
                 try transactions.upsert(transx.docDictionary())
 
                 orders.findByID(order._id).update { mutableDoc in
-//                    print("DS.\(#function): add (\(transx.id)) to mutableDoc.transactionIds)")
                     mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]                    
                 }
             } catch {
@@ -187,13 +173,79 @@ class DittoService: ObservableObject {
     
     func clearOrderSaleItemIds(_ order: Order) {
         orderDocs.findByID(DittoDocumentID(value: order._id)).update { mutableDoc in
-//                print("DS.\(#function): CLEAR ORDER ITEMS")
             for id in order.saleItemIds.keys {
                 mutableDoc?["saleItemIds"][id].remove()
             }
             let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
             mutableDoc?["status"].set(open)
         }
+    }
+    
+    func restoredIncompleteOrder(for locId: String?) -> Order? {
+        guard let locId = locId ?? UserDefaults.standard.storedLocationId else {
+            return nil
+        }
+        
+        let incompleteOrderDocs = orderDocs.find(
+            "_id.locationId == '\(locId)'" +
+            " && createdOn > '\(DateFormatter.isoTimeFromNowString(-OrderTTL))'" +
+            " && deviceId == '\(deviceId)'" +
+            " && length(keys(transactionIds)) == 0"
+        ).exec().sorted(by: { $0["createdOn"].stringValue < $1["createdOn"].stringValue })
+
+//        print("POS_VM.\(#function): incompleteOrderDocs.count: \(incompleteOrderDocs.count)")
+        
+        // Reset as new
+        if let doc = incompleteOrderDocs.first {
+            print("DS.\(#function): FOUND INCOMPLETE ORDER TO RECYCLE")
+            var order = Order(doc: doc)
+            
+            resetOrderDoc(for: order)
+
+            // The returned Order object is only to immediately update the UI by the caller;
+            // a new Order object will be created with the values mutated in resetOrderDoc()
+            // when the liveQuery/Publisher is fired by the update
+            order.createdOn = Date()
+            order.saleItemIds.removeAll()
+            order.orderItems = []
+            order.status = OrderStatus.open
+            return order
+        }
+        
+//        print("DS.\(#function): RETURN --> NIL")
+        return nil
+    }
+    
+    func resetOrderDoc(for order: Order) {
+        orderDocs.findByID(order.docId()).update { mutableDoc in
+            print("DS.\(#function): RESET ORDER \(order.title)")
+            
+            for id in order.saleItemIds.keys {
+                mutableDoc?["saleItemIds"][id].remove()
+            }
+            
+            let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
+            mutableDoc?["status"].set(open)
+            
+            // Reset createdOn to now
+            let newDateStr = DateFormatter.isoDate.string(from: Date())
+            mutableDoc?["createdOn"].set(newDateStr)
+        }
+    }
+    
+    func updateOrderCreatedDate(_ order: Order, date: Date = Date()) {
+        orderDocs.findByID(order.id).update {mutableDoc in
+            let newDateStr = DateFormatter.isoDate.string(from: date)
+            mutableDoc?["createdOn"].set(newDateStr)
+        }
+    }
+
+    // Called when going to background from DittoPOS main
+    func purgeOldOrders() {
+        let time = DateFormatter.isoTimeFromNowString(-OrderTTL)
+        let docs = orderDocs.find("createdOn <= '\(time)'").exec()
+        print("DS.\(#function): EVICT \(docs.count) orders < \(time)")
+        orderDocs.find("createdOn <= '\(time)'").evict()
     }
 }
 

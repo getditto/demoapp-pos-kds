@@ -18,6 +18,7 @@ class POSOrderVM: ObservableObject {
         dataVM.$currentOrder
             .sink {[weak self] order in
                 guard let self = self, let order = order else { return }
+                barTitle = "Order #\(order.title)"
                 orderItems = order.orderItems
             }
             .store(in: &cancellables)
@@ -44,7 +45,7 @@ struct POSOrderView: View {
                                 divider()
                             }
                             .onChange(of: vm.orderItems.count) { _ in
-                                print("POSOrderView.onChange(of vm.orderItems.count: \(vm.orderItems.count) FIRED")
+//                                print("POSOrderView.onChange(of vm.orderItems.count: \(vm.orderItems.count) FIRED")
                                 if let itemId = vm.orderItems.last?.id {
                                     withAnimation {
                                         svr.scrollTo(itemId)//, anchor: .bottom)
@@ -54,7 +55,6 @@ struct POSOrderView: View {
                         }
                     }
                 }
-                
                 .listStyle(.plain)
                 
                 // order total and pay buttons

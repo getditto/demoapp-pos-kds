@@ -50,6 +50,14 @@ class LocationsVM: ObservableObject {
             .sink {[weak self] item in
                 guard let item = item else { return }
                 if item.locationID != self?.dataVM.currentLocationId {
+                    
+                    // Important: this must be called before setting dittoService.currentLocationId
+                    // because POS_VM listens to reset incomplete orders before changing location
+                    NotificationCenter.default.post(
+                        name: Notification.Name("willUpdateToLocationId"),
+                        object: item.locationID
+                    )
+                    
                     print("LocationsVM.$selectedItem.sink --> SET dittoService.currentLocationId: \(item.locationID)")
                     self?.dataVM.currentLocationId = item.locationID
                 }
@@ -68,7 +76,7 @@ struct LocationsView: View {
             }
             Spacer()
         }
-        .onAppear { print("LocationsView.onAppear") }
+//        .onAppear { print("LocationsView.onAppear") }
         .navigationBarTitle("Locations")
         .navigationBarTitleDisplayMode(.inline)
     }
