@@ -73,7 +73,7 @@ struct KDSOrderView: View {
         }
         .padding(4)
         .onTapGesture {
-            print("KDSOrderView \(titleText) tapped")
+//            print("KDSOrderView \(titleText) tapped")
             vm.incrementOrderStatus()
         }
 //        .onAppear {
