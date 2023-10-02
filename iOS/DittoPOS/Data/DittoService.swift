@@ -239,14 +239,6 @@ class DittoService: ObservableObject {
             mutableDoc?["createdOn"].set(newDateStr)
         }
     }
-
-    // Called when going to background from DittoPOS main
-    func purgeOldOrders() {
-        let time = DateFormatter.isoTimeFromNowString(-OrderTTL)
-        let docs = orderDocs.find("createdOn <= '\(time)'").exec()
-        print("DS.\(#function): EVICT \(docs.count) orders < \(time)")
-        orderDocs.find("createdOn <= '\(time)'").evict()
-    }
 }
 
 extension DittoService {
