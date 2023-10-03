@@ -21,7 +21,7 @@ struct POSGridView: View {
                         SaleItemView(item, length: itemSide)
                             .frame(width: itemSide, height: itemSide + 8)
                             .onTapGesture {
-                                print("\(item) tapped")
+//                                print("\(item) tapped")
                                 dataVM.addOrderItem(item)
                             }
                     }
@@ -29,7 +29,8 @@ struct POSGridView: View {
                 .padding(.vertical, 16)
             }
         }
-        .onAppear { print("POSGridView.onAppear"); columns = cols() }
+        .onAppear { columns = cols() }
+//        .onAppear { print("POSGridView.onAppear")
 //        .onRotate { orient in
 //            guard orient.isLandscape || orient.isPortrait else { return }
 //            print("MenuGrid.onRotate: orientation: \(orient.description)")

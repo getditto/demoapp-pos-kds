@@ -106,12 +106,6 @@ struct Order: Identifiable, Hashable, Equatable {
     }
 }
 
-//extension Order {
-//    static func isPaid(_ doc: DittoDocument) -> Bool {
-//        doc["transactionIds"].dictionaryValue.count > 0
-//    }
-//}
-
 extension Order {
     init(doc: DittoDocument) {
         self._id = doc["_id"].dictionaryValue as! [String: String]
