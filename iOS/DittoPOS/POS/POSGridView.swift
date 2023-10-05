@@ -16,12 +16,11 @@ struct POSGridView: View {
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 24) {
+                LazyVGrid(columns: columns) {
                     ForEach(dataVM.saleItems, id: \.self) { item in
                         SaleItemView(item, length: itemSide)
                             .frame(width: itemSide, height: itemSide + 8)
                             .onTapGesture {
-//                                print("\(item) tapped")
                                 dataVM.addOrderItem(item)
                             }
                     }
@@ -30,22 +29,14 @@ struct POSGridView: View {
             }
         }
         .onAppear { columns = cols() }
-//        .onAppear { print("POSGridView.onAppear")
-//        .onRotate { orient in
-//            guard orient.isLandscape || orient.isPortrait else { return }
-//            print("MenuGrid.onRotate: orientation: \(orient.description)")
-//            DispatchQueue.main.async {
-//                columns = cols()
-//            }
-//        }
     }
     
     func cols() -> [GridItem] {
-        [GridItem(.adaptive(minimum: itemSide))]
+        [GridItem(.adaptive(minimum: HsizeClass == .compact ? 100 : 160), alignment: .top)]
     }
     
     var itemSide: CGFloat {
-        HsizeClass == .compact ? 80 : 160
+        HsizeClass == .compact ? 100 : 160
     }
 }
 

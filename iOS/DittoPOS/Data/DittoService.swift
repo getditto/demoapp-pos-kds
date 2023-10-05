@@ -192,8 +192,6 @@ class DittoService: ObservableObject {
             " && deviceId == '\(deviceId)'" +
             " && length(keys(transactionIds)) == 0"
         ).exec().sorted(by: { $0["createdOn"].stringValue < $1["createdOn"].stringValue })
-
-//        print("POS_VM.\(#function): incompleteOrderDocs.count: \(incompleteOrderDocs.count)")
         
         // Reset as new
         if let doc = incompleteOrderDocs.first {
@@ -212,7 +210,6 @@ class DittoService: ObservableObject {
             return order
         }
         
-//        print("DS.\(#function): RETURN --> NIL")
         return nil
     }
     

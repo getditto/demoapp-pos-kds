@@ -20,9 +20,7 @@ class KDSOrderVM: ObservableObject {
         DittoService.shared.orderPublisher(order)
             .filter( {$0.status == .inProcess || $0.status == .processed} )
             .sink {[weak self] updatedOrder in
-//                print("KDSOrderViewVM.$orderPublisher --> ORDER UPDATED: \(updatedOrder)")
                 self?.order = updatedOrder
-//                print("KDSOrderViewVM.$orderPublisher --> ORDER UPDATED with items.summary: \(order.summary.count)")
                 self?.orderItems = order.summary
             }
             .store(in: &cancelleables)
@@ -30,7 +28,6 @@ class KDSOrderVM: ObservableObject {
     
     func incrementOrderStatus() {
         let newStatus = OrderStatus(rawValue: order.status.rawValue + 1)!
-//        print("KDSOrderViewVM.\(#function): increment order.\(order.status.title) to \(newStatus.title)")
         DittoService.shared.updateOrderStatus(order, with: newStatus)
     }
 }
@@ -40,7 +37,6 @@ struct KDSOrderView: View {
     
     init(_ order: Order) {
         self._vm = StateObject(wrappedValue: KDSOrderVM(order))
-//        print("KDSOrderView.init() --> order.items: \(order.orderItems.count)")
     }
     
     var body: some View {
@@ -73,12 +69,8 @@ struct KDSOrderView: View {
         }
         .padding(4)
         .onTapGesture {
-//            print("KDSOrderView \(titleText) tapped")
             vm.incrementOrderStatus()
         }
-//        .onAppear {
-//            print("KDSOrderView.onAppear --> status.color: \(vm.order.status.color)")
-//        }
     }
 
     var titleText: String {

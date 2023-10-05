@@ -58,16 +58,16 @@ class POSOrderTotalVM: ObservableObject {
 
 struct POSOrderTotalView: View {
     @StateObject var vm = POSOrderTotalVM()
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            divider()
             HStack(alignment: .bottom, spacing: 0) {
                 Text("Total")
                 Spacer()
                 Text(vm.orderTotal.currencyFormatted())
             }
-                .padding(.bottom, 4)
+            .scaledFont(size: 16)
+            .padding(.vertical, 4)
             
             HStack {
                 Button {

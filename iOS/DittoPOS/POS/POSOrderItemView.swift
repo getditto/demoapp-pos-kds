@@ -25,7 +25,7 @@ struct POSOrderItemView: View {
             Spacer()
             Text(item.price.description)
         }
-        .padding(.horizontal, 16)
+        .scaledFont(size: 16)
     }
 }
 
