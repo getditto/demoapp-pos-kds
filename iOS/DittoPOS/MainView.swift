@@ -91,6 +91,7 @@ struct MainView: View {
                     }
                     .tag(TabViews.locations)
             }
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarLeading ) {
                     Button {
