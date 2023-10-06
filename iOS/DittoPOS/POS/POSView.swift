@@ -16,14 +16,14 @@ class POSViewModel: ObservableObject {
     }
     
     func updateWidths() {
-        switch UIDevice.current.orientation {
-        case .landscapeLeft, .landscapeRight:
-            menuViewWidth = .screenWidth * 0.66
-            orderViewWidth = .screenWidth * 0.30
-        default:
+//        switch UIDevice.current.orientation {
+//        case .landscapeLeft, .landscapeRight:
+//            menuViewWidth = .screenWidth * 0.66
+//            orderViewWidth = .screenWidth * 0.30
+//        default:
             menuViewWidth = .screenWidth * 0.56
             orderViewWidth = .screenWidth * 0.40
-        }
+//        }
     }
 }
 
@@ -34,16 +34,13 @@ struct POSView: View {
             HStack {
                 POSGridView()
                     .frame(width: vm.menuViewWidth)
-//                .border(.red)
                 
                 Divider()
                 
                 POSOrderView()
                     .padding(8)
                     .frame(width: vm.orderViewWidth)
-//                .border(.green)
             }
-//            .onAppear { print("POSView.onAppear") }            
             .onRotate { orient in
                 guard orient.isLandscape || orient.isPortrait else { return }
                 DispatchQueue.main.async {

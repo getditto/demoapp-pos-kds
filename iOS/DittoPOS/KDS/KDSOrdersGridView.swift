@@ -9,7 +9,6 @@
 import SwiftUI
 
 struct KDSOrdersGridView: View {
-    @Environment(\.horizontalSizeClass) private var HsizeClass
     @Environment(\.colorScheme) private var colorScheme
     @StateObject var vm = KDS_VM()
     @State var columns = [GridItem(.adaptive(minimum: 172), alignment: .top)]

@@ -27,11 +27,12 @@ class POSOrderVM: ObservableObject {
 
 struct POSOrderView: View {
     @StateObject var vm = POSOrderVM()
-    
+
     var body: some View {
             VStack(spacing: 0) {
                 // title view
                 Text(vm.barTitle)
+                    .scaledFont(size: 16)
                     .padding(.bottom, 8)
                 divider()
                     .padding(.bottom, 8)
@@ -45,16 +46,16 @@ struct POSOrderView: View {
                                 divider()
                             }
                             .onChange(of: vm.orderItems.count) { _ in
-//                                print("POSOrderView.onChange(of vm.orderItems.count: \(vm.orderItems.count) FIRED")
                                 if let itemId = vm.orderItems.last?.id {
                                     withAnimation {
-                                        svr.scrollTo(itemId)//, anchor: .bottom)
+                                        svr.scrollTo(itemId, anchor: .bottom)
                                     }
                                 }
                             }
                         }
                     }
                 }
+                .padding(.bottom, 4)
                 .listStyle(.plain)
                 
                 // order total and pay buttons

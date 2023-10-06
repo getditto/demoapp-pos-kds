@@ -87,9 +87,9 @@ enum OrderStatus: Int, CaseIterable, Codable {
 // Order
 //--------------------------------------------------------------------------------------------------
 struct Order: Identifiable, Hashable, Equatable {
-    let _id: [String: String] // id, locationId
+    let _id: [String: String] //[id, locationId]
     let deviceId: String
-    var saleItemIds = [String: String]() //timestamp, saleItemId
+    var saleItemIds = [String: String]() //[timestamp, saleItemId]
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
     var orderItems = [OrderItem]()
     var createdOn: Date
@@ -170,11 +170,9 @@ extension Order {
             let draftSaleItemsArray = SaleItem.demoItems
             if let saleItem = draftSaleItemsArray.first( where: { $0.id == saleItemId } ) {
                 let orderItem = OrderItem(id: compoundStringId, saleItem: saleItem)
-//                print("Order.getOrderItems(): append orderItem: \(orderItem.saleItem.title)")
                 items.append(orderItem)
             }
         }
-//        print("Order.getOrderItems(): return \(items.count)")
         return items.sorted(by: { $0.createdOn < $1.createdOn })
     }
     

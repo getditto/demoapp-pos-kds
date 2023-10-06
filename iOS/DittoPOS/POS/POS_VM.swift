@@ -39,7 +39,6 @@ class POS_VM: ObservableObject {
                       !outgoingCurrentOrder.isPaid,
                       let _ = dittoService.currentLocation else { return }
 
-//                print("POS_VM.Notification.willUpdateToLocationId.sink: CALL to reset OUTGOING currentOrder for \(outgoingLoc.name)")
                 dittoService.resetOrderDoc(for: outgoingCurrentOrder)
             }
             .store(in: &cancellables)
@@ -51,7 +50,6 @@ class POS_VM: ObservableObject {
 
                 if let order = currentOrder,
                    order.locationId == loc.id && !order.isPaid {
-//                        print("POS_VM.$currentLocation.sink: CURRENT ORDER VALIDATED --> RETURN")
                         return
                     }
                 
@@ -59,12 +57,10 @@ class POS_VM: ObservableObject {
                 // it as the currentOrder and return. If there is none, execution will continue
                 // and a new order will be added and set below.
                 if let restoredOrder = dittoService.restoredIncompleteOrder(for: loc.id) {
-//                    print("POS_VM.$currentLocation.sink: SET RECYCLED ORDER --> RETURN")
                     currentOrder = restoredOrder
                     return
                 }
 
-//                print("POS_VM.$currentLocation.sink: CALL addNewCurrentOrder()")
                 addNewCurrentOrder(for: loc.id)
             }
             .store(in: &cancellables)
@@ -141,14 +137,11 @@ class POS_VM: ObservableObject {
             // then create new order automatically
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
                 guard let self = self else { return }
-                // 1st try to recycle
+                // first try to recycle
                 if let restoredOrder = dittoService.restoredIncompleteOrder(for: order.locationId) {
-//                    print("POS_VM.\(#function): ORDER PAID - SET RECYCLED ORDER --> RETURN")
                     currentOrder = restoredOrder
                     return
                 }
-
-//                print("POS_VM.\(#function): ORDER PAID - CALL to create/add NEW ORDER")
                 addNewCurrentOrder(for: locId)
             }
     }
