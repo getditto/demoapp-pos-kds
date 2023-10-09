@@ -38,8 +38,8 @@ struct POSOrderView: View {
                     .padding(.bottom, 8)
                 
                 // Order items scrollview
-                ScrollView(showsIndicators: false) {
-                    ScrollViewReader { svr in
+                ScrollViewReader { svr in
+                    ScrollView(showsIndicators: false) {
                         Section {
                             ForEach(vm.orderItems) { item in
                                 POSOrderItemView(item)
@@ -48,8 +48,13 @@ struct POSOrderView: View {
                             .onChange(of: vm.orderItems.count) { _ in
                                 if let itemId = vm.orderItems.last?.id {
                                     withAnimation {
-                                        svr.scrollTo(itemId, anchor: .bottom)
+                                        svr.scrollTo(itemId, anchor: .top)
                                     }
+                                }
+                            }
+                            .onRotate { orientation in
+                                withAnimation {
+                                    scrollToBottom(proxy: svr)
                                 }
                             }
                         }
@@ -61,6 +66,25 @@ struct POSOrderView: View {
                 // order total and pay buttons
                 POSOrderTotalView()
             }
+    }
+    
+    func scrollToBottom(proxy: ScrollViewProxy) {
+        let orientation = UIDevice.current.orientation
+        guard orientation.isLandscape || orientation.isPortrait else { return }
+
+        if let itemId = vm.orderItems.last?.id {
+            /* A delay is needed before scrolling to bottom of orderItems list when rotating to
+             landscape orientation, and the amount of delay is different on different devices.
+             0.5 second delay seems to work reliably on tested devices: iPhones SE, 12Pro, iPad Air5
+             */
+            let delay = (UIScreen.isPortrait && orientation.isLandscape && vm.orderItems.count > 4) ? 0.5 : 0.0
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation {
+                    proxy.scrollTo(itemId, anchor: .bottom)
+                }
+            }
+        }
     }
 }
 
