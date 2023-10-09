@@ -54,14 +54,11 @@ class MainVM: ObservableObject {
 extension MainVM {
     static func storedSelectedTab() -> TabViews? {
         if let tabInt = UserDefaults.standard.storedSelectedTab {
-//            print("MainVM.storedSelectedTab: return \(TabViews(rawValue: tabInt)!)")
             return TabViews(rawValue: tabInt)
         }
-//        print("MainVM.storedSelectedTab: return NIL")
         return nil
     }
     static func saveSelectedTab(_ tab: TabViews) {
-//        print("MainVM.saveSelectedTab: SAVE \(tab)")
         UserDefaults.standard.storedSelectedTab = tab.rawValue
     }
 }
