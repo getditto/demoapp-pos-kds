@@ -33,6 +33,7 @@ class KDSOrderVM: ObservableObject {
 }
 
 struct KDSOrderView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @StateObject var vm: KDSOrderVM
     
     init(_ order: Order) {
@@ -41,7 +42,7 @@ struct KDSOrderView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(timestampText) | \(titleText)")
+            Text("\(timestampText) #\(titleText)")
                 .padding(4)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(maxWidth: .infinity)                
@@ -55,12 +56,9 @@ struct KDSOrderView: View {
             HStack(spacing: 0) {
                 Spacer()
                 if vm.order.isPaid {
-                    Group {
-                        Image(systemName: "dollarsign")
-                        Image(systemName: "dollarsign")
-                    }
-                    .foregroundColor(.yellow)
-                    .padding(0)
+                    Image(systemName: "checkmark.circle")
+                        .foregroundColor(.black)
+                        .padding(2)
                 }
             }
             .frame(height: 20)
