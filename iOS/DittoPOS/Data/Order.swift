@@ -74,8 +74,8 @@ enum OrderStatus: Int, CaseIterable, Codable {
     var color: Color {
         switch self {
         case .open: return Color.gray
-        case .inProcess: return Color.blue
-        case .processed: return Color.green
+        case .inProcess: return Color("inProcessColor")
+        case .processed: return Color("processedColor")
         case .delivered: return Color.black
         case .canceled: return Color.orange
         }
