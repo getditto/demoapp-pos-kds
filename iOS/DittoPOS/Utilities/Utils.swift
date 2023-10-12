@@ -140,3 +140,26 @@ extension View {
     }
 }
 
+extension JSONEncoder {
+    static func encodedObject<T: Codable>(_ obj: T) -> Data? {
+        do {
+            let jsonData = try JSONEncoder().encode(obj)
+            return jsonData
+        } catch {
+            print("JSONEncoder.\(#function): ERROR: \(error.localizedDescription)")
+            return nil
+        }
+    }
+}
+extension JSONDecoder {
+    static func objectFromData<T: Codable>(_ jsonData: Data) -> T? {
+        let decoder = JSONDecoder()
+        do {
+            let obj = try decoder.decode(T.self, from: jsonData)
+            return obj
+        } catch {
+            print("JSONDecoder.\(#function): ERROR: \(error.localizedDescription)")
+            return nil
+        }
+    }
+}

@@ -11,13 +11,34 @@ import DittoExportLogs
 import DittoSwift
 import SwiftUI
 
+/*
+ TRUE:
+     - enables the Locations tab view
+     - requires user selection from default collection of demo locations listed in Locations tab
+     - allows switching between locations at runtime, e.g. to see orders from different locations
+       in KDS view
+ FALSE:
+    - enables Profile form view at first launch; hides Locations tab
+    - requires user to create location from form view company and location name values
+    - KDS view displays only orders for location created from profile
+ 
+ Note: in both cases, the (latest selected) locationId is persisted in UserDefaults and
+       this location is used at launch
+ */
+let USE_DEFAULT_LOCATIONS = false
+
+// Displays gear icon for DittoSwiftTools SettingsView
+let ENABLE_SETTINGS_VIEW = false
+
 let defaultLoggingOption: DittoLogger.LoggingOptions = .error
+
+// Used to constrain orders subscriptions to 1 day old or newer
 let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
 class DittoService: ObservableObject {
     @Published var loggingOption: DittoLogger.LoggingOptions
     private var cancellables = Set<AnyCancellable>()
-
+    
     @Published private(set) var allLocationDocs = [DittoDocument]()
     private var allLocationsCancellable = AnyCancellable({})
 
@@ -52,7 +73,7 @@ class DittoService: ObservableObject {
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
     
-    private init() {
+    private init() {        
         self.locationsSubscription = ditto.store["locations"].findAll().subscribe()
         //initial subscription query will find zero matches
         self.ordersSubscription = ditto.store["orders"].find("_id.locationId == '00000'").subscribe()
@@ -75,7 +96,31 @@ class DittoService: ObservableObject {
             try! ditto.startSync()
         }
         
-        setupDemoLocationDocs()
+        // use case: user-defined location
+        // ProfileScreen creates User from form input and saves to UserDefaults, triggering here
+        UserDefaults.standard.userDataPublisher.sink { [weak self] jsonData in
+            guard let self = self, let data = jsonData else { return }
+            guard let user = JSONDecoder.objectFromData(data) as User? else {
+                print("DS.userDataPublisher.sink: User from jsonData FAILED --> RETURN")
+                return
+            }
+            
+            let loc = Location(id: user.locationId, name: user.locationName)
+            do {
+                try locationDocs.upsert( loc.docDictionary() )
+            } catch {
+                print("DS.\(#function): FAIL UPSERT LOCATION \(loc.id)")
+            }
+            
+            // setting here will save locId and update subscriptions
+            currentLocationId = loc.id
+        }
+        .store(in: &cancellables)
+        
+        if USE_DEFAULT_LOCATIONS {
+            setupDemoLocationDocs()
+        }
+        
         updateLocationsPublisher()
 
         $currentLocationId
@@ -97,14 +142,36 @@ class DittoService: ObservableObject {
         }
     }
     
+    // use case: user-defined location
+    // the save to UserDefaults will trigger the userData publisher sink (above)
+    func saveUser(company: String, location: String) {
+        let user = User(companyName: company, locationName: location)
+        guard let jsonData = JSONEncoder.encodedObject(user) else {
+            print("DS.\(#function): jsonData from user FAILED --> RETURN")
+            return
+        }
+        UserDefaults.standard.userData = jsonData
+    }
+    
     func updateLocationsPublisher() {
-        allLocationsCancellable = locationDocs
-            .findAll()
-            .liveQueryPublisher()
-            .map { docs, _ in
-                return docs.map { $0 }
-            }
-            .assign(to: \.allLocationDocs, on: self)
+        if USE_DEFAULT_LOCATIONS {
+            allLocationsCancellable = locationDocs
+                .findAll()
+                .liveQueryPublisher()
+                .map { docs, _ in
+                    return docs.map { $0 }
+                        .filter { Location.demoLocationsIds.contains($0.id.toString()) }
+                }
+                .assign(to: \.allLocationDocs, on: self)
+        } else {
+            allLocationsCancellable = locationDocs
+                .findAll()
+                .liveQueryPublisher()
+                .map { docs, _ in
+                    return docs.map { $0 }
+                }
+                .assign(to: \.allLocationDocs, on: self)
+        }
     }
     
     func updateOrdersPublisher(_ locId: String) {

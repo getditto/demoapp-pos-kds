@@ -15,12 +15,17 @@ enum TabViews: Int, Identifiable {
 }
 
 class MainVM: ObservableObject {
-    @Published var selectedTab: TabViews = MainVM.storedSelectedTab() ?? .locations
+    @Published var selectedTab: TabViews = MainVM.storedSelectedTab() ?? (USE_DEFAULT_LOCATIONS ? .locations : .pos)
     @Published var presentSettingsView = false
+    @Published var presentProfileScreen: Bool = false
     @Published var mainTitle = DittoService.shared.currentLocation?.name ?? "Please Select Location"
     private var cancellables = Set<AnyCancellable>()
     
     init() {
+        if !USE_DEFAULT_LOCATIONS {
+            self.presentProfileScreen = DittoService.shared.currentLocationId == nil
+        }
+        
         $selectedTab
             .dropFirst()
             .sink { tab in
@@ -82,26 +87,32 @@ struct MainView: View {
                     }
                     .tag(TabViews.kds)
                 
-                LocationsView()
-                    .tabItem {
-                        Label("Locations", systemImage: "globe")
-                    }
-                    .tag(TabViews.locations)
+                if USE_DEFAULT_LOCATIONS {
+                    LocationsView()
+                        .tabItem {
+                            Label("Locations", systemImage: "globe")
+                        }
+                        .tag(TabViews.locations)
+                }
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItemGroup(placement: .navigationBarLeading ) {
-                    Button {
-                        vm.presentSettingsView = true
-                    } label: {
-                        Image(systemName: "gearshape")
+                if ENABLE_SETTINGS_VIEW {
+                    ToolbarItemGroup(placement: .navigationBarLeading ) {
+                        Button {
+                            vm.presentSettingsView = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
                     }
                 }
             }
             .sheet(isPresented: $vm.presentSettingsView) {
                 SettingsView()
             }
-            .onAppear { print("MainView.onAppear") }
+            .sheet(isPresented: $vm.presentProfileScreen) {
+                ProfileScreen()
+            }
             .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(StackNavigationViewStyle())

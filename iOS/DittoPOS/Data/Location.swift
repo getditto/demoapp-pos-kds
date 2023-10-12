@@ -54,7 +54,10 @@ extension Location {
             Location(id: "00006", name: "Gilbert\'s Gumbo", saleItemIds: [String : Double]()),
             Location(id: "00007", name: "Tarra\'s Tacos", saleItemIds: [String : Double]())
         ]
-
     }
     
+    // use case: filtering DittoService.allLocationDocs to only demo locations
+    static var demoLocationsIds: [String] {
+        demoLocations.map { $0.id }
+    }
 }
