@@ -28,7 +28,7 @@ import SwiftUI
 let USE_DEFAULT_LOCATIONS = false
 
 // Displays gear icon for DittoSwiftTools SettingsView
-let ENABLE_SETTINGS_VIEW = false
+let ENABLE_SETTINGS_VIEW = true
 
 let defaultLoggingOption: DittoLogger.LoggingOptions = .error
 
@@ -355,10 +355,15 @@ class DittoInstance {
     let ditto: Ditto
 
     private init() {
+        // Assign new directory in order to avoide conflict with the old SkyService version.
+        let persistenceDirURL = try? FileManager()
+            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .appendingPathComponent("ditto-pos-demo")
+
         ditto = Ditto(identity: .onlinePlayground(
             appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN
-//            enableDittoCloudSync: false // disabled for now for dev
-        ))
+            token: Env.DITTO_PLAYGROUND_TOKEN,
+            enableDittoCloudSync: false
+        ), persistenceDirectory: persistenceDirURL)
     }
 }
