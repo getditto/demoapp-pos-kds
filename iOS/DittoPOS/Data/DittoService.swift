@@ -363,7 +363,7 @@ class DittoInstance {
         ditto = Ditto(identity: .onlinePlayground(
             appID: Env.DITTO_APP_ID,
             token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: false
+            enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
     }
 }
