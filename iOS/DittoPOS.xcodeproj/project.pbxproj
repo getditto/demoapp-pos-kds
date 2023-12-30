@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */; };
 		14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* POSOrderTotalView.swift */; };
 		14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
 		1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */; };
@@ -49,6 +50,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoExtensions.swift; sourceTree = "<group>"; };
 		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
 		1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderItemView.swift; sourceTree = "<group>"; };
@@ -213,6 +215,7 @@
 			isa = PBXGroup;
 			children = (
 				14CD51BE2A2FE3EE0018DE87 /* DittoService.swift */,
+				112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */,
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
@@ -345,6 +348,7 @@
 				14CD51BF2A2FE3EE0018DE87 /* DittoService.swift in Sources */,
 				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
+				112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
 				14AB43882AD71FE900E58566 /* User.swift in Sources */,

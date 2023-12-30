@@ -18,23 +18,22 @@ class KDS_VM: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        dittoService.$locationOrderDocs
-            .sink {[weak self ] docs in
+        dittoService.$locationOrders
+            .sink {[weak self ] orders in
                 guard let self = self else { return }
 
-                let filteredDocs = docs.filter {
-                    $0["status"].intValue == OrderStatus.inProcess.rawValue ||
-                    $0["status"].intValue == OrderStatus.processed.rawValue
+                let filteredOrders = orders.filter {
+                    $0.status.rawValue == OrderStatus.inProcess.rawValue ||
+                    $0.status.rawValue == OrderStatus.processed.rawValue
                 }
-                let updatedOrders = filteredDocs.map { Order(doc: $0) }
-                let sortedOrders = updatedOrders.sorted { (lhs, rhs) in
+                let sortedOrders = filteredOrders.sorted { (lhs, rhs) in
                     if lhs.status == rhs.status {
                         return lhs.createdOn > rhs.createdOn
                     }
                     return lhs.status.rawValue < rhs.status.rawValue
                 }
 
-                orders = sortedOrders
+                self.orders = sortedOrders
             }
             .store(in: &cancellables)
     }

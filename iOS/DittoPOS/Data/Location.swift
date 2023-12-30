@@ -9,8 +9,6 @@
 import DittoSwift
 import Foundation
 
-extension Location: Codable {}
-
 /*
  NOTE:
  Each Location should have its own collection of SaleItems, which is not (yet?) implemented.
@@ -20,29 +18,71 @@ extension Location: Codable {}
 struct Location: Identifiable, Hashable, Equatable {
     let id: String
     let name: String
-//    var details: String?
+    //    var details: String?
     var saleItemIds = [String: Double]() // [saleItemID: price.amount]
+
+    var _id: String { id } // For DittoDecodable
+
+    static let collectionName = "locations"
 }
 
-extension Location {
-    init(doc: DittoDocument) {
-        self.id = doc["_id"].stringValue
-        self.name = doc["name"].stringValue
-//        self.details = doc["details"].string
-        self.saleItemIds = doc["saleItemIds"].dictionaryValue as! [String: Double]
+// MARK: - Initializer
+extension Location: DittoDecodable {
+    init(value: [String: Any?]) {
+        self = Location(
+            id: value["_id"] as! String,
+            name: value["name"] as! String,
+            saleItemIds: value["saleItemIds"] as? [String: Double] ?? [:]
+        )
     }
 }
 
+// MARK: - Query
 extension Location {
-    func docDictionary() -> [String: Any?] {
-        [
-            "_id": id,
-            "name": name,
-            "saleItemIds": saleItemIds
-        ]
+    var insertDefaultQuery: DittoQuery {
+        (
+            string: """
+                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                INITIAL DOCUMENTS (:new)
+                """,
+            args: [
+                "new": [
+                    "_id": id,
+                    "name": name,
+                    "saleItemIds": saleItemIds
+                ]
+            ]
+        )
+    }
+
+    var insertNewQuery: DittoQuery {
+        (
+            string: """
+                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                DOCUMENTS (:new)
+                ON ID CONFLICT DO UPDATE
+            """,
+            args: [
+                "new": [
+                    "_id": id,
+                    "name": name,
+                    "saleItemIds": saleItemIds
+                ]
+            ]
+        )
+    }
+
+    static var selectAllQuery: DittoQuery {
+        (
+            string: """
+                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP)
+            """,
+            args: [:]
+        )
     }
 }
 
+// MARK: - Demo dummy data
 extension Location {
     static var demoLocations: [Location] {
         [
@@ -55,7 +95,7 @@ extension Location {
             Location(id: "00007", name: "Tarra\'s Tacos", saleItemIds: [String : Double]())
         ]
     }
-    
+
     // use case: filtering DittoService.allLocationDocs to only demo locations
     static var demoLocationsIds: [String] {
         demoLocations.map { $0.id }
