@@ -23,18 +23,8 @@ struct Transaction: Identifiable, Hashable, Equatable {
     var status: TransactionStatus
     var amount: Double
     var id: String { _id["id"]! }
-}
 
-extension Transaction {
-    func docDictionary() -> [String: Any?] {
-        [
-            "_id": _id,
-            "createdOn": DateFormatter.isoDate.string(from: createdOn),
-            "type": type,
-            "status": status,
-            "amount": amount
-        ]
-    }
+    static let collectionName = "transactions"
 }
 
 extension Transaction {
@@ -54,14 +44,31 @@ extension Transaction {
             amount: amount
         )
     }
-    
+
     static func _id(locId: String, orderId: String) -> [String: String] {
         ["id": UUID().uuidString, "locationId": locId, "orderId": orderId]
     }
 }
 
+// MARK: - Query
 extension Transaction {
-    static func statusDict(_ dict: [String: Int]) -> [String: TransactionStatus] {
-        dict.mapValues { TransactionStatus(rawValue: $0)! }
+    var insertNewQuery: DittoQuery {
+        (
+            string: """
+                INSERT INTO \(Self.collectionName)
+                DOCUMENTS (:new)
+                ON ID CONFLICT DO UPDATE
+            """,
+            args: [
+                "new":
+                    [
+                        "_id": _id,
+                        "createdOn": createdOn,
+                        "type": type,
+                        "status": status,
+                        "amount": amount
+                    ]
+            ]
+        )
     }
 }

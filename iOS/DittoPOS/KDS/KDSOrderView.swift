@@ -11,7 +11,6 @@ import SwiftUI
 
 class KDSOrderVM: ObservableObject {
     @Published var order: Order
-    @Published var orderItems = OrderItemsSummary()//[String:Int]
     private var cancelleables = Set<AnyCancellable>()
         
     init(_ order: Order) {
@@ -21,14 +20,13 @@ class KDSOrderVM: ObservableObject {
             .filter( {$0.status == .inProcess || $0.status == .processed} )
             .sink {[weak self] updatedOrder in
                 self?.order = updatedOrder
-                self?.orderItems = order.summary
             }
             .store(in: &cancelleables)
     }
     
     func incrementOrderStatus() {
         let newStatus = OrderStatus(rawValue: order.status.rawValue + 1)!
-        DittoService.shared.updateOrderStatus(order, with: newStatus)
+        DittoService.shared.updateStatus(of: order, with: newStatus)
     }
 }
 
