@@ -269,6 +269,10 @@ final class DittoInstance {
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
 
+        // Sync Small Peer Info to Big Peer
+        ditto.smallPeerInfo.isEnabled = true
+        ditto.smallPeerInfo.syncScope = .bigPeerOnly
+
         try! ditto.disableSyncWithV3()
     }
 }
