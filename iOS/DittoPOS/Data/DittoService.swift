@@ -90,6 +90,14 @@ class DittoService: ObservableObject {
 
             // setting here will save locId and update subscriptions
             currentLocationId = user.locationId
+            
+            do {
+                // add locationId to small_peer_info metadata
+                try ditto.smallPeerInfo.setMetadata(["locationId": user.locationId])
+            } catch {
+                print("Error \(error)")
+            }
+
         }
         .store(in: &cancellables)
 
