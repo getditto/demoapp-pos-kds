@@ -73,7 +73,7 @@ struct MainView: View {
     @ObservedObject var dittoService = DittoService.shared
     
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             TabView(selection: $vm.selectedTab) {
                 POSView()
                     .tabItem {
@@ -113,8 +113,10 @@ struct MainView: View {
             .sheet(isPresented: $vm.presentProfileScreen) {
                 ProfileScreen()
             }
+            #if !os(tvOS)
             .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .navigationViewStyle(StackNavigationViewStyle())
         }
     }

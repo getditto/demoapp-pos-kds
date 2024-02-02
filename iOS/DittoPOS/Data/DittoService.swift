@@ -343,7 +343,7 @@ extension DittoService {
         default:
             DittoLogger.enabled = true
             DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
-            if let logFileURL = DittoLogManager.shared.logFileURL {
+            if let logFileURL = LogFileConfig.createLogFileURL() {
                 DittoLogger.setLogFileURL(logFileURL)
             }
         }

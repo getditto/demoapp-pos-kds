@@ -52,11 +52,13 @@ struct POSOrderView: View {
                                     }
                                 }
                             }
+                            #if !os(tvOS)
                             .onRotate { orientation in
                                 withAnimation {
                                     scrollToBottom(proxy: svr)
                                 }
                             }
+                            #endif
                         }
                     }
                 }
@@ -69,15 +71,21 @@ struct POSOrderView: View {
     }
     
     func scrollToBottom(proxy: ScrollViewProxy) {
+        #if !os(tvOS)
         let orientation = UIDevice.current.orientation
         guard orientation.isLandscape || orientation.isPortrait else { return }
+        #endif
 
         if let itemId = vm.orderItems.last?.id {
             /* A delay is needed before scrolling to bottom of orderItems list when rotating to
              landscape orientation, and the amount of delay is different on different devices.
              0.5 second delay seems to work reliably on tested devices: iPhones SE, 12Pro, iPad Air5
              */
+            #if os(tvOS)
+            let delay = 0.5
+            #else
             let delay = (UIScreen.isPortrait && orientation.isLandscape && vm.orderItems.count > 4) ? 0.5 : 0.0
+            #endif
 
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 withAnimation {
