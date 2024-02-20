@@ -357,7 +357,7 @@ class DittoInstance {
     private init() {
         // Assign new directory in order to avoide conflict with the old SkyService version.
         let persistenceDirURL = try? FileManager()
-            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
         ditto = Ditto(identity: .onlinePlayground(
