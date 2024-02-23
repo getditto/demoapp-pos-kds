@@ -17,7 +17,12 @@ class KDS_VM: ObservableObject {
     private var orderDocsCancellable = AnyCancellable({})
     private var cancellables = Set<AnyCancellable>()
 
-    init() {
+    init(previewOrders: [Order]? = nil) {
+        if let previewOrders {
+            orders = previewOrders
+            return
+        }
+
         dittoService.$locationOrderDocs
             .sink {[weak self ] docs in
                 guard let self = self else { return }

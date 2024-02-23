@@ -21,9 +21,13 @@ class POSViewModel: ObservableObject {
 //            menuViewWidth = .screenWidth * 0.66
 //            orderViewWidth = .screenWidth * 0.30
 //        default:
-            menuViewWidth = .screenWidth * 0.56
-            orderViewWidth = .screenWidth * 0.40
-//        }
+        menuViewWidth = .screenWidth * 0.56
+        #if os(tvOS)
+        orderViewWidth = .screenWidth * 0.30
+        #else
+        orderViewWidth = .screenWidth * 0.40
+        #endif
+        //        }
     }
 }
 
@@ -41,12 +45,14 @@ struct POSView: View {
                     .padding(8)
                     .frame(width: vm.orderViewWidth)
             }
+        #if !os(tvOS)
             .onRotate { orient in
                 guard orient.isLandscape || orient.isPortrait else { return }
                 DispatchQueue.main.async {
                     vm.updateWidths()
                 }
             }
+        #endif
     }
 }
 

@@ -61,9 +61,19 @@ struct KDSOrderView: View {
                         .padding(2)
                 }
             }
-            .frame(height: 20)
+            .frame(height: 35)
             .frame(maxWidth: .infinity)
             .background(vm.order.status.color)
+            #if os(tvOS)
+            Spacer()
+            Button(action: {
+                vm.incrementOrderStatus()
+            }, label: {
+                Text("clear \(vm.order.status.title)")
+                    .font(.caption)
+            })
+            .padding(.horizontal)
+            #endif
         }
         .padding(4)
         .onTapGesture {
@@ -81,6 +91,6 @@ struct KDSOrderView: View {
 
 struct KDSOrderView_Previews: PreviewProvider {
     static var previews: some View {
-        KDSOrderView(Order.preview())
+        KDSOrderView(Fixtures.order1)
     }
 }
