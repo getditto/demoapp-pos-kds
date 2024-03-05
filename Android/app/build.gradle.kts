@@ -29,7 +29,12 @@ android {
         val prop = Properties()
         prop.load(FileInputStream(credsFile))
         buildConfigField("String", "DITTO_APP_ID", prop.getProperty("DITTO_APP_ID"))
-        buildConfigField("String", "DITTO_PLAYGROUND_TOKEN", prop.getProperty("DITTO_PLAYGROUND_TOKEN"))
+        buildConfigField(
+            "String",
+            "DITTO_PLAYGROUND_TOKEN",
+            prop.getProperty("DITTO_PLAYGROUND_TOKEN")
+        )
+        buildConfigField("String", "DITTO_OFFLINE_TOKEN", prop.getProperty("DITTO_OFFLINE_TOKEN"))
     }
 
     buildTypes {
@@ -84,11 +89,11 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt (libs.hilt.compiler)
+    kapt(libs.hilt.compiler)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestAnnotationProcessor (libs.hilt.compiler)
+    androidTestAnnotationProcessor(libs.hilt.compiler)
 
     // Hilt For local unit tests
     testImplementation(libs.hilt.android.testing)

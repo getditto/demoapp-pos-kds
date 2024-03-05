@@ -23,6 +23,7 @@ You need to setup some environment variables in order to build this project:
  DITTO_PLAYGROUND_TOKEN = "replace with your playground token" 
  DITTO_AUTH_PASSWORD = "replace with your auth password" 
  DITTO_AUTH_PROVIDER = "replace with your auth provider"
+ DITTO_OFFLINE_TOKEN = "replace with your offline license token if applicable"
  ```  
 
 * `DITTO_APP_ID` is the App ID used by Ditto; this needs to be the same on each device running the
@@ -33,3 +34,5 @@ You need to setup some environment variables in order to build this project:
   authentication identity type.
 * `DITTO_AUTH_PASSWORD` is the authentication password. This is used when using the online with
   authentication identity type.
+* `DITTO_OFFLINE_TOKEN` is the offline-only playground token. This is used when using the offline
+  playground identity type. Note this feature will be discontinued in the future.
