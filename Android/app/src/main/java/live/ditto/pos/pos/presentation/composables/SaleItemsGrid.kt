@@ -1,4 +1,4 @@
-package live.ditto.pos.pos.composables
+package live.ditto.pos.pos.presentation.composables
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells

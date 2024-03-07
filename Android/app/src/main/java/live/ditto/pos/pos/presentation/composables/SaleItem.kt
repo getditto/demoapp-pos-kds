@@ -1,4 +1,4 @@
-package live.ditto.pos.pos.composables
+package live.ditto.pos.pos.presentation.composables
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

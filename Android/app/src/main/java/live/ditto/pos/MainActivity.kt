@@ -10,8 +10,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
-import live.ditto.pos.data.demoMenuData
-import live.ditto.pos.pos.composables.SaleItemsGrid
+import live.ditto.pos.core.data.demoMenuData
+import live.ditto.pos.pos.presentation.composables.SaleItemsGrid
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @AndroidEntryPoint

@@ -1,9 +1,9 @@
-package live.ditto.pos.data
+package live.ditto.pos.core.data
 
 import live.ditto.pos.R
-import live.ditto.pos.pos.composables.SaleItemData
+import live.ditto.pos.pos.presentation.composables.SaleItemData
 
-val demoMenuData = listOf<SaleItemData>(
+val demoMenuData = listOf(
     SaleItemData(
         imageResource = R.drawable.burger,
         label = "Burger"
