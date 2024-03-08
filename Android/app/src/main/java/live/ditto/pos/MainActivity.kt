@@ -3,29 +3,45 @@ package live.ditto.pos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import live.ditto.pos.core.data.demoMenuData
-import live.ditto.pos.pos.presentation.composables.SaleItemsGrid
+import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
+import live.ditto.pos.core.presentation.navigation.BottomNavItem
+import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            val bottomNavItems = listOf(
+                BottomNavItem.PointOfSale,
+                BottomNavItem.KitchenDisplay
+            )
+            val navHostController = rememberNavController()
+
             DittoPoSKDSDemoTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxHeight().width(600.dp),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SaleItemsGrid(saleItems = demoMenuData)
+                Surface {
+                    Scaffold(
+                        bottomBar = {
+                            PosKdsNavigationBar(
+                                bottomNavItems = bottomNavItems,
+                            ) {
+                                navHostController.navigate(route = it.route)
+                            }
+                        },
+                        content = {
+                            Surface(modifier = Modifier.padding(it)) {
+                                PosKdsNavHost(navHostController = navHostController)
+                            }
+                        }
+                    )
                 }
             }
         }
