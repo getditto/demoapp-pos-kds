@@ -80,12 +80,18 @@ class DittoService: ObservableObject {
 
         // use case: user-defined location
         // ProfileScreen creates User from form input and saves to UserDefaults, triggering here
-        UserDefaults.standard.userDataPublisher.sink { [weak self] jsonData in
+        //
+        // added dropFirst() because this fires immediately on init (not sure why), but we don't
+        // want it to fire until the defaults value is written
+        UserDefaults.standard.userDataPublisher
+            .dropFirst()
+            .sink { [weak self] jsonData in
             guard let self = self, let data = jsonData else { return }
             guard let user = JSONDecoder.objectFromData(data) as User? else {
                 print("DS.userDataPublisher.sink: User from jsonData FAILED --> RETURN")
                 return
             }
+
             storeService.insertLocation(of: user)
 
             // setting here will save locId and update subscriptions
@@ -111,7 +117,12 @@ class DittoService: ObservableObject {
             .combineLatest($allLocations)
             .sink {[weak self] locId, allLocations in
                 guard let locId = locId, let self = self else { return }
-                saveLocationId(locId)
+                
+                if locId != storedLocationId {
+                    print("DS.$currentLocationId.sink: call saveLocationId")
+                    saveLocationId(locId)
+                }
+                
                 self.allLocations = allLocations
 
                 // reset subscription for new location
@@ -124,10 +135,6 @@ class DittoService: ObservableObject {
             .store(in: &cancellables)
 
         self.currentLocationId = self.storedLocationId
-        if let locId = currentLocationId {
-            updateOrdersPublisher(locId)
-            updateCurrentLocation(locId)
-        }
     }
 
     // use case: user-defined location
@@ -168,32 +175,17 @@ class DittoService: ObservableObject {
     }
 
     func updateOrderTransaction(_ order: Order, with transx: Transaction) {
-        // NOTE:
-        //   DQL v1 (4.5.x) doesn't support write transactions, so these are written to the store asynchronously for now.
+        // NOTE: DQL v1 (4.5.x) doesn't support write transactions, so these
+        // are written to the store asynchronously for now.
         storeService.insert(transaction: transx)
         storeService.add(transx, to: order)
     }
 
-    func restoredIncompleteOrder(for locId: String?) -> AnyPublisher<Order, Never> {
-        guard let locId = locId ?? UserDefaults.standard.storedLocationId else {
-            return Empty().eraseToAnyPublisher()
+    func incompleteOrderFuture(locationId: String? = nil, device: String? = nil) -> Future<Order?, Never> {
+        guard let locId = locationId ?? currentLocationId else {
+            return Future { promise in  promise(.success(nil)) }
         }
-
-        return storeService.incompleteOrderPublisher(locationId: locId, deviceId: deviceId)
-            .compactMap { $0 } // Ignore nil
-            .map { [weak self] imcompleteOrder in
-                guard let self = self else { return imcompleteOrder }
-                var order = imcompleteOrder
-                self.reset(order: order)
-                order.createdOn = Date()
-                order.saleItemIds.removeAll()
-                order.status = .open
-                // The returned Order object is only to immediately update the UI by the caller;
-                // a new Order object will be created with the values mutated in resetOrderDoc()
-                // when the liveQuery/Publisher is fired by the update
-                return order
-            }
-            .eraseToAnyPublisher()
+        return storeService.incompleteOrderFuture(locationId: locId, deviceId: device ?? deviceId)
     }
 }
 
@@ -266,7 +258,7 @@ final class DittoInstance {
     let ditto: Ditto
 
     private init() {
-        // Assign new directory in order to avoide conflict with the old SkyService version.
+        // Assign new directory to avoid conflict with the old SkyService version.
         let persistenceDirURL = try? FileManager()
             .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
@@ -376,20 +368,42 @@ fileprivate struct StoreService {
                 assertionFailure("ERROR with \(#function)" + error.localizedDescription)
                 return Empty<Order?, Never>()
             }
-            .removeDuplicates()
             .eraseToAnyPublisher()
     }
 
-    func incompleteOrderPublisher(locationId: String, deviceId: String) -> AnyPublisher<Order?, Never> {
+    func incompleteOrderFuture(locationId: String, deviceId: String) -> Future<Order?, Never> {
+        print("DS.\(#function) --> in")
         let query = Order.incompleteOrderQuery(locationId: locationId, deviceId: deviceId)
-        return store.observePublisher(query: query.string, arguments: query.args, mapTo: Order.self, onlyFirst: true)
-            .catch { error in
-                assertionFailure("ERROR with \(#function)" + error.localizedDescription)
-                return Empty<Order?, Never>()
+        return Future { promise in
+            Task {
+                do {
+                    let result = try await self.store.execute(query: query.string, arguments: query.args)
+                    if let item = result.items.first {
+                        print("DS.\(#function): incomplete order FOUND")
+                        var order = Order(value: item.value)
+                        order.createdOn = Date()
+                        order.saleItemIds.removeAll()
+                        order.status = .open
+                        
+                        // The returned Order object is only to immediately update the UI by the caller;
+                        // a new Order object will be created by the observer when locationOrders is
+                        // updated by the following call to reset/update the order in the collection
+                        reset(order: order)
+                        
+                        promise(.success(Order(value: item.value)))
+                    } else {
+                        print("DS.\(#function): incomplete order NOT FOUND --> return nil")
+                        return promise(.success(nil))
+                    }
+                } catch {
+                    print(
+                        "DS.incompleteOrderPublisher: ERROR with  \(query.string) \(query.args):\n"
+                        + error.localizedDescription
+                    )
+                    return promise(.success(nil))
+                }
             }
-            .removeDuplicates()
-            .eraseToAnyPublisher()
-
+        }
     }
 }
 

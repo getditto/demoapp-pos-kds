@@ -86,7 +86,7 @@ enum OrderStatus: Int, CaseIterable, Codable {
 //--------------------------------------------------------------------------------------------------
 // Order
 //--------------------------------------------------------------------------------------------------
-struct Order: Identifiable, Hashable, Equatable {
+struct Order: Identifiable, Hashable {
     let _id: [String: String] //[id, locationId]
     let deviceId: String
     var saleItemIds = [String: String]() //[saleItemId, timestamp]
@@ -105,6 +105,12 @@ struct Order: Identifiable, Hashable, Equatable {
     }
 
     static let collectionName = "orders"
+}
+
+extension Order: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.locationId == lhs.locationId
+    }
 }
 
 // MARK: - Initializer
@@ -254,8 +260,9 @@ extension Order {
             string: """
                 UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
                 SET
-                    saleItemIds -> default(),
+                    saleItemIds -> tombstone(),
                     status = :status
+                WHERE _id = :_id
             """,
             args: [
                 "_id": _id,
@@ -269,9 +276,10 @@ extension Order {
             string: """
                 UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
                 SET
-                    saleItemIds -> default(),
+                    saleItemIds -> tombstone(),
                     status = :status,
                     createdOn = :createdOn
+                WHERE _id = :_id
             """,
             args: [
                 "_id": _id,
@@ -329,12 +337,14 @@ extension Order {
                 WHERE _id.locationId = :locationId
                     AND createdOn > :TTL
                     AND deviceId = :deviceId
-                    AND transactionIds IS NULL
+                    AND transactionIds = :transIds
+                ORDER BY createdOn ASC
             """,
             args: [
                 "locationId": locationId,
                 "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL),
-                "deviceId": deviceId
+                "deviceId": deviceId,
+                "transIds": [String: Int]()
             ]
         )
     }
