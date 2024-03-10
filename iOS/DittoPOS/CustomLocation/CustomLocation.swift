@@ -1,5 +1,5 @@
 ///
-//  User.swift
+//  CustomLocation.swift
 //  DittoPOS
 //
 //  Created by Eric Turner on 10/11/23.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct User: Codable {
+struct CustomLocation: Codable {
     let companyName: String
     let locationName: String
     var locationId: String {
