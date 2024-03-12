@@ -5,8 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import live.ditto.pos.core.data.demoMenuData
-import live.ditto.pos.pos.presentation.composables.SaleItemsGrid
+import live.ditto.pos.pos.presentation.screens.PosScreen
 
 @Composable
 fun PosKdsNavHost(navHostController: NavHostController) {
@@ -15,7 +14,7 @@ fun PosKdsNavHost(navHostController: NavHostController) {
         startDestination = BottomNavItem.PointOfSale.route
     ) {
         composable(BottomNavItem.PointOfSale.route) {
-            SaleItemsGrid(saleItems = demoMenuData)
+            PosScreen()
         }
         composable(BottomNavItem.KitchenDisplay.route) {
             Text(text = "Kitchen display screen")
