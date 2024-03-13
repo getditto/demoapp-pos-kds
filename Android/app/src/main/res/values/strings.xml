@@ -3,4 +3,7 @@
 
     <string name="navigation_label_pos">POS</string>
     <string name="navigation_label_kds">KDS</string>
+    <string name="button_cancel_order">Cancel</string>
+    <string name="button_pay">Pay</string>
+    <string name="label_total">Total</string>
 </resources>

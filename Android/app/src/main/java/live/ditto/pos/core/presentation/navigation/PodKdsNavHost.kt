@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import live.ditto.pos.pos.presentation.screens.PosScreen
+import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 
 @Composable
 fun PosKdsNavHost(navHostController: NavHostController) {

@@ -1,87 +1,127 @@
 package live.ditto.pos.core.data
 
 import live.ditto.pos.R
-import live.ditto.pos.pos.presentation.composables.SaleItemData
+import live.ditto.pos.pos.data.OrderItemUiModel
+import live.ditto.pos.pos.data.SaleItemUiModel
 
 val demoMenuData = listOf(
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.burger,
-        label = "Burger"
+        label = "Burger",
+        price = 8.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.burrito,
-        label = "Burrito"
+        label = "Burrito",
+        price = 6.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.chicken,
-        label = "Fried Chicken"
+        label = "Fried Chicken",
+        price = 8f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.chips,
-        label = "Chips"
+        label = "Potato Chips",
+        price = 2.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.coffee,
-        label = "Coffee"
+        label = "Coffee",
+        price = 1.95f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.cookies,
-        label = "Cookies"
+        label = "Cookies",
+        price = 3.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.corn_on_cob,
-        label = "Corn"
+        label = "Corn",
+        price = 3.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.fries,
-        label = "French Fries"
+        label = "French Fries",
+        price = 3.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.fruit_salad,
-        label = "Fruit Salad"
+        label = "Fruit Salad",
+        price = 6.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.gumbo,
-        label = "Gumbo"
+        label = "Gumbo",
+        price = 9.95f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.ice_cream,
-        label = "Ice Cream"
+        label = "Ice Cream",
+        price = 2.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.milk,
-        label = "Milk"
+        label = "Milk",
+        price = 2.0f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.onion_rings,
-        label = "Onion Rings"
+        label = "Onion Rings",
+        price = 3.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.pancakes,
-        label = "Pancakes"
+        label = "Pancakes",
+        price = 5.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.pie,
-        label = "Pie"
+        label = "Pie",
+        price = 4.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.salad,
-        label = "Salad"
+        label = "Salad",
+        price = 6.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.sandwich,
-        label = "Sandwich"
+        label = "Sandwich",
+        price = 4.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.soft_drink,
-        label = "Soft Drink"
+        label = "Soft Drink",
+        price = 1.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.tacos,
-        label = "Tacos"
+        label = "Tacos",
+        price = 6.5f
     ),
-    SaleItemData(
+    SaleItemUiModel(
         imageResource = R.drawable.veggies,
-        label = "Veggie Plate"
+        label = "Veggie Plate",
+        price = 7.5f
+    )
+)
+
+val demoOrderItems = listOf(
+    OrderItemUiModel(
+        name = "Fries",
+        price = "$3.99"
+    ),
+    OrderItemUiModel(
+        name = "Burger",
+        price = "$4.20"
+    ),
+    OrderItemUiModel(
+        name = "Milkshake",
+        price = "$1.50"
+    ),
+    OrderItemUiModel(
+        name = "Hot Dog",
+        price = "$9.00"
     )
 )

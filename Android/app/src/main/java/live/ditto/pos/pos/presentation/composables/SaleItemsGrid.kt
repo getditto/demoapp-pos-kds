@@ -1,5 +1,6 @@
 package live.ditto.pos.pos.presentation.composables
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -9,29 +10,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
+import live.ditto.pos.pos.data.SaleItemUiModel
 
 @Composable
-fun SaleItemsGrid(saleItems: List<SaleItemData>) {
+fun SaleItemsGrid(saleItems: List<SaleItemUiModel>) {
     LazyVerticalGrid(
-        modifier = Modifier.padding(4.dp),
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxSize(),
         columns = GridCells.Adaptive(minSize = 200.dp)
     ) {
         items(saleItems) { saleItem ->
-            SaleItem(saleItemData = saleItem)
+            SaleItem(saleItemUiModel = saleItem)
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun SaleItemsGridPreview() {
-    SaleItemsGrid(saleItems = saleItemsPreviewData)
-}
-
-private val saleItemsPreviewData = mutableListOf<SaleItemData>().apply {
-    repeat(10) {
-        this.add(
-            SaleItemData(imageResource = R.drawable.burrito, label = "Burrito #${it + 1}")
-        )
+private fun SaleItemsGridPreview() {
+    val saleItemsPreviewData = mutableListOf<SaleItemUiModel>().apply {
+        repeat(10) {
+            add(
+                SaleItemUiModel(imageResource = R.drawable.burrito, label = "Burrito #${it + 1}")
+            )
+        }
     }
+    SaleItemsGrid(saleItems = saleItemsPreviewData)
 }

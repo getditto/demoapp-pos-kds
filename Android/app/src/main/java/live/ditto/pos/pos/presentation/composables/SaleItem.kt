@@ -1,6 +1,5 @@
 package live.ditto.pos.pos.presentation.composables
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,9 +12,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
+import live.ditto.pos.pos.data.SaleItemUiModel
 
 @Composable
-fun SaleItem(saleItemData: SaleItemData, modifier: Modifier = Modifier) {
+fun SaleItem(saleItemUiModel: SaleItemUiModel, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .wrapContentSize(),
@@ -23,24 +23,18 @@ fun SaleItem(saleItemData: SaleItemData, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Image(
-            painter = painterResource(id = saleItemData.imageResource),
-            contentDescription = saleItemData.label
+            painter = painterResource(id = saleItemUiModel.imageResource),
+            contentDescription = saleItemUiModel.label
         )
-        Text(text = saleItemData.label)
+        Text(text = saleItemUiModel.label)
     }
 }
 
-data class SaleItemData(
-    @DrawableRes val imageResource: Int,
-    val label: String
-)
-
 @Preview(showBackground = true)
 @Composable
-fun SaleItemPreview() {
-    SaleItem(saleItemData = saleItemPreviewData)
+private fun SaleItemPreview() {
+    val saleItemPreviewData = SaleItemUiModel(
+        imageResource = R.drawable.burger, label = "Tasty Burger"
+    )
+    SaleItem(saleItemUiModel = saleItemPreviewData)
 }
-
-private val saleItemPreviewData = SaleItemData(
-    imageResource = R.drawable.burger, label = "Tasty Burger"
-)

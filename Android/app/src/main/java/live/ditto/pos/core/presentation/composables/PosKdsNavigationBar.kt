@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import live.ditto.pos.core.presentation.navigation.BottomNavItem
 
 @Composable
@@ -44,5 +45,17 @@ fun PosKdsNavigationBar(
                 }
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PosKdsNavigationBarPreview() {
+    val bottomNavItems = listOf(
+        BottomNavItem.PointOfSale,
+        BottomNavItem.KitchenDisplay
+    )
+    PosKdsNavigationBar(bottomNavItems = bottomNavItems) {
+
     }
 }
