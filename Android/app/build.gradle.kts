@@ -1,4 +1,5 @@
 import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.util.Properties
 
 plugins {
@@ -25,16 +26,17 @@ android {
         }
 
         // Load Ditto API keys
-        val credsFile = rootProject.file("secure/creds.properties")
-        val prop = Properties()
-        prop.load(FileInputStream(credsFile))
-        buildConfigField("String", "DITTO_APP_ID", prop.getProperty("DITTO_APP_ID"))
         buildConfigField(
             "String",
-            "DITTO_PLAYGROUND_TOKEN",
-            prop.getProperty("DITTO_PLAYGROUND_TOKEN")
+            "DITTO_ONLINE_PLAYGROUND_APP_ID",
+            getLocalProperty("dittoOnlinePlaygroundAppId")
         )
-        buildConfigField("String", "DITTO_OFFLINE_TOKEN", prop.getProperty("DITTO_OFFLINE_TOKEN"))
+
+        buildConfigField(
+            "String",
+            "DITTO_ONLINE_PLAYGROUND_TOKEN",
+            getLocalProperty("dittoOnlinePlaygroundToken")
+        )
     }
 
     buildTypes {
@@ -113,4 +115,18 @@ dependencies {
 
 kapt {
     correctErrorTypes = true
+}
+
+fun getLocalProperty(key: String, file: String = "local.properties"): String {
+    val properties = Properties()
+    val localProperties = File(file)
+    if (localProperties.isFile) {
+        InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
+            properties.load(reader)
+        }
+    } else {
+        error("File not found")
+    }
+
+    return properties.getProperty(key)
 }
