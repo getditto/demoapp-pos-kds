@@ -16,37 +16,39 @@ class POSViewModel: ObservableObject {
     }
     
     func updateWidths() {
-//        switch UIDevice.current.orientation {
-//        case .landscapeLeft, .landscapeRight:
-//            menuViewWidth = .screenWidth * 0.66
-//            orderViewWidth = .screenWidth * 0.30
-//        default:
-            menuViewWidth = .screenWidth * 0.56
-            orderViewWidth = .screenWidth * 0.40
-//        }
+        menuViewWidth = .screenWidth * 0.56
+        orderViewWidth = .screenWidth * 0.40
     }
 }
 
 struct POSView: View {    
-    @ObservedObject var vm = POSViewModel()
+    @StateObject var vm = POSViewModel()
+    @ObservedObject var posVM = POS_VM.shared
     
     var body: some View {
-            HStack {
-                POSGridView()
-                    .frame(width: vm.menuViewWidth)
-                
-                Divider()
-                
-                POSOrderView()
-                    .padding(8)
-                    .frame(width: vm.orderViewWidth)
-            }
-            .onRotate { orient in
-                guard orient.isLandscape || orient.isPortrait else { return }
-                DispatchQueue.main.async {
-                    vm.updateWidths()
+        HStack {
+            POSGridView()
+                .frame(width: vm.menuViewWidth)
+            
+            Divider()
+            
+            POSOrderView()
+                .padding(8)
+                .frame(width: vm.orderViewWidth)
+        }
+        .alert(
+            "Please select a location before ordering",
+            isPresented: $posVM.presentSelectLocationAlert) {
+                Button("OK", role: .cancel) { 
+                    Settings.selectedTabView = nil
                 }
             }
+        .onRotate { orient in
+            guard orient.isLandscape || orient.isPortrait else { return }
+            DispatchQueue.main.async {
+                vm.updateWidths()
+            }
+        }
     }
 }
 

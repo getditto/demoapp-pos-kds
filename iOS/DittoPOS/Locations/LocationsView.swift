@@ -10,38 +10,26 @@ import Combine
 import DittoSwift
 import SwiftUI
 
-struct LocationRowItem: Hashable {
-    let locationID: String
-    let name: String
-    let details: String?
-
-    init(doc: DittoDocument) {
-        self.locationID = doc["_id"].stringValue
-        self.name = doc["name"].stringValue
-        self.details = doc["details"].string
-    }
-}
-
 struct LocationRowView: View {
-    let rowItem: LocationRowItem
-    var id: String { rowItem.locationID }
+    let location: Location
+    var id: String { location.id }
     var body: some View {
-        Text(rowItem.name)
+        Text(location.name)
     }
 }
 
 class LocationsVM: ObservableObject {
     @ObservedObject var dataVM = DittoService.shared
-    @Published var selectedItem: LocationRowItem?
-    @Published var locationItems = [LocationRowItem]()
+    @Published var selectedItem: Location?
+    @Published var locations = [Location]()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        dataVM.$allLocationDocs
-            .sink {[weak self] docs in
-                self?.locationItems = docs.map { LocationRowItem(doc: $0) }
-                self?.selectedItem = self?.locationItems.first(
-                    where: { $0.locationID == self?.dataVM.currentLocationId }
+        dataVM.$allLocations
+            .sink { [weak self] locations in
+                self?.locations = locations
+                self?.selectedItem = locations.first(
+                    where: { $0.id == self?.dataVM.currentLocationId }
                 )
             }
             .store(in: &cancellables)
@@ -49,17 +37,17 @@ class LocationsVM: ObservableObject {
         $selectedItem
             .sink {[weak self] item in
                 guard let item = item else { return }
-                if item.locationID != self?.dataVM.currentLocationId {
-                    
+                if item.id != self?.dataVM.currentLocationId {
+
                     // Important: this must be called before setting dittoService.currentLocationId
                     // because POS_VM listens to reset incomplete orders before changing location
                     NotificationCenter.default.post(
                         name: Notification.Name("willUpdateToLocationId"),
-                        object: item.locationID
+                        object: item.id
                     )
                     
-                    print("LocationsVM.$selectedItem.sink --> SET dittoService.currentLocationId: \(item.locationID)")
-                    self?.dataVM.currentLocationId = item.locationID
+                    print("LocationsVM.$selectedItem.sink --> SET dittoService.currentLocationId: \(item.id)")
+                    self?.dataVM.currentLocationId = item.id
                 }
             }
             .store(in: &cancellables)
@@ -71,8 +59,8 @@ struct LocationsView: View {
         
     var body: some View {
         VStack {
-            List(vm.locationItems, id: \.self, selection: $vm.selectedItem) { item in
-                LocationRowView(rowItem: item)
+            List(vm.locations, id: \.self, selection: $vm.selectedItem) { item in
+                LocationRowView(location: item)
             }
             Spacer()
         }

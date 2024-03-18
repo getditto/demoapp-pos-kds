@@ -13,7 +13,7 @@ import SwiftUI
 // OrderItem
 //--------------------------------------------------------------------------------------------------
 /// A UI model object, not used with ditto, with unique ID, representing a saleItem
-struct OrderItem: Identifiable {
+struct OrderItem: Identifiable, Codable {
     let id: String
     let saleItem: SaleItem
     var price: Price { saleItem.price }
@@ -27,8 +27,8 @@ extension OrderItem {
     init(id: String, saleItem: SaleItem) { // initialized with string format as "uuid_timestamp"
         let parts = id.split(separator: "_")
         
-        assert(parts.count == 2, "OrderItem id string initialization error")
-        
+        assert(parts.count == 2, "OrderItem id string initialization error. id: \(id)")
+
         self.id = String(parts[0])
         self.createdOnStr = String(parts[1])
         self.createdOn = DateFormatter.isoDate.date(from: createdOnStr)!
@@ -86,12 +86,11 @@ enum OrderStatus: Int, CaseIterable, Codable {
 //--------------------------------------------------------------------------------------------------
 // Order
 //--------------------------------------------------------------------------------------------------
-struct Order: Identifiable, Hashable, Equatable {
+struct Order: Identifiable, Hashable {
     let _id: [String: String] //[id, locationId]
     let deviceId: String
-    var saleItemIds = [String: String]() //[timestamp, saleItemId]
+    var saleItemIds = [String: String]() //[saleItemId, timestamp]
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
-    var orderItems = [OrderItem]()
     var createdOn: Date
     var status: OrderStatus
     
@@ -104,33 +103,35 @@ struct Order: Identifiable, Hashable, Equatable {
         // N.B. this does not consider refunds or failed transactions
         (status == .canceled) || transactionIds.isEmpty == false
     }
+
+    static let collectionName = "orders"
 }
 
-extension Order {
-    init(doc: DittoDocument) {
-        self._id = doc["_id"].dictionaryValue as! [String: String]
-        self.deviceId = doc["deviceId"].stringValue
-        self.saleItemIds = doc["saleItemIds"].dictionaryValue as! [String: String]
-        self.transactionIds = Transaction.statusDict(
-            doc["transactionIds"].dictionaryValue as! [String: Int]
-        )
-        self.createdOn = DateFormatter.isoDate
-            .date(from: doc["createdOn"].stringValue) ?? Date()
-        self.status = OrderStatus(rawValue: doc["status"].intValue) ?? .open
-        self.orderItems = getOrderItems()
+extension Order: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.locationId == lhs.locationId
     }
 }
 
-extension Order {
-    func docDictionary() -> [String: Any?] {
-        [
-            "_id": _id,
-            "deviceId": deviceId,
-            "saleItemIds": saleItemIds,
-            "transactionIds": transactionIds,
-            "createdOn": DateFormatter.isoDate.string(from: createdOn),
-            "status": status //should this be .rawValue?
-        ]
+// MARK: - Initializer
+extension Order: DittoDecodable {
+    init(value: [String : Any?]) {
+        let statusInt = value["status"] as? Int
+        var order = Order(
+            _id: value["_id"] as! [String: String],
+            deviceId: value["deviceId"] as! String,
+            createdOn: DateFormatter.isoDate.date(from: value["createdOn"] as! String) ?? Date(),
+            status: statusInt != nil ? OrderStatus(rawValue: statusInt!)! : .open
+        )
+        order.saleItemIds = value["saleItemIds"] as? [String: String] ?? [:]
+
+        if let transactionIds = (value["transactionIds"] as? [String: Int]) {
+            order.transactionIds = transactionIds.compactMapValues {
+                TransactionStatus(rawValue: $0)
+            }
+        }
+
+        self = order
     }
 }
 
@@ -151,20 +152,12 @@ extension Order {
     static func newId(locId: String) -> [String: String] {
         ["id": UUID().uuidString, "locationId": locId]
     }
-    
-    func docId() -> DittoDocumentID {
-        DittoDocumentID(value: self._id)
-    }
-    
-    static func docId(_ orderId: String, _ locId: String) -> DittoDocumentID {
-        DittoDocumentID(value: ["id": orderId, "locationId": locId])
-    }
 }
 
 extension Order {
-    func getOrderItems() -> [OrderItem] {
+    var orderItems: [OrderItem] {
         var items = [OrderItem]()
-        for (compoundStringId, saleItemId) in self.saleItemIds {
+        for (compoundStringId, saleItemId) in saleItemIds {
             //NOTE: in this draft implementation we're relying on using the SaleItem demoItems
             // collection, where locationId is not relevant
             let draftSaleItemsArray = SaleItem.demoItems
@@ -185,7 +178,6 @@ typealias OrderItemsSummary = [String:Int]
 extension Order {
     var summary: OrderItemsSummary {
         var items = OrderItemsSummary()
-        let orderItems = getOrderItems()
         for item in orderItems {
             if let val = items.updateValue(1, forKey: item.title) {
                 items[item.title] = val + 1
@@ -196,10 +188,171 @@ extension Order {
         return items
     }
 }
+
+// MARK: - Query
+extension Order {
+    var selectByIDQuery: DittoQuery {
+        (
+            string: """
+                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                WHERE _id = :_id
+            """,
+            args: [
+                "_id": _id
+            ]
+        )
+    }
+    
+    var insertNewQuery: DittoQuery {
+        (
+            string: """
+                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                DOCUMENTS (:new)
+            """,
+            args: [
+                "new": [
+                    "_id": _id,
+                    "deviceId": deviceId,
+                    "saleItemIds": saleItemIds,
+                    "transactionIds": transactionIds,
+                    "createdOn": DateFormatter.isoDate.string(from: createdOn),
+                    "status": status
+                ]
+            ]
+        )
+    }
+
+    func addItemQuery(orderItem: OrderItem) -> DittoQuery {
+        (
+            string: """
+                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                SET
+                    saleItemIds -> (
+                        "\(orderItem.id)" = :itemID
+                    ),
+                    status = :status
+                WHERE _id = :_id
+            """,
+            args: [
+                "_id": _id,
+                "itemID": orderItem.saleItem.id,
+                "status": status.rawValue
+            ]
+        )
+    }
+
+    func updateStatusQuery(status: OrderStatus) -> DittoQuery {
+        (
+            string: """
+                UPDATE \(Self.collectionName)
+                SET status = :status
+                WHERE _id = :_id
+            """,
+            args: [
+                "_id": _id,
+                "status": status.rawValue
+            ]
+        )
+    }
+
+    var clearSaleItemIdsQuery: DittoQuery {
+        (
+            string: """
+                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                SET
+                    saleItemIds -> tombstone(),
+                    status = :status
+                WHERE _id = :_id
+            """,
+            args: [
+                "_id": _id,
+                "status": OrderStatus.open.rawValue
+            ]
+        )
+    }
+
+    var resetQuery: DittoQuery {
+        (
+            string: """
+                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                SET
+                    saleItemIds -> tombstone(),
+                    status = :status,
+                    createdOn = :createdOn
+                WHERE _id = :_id
+            """,
+            args: [
+                "_id": _id,
+                "status": OrderStatus.open.rawValue,
+                "createdOn": DateFormatter.isoDate.string(from: Date())
+            ]
+        )
+    }
+
+    func addTransactionQuery(transaction: Transaction) -> DittoQuery {
+        (
+            string: """
+                UPDATE COLLECTION \(Self.collectionName) (transactionIds MAP)
+                SET
+                    transactionIds -> (
+                        "\(transaction.id)" = :status
+                    )
+                WHERE _id = :_id
+            """,
+            args: [
+                "status": transaction.status.rawValue,
+                "_id": _id
+            ]
+        )
+    }
+
+    static func ordersQuerySinceTTL(locId: String) -> DittoQuery {
+        (
+            string: """
+                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                WHERE _id.locationId = :locId
+                    AND createdOn > :TTL
+            """,
+            args: [
+                "locId": locId,
+                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL)
+            ]
+        )
+    }
+
+    static var defaultLocationSyncQuery: DittoQuery {
+        (
+            string: """
+                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                WHERE _id.locationId = :locationId
+            """,
+            args: ["locationId": "00000"]
+        )
+    }
+
+    static func incompleteOrderQuery(locationId: String, deviceId: String) -> DittoQuery {
+        (
+            string: """
+                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                WHERE _id.locationId = :locationId
+                    AND createdOn > :TTL
+                    AND deviceId = :deviceId
+                    AND transactionIds = :transIds
+                ORDER BY createdOn ASC
+            """,
+            args: [
+                "locationId": locationId,
+                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL),
+                "deviceId": deviceId,
+                "transIds": [String: Int]()
+            ]
+        )
+    }
+}
+
 //--------------------------------------------------------------------------------------------------
 
-
-
+// MARK: - Preview
 extension Order {
     static func preview() -> Order {
         Order.new(locationId: "PreviewLocationId")

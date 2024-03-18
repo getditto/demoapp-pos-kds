@@ -74,6 +74,11 @@ struct SettingsView: View {
                         ExportData(ditto: ditto)
                     }
                 }
+                Section {
+                    NavigationLink(destination: AdvancedSettings()) {
+                        DittoToolsListItem(title: "Advanced Settings", systemImage: "gear", color: .teal)
+                    }
+                }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationViewStyle(StackNavigationViewStyle())

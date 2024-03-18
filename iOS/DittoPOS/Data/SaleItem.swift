@@ -9,22 +9,11 @@
 import DittoSwift
 import SwiftUI
 
-struct SaleItem {
+struct SaleItem: Codable {
     let _id: [String: String] // [id: String, locationId: String]
     let title: String
     let imageName: String // this should be temporary in favor of imageToken
-    var imageToken: DittoAttachmentToken? //not yet implemented
     let price: Price
-}
-
-extension SaleItem {
-    init(doc: DittoDocument) {
-        self._id = doc["_id"].dictionaryValue as! [String:String]
-        self.title = doc["title"].stringValue
-        self.imageName = doc["imageName"].string ?? "ellipsis"
-        self.imageToken = doc["imageToken"].attachmentToken
-        self.price = Price(doc["price"].doubleValue)
-    }
 }
 
 extension SaleItem: Identifiable {
@@ -56,14 +45,12 @@ extension SaleItem {
         locationId: String = "0",
         title: String,
         imageName: String,
-        imageToken: DittoAttachmentToken? = nil,
         price: Price
     ) -> SaleItem {
         SaleItem(
             _id: Self.newId(id: id, locId: locationId),
             title: title,
             imageName: imageName,
-            imageToken: imageToken,
             price: price
         )
     }
@@ -71,16 +58,9 @@ extension SaleItem {
     static func newId(id: String, locId: String) -> [String: String] {
         ["id": id, "locationId": locId]
     }
-    
-    func docId() -> DittoDocumentID {
-        DittoDocumentID(value: self._id)
-    }
-    
-    static func docId(id: String, locId: String) -> DittoDocumentID {
-        DittoDocumentID(value: ["id": id, "locationId": locId])
-    }
 }
 
+// MARK: - Demo dummy data
 extension SaleItem {
     static var demoItems: [SaleItem] {
         [
