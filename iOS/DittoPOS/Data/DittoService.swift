@@ -38,110 +38,105 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 class DittoService: ObservableObject {
     @Published var loggingOption: DittoLogger.LoggingOptions
     private var cancellables = Set<AnyCancellable>()
-    
-    @Published private(set) var allLocationDocs = [DittoDocument]()
+
+    @Published private(set) var allLocations = [Location]()
     private var allLocationsCancellable = AnyCancellable({})
 
     @Published var currentLocationId: String?
-    @Published var currentLocation: Location?
+    @Published private(set) var currentLocation: Location?
     private let currentLocationSubject = CurrentValueSubject<Location?, Never>(nil)
-    
-    @Published private(set) var locationOrderDocs = [DittoDocument]()
+
+    @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
-    
-    var deviceId: String //ditto.siteID as String to partition ordering to devices
-    
-    private var locationsSubscription: DittoSubscription
-    private var ordersSubscription: DittoSubscription
-    private var transactionsSubscription: DittoSubscription
 
-    var locationDocs: DittoCollection {
-        ditto.store["locations"]
-    }
+    private(set) var deviceId: String //ditto.siteID as String to partition ordering to devices
 
-    var orderDocs: DittoCollection {
-        ditto.store["orders"]
-    }
-    var transactionDocs: DittoCollection {
-        ditto.store["transactions"]
-    }
-    
-    func currentLocationPublisher() -> AnyPublisher<Location?, Never> {
-        currentLocationSubject.eraseToAnyPublisher()
-    }
-    
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
-    
-    private init() {        
-        self.locationsSubscription = ditto.store["locations"].findAll().subscribe()
-        //initial subscription query will find zero matches
-        self.ordersSubscription = ditto.store["orders"].find("_id.locationId == '00000'").subscribe()
-        self.transactionsSubscription = ditto.store["transactions"].findAll().subscribe()
-        self.deviceId = String(ditto.siteID)
-        
+    private let storeService: StoreService
+    private let syncService: SyncService
+
+    private init() {
+        storeService = StoreService(ditto.store)
+        syncService = SyncService(ditto.sync)
+        syncService.registerInitialSubscriptions()
+
+        deviceId = String(ditto.siteID)
+
         // make sure our log level is set _before_ starting ditto.
-        self.loggingOption = UserDefaults.standard.storedLoggingOption
+        loggingOption = UserDefaults.standard.storedLoggingOption
         $loggingOption
             .sink {[weak self] option in
                 UserDefaults.standard.storedLoggingOption = option
                 self?.resetLogging()
             }
             .store(in: &cancellables)
-        
-        
+
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         if !isPreview {
             try! ditto.startSync()
         }
-        
+
         // use case: user-defined location
         // ProfileScreen creates User from form input and saves to UserDefaults, triggering here
-        UserDefaults.standard.userDataPublisher.sink { [weak self] jsonData in
+        //
+        // added dropFirst() because this fires immediately on init (not sure why), but we don't
+        // want it to fire until the defaults value is written
+        UserDefaults.standard.userDataPublisher
+            .dropFirst()
+            .sink { [weak self] jsonData in
             guard let self = self, let data = jsonData else { return }
             guard let user = JSONDecoder.objectFromData(data) as User? else {
                 print("DS.userDataPublisher.sink: User from jsonData FAILED --> RETURN")
                 return
             }
-            
-            let loc = Location(id: user.locationId, name: user.locationName)
-            do {
-                try locationDocs.upsert( loc.docDictionary() )
-            } catch {
-                print("DS.\(#function): FAIL UPSERT LOCATION \(loc.id)")
-            }
-            
+
+            storeService.insertLocation(of: user)
+
             // setting here will save locId and update subscriptions
-            currentLocationId = loc.id
+            currentLocationId = user.locationId
+            
+            do {
+                // add locationId to small_peer_info metadata
+                try ditto.smallPeerInfo.setMetadata(["locationId": user.locationId])
+            } catch {
+                print("Error \(error)")
+            }
+
         }
         .store(in: &cancellables)
-        
+
         if USE_DEFAULT_LOCATIONS {
-            setupDemoLocationDocs()
+            storeService.setupDemoLocations()
         }
-        
+
         updateLocationsPublisher()
 
         $currentLocationId
-            .sink {[weak self] locId in
+            .combineLatest($allLocations)
+            .sink {[weak self] locId, allLocations in
                 guard let locId = locId, let self = self else { return }
-                saveLocationId(locId)
+                
+                if locId != storedLocationId {
+                    print("DS.$currentLocationId.sink: call saveLocationId")
+                    saveLocationId(locId)
+                }
+                
+                self.allLocations = allLocations
+
                 // reset subscription for new location
-                ordersSubscription.cancel()
-                ordersSubscription = orderDocs.find(ordersQuerySinceTTL(locId: locId)).subscribe()
+                syncService.cancelOrdersSubscription()
+                syncService.registerOrdersSinceTTLSubscription(locId: locId)
+
                 updateOrdersPublisher(locId)
                 updateCurrentLocation(locId)
             }
             .store(in: &cancellables)
-        
-        self.currentLocationId = self.storedLocationId()
-        if let locId = currentLocationId {
-            updateOrdersPublisher(locId)
-            updateCurrentLocation(locId)
-        }
+
+        self.currentLocationId = self.storedLocationId
     }
-    
+
     // use case: user-defined location
     // the save to UserDefaults will trigger the userData publisher sink (above)
     func saveUser(company: String, location: String) {
@@ -152,190 +147,97 @@ class DittoService: ObservableObject {
         }
         UserDefaults.standard.userData = jsonData
     }
-    
-    func updateLocationsPublisher() {
-        if USE_DEFAULT_LOCATIONS {
-            allLocationsCancellable = locationDocs
-                .findAll()
-                .liveQueryPublisher()
-                .map { docs, _ in
-                    return docs.map { $0 }
-                        .filter { Location.demoLocationsIds.contains($0.id.toString()) }
-                }
-                .assign(to: \.allLocationDocs, on: self)
-        } else {
-            allLocationsCancellable = locationDocs
-                .findAll()
-                .liveQueryPublisher()
-                .map { docs, _ in
-                    return docs.map { $0 }
-                }
-                .assign(to: \.allLocationDocs, on: self)
-        }
-    }
-    
-    func updateOrdersPublisher(_ locId: String) {
-        allOrdersCancellable = orderDocs
-            .find(ordersSubscription.query)
-            .liveQueryPublisher()
-            .map { docs, _ in
-                return docs.map { $0 }
-            }
-            .assign(to: \.locationOrderDocs, on: self)
-    }
-        
-    func ordersQuerySinceTTL(locId: String) -> String {
-        "_id.locationId == '\(locId)' && " +
-        "createdOn > '\(DateFormatter.isoTimeFromNowString(-OrderTTL))'"
-    }
-    
+
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
-        orderDocs.findByID(DittoDocumentID(value: order._id))
-            .singleDocumentLiveQueryPublisher()
-            .compactMap {doc, _ in
-                if let doc = doc {
-                    return Order(doc: doc)
-                }
-                return nil
-            }
+        storeService.selectByIDObservePublisher(order)
+            .compactMap { $0 }
             .eraseToAnyPublisher()
     }
-    
-    func addOrder(_ order: Order) {
-        do {
-            try orderDocs.upsert(order.docDictionary())
-        } catch {
-            print("DS.\(#function): FAIL TO ADD Order(\(order.title)) to Orders collection")
-        }
+
+    func add(order: Order) {
+        storeService.insert(order: order)
     }
 
-    func addItemToOrder(item: OrderItem, order: Order) {
-        orderDocs.findByID(order._id).update { mutableDoc in
-            mutableDoc?["saleItemIds"][item.id].set(item.saleItem.id) //[uuid_createdOn: saleItemId]
-            mutableDoc?["status"].set(order.status.rawValue)
-        }
+    func add(item: OrderItem, to order: Order) {
+        storeService.add(item: item, to: order)
     }
-    
-    func updateOrderStatus(_ order: Order, with status: OrderStatus) {
-        orderDocs.findByID(order._id).update { mutableDoc in
-            mutableDoc?["status"].set(status.rawValue)
-        }
+
+    func updateStatus(of order: Order, with status: OrderStatus) {
+        storeService.updateStatus(of: order, with: status)
+    }
+
+    func clearSaleItemIds(of order: Order) {
+        storeService.clearSaleItemIds(of: order)
+    }
+
+    func reset(order: Order) {
+        storeService.reset(order: order)
     }
 
     func updateOrderTransaction(_ order: Order, with transx: Transaction) {
-        ditto.store.write { transaction in
-            let transactions = transaction.scoped(toCollectionNamed: "transactions")
-            let orders = transaction.scoped(toCollectionNamed: "orders")
-            do {
-                try transactions.upsert(transx.docDictionary())
+        // NOTE: DQL v1 (4.5.x) doesn't support write transactions, so these
+        // are written to the store asynchronously for now.
+        storeService.insert(transaction: transx)
+        storeService.add(transx, to: order)
+    }
 
-                orders.findByID(order._id).update { mutableDoc in
-                    mutableDoc?["transactionIds"][transx.id].set(transx.status.rawValue) //[id: status (Int)]                    
+    func incompleteOrderFuture(locationId: String? = nil, device: String? = nil) -> Future<Order?, Never> {
+        guard let locId = locationId ?? currentLocationId else {
+            return Future { promise in  promise(.success(nil)) }
+        }
+        return storeService.incompleteOrderFuture(locationId: locId, deviceId: device ?? deviceId)
+    }
+}
+
+// MARK: - Private
+extension DittoService {
+    private func updateLocationsPublisher() {
+        if USE_DEFAULT_LOCATIONS {
+            allLocationsCancellable = storeService
+                .allLocationsObservePublisher()
+                .map { locations in
+                    locations.filter { Location.demoLocationsIds.contains($0.id) }
                 }
-            } catch {
-                print(error.localizedDescription)
-            }
+                .assign(to: \.allLocations, on: self)
+        } else {
+            allLocationsCancellable = storeService
+                .allLocationsObservePublisher()
+                .assign(to: \.allLocations, on: self)
         }
     }
-    
-    func clearOrderSaleItemIds(_ order: Order) {
-        orderDocs.findByID(DittoDocumentID(value: order._id)).update { mutableDoc in
-            for id in order.saleItemIds.keys {
-                mutableDoc?["saleItemIds"][id].remove()
-            }
-            let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
-            mutableDoc?["status"].set(open)
-        }
-    }
-    
-    func restoredIncompleteOrder(for locId: String?) -> Order? {
-        guard let locId = locId ?? UserDefaults.standard.storedLocationId else {
-            return nil
-        }
-        
-        let incompleteOrderDocs = orderDocs.find(
-            "_id.locationId == '\(locId)'" +
-            " && createdOn > '\(DateFormatter.isoTimeFromNowString(-OrderTTL))'" +
-            " && deviceId == '\(deviceId)'" +
-            " && length(keys(transactionIds)) == 0"
-        ).exec().sorted(by: { $0["createdOn"].stringValue < $1["createdOn"].stringValue })
-        
-        // Reset as new
-        if let doc = incompleteOrderDocs.first {
-            print("DS.\(#function): FOUND INCOMPLETE ORDER TO RECYCLE")
-            var order = Order(doc: doc)
-            
-            resetOrderDoc(for: order)
 
-            // The returned Order object is only to immediately update the UI by the caller;
-            // a new Order object will be created with the values mutated in resetOrderDoc()
-            // when the liveQuery/Publisher is fired by the update
-            order.createdOn = Date()
-            order.saleItemIds.removeAll()
-            order.orderItems = []
-            order.status = OrderStatus.open
-            return order
-        }
-        
-        return nil
-    }
-    
-    func resetOrderDoc(for order: Order) {
-        orderDocs.findByID(order.docId()).update { mutableDoc in
-            print("DS.\(#function): RESET ORDER \(order.title)")
-            
-            for id in order.saleItemIds.keys {
-                mutableDoc?["saleItemIds"][id].remove()
-            }
-            
-            let open = OrderStatus(rawValue: OrderStatus.open.rawValue)
-            mutableDoc?["status"].set(open)
-            
-            // Reset createdOn to now
-            let newDateStr = DateFormatter.isoDate.string(from: Date())
-            mutableDoc?["createdOn"].set(newDateStr)
-        }
-    }
-    
-    func updateOrderCreatedDate(_ order: Order, date: Date = Date()) {
-        orderDocs.findByID(order.id).update {mutableDoc in
-            let newDateStr = DateFormatter.isoDate.string(from: date)
-            mutableDoc?["createdOn"].set(newDateStr)
-        }
-    }
-}
+    private func updateOrdersPublisher(_ locId: String) {
+        guard let subscription = syncService.ordersSubscription else { return }
 
-extension DittoService {
-    func setupDemoLocationDocs() {
-        for loc in Location.demoLocations {
-            try! locationDocs.upsert(
-                loc.docDictionary(),
-                writeStrategy: .insertDefaultIfAbsent
+        allOrdersCancellable = storeService
+            .allOrdersObservePublisher(
+                queryString: subscription.queryString,
+                queryArgs: subscription.queryArguments
             )
-        }
+            .assign(to: \.locationOrders, on: self)
     }
-    
-    func updateCurrentLocation(_ locId: String?) {
+
+    private func updateCurrentLocation(_ locId: String?) {
         guard let locId = locId else { return }
-        if let locDoc = locationDocs.findByID(DittoDocumentID(value: locId)).exec() {
-            let loc = Location(doc: locDoc)
-            currentLocation = loc
-            currentLocationSubject.value = loc
-        }
+        let location = allLocations.first { $0.id == locId }
+        currentLocation = location
+        currentLocationSubject.value = location
     }
 }
 
+// MARK: - UserDefaults
 extension DittoService {
-    func storedLocationId() -> String? {
+    private var storedLocationId: String? {
         UserDefaults.standard.storedLocationId
     }
-    func saveLocationId(_ newId: String) {
+    private func saveLocationId(_ newId: String) {
         UserDefaults.standard.storedLocationId = newId
     }
 }
 
+// MARK: - Logging
 extension DittoService {
-    fileprivate func resetLogging() {
+    private func resetLogging() {
         let logOption = UserDefaults.standard.storedLoggingOption
         switch logOption {
         case .disabled:
@@ -350,12 +252,13 @@ extension DittoService {
     }
 }
 
-class DittoInstance {
+// MARK: - DittoInstance
+final class DittoInstance {
     static var shared = DittoInstance()
     let ditto: Ditto
 
     private init() {
-        // Assign new directory in order to avoide conflict with the old SkyService version.
+        // Assign new directory to avoid conflict with the old SkyService version.
         let persistenceDirURL = try? FileManager()
             .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
@@ -365,5 +268,184 @@ class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN,
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
+
+        // Sync Small Peer Info to Big Peer
+        ditto.smallPeerInfo.isEnabled = true
+        ditto.smallPeerInfo.syncScope = .bigPeerOnly
+
+        try! ditto.disableSyncWithV3()
+    }
+}
+
+// MARK: - StoreService
+fileprivate struct StoreService {
+    private let store: DittoStore
+
+    init(_ store: DittoStore) {
+        self.store = store
+    }
+
+    func insertLocation(of user: User) {
+        let loc = Location(id: user.locationId, name: user.locationName)
+        let query = loc.insertNewQuery
+        exec(query: query)
+    }
+
+    func insert(order: Order) {
+        let query = order.insertNewQuery
+        exec(query: query)
+    }
+
+    func setupDemoLocations(_ demoLocations: [Location] = Location.demoLocations) {
+        demoLocations.forEach { loc in
+            let query = loc.insertDefaultQuery
+            exec(query: query)
+        }
+    }
+
+    func add(item: OrderItem, to order: Order) {
+        let query = order.addItemQuery(orderItem: item)
+        exec(query: query)
+    }
+
+    func updateStatus(of order: Order, with status: OrderStatus) {
+        let query = order.updateStatusQuery(status: status)
+        exec(query: query)
+    }
+
+    func clearSaleItemIds(of order: Order) {
+        let query = order.clearSaleItemIdsQuery
+        exec(query: query)
+    }
+
+    func reset(order: Order) {
+        let query = order.resetQuery
+        exec(query: query)
+    }
+
+    func insert(transaction: Transaction) {
+        let query = transaction.insertNewQuery
+        exec(query: query)
+    }
+
+    func add(_ transaction: Transaction, to order: Order) {
+        let query = order.addTransactionQuery(transaction: transaction)
+        exec(query: query)
+    }
+
+    private func exec(query: DittoQuery, function: String = #function) {
+        Task {
+            do {
+                try await self.store.execute(query: query.string, arguments: query.args)
+            } catch {
+                assertionFailure("ERROR with \(function) \(query.string) \(query.args): " + error.localizedDescription)
+            }
+        }
+    }
+
+    func allLocationsObservePublisher() -> AnyPublisher<[Location], Never> {
+        store.observePublisher(query: Location.selectAllQuery.string, mapTo: Location.self)
+            .catch { error in
+                assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+                return Empty<[Location], Never>()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func allOrdersObservePublisher(queryString: String, queryArgs: [String:Any?]?) -> AnyPublisher<[Order], Never> {
+        store.observePublisher(query: queryString, arguments: queryArgs, mapTo: Order.self)
+            .catch { error in
+                assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+                return Empty<[Order], Never>()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func selectByIDObservePublisher(_ order: Order) -> AnyPublisher<Order?, Never> {
+        let query = order.selectByIDQuery
+        return store.observePublisher(query: query.string, arguments: query.args, mapTo: Order.self, onlyFirst: true)
+            .catch { error in
+                assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+                return Empty<Order?, Never>()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func incompleteOrderFuture(locationId: String, deviceId: String) -> Future<Order?, Never> {
+        print("DS.\(#function) --> in")
+        let query = Order.incompleteOrderQuery(locationId: locationId, deviceId: deviceId)
+        return Future { promise in
+            Task {
+                do {
+                    let result = try await self.store.execute(query: query.string, arguments: query.args)
+                    if let item = result.items.first {
+                        print("DS.\(#function): incomplete order FOUND")
+                        var order = Order(value: item.value)
+                        order.createdOn = Date()
+                        order.saleItemIds.removeAll()
+                        order.status = .open
+                        
+                        // The returned Order object is only to immediately update the UI by the caller;
+                        // a new Order object will be created by the observer when locationOrders is
+                        // updated by the following call to reset/update the order in the collection
+                        reset(order: order)
+                        
+                        promise(.success(Order(value: item.value)))
+                    } else {
+                        print("DS.\(#function): incomplete order NOT FOUND --> return nil")
+                        return promise(.success(nil))
+                    }
+                } catch {
+                    print(
+                        "DS.incompleteOrderPublisher: ERROR with  \(query.string) \(query.args):\n"
+                        + error.localizedDescription
+                    )
+                    return promise(.success(nil))
+                }
+            }
+        }
+    }
+}
+
+// MARK: - SyncService
+fileprivate final class SyncService {
+    private let sync: DittoSync
+
+    private var locationsSubscription: DittoSyncSubscription? = nil
+    private(set) var ordersSubscription: DittoSyncSubscription? = nil
+
+    init(_ sync: DittoSync) {
+        self.sync = sync
+    }
+
+    func registerInitialSubscriptions() {
+        do {
+            try locationsSubscription = sync.registerSubscription(
+                query: Location.selectAllQuery.string
+            )
+            try ordersSubscription = sync.registerSubscription(
+                query: Order.defaultLocationSyncQuery.string,
+                arguments: Order.defaultLocationSyncQuery.args
+            )
+        } catch {
+            assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+        }
+    }
+
+    func registerOrdersSinceTTLSubscription(locId: String) {
+        let query = Order.ordersQuerySinceTTL(locId: locId)
+        do {
+            ordersSubscription = try sync.registerSubscription(
+                query: query.string,
+                arguments: query.args
+            )
+        } catch {
+            assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+        }
+    }
+
+    func cancelOrdersSubscription() {
+        ordersSubscription?.cancel()
+        ordersSubscription = nil
     }
 }
