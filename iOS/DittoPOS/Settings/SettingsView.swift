@@ -31,7 +31,7 @@ class SettingsVM: ObservableObject {
                 let locationName = user.locationName
                 print("Location Name: \(locationName)")
                 
-                self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(id: ["locationId": locationName], secondsInterval: 10, collectionName: "posHeartbeat")) {_ in}
+                self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(secondsInterval: 10, collectionName: "posHeartbeat2")) {_ in}
                 
             } catch {
                 print("Error decoding JSON data: \(error)")
