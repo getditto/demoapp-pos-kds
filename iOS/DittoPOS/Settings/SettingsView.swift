@@ -12,6 +12,8 @@ import DittoExportData
 import DittoExportLogs
 import DittoPeersList
 import DittoPresenceViewer
+import DittoHeartbeat
+import DittoPermissionsHealth
 import DittoSwift
 import SwiftUI
 
@@ -19,6 +21,30 @@ import SwiftUI
 class SettingsVM: ObservableObject {
     @Published var presentExportDataShare: Bool = false
     @Published var presentExportDataAlert: Bool = false
+    @Published var isHeartbeatOn: Bool = false
+    var heartbeatVM: HeartbeatVM = HeartbeatVM(ditto: DittoService.shared.ditto)
+    
+    func startHeartbeat() {
+        if let userData = UserDefaults.standard.userData {
+            do {
+                let user = try JSONDecoder().decode(User.self, from: userData)
+                let locationName = user.locationName
+                print("Location Name: \(locationName)")
+                
+                self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(secondsInterval: 10, collectionName: "posHeartbeat2")) {_ in}
+                
+            } catch {
+                print("Error decoding JSON data: \(error)")
+            }
+        } else {
+            print("No user data found in UserDefaults")
+        }
+        
+    }
+    
+    func stopHeartbeat() {
+        self.heartbeatVM.stopHeartbeat()
+    }
 }
 
 struct SettingsView: View {
@@ -50,6 +76,9 @@ struct SettingsView: View {
                     NavigationLink(destination: DittoDiskUsageView(ditto: ditto)) {
                         DittoToolsListItem(title: "Disk Usage", systemImage: "opticaldiscdrive", color: .secondary)
                     }
+                    NavigationLink(destination: PermissionsHealth()) {
+                        DittoToolsListItem(title: "Permissions Health", systemImage: "exclamationmark.triangle", color: .yellow)
+                    }
                 }
                 Section(header: Text("Exports")) {
                     NavigationLink(destination: LoggingDetailsView(loggingOption: $dittoService.loggingOption)) {
@@ -74,11 +103,22 @@ struct SettingsView: View {
                         ExportData(ditto: ditto)
                     }
                 }
+                Section("Observability") {
+                    Toggle(isOn: $vm.isHeartbeatOn) {
+                        DittoToolsListItem(title: "Heartbeat", systemImage: "heart.fill", color: .red)
+                    }
+                    .onChange(of: vm.isHeartbeatOn) { isOn in
+                        if isOn {
+                            vm.startHeartbeat()
+                        } else {
+                            vm.stopHeartbeat()
+                        }
+                    }
+                }
                 Section {
                     NavigationLink(destination: AdvancedSettings()) {
                         DittoToolsListItem(title: "Advanced Settings", systemImage: "gear", color: .teal)
                     }
-                }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationViewStyle(StackNavigationViewStyle())
