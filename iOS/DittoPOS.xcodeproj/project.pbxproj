@@ -17,6 +17,7 @@
 		0E1E91A92BA0E40800046BC0 /* DittoPresenceDegradation in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A82BA0E40800046BC0 /* DittoPresenceDegradation */; };
 		0E1E91AB2BA0E40800046BC0 /* DittoPresenceViewer in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91AA2BA0E40800046BC0 /* DittoPresenceViewer */; };
 		0E1E91AD2BA0FC9300046BC0 /* LogFileConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */; };
+		0E3768B82BAE2FD3009A7053 /* HeartbeatConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */; };
 		112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */; };
 		14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* POSOrderTotalView.swift */; };
 		14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
@@ -55,6 +56,7 @@
 
 /* Begin PBXFileReference section */
 		0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfig.swift; sourceTree = "<group>"; };
+		0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConfig.swift; sourceTree = "<group>"; };
 		112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoExtensions.swift; sourceTree = "<group>"; };
 		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 				148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */,
 				14FFFEF02A43732400DD6806 /* SettingsModel.swift */,
 				148071152A8C2E930091EC03 /* SettingsView.swift */,
+				0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -376,6 +379,7 @@
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
+				0E3768B82BAE2FD3009A7053 /* HeartbeatConfig.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,

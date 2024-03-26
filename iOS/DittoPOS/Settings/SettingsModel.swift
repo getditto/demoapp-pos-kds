@@ -48,6 +48,41 @@ struct Settings {
         customLocation = nil
         locationId = nil
     }
+
+}
+
+// MARK: Observability data
+extension Settings {
+    static private var _isHeartbeatOn: Bool = false
+    static private var _secondsInterval: Int = 30
+    static private var _expectedDeviceCount: Int = 0
+    static private var _collectionName: String = "devices"
+    static private var _locationName: String = ""
+    
+    static var isHeartbeatOn: Bool {
+        get { _isHeartbeatOn }
+        set (value) { _isHeartbeatOn = value }
+    }
+    
+    static var secondsInterval: Int {
+        get { _secondsInterval }
+        set (value) { _secondsInterval = value }
+    }
+    
+    static var expectedDeviceCount: Int {
+        get { _expectedDeviceCount }
+        set (value) { _expectedDeviceCount = value }
+    }
+    
+    static var collectionName: String {
+        get { _collectionName }
+        set (value) { _collectionName = value }
+    }
+    
+    static var locationName: String {
+        get { _locationName }
+        set (value) { _locationName = value }
+    }
 }
 
 
