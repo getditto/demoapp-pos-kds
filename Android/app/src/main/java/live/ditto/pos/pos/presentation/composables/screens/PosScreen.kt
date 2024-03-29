@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import live.ditto.pos.core.data.demoMenuData
 import live.ditto.pos.pos.presentation.composables.CurrentOrderView
-import live.ditto.pos.pos.presentation.composables.SaleItemsGrid
+import live.ditto.pos.pos.presentation.composables.saleitemgrid.SaleItemsGrid
 
 @Composable
 fun PosScreen() {
