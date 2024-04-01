@@ -43,7 +43,7 @@ class HeartbeatConfigVM: ObservableObject {
         if self.heartbeatVM.isEnabled {
             self.stopHeartbeat()
         }
-        self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(secondsInterval: self.secondsInterval, collectionName: "heartbeat", metadata: self.metaData)) {_ in }
+        self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(id: Settings.deviceId, secondsInterval: self.secondsInterval, metadata: self.metaData)) {_ in }
     }
     
     func stopHeartbeat() {
@@ -51,7 +51,6 @@ class HeartbeatConfigVM: ObservableObject {
     }
     
     func saveConfig() {
-        
         //construct location
         self.location["locationId"] = self.locationId
         self.location["locationName"] = self.locationName
@@ -60,12 +59,8 @@ class HeartbeatConfigVM: ObservableObject {
         //construct metaData
         self.metaData["deviceName"] = self.deviceName
         self.metaData["location"] = self.location
-        if(!self.locationAttributes.isEmpty) {
-            self.metaData["locationAttributes"] = self.locationAttributes
-        }
-        if(!self.deviceAttributes.isEmpty) {
-            self.metaData["deviceAttributes"] = self.deviceAttributes
-        }
+        self.metaData["locationAttributes"] = self.locationAttributes
+        self.metaData["deviceAttributes"] = self.deviceAttributes
 
         Settings.isHeartbeatOn = self.isHeartbeatOn
         Settings.secondsInterval = self.secondsInterval
@@ -87,7 +82,6 @@ class HeartbeatConfigVM: ObservableObject {
         self.deviceAttributes[self.newDeviceAttributesKey] = ""
         self.newDeviceAttributesKey = ""
     }
-
 }
 
 struct HeartbeatConfig: View {
@@ -100,7 +94,6 @@ struct HeartbeatConfig: View {
                     Text("Heartbeat")
                 }
             }
-            
             Section {
                 VStack(alignment: .leading) {
                     HStack {
@@ -123,7 +116,6 @@ struct HeartbeatConfig: View {
                     }
                 }
             }
-            
             Section(header: Text("location:")) {
                 VStack(alignment: .leading) {
                     Text("Location Id: \(vm.locationId)")
@@ -147,7 +139,6 @@ struct HeartbeatConfig: View {
                     }
                 }
             }
-            
             Section(header: Text("Location Attributes:")) {
                 if(!vm.locationAttributes.isEmpty) {
                     ScrollView {
@@ -183,7 +174,6 @@ struct HeartbeatConfig: View {
                     Button("Cancel") { vm.locationAttributesAlert = false }
                 }
             }
-            
             Section(header: Text("Device Attributes:")) {
                 if(!vm.deviceAttributes.isEmpty) {
                     ScrollView {
@@ -209,7 +199,6 @@ struct HeartbeatConfig: View {
                         }
                     }
                 }
-                
                 Button("New Entry") {
                     vm.deviceAttributesAlert.toggle()
                 }
@@ -220,7 +209,6 @@ struct HeartbeatConfig: View {
                     Button("Cancel") { vm.deviceAttributesAlert = false }
                 }
             }
-
             Button(action: vm.saveConfig) {
                 Text("Save")
             }

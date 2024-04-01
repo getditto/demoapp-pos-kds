@@ -19,6 +19,11 @@ struct Settings {
         set(value) { defaults.storedLoggingOption = value }
     }
     
+    static var deviceId: String {
+        get { defaults.storedDeviceId }
+        set(value) { defaults.storedDeviceId = value }
+    }
+    
     static var locationId: String? {
         get { defaults.storedLocationId }
         set(value) { defaults.storedLocationId = value }
@@ -55,7 +60,6 @@ struct Settings {
 extension Settings {
     
     static private var _metaData: [String:Any] = [:]
-    
     static private var _isHeartbeatOn: Bool = false
     static private var _secondsInterval: Int = 30
     
@@ -75,6 +79,17 @@ extension Settings {
     }
 }
 
+// user case: heartbeat tool
+//extension UserDefaults {
+//    //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
+//    static private var _deviceId: String = UUID().uuidString
+//    
+//    var deviceId: String {
+//        get { _deviceId }
+//        set (value) { _deviceId = value }
+//    }
+//}
+
 
 extension UserDefaults {
     public struct UserDefaultsKeys {
@@ -84,6 +99,8 @@ extension UserDefaults {
         //rename: keep legacy "userKey" key
         static var customLocationKey: String { "live.ditto.DittoPOS.userKey" }
         static var useDemoLocations: String { "live.ditto.DittoPOS.useDemoLocations" }
+        //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
+        static var deviceId: String { UUID().uuidString }
     }
 
     // stored location from both user-defined and default demo locations selection
@@ -93,6 +110,16 @@ extension UserDefaults {
         }
         set(value) {
             set(value, forKey: UserDefaultsKeys.currentLocationId)
+        }
+    }
+    
+    //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
+    var storedDeviceId: String {
+        get {
+            return string(forKey: UserDefaultsKeys.deviceId) ?? UUID().uuidString
+        }
+        set(value) {
+            set(value, forKey: UserDefaultsKeys.deviceId)
         }
     }
     

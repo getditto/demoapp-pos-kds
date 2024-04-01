@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoSwiftTools",
       "state" : {
-        "revision" : "8b138ae543ea8b0505240132dbdad13515408223",
-        "version" : "4.7.2"
+        "branch" : "we/updateHeartbeatTool",
+        "revision" : "c5d85efebad7a47dc2e7ec1dd067070bf4c3d30c"
       }
     },
     {
