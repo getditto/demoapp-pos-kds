@@ -79,18 +79,6 @@ extension Settings {
     }
 }
 
-// user case: heartbeat tool
-//extension UserDefaults {
-//    //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
-//    static private var _deviceId: String = UUID().uuidString
-//    
-//    var deviceId: String {
-//        get { _deviceId }
-//        set (value) { _deviceId = value }
-//    }
-//}
-
-
 extension UserDefaults {
     public struct UserDefaultsKeys {
         static var loggingOption: String { "live.ditto.DittoPOS.loggingOption" }
@@ -99,9 +87,26 @@ extension UserDefaults {
         //rename: keep legacy "userKey" key
         static var customLocationKey: String { "live.ditto.DittoPOS.userKey" }
         static var useDemoLocations: String { "live.ditto.DittoPOS.useDemoLocations" }
-        //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
-        static var deviceId: String { UUID().uuidString }
+        
+        static var deviceId: String {"live.ditto.DittoPOS.deviceId"}
     }
+    
+    var storedDeviceId: String {
+        get {
+            if let deviceId = string(forKey: UserDefaultsKeys.deviceId) {
+                return deviceId
+            } else {
+                //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
+                let newDeviceId = UUID().uuidString
+                set(newDeviceId, forKey: UserDefaultsKeys.deviceId)
+                return newDeviceId
+            }
+        }
+        set(value) {
+            set(value, forKey: UserDefaultsKeys.deviceId)
+        }
+    }
+    
 
     // stored location from both user-defined and default demo locations selection
     var storedLocationId: String? {
@@ -110,16 +115,6 @@ extension UserDefaults {
         }
         set(value) {
             set(value, forKey: UserDefaultsKeys.currentLocationId)
-        }
-    }
-    
-    //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
-    var storedDeviceId: String {
-        get {
-            return string(forKey: UserDefaultsKeys.deviceId) ?? UUID().uuidString
-        }
-        set(value) {
-            set(value, forKey: UserDefaultsKeys.deviceId)
         }
     }
     
