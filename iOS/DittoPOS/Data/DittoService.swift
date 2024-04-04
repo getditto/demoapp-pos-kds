@@ -11,24 +11,30 @@ import DittoExportLogs
 import DittoSwift
 import SwiftUI
 
-/*
- TRUE:
-     - enables the Locations tab view
-     - requires user selection from default collection of demo locations listed in Locations tab
-     - allows switching between locations at runtime, e.g. to see orders from different locations
-       in KDS view
- FALSE:
-    - enables Profile form view at first launch; hides Locations tab
-    - requires user to create location from form view company and location name values
-    - KDS view displays only orders for location created from profile
- 
- Note: in both cases, the (latest selected) locationId is persisted in UserDefaults and
-       this location is used at launch
- */
-let USE_DEFAULT_LOCATIONS = false
+// MARK: - DittoInstance
+final class DittoInstance {
+    static var shared = DittoInstance()
+    let ditto: Ditto
 
-// Displays gear icon for DittoSwiftTools SettingsView
-let ENABLE_SETTINGS_VIEW = true
+    private init() {
+        // Assign new directory to avoid conflict with the old SkyService version.
+        let persistenceDirURL = try? FileManager()
+            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .appendingPathComponent("ditto-pos-demo")
+
+        ditto = Ditto(identity: .onlinePlayground(
+            appID: Env.DITTO_APP_ID,
+            token: Env.DITTO_PLAYGROUND_TOKEN,
+            enableDittoCloudSync: true
+        ), persistenceDirectory: persistenceDirURL)
+
+        // Sync Small Peer Info to Big Peer
+        ditto.smallPeerInfo.isEnabled = true
+        ditto.smallPeerInfo.syncScope = .bigPeerOnly
+
+        try! ditto.disableSyncWithV3()
+    }
+}
 
 let defaultLoggingOption: DittoLogger.LoggingOptions = .error
 
@@ -48,8 +54,9 @@ class DittoService: ObservableObject {
 
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
-
-    private(set) var deviceId: String //ditto.siteID as String to partition ordering to devices
+    
+    //ditto.siteID as String to partition ordering to devices
+    private(set) var deviceId: String
 
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
@@ -64,10 +71,10 @@ class DittoService: ObservableObject {
         deviceId = String(ditto.siteID)
 
         // make sure our log level is set _before_ starting ditto.
-        loggingOption = UserDefaults.standard.storedLoggingOption
+        loggingOption = Settings.dittoLoggingOption
         $loggingOption
             .sink {[weak self] option in
-                UserDefaults.standard.storedLoggingOption = option
+                Settings.dittoLoggingOption = option
                 self?.resetLogging()
             }
             .store(in: &cancellables)
@@ -77,75 +84,59 @@ class DittoService: ObservableObject {
         if !isPreview {
             try! ditto.startSync()
         }
-
-        // use case: user-defined location
-        // ProfileScreen creates User from form input and saves to UserDefaults, triggering here
-        //
-        // added dropFirst() because this fires immediately on init (not sure why), but we don't
-        // want it to fire until the defaults value is written
-        UserDefaults.standard.userDataPublisher
-            .dropFirst()
-            .sink { [weak self] jsonData in
-            guard let self = self, let data = jsonData else { return }
-            guard let user = JSONDecoder.objectFromData(data) as User? else {
-                print("DS.userDataPublisher.sink: User from jsonData FAILED --> RETURN")
-                return
-            }
-
-            storeService.insertLocation(of: user)
-
-            // setting here will save locId and update subscriptions
-            currentLocationId = user.locationId
-            
-            do {
-                // add locationId to small_peer_info metadata
-                try ditto.smallPeerInfo.setMetadata(["locationId": user.locationId])
-            } catch {
-                print("Error \(error)")
-            }
-
-        }
-        .store(in: &cancellables)
-
-        if USE_DEFAULT_LOCATIONS {
-            storeService.setupDemoLocations()
-        }
-
+        
         updateLocationsPublisher()
 
+        currentLocationId = Settings.locationId
+        
         $currentLocationId
             .combineLatest($allLocations)
             .sink {[weak self] locId, allLocations in
                 guard let locId = locId, let self = self else { return }
                 
-                if locId != storedLocationId {
-                    print("DS.$currentLocationId.sink: call saveLocationId")
-                    saveLocationId(locId)
+                if locId != Settings.locationId {
+                    Settings.locationId = locId
                 }
-                
-                self.allLocations = allLocations
+
+                if Settings.useDemoLocations {
+                    storeService.setupDemoLocations()
+                }
 
                 // reset subscription for new location
                 syncService.cancelOrdersSubscription()
                 syncService.registerOrdersSinceTTLSubscription(locId: locId)
 
                 updateOrdersPublisher(locId)
-                updateCurrentLocation(locId)
+                Task {
+                    await MainActor.run {[weak self] in
+                        self?.updateCurrentLocation(locId)
+                    }
+                }
             }
             .store(in: &cancellables)
-
-        self.currentLocationId = self.storedLocationId
     }
 
-    // use case: user-defined location
-    // the save to UserDefaults will trigger the userData publisher sink (above)
-    func saveUser(company: String, location: String) {
-        let user = User(companyName: company, locationName: location)
-        guard let jsonData = JSONEncoder.encodedObject(user) else {
-            print("DS.\(#function): jsonData from user FAILED --> RETURN")
+    // use case: store user-defined location
+    func saveCustomLocation(company: String, location: String) {
+        let loc = CustomLocation(companyName: company, locationName: location)
+        guard let jsonData = JSONEncoder.encodedObject(loc) else {
+            print("DS.\(#function): jsonData from custom location FAILED --> RETURN")
             return
         }
-        UserDefaults.standard.userData = jsonData
+
+        Settings.customLocation = jsonData
+        
+        storeService.insertLocation(of: loc)
+
+        // setting here will save locationId and update subscriptions in sink above
+        currentLocationId = loc.locationId
+        
+        do {
+            // add locationId to small_peer_info metadata
+            try ditto.smallPeerInfo.setMetadata(["locationId": loc.locationId])
+        } catch {
+            print("DS.smallPeerInfo.metadata: Error \(error)")
+        }
     }
 
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
@@ -189,22 +180,59 @@ class DittoService: ObservableObject {
     }
 }
 
+extension DittoService {
+    enum LocationsSetupOption { case demo, custom }
+    
+    var locationSetupNotValid: Bool {
+        Settings.locationId == nil && Settings.useDemoLocations == false
+    }
+
+    func updateLocationsSetup(option: LocationsSetupOption) {
+        switch option {
+        case .demo: resetToDemoLocations()
+        case .custom: resetToCustomLocation()
+        }
+    }
+    
+    func updateDemoLocationsSetting(enable: Bool) {
+        if enable { resetToDemoLocations() }
+        else { resetToCustomLocation() }
+    }
+    
+    func resetToDemoLocations() {
+        Settings.customLocation = nil
+        Settings.useDemoLocations = true
+        storeService.setupDemoLocations()
+        locationsSetupCommon()
+    }
+    
+    func resetToCustomLocation() {
+        Settings.useDemoLocations = false
+        locationsSetupCommon()
+    }
+    
+    private func locationsSetupCommon() {
+        updateLocationsPublisher()
+        Settings.locationId = nil
+        currentLocation = nil
+        currentLocationId = nil
+    }
+}
+
 // MARK: - Private
 extension DittoService {
     private func updateLocationsPublisher() {
-        if USE_DEFAULT_LOCATIONS {
-            allLocationsCancellable = storeService
-                .allLocationsObservePublisher()
-                .map { locations in
-                    locations.filter { Location.demoLocationsIds.contains($0.id) }
+        allLocationsCancellable = storeService
+            .allLocationsObservePublisher()
+            .map { locations in
+                if Settings.useDemoLocations {
+                    return locations.filter { Location.demoLocationsIds.contains($0.id) }
                 }
-                .assign(to: \.allLocations, on: self)
-        } else {
-            allLocationsCancellable = storeService
-                .allLocationsObservePublisher()
-                .assign(to: \.allLocations, on: self)
-        }
+                return locations
+            }
+            .assign(to: \.allLocations, on: self)
     }
+
 
     private func updateOrdersPublisher(_ locId: String) {
         guard let subscription = syncService.ordersSubscription else { return }
@@ -225,55 +253,22 @@ extension DittoService {
     }
 }
 
-// MARK: - UserDefaults
-extension DittoService {
-    private var storedLocationId: String? {
-        UserDefaults.standard.storedLocationId
-    }
-    private func saveLocationId(_ newId: String) {
-        UserDefaults.standard.storedLocationId = newId
-    }
-}
-
 // MARK: - Logging
 extension DittoService {
+    
     private func resetLogging() {
-        let logOption = UserDefaults.standard.storedLoggingOption
+        let logOption = Settings.dittoLoggingOption
         switch logOption {
         case .disabled:
             DittoLogger.enabled = false
         default:
             DittoLogger.enabled = true
             DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
-            if let logFileURL = DittoLogManager.shared.logFileURL {
+            
+            if let logFileURL = LogFileConfig.createLogFileURL() {
                 DittoLogger.setLogFileURL(logFileURL)
             }
         }
-    }
-}
-
-// MARK: - DittoInstance
-final class DittoInstance {
-    static var shared = DittoInstance()
-    let ditto: Ditto
-
-    private init() {
-        // Assign new directory to avoid conflict with the old SkyService version.
-        let persistenceDirURL = try? FileManager()
-            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            .appendingPathComponent("ditto-pos-demo")
-
-        ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: true
-        ), persistenceDirectory: persistenceDirURL)
-
-        // Sync Small Peer Info to Big Peer
-        ditto.smallPeerInfo.isEnabled = true
-        ditto.smallPeerInfo.syncScope = .bigPeerOnly
-
-        try! ditto.disableSyncWithV3()
     }
 }
 
@@ -285,8 +280,8 @@ fileprivate struct StoreService {
         self.store = store
     }
 
-    func insertLocation(of user: User) {
-        let loc = Location(id: user.locationId, name: user.locationName)
+    func insertLocation(of customLoc: CustomLocation) {
+        let loc = Location(id: customLoc.locationId, name: customLoc.locationName)
         let query = loc.insertNewQuery
         exec(query: query)
     }
@@ -379,7 +374,7 @@ fileprivate struct StoreService {
                 do {
                     let result = try await self.store.execute(query: query.string, arguments: query.args)
                     if let item = result.items.first {
-                        print("DS.\(#function): incomplete order FOUND")
+//                        print("DS.\(#function): incomplete order FOUND")
                         var order = Order(value: item.value)
                         order.createdOn = Date()
                         order.saleItemIds.removeAll()
@@ -392,7 +387,7 @@ fileprivate struct StoreService {
                         
                         promise(.success(Order(value: item.value)))
                     } else {
-                        print("DS.\(#function): incomplete order NOT FOUND --> return nil")
+//                        print("DS.\(#function): incomplete order NOT FOUND --> return nil")
                         return promise(.success(nil))
                     }
                 } catch {

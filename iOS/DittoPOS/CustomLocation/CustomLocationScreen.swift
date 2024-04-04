@@ -1,15 +1,37 @@
 //
-//  ProfileScreen.swift
+//  CustomLocation.swift
 //  DittoChat
 //
 //  Created by Maximilian Alexander on 7/20/22.
 //
 
+import Combine
 import SwiftUI
 
-struct ProfileScreen: View {
+class CustomLocationVM: ObservableObject {
+    @Published var companyName: String = ""
+    @Published var locationName: String = ""
+    @Published var saveButtonDisabled = false
+    
+    init() {
+        $companyName.combineLatest($locationName)
+            .map { companyName, locationName -> Bool in
+                return companyName.isEmpty || locationName.isEmpty
+            }
+            .assign(to: &$saveButtonDisabled)
+    }
+
+    func saveChanges() {
+        DittoService.shared.saveCustomLocation(
+            company: companyName.trimmingCharacters(in: .whitespacesAndNewlines),
+            location: locationName.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+}
+
+struct CustomLocationScreen: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject var vm = ProfileScreenViewModel()
+    @StateObject var vm = CustomLocationVM()
 
     var body: some View {
         NavigationView {
@@ -39,10 +61,8 @@ struct ProfileScreen: View {
     }
 }
 
-#if DEBUG
-struct ProfileScreen_Previews: PreviewProvider {
+struct CustomLocationScreen_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileScreen()
+        CustomLocationScreen()
     }
 }
-#endif

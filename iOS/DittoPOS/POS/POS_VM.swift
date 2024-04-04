@@ -15,16 +15,17 @@ class POS_VM: ObservableObject {
     
     @Published private(set) var currentOrder: Order?
     @Published var saleItems: [SaleItem] = SaleItem.demoItems // demo collection for order display
+    @Published var presentSelectLocationAlert = false
     private let dittoService = DittoService.shared
     private var cancellables = Set<AnyCancellable>()
     private var orderCancellable = AnyCancellable({})
 
     private init() {
 
-        // use case: when DittoService USE_DEFAULT_LOCATIONS is true, the demo locations list
-        // tabView will display, allowing user to change between locations. This is the listener
+        // use case: when Settings.useDemocLocations is true, the Locations tabView will display
+        // a list of demo locations, allowing user to change between locations. This is the listener
         // for that change. We "reset" an unpaid outgoing order to clear it of sale items when
-        // changing locations so that we're not leaving hanging partial orders on other devices'
+        // changing locations so that we're not leaving partial orders hanging on other devices'
         // KDS view.
         NotificationCenter.default.publisher(for: .willUpdateToLocationId)
             .sink {[weak self] locId in
@@ -39,10 +40,13 @@ class POS_VM: ObservableObject {
             }
             .store(in: &cancellables)
         
-        dittoService.$currentLocation
+        dittoService.$currentLocation        
             .receive(on: DispatchQueue.main)
             .sink {[weak self] loc in
-                guard let loc = loc, let self = self else { return }
+                guard let loc = loc, let self = self else {
+                    self?.currentOrder = nil
+                    return
+                }
                 
                 if let order = currentOrder, order.locationId == loc.id && !order.isPaid {
                     return
@@ -62,9 +66,8 @@ class POS_VM: ObservableObject {
                 // theres nothing to do; return.
                 guard orders.count > 0 else { return }
 
-                // If the DittoService.currentLocationId hasn't been set yet (first launch, where
-                // DittoService USE_DEFAULT_LOCATIONS), we can't create an order yet, so there's
-                // nothing to do here.
+                // If the DittoService.currentLocationId hasn't been set yet (first launch, when
+                // using demo locations), we can't create an order yet, so there's nothing to do here.
                 guard let locId = dittoService.currentLocationId else {
                     print("POS_VM.dittoService.$locationOrders.sink: ERROR - NIL currentLocationId should not be possible here")
                     return
@@ -127,9 +130,9 @@ class POS_VM: ObservableObject {
         }
         orderCancellable = dittoService.incompleteOrderFuture()
             .receive(on: DispatchQueue.main)
-            .sink {[weak self] restoredOrder in
+            .sink {[weak self] optionalOrder in
                 guard let self = self else { return }
-                if let order = restoredOrder {
+                if let order = optionalOrder {
 //                    print("POS_VM.\(#function).dittoService.restoredIncompleteOrder(...) FOUND recycled order")
                     currentOrder = order
                 } else {

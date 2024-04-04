@@ -7,25 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E1E919B2BA0E40800046BC0 /* DittoDataBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919A2BA0E40800046BC0 /* DittoDataBrowser */; };
+		0E1E919D2BA0E40800046BC0 /* DittoDiskUsage in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919C2BA0E40800046BC0 /* DittoDiskUsage */; };
+		0E1E919F2BA0E40800046BC0 /* DittoExportData in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919E2BA0E40800046BC0 /* DittoExportData */; };
+		0E1E91A12BA0E40800046BC0 /* DittoExportLogs in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A02BA0E40800046BC0 /* DittoExportLogs */; };
+		0E1E91A32BA0E40800046BC0 /* DittoHeartbeat in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A22BA0E40800046BC0 /* DittoHeartbeat */; };
+		0E1E91A52BA0E40800046BC0 /* DittoPeersList in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A42BA0E40800046BC0 /* DittoPeersList */; };
+		0E1E91A72BA0E40800046BC0 /* DittoPermissionsHealth in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A62BA0E40800046BC0 /* DittoPermissionsHealth */; };
+		0E1E91A92BA0E40800046BC0 /* DittoPresenceDegradation in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91A82BA0E40800046BC0 /* DittoPresenceDegradation */; };
+		0E1E91AB2BA0E40800046BC0 /* DittoPresenceViewer in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E91AA2BA0E40800046BC0 /* DittoPresenceViewer */; };
+		0E1E91AD2BA0FC9300046BC0 /* LogFileConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */; };
+		0E3768B82BAE2FD3009A7053 /* HeartbeatConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */; };
 		112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */; };
 		14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* POSOrderTotalView.swift */; };
 		14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
+		140421CF2B9AB6B800778C1B /* AdvancedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */; };
 		1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */; };
-		142B27C92A3A310600C09751 /* DittoDiskUsage in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27C82A3A310600C09751 /* DittoDiskUsage */; };
-		142B27CB2A3A310600C09751 /* DittoExportData in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CA2A3A310600C09751 /* DittoExportData */; };
-		142B27CD2A3A310600C09751 /* DittoExportLogs in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27CC2A3A310600C09751 /* DittoExportLogs */; };
-		142B27D12A3A310600C09751 /* DittoPresenceViewer in Frameworks */ = {isa = PBXBuildFile; productRef = 142B27D02A3A310600C09751 /* DittoPresenceViewer */; };
-		1435D5AB2A8EBBAC0046B661 /* DittoDataBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = 1435D5AA2A8EBBAC0046B661 /* DittoDataBrowser */; };
-		1435D5AD2A8EBBAC0046B661 /* DittoPeersList in Frameworks */ = {isa = PBXBuildFile; productRef = 1435D5AC2A8EBBAC0046B661 /* DittoPeersList */; };
 		1435D5AF2A8EC7270046B661 /* DittoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1435D5AE2A8EC7270046B661 /* DittoSwift */; };
 		1460E33B2A93DA5D007A2A6D /* KDSOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */; };
 		1460E33D2A93DCC8007A2A6D /* KDS_VM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDS_VM.swift */; };
 		148071162A8C2E930091EC03 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071152A8C2E930091EC03 /* SettingsView.swift */; };
 		148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */; };
 		149CABC62A32C43700729331 /* Env.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149CABC52A32C43700729331 /* Env.swift */; };
-		14AB43852AD713EF00E58566 /* ProfileScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB43832AD713EF00E58566 /* ProfileScreen.swift */; };
-		14AB43862AD713EF00E58566 /* ProfileScreenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB43842AD713EF00E58566 /* ProfileScreenViewModel.swift */; };
-		14AB43882AD71FE900E58566 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB43872AD71FE900E58566 /* User.swift */; };
+		14AB43852AD713EF00E58566 /* CustomLocationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB43832AD713EF00E58566 /* CustomLocationScreen.swift */; };
+		14AB43882AD71FE900E58566 /* CustomLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB43872AD71FE900E58566 /* CustomLocation.swift */; };
 		14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */; };
 		14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51B22A2FE2D50018DE87 /* MainView.swift */; };
 		14CD51B52A2FE2D60018DE87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14CD51B42A2FE2D60018DE87 /* Assets.xcassets */; };
@@ -46,22 +51,24 @@
 		14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1E2A3D13F0005BC2AE /* Utils.swift */; };
 		14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */; };
 		14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */; };
-		14FFFEF12A43732400DD6806 /* UserDefaults+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEF02A43732400DD6806 /* UserDefaults+Extensions.swift */; };
+		14FFFEF12A43732400DD6806 /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEF02A43732400DD6806 /* SettingsModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfig.swift; sourceTree = "<group>"; };
+		0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConfig.swift; sourceTree = "<group>"; };
 		112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoExtensions.swift; sourceTree = "<group>"; };
 		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
+		140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettings.swift; sourceTree = "<group>"; };
 		1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderItemView.swift; sourceTree = "<group>"; };
 		1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderView.swift; sourceTree = "<group>"; };
 		1460E33C2A93DCC8007A2A6D /* KDS_VM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDS_VM.swift; sourceTree = "<group>"; };
 		148071152A8C2E930091EC03 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DittoToolsListItem.swift; sourceTree = "<group>"; };
 		149CABC52A32C43700729331 /* Env.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Env.swift; sourceTree = "<group>"; };
-		14AB43832AD713EF00E58566 /* ProfileScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileScreen.swift; sourceTree = "<group>"; };
-		14AB43842AD713EF00E58566 /* ProfileScreenViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileScreenViewModel.swift; sourceTree = "<group>"; };
-		14AB43872AD71FE900E58566 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		14AB43832AD713EF00E58566 /* CustomLocationScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomLocationScreen.swift; sourceTree = "<group>"; };
+		14AB43872AD71FE900E58566 /* CustomLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLocation.swift; sourceTree = "<group>"; };
 		14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DittoPOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS.swift; sourceTree = "<group>"; };
 		14CD51B22A2FE2D50018DE87 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -83,7 +90,7 @@
 		14DECF1E2A3D13F0005BC2AE /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrdersGridView.swift; sourceTree = "<group>"; };
 		14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderItemView.swift; sourceTree = "<group>"; };
-		14FFFEF02A43732400DD6806 /* UserDefaults+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+Extensions.swift"; sourceTree = "<group>"; };
+		14FFFEF02A43732400DD6806 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,14 +98,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E1E919B2BA0E40800046BC0 /* DittoDataBrowser in Frameworks */,
 				14CD51C62A2FE58E0018DE87 /* DittoObjC in Frameworks */,
-				142B27C92A3A310600C09751 /* DittoDiskUsage in Frameworks */,
-				142B27CB2A3A310600C09751 /* DittoExportData in Frameworks */,
+				0E1E919D2BA0E40800046BC0 /* DittoDiskUsage in Frameworks */,
+				0E1E91A92BA0E40800046BC0 /* DittoPresenceDegradation in Frameworks */,
+				0E1E919F2BA0E40800046BC0 /* DittoExportData in Frameworks */,
+				0E1E91A12BA0E40800046BC0 /* DittoExportLogs in Frameworks */,
+				0E1E91A52BA0E40800046BC0 /* DittoPeersList in Frameworks */,
+				0E1E91AB2BA0E40800046BC0 /* DittoPresenceViewer in Frameworks */,
+				0E1E91A32BA0E40800046BC0 /* DittoHeartbeat in Frameworks */,
+				0E1E91A72BA0E40800046BC0 /* DittoPermissionsHealth in Frameworks */,
 				1435D5AF2A8EC7270046B661 /* DittoSwift in Frameworks */,
-				142B27CD2A3A310600C09751 /* DittoExportLogs in Frameworks */,
-				1435D5AD2A8EBBAC0046B661 /* DittoPeersList in Frameworks */,
-				142B27D12A3A310600C09751 /* DittoPresenceViewer in Frameworks */,
-				1435D5AB2A8EBBAC0046B661 /* DittoDataBrowser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,14 +156,13 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		14AB43822AD7133900E58566 /* User */ = {
+		14AB43822AD7133900E58566 /* CustomLocation */ = {
 			isa = PBXGroup;
 			children = (
-				14AB43832AD713EF00E58566 /* ProfileScreen.swift */,
-				14AB43842AD713EF00E58566 /* ProfileScreenViewModel.swift */,
-				14AB43872AD71FE900E58566 /* User.swift */,
+				14AB43832AD713EF00E58566 /* CustomLocationScreen.swift */,
+				14AB43872AD71FE900E58566 /* CustomLocation.swift */,
 			);
-			path = User;
+			path = CustomLocation;
 			sourceTree = "<group>";
 		};
 		14CD51A42A2FE2D50018DE87 = {
@@ -183,7 +192,7 @@
 				1420B7982A4A23AC00EBF40F /* Locations */,
 				14039BEC2A465ECC001903ED /* POS */,
 				14DECF0B2A3BDC0A005BC2AE /* Settings */,
-				14AB43822AD7133900E58566 /* User */,
+				14AB43822AD7133900E58566 /* CustomLocation */,
 				14DECF032A3A6859005BC2AE /* Utilities */,
 				149CABC52A32C43700729331 /* Env.swift */,
 				14CD51C22A2FE4880018DE87 /* Info.plist */,
@@ -206,7 +215,6 @@
 			children = (
 				14039BEF2A4789AE001903ED /* CurrencyUtils.swift */,
 				14DECF1E2A3D13F0005BC2AE /* Utils.swift */,
-				14FFFEF02A43732400DD6806 /* UserDefaults+Extensions.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -220,6 +228,7 @@
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
 				14DECF092A3B92D5005BC2AE /* Transaction.swift */,
+				0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -227,8 +236,11 @@
 		14DECF0B2A3BDC0A005BC2AE /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */,
 				148071172A8C2E9E0091EC03 /* DittoToolsListItem.swift */,
+				14FFFEF02A43732400DD6806 /* SettingsModel.swift */,
 				148071152A8C2E930091EC03 /* SettingsView.swift */,
+				0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -252,13 +264,16 @@
 			name = DittoPOS;
 			packageProductDependencies = (
 				14CD51C52A2FE58E0018DE87 /* DittoObjC */,
-				142B27C82A3A310600C09751 /* DittoDiskUsage */,
-				142B27CA2A3A310600C09751 /* DittoExportData */,
-				142B27CC2A3A310600C09751 /* DittoExportLogs */,
-				142B27D02A3A310600C09751 /* DittoPresenceViewer */,
-				1435D5AA2A8EBBAC0046B661 /* DittoDataBrowser */,
-				1435D5AC2A8EBBAC0046B661 /* DittoPeersList */,
 				1435D5AE2A8EC7270046B661 /* DittoSwift */,
+				0E1E919A2BA0E40800046BC0 /* DittoDataBrowser */,
+				0E1E919C2BA0E40800046BC0 /* DittoDiskUsage */,
+				0E1E919E2BA0E40800046BC0 /* DittoExportData */,
+				0E1E91A02BA0E40800046BC0 /* DittoExportLogs */,
+				0E1E91A22BA0E40800046BC0 /* DittoHeartbeat */,
+				0E1E91A42BA0E40800046BC0 /* DittoPeersList */,
+				0E1E91A62BA0E40800046BC0 /* DittoPermissionsHealth */,
+				0E1E91A82BA0E40800046BC0 /* DittoPresenceDegradation */,
+				0E1E91AA2BA0E40800046BC0 /* DittoPresenceViewer */,
 			);
 			productName = DittoPOS;
 			productReference = 14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */;
@@ -272,7 +287,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1430;
-				LastUpgradeCheck = 1510;
+				LastUpgradeCheck = 1520;
 				ORGANIZATIONNAME = "DittoLive Incorporated";
 				TargetAttributes = {
 					14CD51AC2A2FE2D50018DE87 = {
@@ -291,7 +306,7 @@
 			mainGroup = 14CD51A42A2FE2D50018DE87;
 			packageReferences = (
 				14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */,
-				142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */,
+				0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */,
 			);
 			productRefGroup = 14CD51AE2A2FE2D50018DE87 /* Products */;
 			projectDirPath = "";
@@ -349,9 +364,11 @@
 				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */,
+				0E1E91AD2BA0FC9300046BC0 /* LogFileConfig.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
+				140421CF2B9AB6B800778C1B /* AdvancedSettings.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
-				14AB43882AD71FE900E58566 /* User.swift in Sources */,
+				14AB43882AD71FE900E58566 /* CustomLocation.swift in Sources */,
 				1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
@@ -362,14 +379,14 @@
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
+				0E3768B82BAE2FD3009A7053 /* HeartbeatConfig.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,
 				14DECF082A3A7F76005BC2AE /* Order.swift in Sources */,
-				14AB43852AD713EF00E58566 /* ProfileScreen.swift in Sources */,
+				14AB43852AD713EF00E58566 /* CustomLocationScreen.swift in Sources */,
 				14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */,
-				14AB43862AD713EF00E58566 /* ProfileScreenViewModel.swift in Sources */,
-				14FFFEF12A43732400DD6806 /* UserDefaults+Extensions.swift in Sources */,
+				14FFFEF12A43732400DD6806 /* SettingsModel.swift in Sources */,
 				14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */,
 				14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */,
 			);
@@ -382,6 +399,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -443,6 +461,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -592,12 +611,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */ = {
+		0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getditto/DittoSwiftTools.git";
+			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.4.0;
+				minimumVersion = 4.5.0;
 			};
 		};
 		14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */ = {
@@ -611,35 +630,50 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		142B27C82A3A310600C09751 /* DittoDiskUsage */ = {
+		0E1E919A2BA0E40800046BC0 /* DittoDataBrowser */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
-			productName = DittoDiskUsage;
-		};
-		142B27CA2A3A310600C09751 /* DittoExportData */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
-			productName = DittoExportData;
-		};
-		142B27CC2A3A310600C09751 /* DittoExportLogs */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
-			productName = DittoExportLogs;
-		};
-		142B27D02A3A310600C09751 /* DittoPresenceViewer */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
-			productName = DittoPresenceViewer;
-		};
-		1435D5AA2A8EBBAC0046B661 /* DittoDataBrowser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
 			productName = DittoDataBrowser;
 		};
-		1435D5AC2A8EBBAC0046B661 /* DittoPeersList */ = {
+		0E1E919C2BA0E40800046BC0 /* DittoDiskUsage */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 142B27C52A3A310600C09751 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoDiskUsage;
+		};
+		0E1E919E2BA0E40800046BC0 /* DittoExportData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoExportData;
+		};
+		0E1E91A02BA0E40800046BC0 /* DittoExportLogs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoExportLogs;
+		};
+		0E1E91A22BA0E40800046BC0 /* DittoHeartbeat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoHeartbeat;
+		};
+		0E1E91A42BA0E40800046BC0 /* DittoPeersList */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
 			productName = DittoPeersList;
+		};
+		0E1E91A62BA0E40800046BC0 /* DittoPermissionsHealth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoPermissionsHealth;
+		};
+		0E1E91A82BA0E40800046BC0 /* DittoPresenceDegradation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoPresenceDegradation;
+		};
+		0E1E91AA2BA0E40800046BC0 /* DittoPresenceViewer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoPresenceViewer;
 		};
 		1435D5AE2A8EC7270046B661 /* DittoSwift */ = {
 			isa = XCSwiftPackageProductDependency;
