@@ -33,18 +33,18 @@ fun LazyGridItemScope.SaleItem(saleItemUiModel: SaleItemUiModel, modifier: Modif
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
         modifier = modifier
-            .fillMaxHeight(),
+            .fillMaxHeight()
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Image(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(8.dp)),
                 painter = painterResource(id = saleItemUiModel.imageResource),
-                contentDescription = saleItemUiModel.label,
+                contentDescription = saleItemUiModel.label
             )
         }
         Text(
@@ -63,7 +63,8 @@ fun LazyGridItemScope.SaleItem(saleItemUiModel: SaleItemUiModel, modifier: Modif
 private fun SaleItemPreview() {
     val saleItems = listOf(
         SaleItemUiModel(
-            imageResource = R.drawable.burger, label = "Tasty Burger"
+            imageResource = R.drawable.burger,
+            label = "Tasty Burger"
         )
     )
     LazyVerticalGrid(columns = GridCells.Adaptive(120.dp)) {

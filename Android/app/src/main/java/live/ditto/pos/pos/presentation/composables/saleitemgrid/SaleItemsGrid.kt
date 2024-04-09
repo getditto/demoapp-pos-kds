@@ -17,13 +17,12 @@ fun SaleItemsGrid(saleItems: List<SaleItemUiModel>) {
         columns = GridCells.Adaptive(120.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp),
+        contentPadding = PaddingValues(8.dp)
     ) {
         items(saleItems) { saleItem ->
             SaleItem(saleItemUiModel = saleItem)
         }
     }
-
 }
 
 @Preview

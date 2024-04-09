@@ -38,7 +38,7 @@ private fun PosKdsApp(
             Scaffold(
                 bottomBar = {
                     PosKdsNavigationBar(
-                        bottomNavItems = bottomNavItems,
+                        bottomNavItems = bottomNavItems
                     ) {
                         navHostController.navigate(route = it.route)
                     }

@@ -50,7 +50,6 @@ fun CheckoutSection() {
                         .width(48.dp)
                         .height(48.dp)
                         .clickable {
-
                         }
                 )
             }

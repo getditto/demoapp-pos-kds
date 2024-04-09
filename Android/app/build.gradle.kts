@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.kapt)
     alias(libs.plugins.google.dagger.hilt.android)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -108,9 +109,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // Extended material icons
-    //todo: remove and just grab individual icons
+    // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
-
 }
 
 kapt {

@@ -56,6 +56,5 @@ private fun PosKdsNavigationBarPreview() {
         BottomNavItem.KitchenDisplay
     )
     PosKdsNavigationBar(bottomNavItems = bottomNavItems) {
-
     }
 }
