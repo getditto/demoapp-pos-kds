@@ -109,9 +109,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // Extended material icons
-    //todo: remove and just grab individual icons
+    // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
-
 }
 
 kapt {
