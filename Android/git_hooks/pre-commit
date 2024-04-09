@@ -1,22 +1,27 @@
 #!/bin/bash
-echo "*********************************************************"
-echo "Running git pre-commit hook. Running Static analysis... "
-echo "*********************************************************"
 
-#TODO figure out how to pass lint without minifyEnabled
-(cd android && ./gradlew ktlintCheck)
+ANDROID_DIRECTORY="Android/"
+git diff --cached --name-only | if grep --quiet "$ANDROID_DIRECTORY"
+then
+  echo "*********************************************************"
+  echo "Running git pre-commit hook. Running Static analysis... "
+  echo "*********************************************************"
 
-status=$?
+  #TODO figure out how to pass lint without minifyEnabled
+  (cd $ANDROID_DIRECTORY && ./gradlew ktlintCheck)
 
-if [ "$status" = 0 ] ; then
-    echo "Static analysis found no problems."
-    exit 0
-else
-    echo "*********************************************************"
-    echo "       ********************************************      "
-    echo 1>&2 "Static analysis found violations it could not fix."
-    echo "Run ./gradlew ktlintFormat to fix formatting related issues..."
-    echo "       ********************************************      "
-    echo "*********************************************************"
-    exit 1
+  status=$?
+
+  if [ "$status" = 0 ] ; then
+      echo "Static analysis found no problems."
+      exit 0
+  else
+      echo "*********************************************************"
+      echo "       ********************************************      "
+      echo 1>&2 "Static analysis found violations it could not fix."
+      echo "Run ./gradlew ktlintFormat to fix formatting related issues..."
+      echo "       ********************************************      "
+      echo "*********************************************************"
+      exit 1
+  fi
 fi
