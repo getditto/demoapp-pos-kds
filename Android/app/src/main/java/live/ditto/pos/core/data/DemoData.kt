@@ -1,6 +1,7 @@
 package live.ditto.pos.core.data
 
 import live.ditto.pos.R
+import live.ditto.pos.kds.presentation.composables.TicketItemUi
 import live.ditto.pos.pos.data.OrderItemUiModel
 import live.ditto.pos.pos.data.SaleItemUiModel
 
@@ -123,5 +124,25 @@ val demoOrderItems = listOf(
     OrderItemUiModel(
         name = "Hot Dog",
         price = "$9.00"
+    )
+)
+
+val demoTicketItems = listOf(
+    TicketItemUi(
+        header = "9:59 AM #8921DD",
+        items = hashMapOf(
+            "Burger" to 1,
+            "Coffee" to 1,
+            "Milk" to 3
+        )
+    ),
+    TicketItemUi(
+        header = "9:56 AM #09FBC2",
+        items = hashMapOf(
+            "Fruit Salad" to 2,
+            "Coffee" to 1,
+            "Corn" to 1,
+            "Cereal" to 5
+        )
     )
 )
