@@ -52,6 +52,7 @@
 		14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */; };
 		14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */; };
 		14FFFEF12A43732400DD6806 /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEF02A43732400DD6806 /* SettingsModel.swift */; };
+		A4ADA65E2BEAA3E800936AD6 /* DittoHealthMetrics in Frameworks */ = {isa = PBXBuildFile; productRef = A4ADA65D2BEAA3E800936AD6 /* DittoHealthMetrics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -109,6 +110,7 @@
 				0E1E91A32BA0E40800046BC0 /* DittoHeartbeat in Frameworks */,
 				0E1E91A72BA0E40800046BC0 /* DittoPermissionsHealth in Frameworks */,
 				1435D5AF2A8EC7270046B661 /* DittoSwift in Frameworks */,
+				A4ADA65E2BEAA3E800936AD6 /* DittoHealthMetrics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,6 +276,7 @@
 				0E1E91A62BA0E40800046BC0 /* DittoPermissionsHealth */,
 				0E1E91A82BA0E40800046BC0 /* DittoPresenceDegradation */,
 				0E1E91AA2BA0E40800046BC0 /* DittoPresenceViewer */,
+				A4ADA65D2BEAA3E800936AD6 /* DittoHealthMetrics */,
 			);
 			productName = DittoPOS;
 			productReference = 14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */;
@@ -616,7 +619,7 @@
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.5.0;
+				minimumVersion = 4.8.0;
 			};
 		};
 		14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */ = {
@@ -684,6 +687,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */;
 			productName = DittoObjC;
+		};
+		A4ADA65D2BEAA3E800936AD6 /* DittoHealthMetrics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E1E91992BA0E40800046BC0 /* XCRemoteSwiftPackageReference "DittoSwiftTools" */;
+			productName = DittoHealthMetrics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,12 +1,13 @@
 {
+  "originHash" : "813f35598a8fa9c931a22f18a3f20117f2e42931ac2373c546c2e0f4df7e2d65",
   "pins" : [
     {
       "identity" : "dittoswiftpackage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoSwiftPackage",
       "state" : {
-        "revision" : "2418e85dd95db011b976336eda47893ba1a29133",
-        "version" : "4.6.0"
+        "revision" : "e9ac25ae9d38d215cc5958c995450dbc9b9dbea7",
+        "version" : "4.7.1"
       }
     },
     {
@@ -14,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoSwiftTools",
       "state" : {
-        "revision" : "e78ed387c8467e60c7909b9af2ad5af5eabe076b",
-        "version" : "4.7.4"
+        "revision" : "a8ad598f574de00554572f7feeb1e01e6a87fc20",
+        "version" : "4.8.0"
       }
     },
     {
@@ -28,5 +29,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
