@@ -50,10 +50,7 @@ class HeartbeatConfigVM: ObservableObject {
                                             secondsInterval: self.secondsInterval,
                                             metadata: self.metaData,
                                             healthMetricProviders: healthMetricProviders)
-        self.heartbeatVM.startHeartbeat(config: hbConfig) {heartbeatInfo in
-            print("hb callback")
-            
-        }
+        self.heartbeatVM.startHeartbeat(config: hbConfig) {_ in }
     }
     
     func stopHeartbeat() {
