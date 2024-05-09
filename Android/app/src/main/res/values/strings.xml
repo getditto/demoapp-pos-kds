@@ -6,4 +6,5 @@
     <string name="button_cancel_order">Cancel</string>
     <string name="button_pay">Pay</string>
     <string name="label_total">Total</string>
+    <string name="navigation_drawer_label_ditto_tools">Ditto Tools</string>
 </resources>

@@ -70,6 +70,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // prevent duplicate classes error when building
+    configurations.forEach {
+        it.exclude("live.ditto", "dittoexporter")
+        it.exclude("live.ditto", "health")
+    }
 }
 
 dependencies {
@@ -93,6 +99,7 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
@@ -111,6 +118,22 @@ dependencies {
     // Extended material icons
     // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
+
+    implementation(files("./libs/DittoToolsViewer.aar"))
+
+    // these deps have to be pulled in when testing with a local .aar
+    implementation(libs.live.ditto.databrowser)
+    implementation(libs.live.ditto.exportlogs)
+    implementation(libs.live.ditto.presenceviewer)
+    implementation(files("./libs/DittoExporter.aar"))
+
+    implementation(files("./libs/DittoHeartbeat.aar"))
+
+    implementation(files("./libs/DittoDiskUsage.aar"))
+
+    implementation(libs.live.ditto.health)
+    implementation(files("./libs/DittoPresenceDegradationReporter.aar"))
+    implementation(files("./libs/DittoHealthMetrics.aar"))
 }
 
 kapt {

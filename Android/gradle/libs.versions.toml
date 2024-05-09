@@ -3,9 +3,10 @@ activityCompose = "1.8.2"
 agp = "8.3.0"
 composeBom = "2024.02.02"
 coreKtx = "1.12.0"
-ditto = "4.5.4"
+ditto = "4.7.1"
 espressoCore = "3.5.1"
 hiltAndroid = "2.51"
+hiltNavigationCompose = "1.2.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 kotlin = "1.9.22"
@@ -13,6 +14,10 @@ ktlint = "11.6.1"
 lifecycleRuntimeKtx = "2.7.0"
 materialIconsExtendedAndroid = "1.6.3"
 navigationCompose = "2.7.7"
+ditto-presence-viewer = "0.0.4"
+live-ditto-databrowser = "0.0.5"
+live-ditto-exportlogs = "0.0.5"
+live-ditto-health = "0.0.4"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -26,6 +31,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
@@ -35,6 +41,10 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltA
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { module = "junit:junit", version.ref = "junit" }
+live-ditto-presenceviewer = { module = "live.ditto:dittopresenceviewer", version.ref = "ditto-presence-viewer" }
+live-ditto-databrowser = { module = "live.ditto:dittodatabrowser", version.ref = "live-ditto-databrowser" }
+live-ditto-exportlogs = { module = "live.ditto:dittoexportlogs", version.ref = "live-ditto-exportlogs" }
+live-ditto-health = { module = "live.ditto:health", version.ref = "live-ditto-health" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
