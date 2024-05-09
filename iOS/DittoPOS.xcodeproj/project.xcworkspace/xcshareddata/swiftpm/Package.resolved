@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoSwiftTools",
       "state" : {
-        "branch" : "BP/health_metrics_fix",
-        "revision" : "fa46570bc3d5eae22c5c87adff6a0b0faa152c1a"
+        "revision" : "5e8e1f5614d05686bd9460b6e9e00a9c1f525092",
+        "version" : "4.8.1"
       }
     },
     {

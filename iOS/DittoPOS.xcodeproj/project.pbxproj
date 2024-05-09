@@ -622,8 +622,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
-				branch = BP/health_metrics_fix;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.8.1;
 			};
 		};
 		14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */ = {
