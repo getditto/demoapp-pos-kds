@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoSwiftTools",
       "state" : {
-        "branch" : "BP/disk_usage_health_metric",
-        "revision" : "730bfabadf8b6be2e70914319922e008a4b1ed04"
+        "revision" : "1c8bf29bc160a70a1d74e99f47efd132e572a940",
+        "version" : "4.9.0"
       }
     },
     {

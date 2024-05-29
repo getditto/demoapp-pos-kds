@@ -622,8 +622,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
-				branch = BP/disk_usage_health_metric;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.9.0;
 			};
 		};
 		14CD51C42A2FE58E0018DE87 /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */ = {
