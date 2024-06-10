@@ -18,6 +18,8 @@ ditto-presence-viewer = "0.0.4"
 live-ditto-databrowser = "0.0.5"
 live-ditto-exportlogs = "0.0.5"
 live-ditto-health = "0.0.4"
+appcompat = "1.7.0"
+material = "1.12.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -45,6 +47,8 @@ live-ditto-presenceviewer = { module = "live.ditto:dittopresenceviewer", version
 live-ditto-databrowser = { module = "live.ditto:dittodatabrowser", version.ref = "live-ditto-databrowser" }
 live-ditto-exportlogs = { module = "live.ditto:dittoexportlogs", version.ref = "live-ditto-exportlogs" }
 live-ditto-health = { module = "live.ditto:health", version.ref = "live-ditto-health" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

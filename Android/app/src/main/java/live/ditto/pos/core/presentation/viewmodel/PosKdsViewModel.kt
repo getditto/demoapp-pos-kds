@@ -3,7 +3,7 @@ package live.ditto.pos.core.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import live.ditto.Ditto
-import live.ditto.pos.ditto.DittoManager
+import live.ditto.ditto_wrapper.DittoManager
 import javax.inject.Inject
 
 @HiltViewModel

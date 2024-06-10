@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Ditto PoS KDS Demo"
 include(":app")
+include(":ditto-wrapper")
