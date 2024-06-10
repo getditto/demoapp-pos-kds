@@ -1,26 +1,32 @@
 package live.ditto.pos.pos.presentation.composables
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import live.ditto.pos.R
+import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 
 @Composable
-fun CurrentOrderView() {
+fun CurrentOrder(
+    orderId: String,
+    orderItems: List<OrderItemUiModel>
+) {
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Order: #39HFK2")
+        Text(text = stringResource(R.string.current_order_id, orderId))
         HorizontalDivider()
-        OrderItemsList()
-        Spacer(modifier = Modifier.weight(1f))
+        OrderItemsList(
+            orderItems = orderItems
+        )
         CheckoutSection()
     }
 }
@@ -28,5 +34,8 @@ fun CurrentOrderView() {
 @Composable
 @Preview
 private fun CurrentOrderViewPreview() {
-    CurrentOrderView()
+    CurrentOrder(
+        orderId = "#2311FFC",
+        orderItems = emptyList()
+    )
 }

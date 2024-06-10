@@ -6,27 +6,43 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import live.ditto.pos.core.data.demoMenuData
-import live.ditto.pos.pos.presentation.composables.CurrentOrderView
+import live.ditto.pos.pos.PoSViewModel
+import live.ditto.pos.pos.presentation.composables.CurrentOrder
 import live.ditto.pos.pos.presentation.composables.saleitemgrid.SaleItemsGrid
 
 @Composable
-fun PosScreen() {
+fun PosScreen(
+    viewModel: PoSViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Row(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(0.5f)
         ) {
-            SaleItemsGrid(saleItems = demoMenuData)
+            SaleItemsGrid(
+                saleItems = demoMenuData,
+                onSaleItemClicked = {
+                    viewModel.addItemToCart(it)
+                }
+            )
         }
         Box(
             modifier = Modifier
                 .fillMaxHeight()
         ) {
-            CurrentOrderView()
+            CurrentOrder(
+                orderId = state.currentOrderId,
+                orderItems = state.orderItems
+            )
         }
     }
 }

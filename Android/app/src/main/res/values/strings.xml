@@ -7,4 +7,5 @@
     <string name="button_pay">Pay</string>
     <string name="label_total">Total</string>
     <string name="navigation_drawer_label_ditto_tools">Ditto Tools</string>
+    <string name="current_order_id">Order: %1$s</string>
 </resources>

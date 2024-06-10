@@ -2,8 +2,8 @@ package live.ditto.pos.core.data
 
 import live.ditto.pos.R
 import live.ditto.pos.kds.presentation.composables.TicketItemUi
-import live.ditto.pos.pos.data.OrderItemUiModel
-import live.ditto.pos.pos.data.SaleItemUiModel
+import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
+import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 
 val demoMenuData = listOf(
     SaleItemUiModel(

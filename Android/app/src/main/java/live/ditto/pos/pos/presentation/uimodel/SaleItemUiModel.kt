@@ -1,4 +1,4 @@
-package live.ditto.pos.pos.data
+package live.ditto.pos.pos.presentation.uimodel
 
 import androidx.annotation.DrawableRes
 
