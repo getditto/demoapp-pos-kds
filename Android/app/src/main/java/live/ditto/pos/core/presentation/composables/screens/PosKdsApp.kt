@@ -14,38 +14,44 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.presentation.composables.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
-import live.ditto.pos.core.presentation.navigation.BottomNavItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
+import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @Composable
-fun PosKdsApp() {
-    val bottomNavItems = listOf(
-        BottomNavItem.PointOfSale,
-        BottomNavItem.KitchenDisplay
-    )
-    PosKdsApp(
-        navHostController = rememberNavController(),
-        bottomNavItems = bottomNavItems
-    )
+fun PosKdsApp(
+    viewModel: CoreViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    if (state.isSetupValid) {
+        PosKdsApp(
+            navHostController = rememberNavController()
+        )
+    } else {
+        InitialSetupScreen()
+    }
 }
 
 @Composable
 private fun PosKdsApp(
-    navHostController: NavHostController,
-    bottomNavItems: List<BottomNavItem>
+    navHostController: NavHostController
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
     DittoPoSKDSDemoTheme {
         Surface {
             PosKDSNavigationDrawer(
@@ -54,7 +60,6 @@ private fun PosKdsApp(
                 scope = scope
             ) {
                 PosKDSScaffold(
-                    bottomNavItems = bottomNavItems,
                     navHostController = navHostController
                 ) {
                     scope.launch {
@@ -71,22 +76,24 @@ private fun PosKdsApp(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun PosKDSScaffold(
-    bottomNavItems: List<BottomNavItem>,
+    viewModel: CoreViewModel = hiltViewModel(),
     navHostController: NavHostController,
     onNavigationClicked: () -> Unit
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         bottomBar = {
             PosKdsNavigationBar(
-                bottomNavItems = bottomNavItems
-            ) {
-                navHostController.navigate(route = it.route)
-            }
+                onItemClick = {
+                    navHostController.navigate(route = it.route)
+                }
+            )
         },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "McDitto's")
+                    Text(text = state.currentLocationName)
                 },
                 colors = TopAppBarDefaults
                     .centerAlignedTopAppBarColors(containerColor = Color.LightGray),

@@ -7,13 +7,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import live.ditto.pos.core.presentation.composables.screens.PosKdsApp
-import live.ditto.pos.core.presentation.viewmodel.PosKdsViewModel
+import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.transports.DittoSyncPermissions
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: PosKdsViewModel by viewModels<PosKdsViewModel>()
+    private val viewModel: CoreViewModel by viewModels<CoreViewModel>()
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         viewModel.refreshDittoPermissions()

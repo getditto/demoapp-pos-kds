@@ -146,3 +146,41 @@ val demoTicketItems = listOf(
         )
     )
 )
+
+val demoLocations = listOf(
+    Location(
+        id = "00001",
+        name = "Ham's Burgers",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00002",
+        name = "Sally's Salad Bar",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00003",
+        name = "Kyle's Kabobs",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00004",
+        name = "Frank's Falafels",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00005",
+        name = "Cathy's Crepes",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00006",
+        name = "Gilbert's Gumbo",
+        saleItemIds = emptyMap()
+    ),
+    Location(
+        id = "00007",
+        name = "Tarra's Tacos",
+        saleItemIds = emptyMap()
+    )
+)

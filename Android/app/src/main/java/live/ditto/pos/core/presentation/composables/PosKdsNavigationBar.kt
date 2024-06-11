@@ -15,12 +15,16 @@ import live.ditto.pos.core.presentation.navigation.BottomNavItem
 
 @Composable
 fun PosKdsNavigationBar(
-    bottomNavItems: List<BottomNavItem>,
     onItemClick: (bottomNavItem: BottomNavItem) -> Unit
 ) {
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
+
+    val bottomNavItems = listOf(
+        BottomNavItem.PointOfSale,
+        BottomNavItem.KitchenDisplay
+    )
 
     NavigationBar {
         bottomNavItems.forEachIndexed { index, item ->
@@ -51,10 +55,7 @@ fun PosKdsNavigationBar(
 @Preview
 @Composable
 private fun PosKdsNavigationBarPreview() {
-    val bottomNavItems = listOf(
-        BottomNavItem.PointOfSale,
-        BottomNavItem.KitchenDisplay
+    PosKdsNavigationBar(
+        onItemClick = { }
     )
-    PosKdsNavigationBar(bottomNavItems = bottomNavItems) {
-    }
 }

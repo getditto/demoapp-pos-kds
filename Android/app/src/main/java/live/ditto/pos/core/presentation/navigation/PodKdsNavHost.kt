@@ -6,14 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import live.ditto.dittotoolsviewer.presentation.DittoToolsViewer
-import live.ditto.pos.core.presentation.viewmodel.PosKdsViewModel
+import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 
 @Composable
 fun PosKdsNavHost(
     navHostController: NavHostController,
-    viewModel: PosKdsViewModel = hiltViewModel()
+    viewModel: CoreViewModel = hiltViewModel()
 ) {
     NavHost(
         navController = navHostController,
