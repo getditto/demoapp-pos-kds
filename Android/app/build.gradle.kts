@@ -136,6 +136,9 @@ dependencies {
     implementation(libs.live.ditto.health)
     implementation(files("./libs/DittoPresenceDegradationReporter.aar"))
     implementation(files("./libs/DittoHealthMetrics.aar"))
+
+    // Jetpack Datastore
+    implementation(libs.androidx.datastore.preferences)
 }
 
 kapt {

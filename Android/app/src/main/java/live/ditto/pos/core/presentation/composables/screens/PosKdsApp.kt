@@ -18,38 +18,31 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import live.ditto.Ditto
 import live.ditto.pos.core.presentation.composables.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.BottomNavItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
-import live.ditto.pos.core.presentation.viewmodel.PosKdsViewModel
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @Composable
-fun PosKdsApp(
-    viewModel: PosKdsViewModel = hiltViewModel()
-) {
+fun PosKdsApp() {
     val bottomNavItems = listOf(
         BottomNavItem.PointOfSale,
         BottomNavItem.KitchenDisplay
     )
     PosKdsApp(
         navHostController = rememberNavController(),
-        bottomNavItems = bottomNavItems,
-        ditto = viewModel.requireDitto()
+        bottomNavItems = bottomNavItems
     )
 }
 
 @Composable
 private fun PosKdsApp(
     navHostController: NavHostController,
-    bottomNavItems: List<BottomNavItem>,
-    ditto: Ditto
+    bottomNavItems: List<BottomNavItem>
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -62,16 +55,14 @@ private fun PosKdsApp(
             ) {
                 PosKDSScaffold(
                     bottomNavItems = bottomNavItems,
-                    navHostController = navHostController,
-                    onNavigationClicked = {
-                        scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
-                            }
+                    navHostController = navHostController
+                ) {
+                    scope.launch {
+                        drawerState.apply {
+                            if (isClosed) open() else close()
                         }
-                    },
-                    ditto = ditto
-                )
+                    }
+                }
             }
         }
     }
@@ -82,8 +73,7 @@ private fun PosKdsApp(
 private fun PosKDSScaffold(
     bottomNavItems: List<BottomNavItem>,
     navHostController: NavHostController,
-    onNavigationClicked: () -> Unit,
-    ditto: Ditto
+    onNavigationClicked: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -110,8 +100,7 @@ private fun PosKDSScaffold(
         content = {
             Surface(modifier = Modifier.padding(it)) {
                 PosKdsNavHost(
-                    navHostController = navHostController,
-                    ditto = ditto
+                    navHostController = navHostController
                 )
             }
         }

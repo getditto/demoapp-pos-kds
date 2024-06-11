@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.BuildConfig
+import live.ditto.pos.core.domain.repository.CoreRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -36,5 +37,10 @@ internal object AppModule {
     @Provides
     fun provideDittoOnlinePlaygroundAppToken(): String {
         return BuildConfig.DITTO_ONLINE_PLAYGROUND_TOKEN
+    }
+
+    @Provides
+    fun provideCoreRepository(@ApplicationContext context: Context): CoreRepository {
+        return CoreRepository(context)
     }
 }

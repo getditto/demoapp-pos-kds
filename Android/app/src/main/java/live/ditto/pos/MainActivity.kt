@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: PosKdsViewModel by viewModels<PosKdsViewModel>()
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        viewModel.requireDitto().refreshPermissions()
+        viewModel.refreshDittoPermissions()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
