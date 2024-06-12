@@ -60,6 +60,7 @@ class DittoService: ObservableObject {
 
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
+
     private let storeService: StoreService
     private let syncService: SyncService
 

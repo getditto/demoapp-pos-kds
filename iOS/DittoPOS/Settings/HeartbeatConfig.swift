@@ -8,6 +8,9 @@
 
 import SwiftUI
 import DittoHeartbeat
+import DittoHealthMetrics
+import DittoPermissionsHealth
+import DittoDiskUsage
 
 class HeartbeatConfigVM: ObservableObject {
     
@@ -43,7 +46,16 @@ class HeartbeatConfigVM: ObservableObject {
         if self.heartbeatVM.isEnabled {
             self.stopHeartbeat()
         }
-        self.heartbeatVM.startHeartbeat(config: DittoHeartbeatConfig(id: Settings.deviceId, secondsInterval: self.secondsInterval, metaData: self.metaData)) {_ in }
+        let healthMetricProviders: [HealthMetricProvider] = [
+            DittoPermissionsHealth.BluetoothManager(),
+            DittoPermissionsHealth.NetworkManager(),
+            DittoDiskUsage.DiskUsageViewModel(ditto: DittoService.shared.ditto)
+        ]
+        let hbConfig = DittoHeartbeatConfig(id: Settings.deviceId,
+                                            secondsInterval: self.secondsInterval,
+                                            metadata: self.metaData,
+                                            healthMetricProviders: healthMetricProviders)
+        self.heartbeatVM.startHeartbeat(config: hbConfig) {_ in }
     }
     
     func stopHeartbeat() {
