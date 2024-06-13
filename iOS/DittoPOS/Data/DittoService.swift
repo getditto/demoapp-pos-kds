@@ -9,6 +9,7 @@
 import Combine
 import DittoExportLogs
 import DittoSwift
+import OSLog
 import SwiftUI
 
 // MARK: - DittoInstance
@@ -38,11 +39,15 @@ final class DittoInstance {
 
 let defaultLoggingOption: DittoLogger.LoggingOptions = .error
 
-// Used to constrain orders subscriptions to 1 day old or newer
-let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
-
 class DittoService: ObservableObject {
-    @Published var loggingOption: DittoLogger.LoggingOptions
+
+    /*
+     re-enable this before commit
+     */
+//    @Published var loggingOption: DittoLogger.LoggingOptions
+    @Published var loggingOption = DittoLogger.LoggingOptions.error
+    
+    
     private var cancellables = Set<AnyCancellable>()
 
     @Published private(set) var allLocations = [Location]()
@@ -55,22 +60,48 @@ class DittoService: ObservableObject {
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
     
+    @Published private(set) var appConfig = Settings.storedAppConfig ?? AppConfig.Defaults.defaultConfig
+    private var appConfigCancellable = AnyCancellable({})
+    
     //ditto.siteID as String to partition ordering to devices
     private(set) var deviceId: String
 
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
-
     private let storeService: StoreService
-    private let syncService: SyncService
+    let syncService: SyncService //made public for eviction
 
     private init() {
+        // instantiate only the minimum
         storeService = StoreService(ditto.store)
         syncService = SyncService(ditto.sync)
+        deviceId = String(ditto.siteID)
+        
+        /* Run the rest of setup that was previously in init() as background task so that
+         the initialization can return quickly enough for the singleton instance to be
+         available early elsewhere, e.g. in other initializers.
+         N.B. this has the consequence of causing the current order to delay appearing in the
+         POS view for a full second or more after launch.
+         */
+        Task { setup() }
+        
+        $appConfig
+            .sink { config in
+                print("   -------- DS.$appConfig.sink ----------\n\(config)")
+            }
+            .store(in: &cancellables)
+    }
+        
+    private func setup() {
+//        storeService = StoreService(ditto.store)
+//        syncService = SyncService(ditto.sync)
         syncService.registerInitialSubscriptions()
 
-        deviceId = String(ditto.siteID)
+//        deviceId = String(ditto.siteID)
 
+//        if Settings.useLocalAppConfig {
+//            appConfig = Settings.localAppConfig ?? AppConfig.Defaults.defaultConfig
+//        }
         // make sure our log level is set _before_ starting ditto.
         loggingOption = Settings.dittoLoggingOption
         $loggingOption
@@ -87,7 +118,7 @@ class DittoService: ObservableObject {
         }
         
         updateLocationsPublisher()
-
+        
         currentLocationId = Settings.locationId
         
         $currentLocationId
@@ -95,6 +126,7 @@ class DittoService: ObservableObject {
             .sink {[weak self] locId, allLocations in
                 guard let locId = locId, let self = self else { return }
                 
+                Logger.ditto.info("currentLocationId(\(locId,privacy:.public)) + allLocations update sink ")
                 if locId != Settings.locationId {
                     Settings.locationId = locId
                 }
@@ -103,11 +135,21 @@ class DittoService: ObservableObject {
                     storeService.setupDemoLocations()
                 }
 
-                // reset subscription for new location
-                syncService.cancelOrdersSubscription()
-                syncService.registerOrdersSinceTTLSubscription(locId: locId)
+                //moved above subscription registration
+                if Settings.usePublishedAppConfig {
+                    enablePublishedAppConfig(locId: locId)
+//                    syncService.registerAppConfigSubscription(locId: locId)
+//                    updateAppConfigPublisher(locId: locId)
+                }
 
-                updateOrdersPublisher(locId)
+                // reset orders subscription for new location
+//                if let ttl = appConfig.TTLs?[ordersKey] {
+//                    syncService.cancelOrdersSubscription()
+//                    syncService.registerOrdersSinceTTLSubscription(locId: locId, ttl: ttl)
+//                    updateOrdersPublisher(locId)
+//                }
+                resetOrdersSubscription(ttl: appConfig.TTLs?[ordersKey])
+                
                 Task {
                     await MainActor.run {[weak self] in
                         self?.updateCurrentLocation(locId)
@@ -116,11 +158,23 @@ class DittoService: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    func resetOrdersSubscription(ttl: TimeInterval? = nil) {
+        Logger.ditto.debug("DS.\(#function) -> in")
+        guard let locId = currentLocationId else {
+            Logger.ditto.error("DS.\(#function): Error: currentLocationId NIL --> return")
+            return
+        }
+        let ttl = ttl ?? Order.defaultOrdersTTL
+        syncService.cancelOrdersSubscription()
+        syncService.registerOrdersSinceTTLSubscription(locId: locId, ttl: ttl)
+        updateOrdersPublisher(locId)
+    }
 
     // use case: store user-defined location
     func saveCustomLocation(company: String, location: String) {
         let loc = CustomLocation(companyName: company, locationName: location)
-        guard let jsonData = JSONEncoder.encodedObject(loc) else {
+        guard let jsonData = try? JSONEncoder().encode(loc) else {
             print("DS.\(#function): jsonData from custom location FAILED --> RETURN")
             return
         }
@@ -129,7 +183,7 @@ class DittoService: ObservableObject {
         
         storeService.insertLocation(of: loc)
 
-        // setting here will save locationId and update subscriptions in sink above
+        // set currentLocationId: causes save and update subscriptions in currentLocationId.sink in init() above
         currentLocationId = loc.locationId
         
         do {
@@ -158,16 +212,22 @@ class DittoService: ObservableObject {
         storeService.updateStatus(of: order, with: status)
     }
 
+    /* EVICTION: in testing evictions it was found that if the current order is evicted, the
+     addOrder workflow no longer works because there is no order.
+     Similarly, it seems, when an order is "cleared" with the cancel button, the order should be
+     reset back to a new order state. The only difference between order.clearSaleItems query and
+     the reset query is that the date is set to now in reset.
     func clearSaleItemIds(of order: Order) {
         storeService.clearSaleItemIds(of: order)
     }
-
+     */
+    
     func reset(order: Order) {
         storeService.reset(order: order)
     }
 
     func updateOrderTransaction(_ order: Order, with transx: Transaction) {
-        // NOTE: DQL v1 (4.5.x) doesn't support write transactions, so these
+        // NOTE: DQL v1 (4.7.x) doesn't support write/batch transactions, so these
         // are written to the store asynchronously for now.
         storeService.insert(transaction: transx)
         storeService.add(transx, to: order)
@@ -222,18 +282,16 @@ extension DittoService {
 
 // MARK: - Private
 extension DittoService {
-    private func updateLocationsPublisher() {
-        allLocationsCancellable = storeService
-            .allLocationsObservePublisher()
-            .map { locations in
-                if Settings.useDemoLocations {
-                    return locations.filter { Location.demoLocationsIds.contains($0.id) }
-                }
-                return locations
-            }
-            .assign(to: \.allLocations, on: self)
-    }
 
+    //new appConfig: called when app comes to foreground
+    func updateOrders() {
+        guard let locId = currentLocationId else {
+            Logger.ditto.debug("\(#function,privacy:.public): currentLocationId is nil. Return")
+            return
+        }
+        Logger.ditto.info("\(#function,privacy:.public) --> in")
+        updateOrdersPublisher(locId)
+    }
 
     private func updateOrdersPublisher(_ locId: String) {
         guard let subscription = syncService.ordersSubscription else { return }
@@ -245,18 +303,29 @@ extension DittoService {
             )
             .assign(to: \.locationOrders, on: self)
     }
-
+    
     private func updateCurrentLocation(_ locId: String?) {
         guard let locId = locId else { return }
         let location = allLocations.first { $0.id == locId }
         currentLocation = location
         currentLocationSubject.value = location
     }
+    
+    private func updateLocationsPublisher() {
+        allLocationsCancellable = storeService
+            .allLocationsObservePublisher()
+            .map { locations in
+                if Settings.useDemoLocations {
+                    return locations.filter { Location.demoLocationsIds.contains($0.id) }
+                }
+                return locations
+            }
+            .assign(to: \.allLocations, on: self)
+    }
 }
 
 // MARK: - Logging
 extension DittoService {
-    
     private func resetLogging() {
         let logOption = Settings.dittoLoggingOption
         switch logOption {
@@ -265,11 +334,65 @@ extension DittoService {
         default:
             DittoLogger.enabled = true
             DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
-            
-            if let logFileURL = LogFileConfig.createLogFileURL() {
+            if let logFileURL = DittoLogManager.shared.logFileURL {
                 DittoLogger.setLogFileURL(logFileURL)
             }
         }
+    }
+}
+
+//WIP appConfig
+extension DittoService {
+    
+    func enablePublishedAppConfig(locId: String? = nil) {
+        let locId = locId ?? currentLocationId!
+        if Settings.usePublishedAppConfig == false { Settings.usePublishedAppConfig = true }
+        syncService.registerAppConfigSubscription(locId: locId)
+        updateAppConfigPublisher(locId: locId)
+    }
+    
+    func publishAppConfig(_ config: AppConfig) async throws {
+        guard let locId = currentLocationId else {
+            Logger.ditto.error("DS.\(#function,privacy:.public): ERROR - locId should not be NIL here. --> Return")
+            return
+        }
+        
+        Logger.ditto.warning("DS.\(#function,privacy:.public): publish AppConfig")
+        
+        //new try always saving to UserDefaults for access at launch DittoService initialization
+        Settings.storedAppConfig = config
+        Settings.usePublishedAppConfig = true
+        syncService.registerAppConfigSubscription(locId: locId)
+        
+        do {
+            try await storeService.insertAppConfig(config)
+            await MainActor.run {
+                updateAppConfigPublisher(locId: locId)
+            }
+        } catch {
+            throw error
+        }
+    }
+    
+    func updateLocalOnlyAppConfig(_ config: AppConfig) {
+        // save config to settings
+        Settings.storedAppConfig = config
+        Settings.usePublishedAppConfig = false
+        
+        // call SyncService to unsubscribe from config
+        syncService.unregisterAppConfigSubscription()
+
+        // set self appConfig
+        Task {
+            await MainActor.run { appConfig = config }
+            await MainActor.run { updateOrders() }
+        }
+    }
+
+    private func updateAppConfigPublisher(locId: String) {
+        appConfigCancellable = storeService
+            .appConfigObservePublisher(locId: locId)
+            .assign(to: \.appConfig, on: self)
     }
 }
 
@@ -309,11 +432,17 @@ fileprivate struct StoreService {
         exec(query: query)
     }
 
+    /* EVICTION: in testing evictions it was found that if the current order is evicted, the
+     addOrder workflow no longer works because there is no order.
+     Similarly, it seems, when an order is "cleared" with the cancel button, the order should be
+     reset back to a new order state. The only difference between order.clearSaleItems query and
+     the reset query is that the date is set to now in reset.
     func clearSaleItemIds(of order: Order) {
         let query = order.clearSaleItemIdsQuery
         exec(query: query)
     }
-
+     */
+    
     func reset(order: Order) {
         let query = order.resetQuery
         exec(query: query)
@@ -368,7 +497,8 @@ fileprivate struct StoreService {
     }
 
     func incompleteOrderFuture(locationId: String, deviceId: String) -> Future<Order?, Never> {
-        print("DS.\(#function) --> in")
+//        print("DS.\(#function) --> in")
+        
         let query = Order.incompleteOrderQuery(locationId: locationId, deviceId: deviceId)
         return Future { promise in
             Task {
@@ -401,47 +531,45 @@ fileprivate struct StoreService {
             }
         }
     }
-}
-
-// MARK: - SyncService
-fileprivate final class SyncService {
-    private let sync: DittoSync
-
-    private var locationsSubscription: DittoSyncSubscription? = nil
-    private(set) var ordersSubscription: DittoSyncSubscription? = nil
-
-    init(_ sync: DittoSync) {
-        self.sync = sync
+    
+    func insertAppConfig(_ config: AppConfig) async throws {
+        print("DS.\(#function) --> in")
+        
+        //Eviction MVP: default query inserts to configuration collection
+        let query = AppConfig.Defaults.insertQuery(config: config)
+            do {
+                try await store.execute(query: query.string, arguments: query.args)
+            } catch {
+                Logger.eviction.error("\(#function,privacy:.public): Error: \(error.localizedDescription,privacy:.public)")
+                throw error
+            }
     }
+    
+    func appConfigObservePublisher(locId: String) -> AnyPublisher<AppConfig, Never> {
+        let query = AppConfig.Defaults.registerQuery(locId: locId)
+        let subject = PassthroughSubject<AppConfig, Never>()
+        let defaultConfig = AppConfig.Defaults.defaultConfig
 
-    func registerInitialSubscriptions() {
         do {
-            try locationsSubscription = sync.registerSubscription(
-                query: Location.selectAllQuery.string
-            )
-            try ordersSubscription = sync.registerSubscription(
-                query: Order.defaultLocationSyncQuery.string,
-                arguments: Order.defaultLocationSyncQuery.args
-            )
+            try store.registerObserver(query: query.string, arguments: query.args) { result in
+                
+                // take the latest version
+                // N.B. this could be problematic - should there be a better strategy for
+                // evaluating which version to update to? Or punt here for demo MVP?
+                if let item = result.items.sorted(by: { $0.value["version"] as! Float > $1.value["version"] as! Float }).first {
+                    let config = AppConfig(value: item.value)
+                    subject.send(config)
+//                    return
+                }
+                
+//                Logger.test.warning("DS.appConfigPublisher: registerObserver returned NIL config --> return defaultConfig")
+//                subject.send( defaultConfig )
+            }
         } catch {
-            assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+            subject.send( defaultConfig )
+            Logger.test.error("DS.appConfigPublisher: register appConfig observer failed: \(error.localizedDescription) --> return defaultConfig")
         }
-    }
 
-    func registerOrdersSinceTTLSubscription(locId: String) {
-        let query = Order.ordersQuerySinceTTL(locId: locId)
-        do {
-            ordersSubscription = try sync.registerSubscription(
-                query: query.string,
-                arguments: query.args
-            )
-        } catch {
-            assertionFailure("ERROR with \(#function)" + error.localizedDescription)
-        }
-    }
-
-    func cancelOrdersSubscription() {
-        ordersSubscription?.cancel()
-        ordersSubscription = nil
+        return subject.eraseToAnyPublisher()
     }
 }

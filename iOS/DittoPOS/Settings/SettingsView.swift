@@ -54,6 +54,11 @@ struct SettingsView: View {
                     }
                     NavigationLink(destination: PermissionsHealth()) {
                         DittoToolsListItem(title: "Permissions Health", systemImage: "exclamationmark.triangle", color: .yellow)
+//                    NavigationLink(destination: EvictionLogsView()) {
+//                        DittoToolsListItem(title: "Eviction Logs", systemImage: "square.split.1x2", color: .mint)
+//                    }
+                    NavigationLink(destination: EvictionView()) {
+                        DittoToolsListItem(title: "Eviction", systemImage: "square.split.1x2", color: .mint)
                     }
                 }
                 Section(header: Text("Exports")) {

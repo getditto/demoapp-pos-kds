@@ -54,7 +54,6 @@ struct DittoToolsListItem_Previews: PreviewProvider {
                     DittoToolsListItem(title: "Export Logs", systemImage: "square.and.arrow.up", color: .green)
                     DittoToolsListItem(title: "Export Logs", systemImage: "square.and.arrow.up", color: .green)
                 }
-
             }
             .listStyle(GroupedListStyle())
             .navigationTitle("DittoTools")

@@ -38,8 +38,8 @@ struct AdvancedSettings: View {
                         .overlay(Divider(), alignment: .bottom)
                         
                         Text(
-                            "You can switch between stock, shared demo restaurant locations.\n"
-                            + "Or, you create a custom location and all orders in your demo "
+                            "You can switch between shared demo restaurant locations.\n"
+                            + "Or, create a custom location and all orders in your demo "
                             + "will be for that location."
                         )
                         .font(.footnote)

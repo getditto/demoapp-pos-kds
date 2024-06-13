@@ -7,6 +7,7 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
+import OSLog
 import SwiftUI
 
 enum TabViews: Int, Identifiable {
@@ -72,11 +73,7 @@ class MainVM: ObservableObject {
         dittoService.$currentLocation
             .sink {[weak self] loc in
                 guard let self = self else { return }
-                if let loc = loc {
-                    mainTitle = loc.name
-                } else {
-                    mainTitle = "Please Select Location"
-                }
+                    mainTitle = loc?.name ?? "Please Select Location"
             }
             .store(in: &cancellables)
     }
@@ -131,6 +128,7 @@ struct MainView: View {
                 }
             }
             .navigationBarTitle(vm.mainTitle)
+//            .navigationBarTitle("\(DittoService.shared.currentLocation?.name ?? "Please Select Location") (Logs: \(Settings.evictionLogs.count))")
             .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(StackNavigationViewStyle())
             .alert("Store Location Options", isPresented: $vm.presentLocationChooserAlert, actions: {
@@ -152,9 +150,16 @@ struct MainView: View {
         }
     }
     
-    var barTitle: String {
-        dittoService.currentLocation?.name ?? "Please Select Location"
-    }
+//    var barTitle: String {
+//        dittoService.currentLocation?.name ?? "Please Select Location"
+//    }
+//    //TEST
+//    func aBarTitle() -> String {
+//        if let locName = dittoService.currentLocation?.name {
+//            return locName + "(Logs: \(Settings.evictionLogs.count))"
+//        }
+//        return dittoService.currentLocation?.name ?? "Please Select Location"
+//    }
 }
 
 struct ContentView_Previews: PreviewProvider {

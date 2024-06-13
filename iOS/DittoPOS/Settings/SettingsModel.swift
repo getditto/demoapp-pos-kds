@@ -10,6 +10,7 @@ import Combine
 import DittoSwift
 import DittoExportLogs
 import Foundation
+import OSLog
 
 struct Settings {
     static var defaults = UserDefaults.standard
@@ -184,4 +185,153 @@ extension UserDefaults {
         Self.selectedTabSubject
             .eraseToAnyPublisher()
     }
+}
+
+
+//--------------------------------------------------------------------------------
+//MARK:  AppConfig/Eviction
+//--------------------------------------------------------------------------------
+extension Settings {
+    
+    // AppConfig
+    static var usePublishedAppConfig: Bool {
+        get { defaults.usePublishedAppConfig }
+        set(value) { defaults.usePublishedAppConfig = value }
+    }
+    
+    static var storedAppConfig: AppConfig? {
+        get { try? JSONDecoder().decode(AppConfig.self, from: defaults.storedAppConfig ?? Data()) }
+        set { try? defaults.storedAppConfig = JSONEncoder().encode(newValue) }
+    }
+    static var storedAppConfigPublisher: AnyPublisher<AppConfig?, Never> {
+        get {
+            defaults.storedAppConfigPublisher
+                .map {
+                    try? JSONDecoder().decode(AppConfig.self, from: $0 ?? Data())
+                }
+                .eraseToAnyPublisher()
+        }
+    }
+    
+    //Eviction
+    static var lastEvictionDate: Date? {
+        get { defaults.lastEvictionDate }
+        set { defaults.lastEvictionDate = newValue }
+    }
+
+    static var evictionLogs: [EvictionLog]? {
+        get {
+            guard let logsData = defaults.evictionLogs else {
+                Logger.eviction.warning("SM.\(#function,privacy:.public): no existing logs data (first access?) --> Return NIL")
+                return nil
+            }
+            do {
+                let logs = try JSONDecoder().decode([EvictionLog].self, from: logsData)
+                return logs
+            } catch {
+                Logger.eviction.error("SM.\(#function,privacy:.public): ERROR accessing logs:\n \(error.localizedDescription,privacy:.public)")
+            }
+            return nil
+        }
+        set {
+            do {
+                try defaults.evictionLogs = JSONEncoder().encode(newValue)
+            } catch {
+                Logger.eviction.error("SM.\(#function,privacy:.public): ERROR writing logs:\n \(error.localizedDescription,privacy:.public)")
+            }
+        }
+    }
+    static var evictionLogsPublisher: AnyPublisher<[EvictionLog]?, Never> {
+        get {
+            defaults.evictionLogsPublisher
+                .map {
+                    try? JSONDecoder().decode([EvictionLog].self, from: $0 ?? Data())
+                }
+                .eraseToAnyPublisher()
+        }
+    }
+    
+//    static var ordersSubscribeTTL: TimeInterval {
+//        get { defaults.ordersSubscribeTTL }
+//        set { defaults.ordersSubscribeTTL = newValue }
+//    }
+}
+
+extension UserDefaults.Keys {
+//    static var ordersSubscribeTTL = "live.ditto.eviction.ordersSubscriptionTTL"
+    static var lastEvictionDate      = "live.ditto.eviction.lastEvictionDate"
+    static var evictionLogs          = "live.ditto.eviction.logs"
+    static var usePublishedAppConfig = "live.ditto.usePublishedAppConfig"
+    static var localAppConfig        = "live.ditto.localAppConfig"
+}
+
+//let defaultEvictionInterval   = TimeInterval(360)     //<- (6 min TEST) //TimeInterval(60 * 60 * 24)     // 24 hours
+//let defaultEvictionInterval   = TimeInterval(60 * 60 * 24)  // 24 hours (now defined in appConfig)
+//let defaultOrdersEvictTTL     = TimeInterval(3600 * 3) //<- (3 hrs TEST) //TimeInterval(60 * 60 * 24 * 7) //  7 days
+//let defaultOrdersEvictTTL     = TimeInterval(60 * 3)   //<- (3 minutes TEST) //TimeInterval(60 * 60 * 24 * 7) //  7 days
+//let defaultOrdersSubscribeTTL = TimeInterval(60 * 60 * 24) //TEST <- 2hrs  //TimeInterval(3600) //<- (1 hr TEST) //TimeInterval(60 * 60 * 24)     // 24 hours
+//appConfig: 24 subscription TTL - while testing, eviction should run far more often
+//let defaultOrdersSubscribeTTL = TimeInterval(60 * 60 * 24) // 24 hours
+extension UserDefaults {
+    
+    // AppConfig
+    @objc dynamic var usePublishedAppConfig: Bool {
+        get { return bool(forKey: Keys.usePublishedAppConfig) }
+        set(value) { set(value, forKey: Keys.usePublishedAppConfig) }
+    }
+    var usePublishedAppConfigPublisher: AnyPublisher<Bool, Never> {
+        UserDefaults.standard
+            .publisher(for: \.usePublishedAppConfig)
+            .eraseToAnyPublisher()
+    }
+
+    var storedAppConfig: Data? {
+        get { data(forKey: Keys.localAppConfig) }
+        set(value) { set(value, forKey: Keys.localAppConfig) }
+    }
+    var storedAppConfigPublisher: AnyPublisher<Data?, Never> {
+        UserDefaults.standard
+            .publisher(for: \.storedAppConfig)
+            .eraseToAnyPublisher()
+    }
+
+    // Eviction
+    var lastEvictionDate: Date? {
+        get { object(forKey: Keys.lastEvictionDate) as? Date }
+        set(value) { set(value, forKey: Keys.lastEvictionDate) }
+    }
+
+    @objc dynamic var evictionLogs: Data? {
+        get { data(forKey: Keys.evictionLogs) }
+        set(value) { set(value, forKey: Keys.evictionLogs) }
+    }
+    var evictionLogsPublisher: AnyPublisher<Data?, Never> {
+        UserDefaults.standard
+            .publisher(for: \.evictionLogs)
+            .eraseToAnyPublisher()
+    }
+
+//    var ordersEvictTTL: TimeInterval {
+//        get {
+//            let interval = double(forKey: Keys.ordersEvictTTL)
+//            return interval == 0.0 ? defaultOrdersEvictTTL : interval
+//        }
+//        set(value) { set(value, forKey: Keys.ordersEvictTTL) }
+//    }
+
+//    var ordersSubscribeTTL: TimeInterval {
+//        get {
+//            let interval = double(forKey: Keys.ordersSubscribeTTL)
+//            return interval == 0.0 ? defaultOrdersSubscribeTTL : interval
+//        }
+//        set(value) { set(value, forKey: Keys.ordersSubscribeTTL) }
+//    }
+
+//    var evictionInterval: TimeInterval {
+//        get {
+//            let interval = double(forKey: Keys.evictionInterval)
+//            return interval == 0.0 ? defaultEvictionInterval : interval
+//        }
+//        set(value) { set(value, forKey: Keys.evictionInterval) }
+//    }
 }

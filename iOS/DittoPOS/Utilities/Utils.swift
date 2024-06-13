@@ -93,30 +93,6 @@ extension Sequence {
     }
 }
 
-extension DateFormatter {
-    static var shortTime: DateFormatter {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
-    }
-
-    static var isoDate: ISO8601DateFormatter {
-        let f = ISO8601DateFormatter()
-        f.formatOptions.insert(.withFractionalSeconds)
-        return f
-    }
-    
-    static var isoDateFull: ISO8601DateFormatter {
-        let f = Self.isoDate
-        f.formatOptions = [.withFullDate]
-        return f
-    }
-    
-    static func isoTimeFromNowString(_ seconds: TimeInterval) -> String {
-        isoDate.string(from: Date().addingTimeInterval(seconds))
-    }
-}
-
 struct ScaledFont: ViewModifier {
     // https://stackoverflow.com/questions/59770477/how-to-scale-system-font-in-swiftui-to-support-dynamic-type
     // Asks the system to provide the current size category from the
@@ -140,26 +116,73 @@ extension View {
     }
 }
 
-extension JSONEncoder {
-    static func encodedObject<T: Codable>(_ obj: T) -> Data? {
-        do {
-            let jsonData = try JSONEncoder().encode(obj)
-            return jsonData
-        } catch {
-            print("JSONEncoder.\(#function): ERROR: \(error.localizedDescription)")
-            return nil
-        }
+//MARK: EdgeBorder and ViewModifier
+extension View {
+    public func border(width: CGFloat, edges: [Edge], color: Color) -> some View {
+        overlay(EdgeBorder(width: width, edges: edges).foregroundColor(color))
     }
 }
-extension JSONDecoder {
-    static func objectFromData<T: Codable>(_ jsonData: Data) -> T? {
-        let decoder = JSONDecoder()
-        do {
-            let obj = try decoder.decode(T.self, from: jsonData)
-            return obj
-        } catch {
-            print("JSONDecoder.\(#function): ERROR: \(error.localizedDescription)")
-            return nil
+struct EdgeBorder: Shape {
+    var width: CGFloat
+    var edges: [Edge]
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        for edge in edges {
+            var x: CGFloat {
+                switch edge {
+                case .top, .bottom, .leading: return rect.minX
+                case .trailing: return rect.maxX - width
+                }
+            }
+
+            var y: CGFloat {
+                switch edge {
+                case .top, .leading, .trailing: return rect.minY
+                case .bottom: return rect.maxY - width
+                }
+            }
+
+            var w: CGFloat {
+                switch edge {
+                case .top, .bottom: return rect.width
+                case .leading, .trailing: return self.width
+                }
+            }
+
+            var h: CGFloat {
+                switch edge {
+                case .top, .bottom: return self.width
+                case .leading, .trailing: return rect.height
+                }
+            }
+            path.addPath(Path(CGRect(x: x, y: y, width: w, height: h)))
         }
+        return path
+    }
+}
+
+//MARK: AppConfigView Pickers
+extension UIPickerView {
+    open override var intrinsicContentSize: CGSize {
+        return CGSize(width: UIView.noIntrinsicMetric, height: 90)
+    }
+}
+
+//MARK: Math
+
+extension Float {
+    
+    // VersionPicker AppConfig.version number handling
+    func floorFirstTwoDecimals() -> (first: Int, second: Int) {
+        let shiftedNumber = self * 100
+        let integerPart = Int(floor(shiftedNumber))
+        let firstDecimal = (integerPart / 10) % 10
+        let secondDecimal = integerPart % 10
+        return (firstDecimal, secondDecimal)
+    }
+    
+    func stringToTwoDecimalPlaces() -> String {
+        String(format: "%.2f", self)
     }
 }

@@ -8,6 +8,7 @@
 
 import Combine
 import DittoSwift
+import OSLog
 import SwiftUI
 
 class POS_VM: ObservableObject {
@@ -64,26 +65,33 @@ class POS_VM: ObservableObject {
                 guard let self = self else { return }
                 // If empty docs array is passed, e.g. at first DittoService initialization,
                 // theres nothing to do; return.
-                guard orders.count > 0 else { return }
+                guard orders.count > 0 else {
+//                    Logger.posOrders.info("POS_VM.$locationOrders.sink: orders in: \(orders.count,privacy:.public) - Return")
+                    return
+                }
 
-                // If the DittoService.currentLocationId hasn't been set yet (first launch, when
-                // using demo locations), we can't create an order yet, so there's nothing to do here.
+//                Logger.posOrders.info("POS_VM.$locationOrders.sink: orders in: \(orders.count,privacy:.public)")
+                                  
+                // If the DittoService.currentLocationId hasn't been set yet (first launch, or when
+                // demo/custom location changes), we can't create an order yet, so there's nothing to do here.
                 guard let locId = dittoService.currentLocationId else {
-                    print("POS_VM.dittoService.$locationOrders.sink: ERROR - NIL currentLocationId should not be possible here")
+                    Logger.posOrders.error("POS_VM.dittoService.$locationOrders.sink: ERROR - NIL currentLocationId should not be possible here - Return")
                     return
                 }
                 
-                // If there is no currentOrder(.id) we won't be able to filter from docs to
+                // If there is no currentOrder.id we won't be able to filter from docs to
                 // update our published currentOrder, so return.
-                guard let orderId = currentOrder?.id else { return }
+                guard let orderId = currentOrder?.id else {
+                    Logger.posOrders.debug("POS_VM.$locationOrders.sink: NIL currentOrderId - Return")
+                    return
+                }
 
                 // Find an order matching currentOrder. This will be an update, e.g. added saleItem,
                 // or a "reset" for X-Cancel-order button action
                 if let order = orders.first(where: { $0.id == orderId && $0.locationId == locId }) {
                     currentOrder = order
                 } else {
-                    print("POS_VM.$locationOrders.sink: ERROR - matching doc not found for " +
-                          "(docId:\(orderId), locId:\(locId))"
+                    Logger.posOrders.warning("POS_VM.$locationOrders.sink: ERROR - matching doc not found for (docId:\(orderId,privacy:.public), locId:\(locId,privacy:.public))\nNote: this can happen after eviction."
                     )
                 }
             }
@@ -92,7 +100,7 @@ class POS_VM: ObservableObject {
     
     func addOrderItem(_ saleItem: SaleItem) {
         guard var curOrder = currentOrder else {
-            print("Cannot add item: current order is NIL\n\n");
+            Logger.posOrders.warning("Cannot add item: current order is NIL\n\n");
             return
         }
         
@@ -104,7 +112,7 @@ class POS_VM: ObservableObject {
         
     func payCurrentOrder() {
         guard let locId = dittoService.currentLocationId, let order = currentOrder else {
-            print("POS_VM.\(#function): ERROR - either current Location or Order is nil --> return")
+            Logger.posOrders.error("POS_VM.\(#function,privacy:.public): ERROR - either current Location or Order is nil --> return")
             return
         }
         let tx = Transaction.new(
@@ -125,7 +133,7 @@ class POS_VM: ObservableObject {
     
     func updateCurrentOrder() {
         guard let locId = dittoService.currentLocationId else {
-            print("POS_VM.\(#function): ERROR: unexpected dittoService.currentLocationId")
+            Logger.posOrders.error("POS_VM.\(#function,privacy:.public): ERROR: unexpected dittoService.currentLocationId")
             return
         }
         orderCancellable = dittoService.incompleteOrderFuture()
@@ -153,12 +161,26 @@ class POS_VM: ObservableObject {
         return newOrder
     }
     
+    /* EVICTION: in testing evictions it was found that if the current order is evicted, the
+     addOrder workflow no longer works because there is no order.
+     Similarly, it seems, when an order is "cleared" with the cancel button, the order should be
+     reset back to a new order state. The only difference between order.clearSaleItems query and
+     the reset query is that the date is set to now in reset.
     func clearCurrentOrderSaleItemIds() {
         guard let order = currentOrder else {
-            print("POS_VM.\(#function): ERROR: NIL currentOrder --> RETURN")
+            Logger.posOrders.error("POS_VM.\(#function,privacy:.public): ERROR: NIL currentOrder --> RETURN")
             return
         }
         // Note DittoService function side-effect sets status to .open
         dittoService.clearSaleItemIds(of: order)
+    }
+     */
+    func cancelCurrentOrder() {
+        guard let order = currentOrder else {
+            Logger.posOrders.error("POS_VM.\(#function,privacy:.public): ERROR: NIL currentOrder --> RETURN")
+            return
+        }
+        // Note DittoService function side-effect sets status to .open
+        dittoService.reset(order: order)
     }
 }
