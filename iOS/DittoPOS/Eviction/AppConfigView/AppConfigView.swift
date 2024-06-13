@@ -378,19 +378,6 @@ class AppConfigVM: ObservableObject {
         }
     }
 
-    // Runs current config and not WIP config
-    // N.B. does not respect No-Evict policy window
-    func runForcedEviction() {
-        Task {
-            let msg = await evictionService.runEvictionQueries(mode: .forced)
-            Logger.eviction.debug("AppConfigView: Run FORCED eviction with result: \(msg,privacy:.public)")
-            await MainActor.run {
-                noticeTitle = "Forced Eviction Run"
-                noticeMessage = msg
-                showNoticeAlert = true
-            }
-        }
-    }
 }
 
 
@@ -548,12 +535,6 @@ struct AppConfigView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         }
                         
-                        Button("Force Evict") {
-                            vm.runForcedEviction()
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-
                         Button("Test Evict") {
                             vm.runTestEviction()
                         }
