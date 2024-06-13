@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0123D1972C1B73FE00F73F62 /* AppConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1882C1B73FE00F73F62 /* AppConfigView.swift */; };
+		0123D1982C1B73FE00F73F62 /* DaysHoursMinutesPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1892C1B73FE00F73F62 /* DaysHoursMinutesPickerView.swift */; };
+		0123D1992C1B73FE00F73F62 /* EvictionIntervalPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D18A2C1B73FE00F73F62 /* EvictionIntervalPickerView.swift */; };
+		0123D19A2C1B73FE00F73F62 /* FloatPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D18B2C1B73FE00F73F62 /* FloatPickerView.swift */; };
+		0123D19B2C1B73FE00F73F62 /* TTLPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D18C2C1B73FE00F73F62 /* TTLPickerView.swift */; };
+		0123D19C2C1B73FE00F73F62 /* VersionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D18D2C1B73FE00F73F62 /* VersionPickerView.swift */; };
+		0123D19D2C1B73FE00F73F62 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D18F2C1B73FE00F73F62 /* AppConfig.swift */; };
+		0123D19E2C1B73FE00F73F62 /* EvictionLogDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1902C1B73FE00F73F62 /* EvictionLogDetailView.swift */; };
+		0123D19F2C1B73FE00F73F62 /* EvictionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1912C1B73FE00F73F62 /* EvictionLogger.swift */; };
+		0123D1A02C1B73FE00F73F62 /* EvictionLogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1922C1B73FE00F73F62 /* EvictionLogsView.swift */; };
+		0123D1A12C1B73FE00F73F62 /* EvictionService_myWIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1932C1B73FE00F73F62 /* EvictionService_myWIP.swift */; };
+		0123D1A22C1B73FE00F73F62 /* EvictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1942C1B73FE00F73F62 /* EvictionService.swift */; };
+		0123D1A32C1B73FE00F73F62 /* EvictionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1952C1B73FE00F73F62 /* EvictionView.swift */; };
+		0123D1B82C1B745900F73F62 /* SyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0123D1B72C1B745900F73F62 /* SyncService.swift */; };
 		0E1E919B2BA0E40800046BC0 /* DittoDataBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919A2BA0E40800046BC0 /* DittoDataBrowser */; };
 		0E1E919D2BA0E40800046BC0 /* DittoDiskUsage in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919C2BA0E40800046BC0 /* DittoDiskUsage */; };
 		0E1E919F2BA0E40800046BC0 /* DittoExportData in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1E919E2BA0E40800046BC0 /* DittoExportData */; };
@@ -56,6 +70,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0123D1882C1B73FE00F73F62 /* AppConfigView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppConfigView.swift; sourceTree = "<group>"; };
+		0123D1892C1B73FE00F73F62 /* DaysHoursMinutesPickerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DaysHoursMinutesPickerView.swift; sourceTree = "<group>"; };
+		0123D18A2C1B73FE00F73F62 /* EvictionIntervalPickerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionIntervalPickerView.swift; sourceTree = "<group>"; };
+		0123D18B2C1B73FE00F73F62 /* FloatPickerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatPickerView.swift; sourceTree = "<group>"; };
+		0123D18C2C1B73FE00F73F62 /* TTLPickerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TTLPickerView.swift; sourceTree = "<group>"; };
+		0123D18D2C1B73FE00F73F62 /* VersionPickerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VersionPickerView.swift; sourceTree = "<group>"; };
+		0123D18F2C1B73FE00F73F62 /* AppConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		0123D1902C1B73FE00F73F62 /* EvictionLogDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionLogDetailView.swift; sourceTree = "<group>"; };
+		0123D1912C1B73FE00F73F62 /* EvictionLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionLogger.swift; sourceTree = "<group>"; };
+		0123D1922C1B73FE00F73F62 /* EvictionLogsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionLogsView.swift; sourceTree = "<group>"; };
+		0123D1932C1B73FE00F73F62 /* EvictionService_myWIP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionService_myWIP.swift; sourceTree = "<group>"; };
+		0123D1942C1B73FE00F73F62 /* EvictionService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionService.swift; sourceTree = "<group>"; };
+		0123D1952C1B73FE00F73F62 /* EvictionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvictionView.swift; sourceTree = "<group>"; };
+		0123D1B72C1B745900F73F62 /* SyncService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
 		0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfig.swift; sourceTree = "<group>"; };
 		0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConfig.swift; sourceTree = "<group>"; };
 		112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoExtensions.swift; sourceTree = "<group>"; };
@@ -117,6 +145,34 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0123D18E2C1B73FE00F73F62 /* AppConfigView */ = {
+			isa = PBXGroup;
+			children = (
+				0123D1882C1B73FE00F73F62 /* AppConfigView.swift */,
+				0123D1892C1B73FE00F73F62 /* DaysHoursMinutesPickerView.swift */,
+				0123D18A2C1B73FE00F73F62 /* EvictionIntervalPickerView.swift */,
+				0123D18B2C1B73FE00F73F62 /* FloatPickerView.swift */,
+				0123D18C2C1B73FE00F73F62 /* TTLPickerView.swift */,
+				0123D18D2C1B73FE00F73F62 /* VersionPickerView.swift */,
+			);
+			path = AppConfigView;
+			sourceTree = "<group>";
+		};
+		0123D1962C1B73FE00F73F62 /* Eviction */ = {
+			isa = PBXGroup;
+			children = (
+				0123D18E2C1B73FE00F73F62 /* AppConfigView */,
+				0123D18F2C1B73FE00F73F62 /* AppConfig.swift */,
+				0123D1902C1B73FE00F73F62 /* EvictionLogDetailView.swift */,
+				0123D1912C1B73FE00F73F62 /* EvictionLogger.swift */,
+				0123D1922C1B73FE00F73F62 /* EvictionLogsView.swift */,
+				0123D1932C1B73FE00F73F62 /* EvictionService_myWIP.swift */,
+				0123D1942C1B73FE00F73F62 /* EvictionService.swift */,
+				0123D1952C1B73FE00F73F62 /* EvictionView.swift */,
+			);
+			path = Eviction;
+			sourceTree = "<group>";
+		};
 		14039BEC2A465ECC001903ED /* POS */ = {
 			isa = PBXGroup;
 			children = (
@@ -187,6 +243,7 @@
 		14CD51AF2A2FE2D50018DE87 /* DittoPOS */ = {
 			isa = PBXGroup;
 			children = (
+				0123D1962C1B73FE00F73F62 /* Eviction */,
 				14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */,
 				14CD51B22A2FE2D50018DE87 /* MainView.swift */,
 				14DECF042A3A6868005BC2AE /* Data */,
@@ -224,6 +281,7 @@
 		14DECF042A3A6868005BC2AE /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				0123D1B72C1B745900F73F62 /* SyncService.swift */,
 				14CD51BE2A2FE3EE0018DE87 /* DittoService.swift */,
 				112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */,
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
@@ -362,6 +420,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0123D1A02C1B73FE00F73F62 /* EvictionLogsView.swift in Sources */,
+				0123D19F2C1B73FE00F73F62 /* EvictionLogger.swift in Sources */,
 				14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */,
 				1460E33D2A93DCC8007A2A6D /* KDS_VM.swift in Sources */,
 				14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */,
@@ -382,18 +442,30 @@
 				14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */,
 				14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */,
 				14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */,
+				0123D1A32C1B73FE00F73F62 /* EvictionView.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				148071182A8C2E9E0091EC03 /* DittoToolsListItem.swift in Sources */,
 				0E3768B82BAE2FD3009A7053 /* HeartbeatConfig.swift in Sources */,
+				0123D19E2C1B73FE00F73F62 /* EvictionLogDetailView.swift in Sources */,
+				0123D1A22C1B73FE00F73F62 /* EvictionService.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POS_VM.swift in Sources */,
+				0123D1992C1B73FE00F73F62 /* EvictionIntervalPickerView.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,
+				0123D19A2C1B73FE00F73F62 /* FloatPickerView.swift in Sources */,
 				14DECF082A3A7F76005BC2AE /* Order.swift in Sources */,
+				0123D1972C1B73FE00F73F62 /* AppConfigView.swift in Sources */,
 				14AB43852AD713EF00E58566 /* CustomLocationScreen.swift in Sources */,
 				14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */,
 				14FFFEF12A43732400DD6806 /* SettingsModel.swift in Sources */,
+				0123D19B2C1B73FE00F73F62 /* TTLPickerView.swift in Sources */,
 				14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */,
+				0123D1A12C1B73FE00F73F62 /* EvictionService_myWIP.swift in Sources */,
+				0123D1982C1B73FE00F73F62 /* DaysHoursMinutesPickerView.swift in Sources */,
+				0123D19D2C1B73FE00F73F62 /* AppConfig.swift in Sources */,
 				14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */,
+				0123D1B82C1B745900F73F62 /* SyncService.swift in Sources */,
+				0123D19C2C1B73FE00F73F62 /* VersionPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

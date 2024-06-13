@@ -186,3 +186,27 @@ extension Float {
         String(format: "%.2f", self)
     }
 }
+
+extension DateFormatter {
+    static var shortTime: DateFormatter {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }
+
+    static var isoDate: ISO8601DateFormatter {
+        let f = ISO8601DateFormatter()
+        f.formatOptions.insert(.withFractionalSeconds)
+        return f
+    }
+    
+    static var isoDateFull: ISO8601DateFormatter {
+        let f = Self.isoDate
+        f.formatOptions = [.withFullDate]
+        return f
+    }
+    
+    static func isoTimeFromNowString(_ seconds: TimeInterval) -> String {
+        isoDate.string(from: Date().addingTimeInterval(seconds))
+    }
+}
