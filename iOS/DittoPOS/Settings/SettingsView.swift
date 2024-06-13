@@ -42,7 +42,7 @@ struct SettingsView: View {
                     }
                     
                     NavigationLink(destination: PeersListView(ditto: ditto)) {
-                            DittoToolsListItem(title: "Peers List", systemImage: "network", color: .blue)
+                        DittoToolsListItem(title: "Peers List", systemImage: "network", color: .blue)
                     }
                     
                     NavigationLink(destination: PresenceView(ditto: ditto)) {
@@ -52,20 +52,12 @@ struct SettingsView: View {
                     NavigationLink(destination: DittoDiskUsageView(ditto: ditto)) {
                         DittoToolsListItem(title: "Disk Usage", systemImage: "opticaldiscdrive", color: .secondary)
                     }
-                    NavigationLink(destination: PermissionsHealth()) {
-                        DittoToolsListItem(title: "Permissions Health", systemImage: "exclamationmark.triangle", color: .yellow)
-//                    NavigationLink(destination: EvictionLogsView()) {
-//                        DittoToolsListItem(title: "Eviction Logs", systemImage: "square.split.1x2", color: .mint)
-//                    }
-                    NavigationLink(destination: EvictionView()) {
-                        DittoToolsListItem(title: "Eviction", systemImage: "square.split.1x2", color: .mint)
-                    }
                 }
                 Section(header: Text("Exports")) {
                     NavigationLink(destination: LoggingDetailsView(loggingOption: $dittoService.loggingOption)) {
                         DittoToolsListItem(title: "Logging", systemImage: "square.split.1x2", color: .green)
                     }
-
+                    
                     // Export Ditto db Directory
                     // N.B. The export Logs feature is in DittoSwiftTools pkg, DittoExportLogs module,
                     // exposed in LoggingDetailsView ^^
@@ -88,12 +80,25 @@ struct SettingsView: View {
                     NavigationLink(destination: HeartbeatConfig()) {
                         DittoToolsListItem(title: "Heartbeat", systemImage: "heart.fill", color: vm.isHeartbeatOn ? .green : .red)
                     }
+                    
+                    NavigationLink(destination: PermissionsHealth()) {
+                        DittoToolsListItem(title: "Permissions", systemImage: "exclamationmark.triangle", color: .yellow)
+                        //                    NavigationLink(destination: EvictionLogsView()) {
+                        //                        DittoToolsListItem(title: "Eviction Logs", systemImage: "square.split.1x2", color: .mint)
+                        //                    }
+                        
+                    }
+                    NavigationLink(destination: EvictionView()) {
+                        DittoToolsListItem(title: "Eviction", systemImage: "square.split.1x2", color: .mint)
+                    }
+                    
                 }
                 Section {
                     NavigationLink(destination: AdvancedSettings()) {
                         DittoToolsListItem(title: "Advanced Settings", systemImage: "gear", color: .teal)
                     }
                 }
+                
             }
             .listStyle(InsetGroupedListStyle())
             .navigationViewStyle(StackNavigationViewStyle())
@@ -103,23 +108,18 @@ struct SettingsView: View {
                     vm.presentExportDataShare = true
                 }
                 Button("Cancel", role: .cancel) {}
-
-                } message: {
-                    Text("Compressing log data may take a while.")
-                }
+                
+            } message: {
+                Text("Compressing log data may take a while.")
             }
-        
-        Spacer()
+            
+        }
+    }
+}
+
     
-        VStack {
-            Text("SDK Version: \(ditto.sdkVersion)")
-        }.padding()
+    struct DittoToolsListView_Previews: PreviewProvider {
+        static var previews: some View {
+            SettingsView()
+        }
     }
-}
-
-
-struct DittoToolsListView_Previews: PreviewProvider {
-    static var previews: some View {
-        SettingsView()
-    }
-}

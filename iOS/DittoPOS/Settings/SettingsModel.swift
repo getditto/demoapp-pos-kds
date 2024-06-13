@@ -90,6 +90,11 @@ extension UserDefaults {
         static var useDemoLocations: String { "live.ditto.DittoPOS.useDemoLocations" }
         
         static var deviceId: String {"live.ditto.DittoPOS.deviceId"}
+        
+        static var lastEvictionDate      = "live.ditto.eviction.lastEvictionDate"
+        static var evictionLogs          = "live.ditto.eviction.logs"
+        static var usePublishedAppConfig = "live.ditto.usePublishedAppConfig"
+        static var localAppConfig        = "live.ditto.localAppConfig"
     }
     
     var storedDeviceId: String {
@@ -257,13 +262,6 @@ extension Settings {
 //    }
 }
 
-extension UserDefaults.Keys {
-//    static var ordersSubscribeTTL = "live.ditto.eviction.ordersSubscriptionTTL"
-    static var lastEvictionDate      = "live.ditto.eviction.lastEvictionDate"
-    static var evictionLogs          = "live.ditto.eviction.logs"
-    static var usePublishedAppConfig = "live.ditto.usePublishedAppConfig"
-    static var localAppConfig        = "live.ditto.localAppConfig"
-}
 
 //let defaultEvictionInterval   = TimeInterval(360)     //<- (6 min TEST) //TimeInterval(60 * 60 * 24)     // 24 hours
 //let defaultEvictionInterval   = TimeInterval(60 * 60 * 24)  // 24 hours (now defined in appConfig)
@@ -276,8 +274,8 @@ extension UserDefaults {
     
     // AppConfig
     @objc dynamic var usePublishedAppConfig: Bool {
-        get { return bool(forKey: Keys.usePublishedAppConfig) }
-        set(value) { set(value, forKey: Keys.usePublishedAppConfig) }
+        get { return bool(forKey: UserDefaultsKeys.usePublishedAppConfig) }
+        set(value) { set(value, forKey: UserDefaultsKeys.usePublishedAppConfig) }
     }
     var usePublishedAppConfigPublisher: AnyPublisher<Bool, Never> {
         UserDefaults.standard
@@ -286,8 +284,8 @@ extension UserDefaults {
     }
 
     var storedAppConfig: Data? {
-        get { data(forKey: Keys.localAppConfig) }
-        set(value) { set(value, forKey: Keys.localAppConfig) }
+        get { data(forKey: UserDefaultsKeys.localAppConfig) }
+        set(value) { set(value, forKey: UserDefaultsKeys.localAppConfig) }
     }
     var storedAppConfigPublisher: AnyPublisher<Data?, Never> {
         UserDefaults.standard
@@ -297,13 +295,13 @@ extension UserDefaults {
 
     // Eviction
     var lastEvictionDate: Date? {
-        get { object(forKey: Keys.lastEvictionDate) as? Date }
-        set(value) { set(value, forKey: Keys.lastEvictionDate) }
+        get { object(forKey: UserDefaultsKeys.lastEvictionDate) as? Date }
+        set(value) { set(value, forKey: UserDefaultsKeys.lastEvictionDate) }
     }
 
     @objc dynamic var evictionLogs: Data? {
-        get { data(forKey: Keys.evictionLogs) }
-        set(value) { set(value, forKey: Keys.evictionLogs) }
+        get { data(forKey: UserDefaultsKeys.evictionLogs) }
+        set(value) { set(value, forKey: UserDefaultsKeys.evictionLogs) }
     }
     var evictionLogsPublisher: AnyPublisher<Data?, Never> {
         UserDefaults.standard
