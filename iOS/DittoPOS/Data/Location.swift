@@ -80,6 +80,12 @@ extension Location {
             args: [:]
         )
     }
+    
+    // Used in initial registration before currentLocationId is set. In this demo, this value
+    // does not match any locations, so queries for this locationId return no results.
+    static var defaultLocation: String {
+        "00000"
+    }
 }
 
 // MARK: - Demo dummy data

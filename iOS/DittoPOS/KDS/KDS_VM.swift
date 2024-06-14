@@ -9,6 +9,7 @@
 import Combine
 import DittoSwift
 import Foundation
+import OSLog
 
 /// Supplies published orders array to OrdersGridView
 class KDS_VM: ObservableObject {
@@ -21,7 +22,8 @@ class KDS_VM: ObservableObject {
         dittoService.$locationOrders
             .sink {[weak self ] orders in
                 guard let self = self else { return }
-
+//                Logger.kdsOrders.debug("KDS_VM.$locationOrders.sink: orders in: \(orders.count,privacy:.public)")
+                
                 let filteredOrders = orders.filter {
                     $0.status.rawValue == OrderStatus.inProcess.rawValue ||
                     $0.status.rawValue == OrderStatus.processed.rawValue

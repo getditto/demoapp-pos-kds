@@ -49,9 +49,18 @@ class POSOrderTotalVM: ObservableObject {
         dataVM.payCurrentOrder()
     }
     
+    /* EVICTION: in testing evictions it was found that if the current order is evicted, the
+     addOrder workflow no longer works because there is no order.
+     Similarly, it seems, when an order is "cleared" with the cancel button, the order should be
+     reset back to a new order state. The only difference between order.clearSaleItems query and
+     the reset query is that the date is set to now in reset. 
+     
+     FURTHER: note that
+     */
     func cancelOrder() {
         if let items = dataVM.currentOrder?.saleItemIds, !items.isEmpty {
-            dataVM.clearCurrentOrderSaleItemIds()
+//            dataVM.clearCurrentOrderSaleItemIds()
+            dataVM.cancelCurrentOrder()
         }
     }
 }

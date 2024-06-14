@@ -83,6 +83,7 @@ enum OrderStatus: Int, CaseIterable, Codable {
 }
 //--------------------------------------------------------------------------------------------------
 
+
 //--------------------------------------------------------------------------------------------------
 // Order
 //--------------------------------------------------------------------------------------------------
@@ -105,6 +106,17 @@ struct Order: Identifiable, Hashable {
     }
 
     static let collectionName = "orders"
+}
+
+
+// convenience replacement for string literal
+// used mainly in accessing TTL value from config
+let ordersKey = "orders"
+
+extension Order {
+    // centralized definition of hard-coded orders TTL
+    // used as default value in AppConfig.Default
+    static let defaultOrdersTTL = TimeInterval(60 * 60 * 24 * 7) // 7 days
 }
 
 extension Order: Equatable {
@@ -255,6 +267,10 @@ extension Order {
         )
     }
 
+    /*EVICTION: createdOn reset added for workaround when updating appconfig for testing
+    // where current time is set for "older than" param, and where existing new/ready
+    // order is evicted - UI becomes unresponsive.
+    // COULD THIS HAPPEN IN REAL LIFE???
     var clearSaleItemIdsQuery: DittoQuery {
         (
             string: """
@@ -270,7 +286,7 @@ extension Order {
             ]
         )
     }
-
+     */
     var resetQuery: DittoQuery {
         (
             string: """
@@ -306,16 +322,16 @@ extension Order {
         )
     }
 
-    static func ordersQuerySinceTTL(locId: String) -> DittoQuery {
+    static func ordersQuerySinceTTL(locId: String, ttl: TimeInterval) -> DittoQuery {
         (
             string: """
                 SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
                 WHERE _id.locationId = :locId
-                    AND createdOn > :TTL
+                AND createdOn > :TTL
             """,
             args: [
                 "locId": locId,
-                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL)
+                "TTL": DateFormatter.isoTimeFromNowString(-ttl)
             ]
         )
     }
@@ -326,7 +342,7 @@ extension Order {
                 SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
                 WHERE _id.locationId = :locationId
             """,
-            args: ["locationId": "00000"]
+            args: ["locationId": Location.defaultLocation]
         )
     }
 
@@ -335,14 +351,12 @@ extension Order {
             string: """
                 SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
                 WHERE _id.locationId = :locationId
-                    AND createdOn > :TTL
                     AND deviceId = :deviceId
                     AND transactionIds = :transIds
                 ORDER BY createdOn ASC
             """,
             args: [
                 "locationId": locationId,
-                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL),
                 "deviceId": deviceId,
                 "transIds": [String: Int]()
             ]
@@ -351,6 +365,19 @@ extension Order {
 }
 
 //--------------------------------------------------------------------------------------------------
+
+extension Order {
+    
+    // Used by AppConfigView to construct wip config eviction query
+    static func defaultEvictQueryStub() -> String {
+        "EVICT FROM COLLECTION `orders` (saleItemIds MAP, transactionIds MAP) "
+    }
+    
+    // Used by SyncService to log assumptions relating to orders subscription with TTL
+    static func defaultOrdersSubQueryStub() -> String {
+        "SELECT * FROM COLLECTION `orders` (saleItemIds MAP, transactionIds MAP) "
+    }
+}
 
 // MARK: - Preview
 extension Order {
