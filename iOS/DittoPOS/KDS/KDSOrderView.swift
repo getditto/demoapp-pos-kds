@@ -89,6 +89,6 @@ struct KDSOrderView: View {
 
 struct KDSOrderView_Previews: PreviewProvider {
     static var previews: some View {
-        KDSOrderView(Fixtures.order1)
+        KDSOrderView(Order.preview())
     }
 }

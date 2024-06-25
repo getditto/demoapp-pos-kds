@@ -18,8 +18,14 @@ final class DittoInstance {
 
     private init() {
         // Assign new directory to avoid conflict with the old SkyService version.
+#if os(tvOS)
+        let directory: FileManager.SearchPathDirectory = .cachesDirectory
+#else
+        let directory: FileManager.SearchPathDirectory = .documentDirectory
+#endif
+
         let persistenceDirURL = try? FileManager()
-            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
         ditto = Ditto(identity: .onlinePlayground(
@@ -270,24 +276,6 @@ extension DittoService {
                 DittoLogger.setLogFileURL(logFileURL)
             }
         }
-    }
-}
-
-class DittoInstance {
-    static var shared = DittoInstance()
-    let ditto: Ditto
-    
-    private init() {
-        // Assign new directory in order to avoide conflict with the old SkyService version.
-        let persistenceDirURL = try? FileManager()
-            .url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            .appendingPathComponent("ditto-pos-demo")
-        
-        ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: true
-        ), persistenceDirectory: persistenceDirURL)
     }
 }
 

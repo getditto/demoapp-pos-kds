@@ -33,6 +33,6 @@ struct KDSOrdersGridView: View {
 
 struct KDSOrdersGridView_Previews: PreviewProvider {
     static var previews: some View {
-        KDSOrdersGridView(vm: Fixtures.kdsVM)
+        KDSOrdersGridView()
     }
 }
