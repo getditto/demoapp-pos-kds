@@ -16,8 +16,18 @@ class POSViewModel: ObservableObject {
     }
     
     func updateWidths() {
+//        switch UIDevice.current.orientation {
+//        case .landscapeLeft, .landscapeRight:
+//            menuViewWidth = .screenWidth * 0.66
+//            orderViewWidth = .screenWidth * 0.30
+//        default:
         menuViewWidth = .screenWidth * 0.56
+        #if os(tvOS)
+        orderViewWidth = .screenWidth * 0.30
+        #else
         orderViewWidth = .screenWidth * 0.40
+        #endif
+        //        }
     }
 }
 
@@ -43,12 +53,14 @@ struct POSView: View {
                     Settings.selectedTabView = nil
                 }
             }
+#if !os(tvOS)
         .onRotate { orient in
             guard orient.isLandscape || orient.isPortrait else { return }
             DispatchQueue.main.async {
                 vm.updateWidths()
             }
         }
+#endif
     }
 }
 

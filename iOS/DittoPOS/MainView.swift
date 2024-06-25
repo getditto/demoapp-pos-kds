@@ -87,7 +87,7 @@ struct MainView: View {
     @ObservedObject var dittoService = DittoService.shared
     
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             TabView(selection: $vm.selectedTab) {
                 POSView()
                     .tabItem {
@@ -130,8 +130,10 @@ struct MainView: View {
                     }
                 }
             }
+            #if !os(tvOS)
             .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .navigationViewStyle(StackNavigationViewStyle())
             .alert("Store Location Options", isPresented: $vm.presentLocationChooserAlert, actions: {
                 Button("Demo Locations")  {
