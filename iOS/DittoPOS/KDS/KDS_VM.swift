@@ -12,7 +12,7 @@ import Foundation
 
 /// Supplies published orders array to OrdersGridView
 class KDS_VM: ObservableObject {
-    @Published private(set) var orders = [Order]()    
+    @Published private(set) var orders = [Order]()
     private let dittoService = DittoService.shared
     private var orderDocsCancellable = AnyCancellable({})
     private var cancellables = Set<AnyCancellable>()
@@ -38,4 +38,3 @@ class KDS_VM: ObservableObject {
             .store(in: &cancellables)
     }
 }
-

@@ -66,7 +66,9 @@ struct LocationsView: View {
         }
 //        .onAppear { print("LocationsView.onAppear") }
         .navigationBarTitle("Locations")
+        #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 

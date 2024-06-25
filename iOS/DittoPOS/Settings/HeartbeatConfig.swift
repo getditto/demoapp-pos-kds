@@ -112,7 +112,7 @@ struct HeartbeatConfig: View {
                         Text("Device Name:")
                         TextField("name", text: $vm.deviceName)
                             .padding([.leading])
-                            .background(Color(UIColor.systemGray5))
+                            .background(Color.gray5)
                             .cornerRadius(5)
                             .frame(maxWidth: 150)
                     }
@@ -122,7 +122,7 @@ struct HeartbeatConfig: View {
                         TextField("0", value: $vm.secondsInterval, formatter: NumberFormatter())
                             .keyboardType(.numberPad)
                             .padding([.leading])
-                            .background(Color(UIColor.systemGray5))
+                            .background(Color.gray5)
                             .cornerRadius(5)
                             .frame(maxWidth: 100)
                     }
@@ -135,7 +135,7 @@ struct HeartbeatConfig: View {
                         Text("Location Name:")
                         TextField("name", text: $vm.locationName)
                             .padding([.leading])
-                            .background(Color(UIColor.systemGray5))
+                            .background(Color.gray5)
                             .cornerRadius(5)
                             .frame(maxWidth: 150)
                     }
@@ -145,7 +145,7 @@ struct HeartbeatConfig: View {
                         TextField("0", value: $vm.expectedDeviceCount, formatter: NumberFormatter())
                             .keyboardType(.numberPad)
                             .padding([.leading])
-                            .background(Color(UIColor.systemGray5))
+                            .background(Color.gray5)
                             .cornerRadius(5)
                             .frame(maxWidth: 100)
                     }
@@ -168,7 +168,7 @@ struct HeartbeatConfig: View {
                                         }
                                     ))
                                         .padding([.leading])
-                                        .background(Color(UIColor.systemGray5))
+                                        .background(Color.gray5)
                                         .cornerRadius(5)
                                         .frame(maxWidth: 150)
                                 }
@@ -203,7 +203,7 @@ struct HeartbeatConfig: View {
                                         }
                                     ))
                                         .padding([.leading])
-                                        .background(Color(UIColor.systemGray5))
+                                        .background(Color.gray5)
                                         .cornerRadius(5)
                                         .frame(maxWidth: 150)
                                 }
