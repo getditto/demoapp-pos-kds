@@ -8,7 +8,7 @@
 
 import Combine
 import Foundation
-
+/*
 class ProfileScreenViewModel: ObservableObject {
     @Published var companyName: String = ""
     @Published var locationName: String = ""
@@ -29,3 +29,4 @@ class ProfileScreenViewModel: ObservableObject {
         )
     }
 }
+*/

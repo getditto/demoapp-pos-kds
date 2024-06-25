@@ -32,27 +32,35 @@ class POSViewModel: ObservableObject {
 }
 
 struct POSView: View {    
-    @ObservedObject var vm = POSViewModel()
+    @StateObject var vm = POSViewModel()
+    @ObservedObject var posVM = POS_VM.shared
     
     var body: some View {
-            HStack {
-                POSGridView()
-                    .frame(width: vm.menuViewWidth)
-                
-                Divider()
-                
-                POSOrderView()
-                    .padding(8)
-                    .frame(width: vm.orderViewWidth)
-            }
-        #if !os(tvOS)
-            .onRotate { orient in
-                guard orient.isLandscape || orient.isPortrait else { return }
-                DispatchQueue.main.async {
-                    vm.updateWidths()
+        HStack {
+            POSGridView()
+                .frame(width: vm.menuViewWidth)
+            
+            Divider()
+            
+            POSOrderView()
+                .padding(8)
+                .frame(width: vm.orderViewWidth)
+        }
+        .alert(
+            "Please select a location before ordering",
+            isPresented: $posVM.presentSelectLocationAlert) {
+                Button("OK", role: .cancel) { 
+                    Settings.selectedTabView = nil
                 }
             }
-        #endif
+#if !os(tvOS)
+        .onRotate { orient in
+            guard orient.isLandscape || orient.isPortrait else { return }
+            DispatchQueue.main.async {
+                vm.updateWidths()
+            }
+        }
+#endif
     }
 }
 

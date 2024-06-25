@@ -11,97 +11,79 @@ import DittoSwift
 import SwiftUI
 
 class POS_VM: ObservableObject {
-    @Published private(set) var currentOrder: Order?
-    @Published var saleItems: [SaleItem] = SaleItem.demoItems // demo collection for order display
-    private var cancellables = Set<AnyCancellable>()
-    private let dittoService = DittoService.shared
-    
     static var shared = POS_VM()
     
-    private var deviceId: String {
-        dittoService.deviceId
-    }
+    @Published private(set) var currentOrder: Order?
+    @Published var saleItems: [SaleItem] = SaleItem.demoItems // demo collection for order display
+    @Published var presentSelectLocationAlert = false
+    private let dittoService = DittoService.shared
+    private var cancellables = Set<AnyCancellable>()
+    private var orderCancellable = AnyCancellable({})
 
     private init() {
-        // Try to restore an order from UserDefaults before $currentLocation fires
-        if let previousOrder = dittoService.restoredIncompleteOrder(for: nil) {
-            currentOrder = previousOrder
-        }
-        
-        // Reset an outgoing unpaid currentOrder when locationId changes. This will prevent a
-        // lingering incomplete order in the KDS view of other devices, which would be only
-        // recovered and cleaned up below in $currentLocation.sink via restoredIncompleteOrder
-        // when switching back to that location, or left lingering if not returning.
+
+        // use case: when Settings.useDemocLocations is true, the Locations tabView will display
+        // a list of demo locations, allowing user to change between locations. This is the listener
+        // for that change. We "reset" an unpaid outgoing order to clear it of sale items when
+        // changing locations so that we're not leaving partial orders hanging on other devices'
+        // KDS view.
         NotificationCenter.default.publisher(for: .willUpdateToLocationId)
             .sink {[weak self] locId in
                 guard let self = self else { return }
                 guard let outgoingCurrentOrder = currentOrder,
                       !outgoingCurrentOrder.isPaid,
-                      let _ = dittoService.currentLocation else { return }
-
-                dittoService.resetOrderDoc(for: outgoingCurrentOrder)
-            }
-            .store(in: &cancellables)
-        
-        dittoService.$currentLocation
-            .receive(on: DispatchQueue.main)
-            .sink {[weak self] loc in
-                guard let loc = loc, let self = self else { return }
-
-                if let order = currentOrder,
-                   order.locationId == loc.id && !order.isPaid {
-                        return
-                    }
-                
-                // Try to restore an incomplete order for the incoming current location and set
-                // it as the currentOrder and return. If there is none, execution will continue
-                // and a new order will be added and set below.
-                if let restoredOrder = dittoService.restoredIncompleteOrder(for: loc.id) {
-                    currentOrder = restoredOrder
+                      let _ = dittoService.currentLocation else {
                     return
                 }
 
-                addNewCurrentOrder(for: loc.id)
+                dittoService.reset(order: outgoingCurrentOrder)
+            }
+            .store(in: &cancellables)
+        
+        dittoService.$currentLocation        
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] loc in
+                guard let loc = loc, let self = self else {
+                    self?.currentOrder = nil
+                    return
+                }
+                
+                if let order = currentOrder, order.locationId == loc.id && !order.isPaid {
+                    return
+                }
+
+                updateCurrentOrder()
             }
             .store(in: &cancellables)
 
-        // Monitor changes in docs for current location, published from DittoService, to update
-        // our published currentOrder, which will cause appropriate UI changes in subscribers.
-        dittoService.$locationOrderDocs
+        // Monitor changes in locationOrders for current location to update our published
+        // currentOrder, which will cause appropriate UI changes in view subscribers.
+        dittoService.$locationOrders
             .receive(on: DispatchQueue.main)
-            .sink {[weak self] docs in
+            .sink {[weak self] orders in
                 guard let self = self else { return }
                 // If empty docs array is passed, e.g. at first DittoService initialization,
                 // theres nothing to do; return.
-                guard docs.count > 0 else { return }
-                
-                // If the DittoService.currentLocationId hasn't been set yet (first launch), we can't
-                // create an order yet, so there's nothing to do here. Actually, I don't think this
-                // should be able to happen. The docs collection is from a location-based query. Well
-                // I suppose it's possible that for a location change DittoService could update the
-                // query (with the new location) which could fire this sink before the currentLocation
-                // publisher is updated... mm... well no, the dittoService.currentLocationId is
-                // updated first, so it should not be possible for locationOrderDocs to be
-                // updated without a currentLocationId - unless there's a race condition, so we
-                // should use the guard to check expectations.
+                guard orders.count > 0 else { return }
+
+                // If the DittoService.currentLocationId hasn't been set yet (first launch, when
+                // using demo locations), we can't create an order yet, so there's nothing to do here.
                 guard let locId = dittoService.currentLocationId else {
-                    print("POS_VM.dittoService.$locationDocs.sink: ERROR - NIL currentLocationId should not be possible here")
+                    print("POS_VM.dittoService.$locationOrders.sink: ERROR - NIL currentLocationId should not be possible here")
                     return
                 }
                 
                 // If there is no currentOrder(.id) we won't be able to filter from docs to
                 // update our published currentOrder, so return.
-                guard let docId = currentOrder?.id else { return }
+                guard let orderId = currentOrder?.id else { return }
 
-                // Create DittoDocumentID with currentOrder.id, filter for this ID, then initialize
-                // and update published currentOrder object.
-                let docID = Order.docId(docId, locId)
-                if let dbDoc = docs.first(where: { $0.id == docID }) {
-                    // Last case: should be an order item update - set as currentOrder
-                    currentOrder = Order(doc: dbDoc)
+                // Find an order matching currentOrder. This will be an update, e.g. added saleItem,
+                // or a "reset" for X-Cancel-order button action
+                if let order = orders.first(where: { $0.id == orderId && $0.locationId == locId }) {
+                    currentOrder = order
                 } else {
-                    print("POS_VM.$locationOrderDocs.sink: ERROR - matching doc not found for " +
-                          "(docId:\(docId), locId:\(locId))"
+                    print("POS_VM.$locationOrders.sink: ERROR - matching doc not found for " +
+                          "(docId:\(orderId), locId:\(locId))"
                     )
                 }
             }
@@ -109,7 +91,6 @@ class POS_VM: ObservableObject {
     }
     
     func addOrderItem(_ saleItem: SaleItem) {
-        //TODO: alert user to select location
         guard var curOrder = currentOrder else {
             print("Cannot add item: current order is NIL\n\n");
             return
@@ -118,7 +99,7 @@ class POS_VM: ObservableObject {
         let orderItem = OrderItem(saleItem: saleItem)
         // set order status to inProcess for every item added
         curOrder.status = .inProcess
-        dittoService.addItemToOrder(item: orderItem, order: curOrder)
+        dittoService.add(item: orderItem, to: curOrder)
     }
         
     func payCurrentOrder() {
@@ -133,23 +114,38 @@ class POS_VM: ObservableObject {
         )
 
         dittoService.updateOrderTransaction(order, with: tx)
-            // pause a moment to show current order updated to PAID in POSOrderView
-            // then create new order automatically
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
-                guard let self = self else { return }
-                // first try to recycle
-                if let restoredOrder = dittoService.restoredIncompleteOrder(for: order.locationId) {
-                    currentOrder = restoredOrder
-                    return
-                }
-                addNewCurrentOrder(for: locId)
-            }
+        
+        // pause a moment to show current order updated to PAID in POSOrderView
+        // then create new order automatically
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
+            guard let self = self else { return }
+            updateCurrentOrder()
+        }
     }
     
+    func updateCurrentOrder() {
+        guard let locId = dittoService.currentLocationId else {
+            print("POS_VM.\(#function): ERROR: unexpected dittoService.currentLocationId")
+            return
+        }
+        orderCancellable = dittoService.incompleteOrderFuture()
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] optionalOrder in
+                guard let self = self else { return }
+                if let order = optionalOrder {
+//                    print("POS_VM.\(#function).dittoService.restoredIncompleteOrder(...) FOUND recycled order")
+                    currentOrder = order
+                } else {
+//                    print("POS_VM.\(#function).dittoService.restoredIncompleteOrder(...) ADD NEW order")
+                    addNewCurrentOrder(for: locId)
+                }
+            }
+    }
+
     func addNewCurrentOrder(for locId: String) {
         let order = newOrder(for: locId)
         currentOrder = order
-        dittoService.addOrder(order)
+        dittoService.add(order: order)
     }
     
     func newOrder(for locId: String) -> Order {
@@ -162,7 +158,7 @@ class POS_VM: ObservableObject {
             print("POS_VM.\(#function): ERROR: NIL currentOrder --> RETURN")
             return
         }
-        // Note DS function side-effect sets status to .open
-        dittoService.clearOrderSaleItemIds(order)
+        // Note DittoService function side-effect sets status to .open
+        dittoService.clearSaleItemIds(of: order)
     }
 }

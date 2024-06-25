@@ -76,24 +76,6 @@ also be surprised to see them popping out of view.
 there is no "paid" column. If you want to search for paid orders, use something like ```_id.locationId == '00001' && length(keys(transactionIds)) > 0```.  
 
 
-## Future  
-This README reflects the initial state of the first draft of this demo app. Features and fixes may change the project, and it is hoped that 
-any notable changes will be accompanied by updates to this README.  
-
-- Expected: All orders for all locations are in a single monolithic Orders collection. This is to simulate real world data modeling where a 
-franchise operator will want a single point of access for all orders for all locations. Currently, the Orders collection subscription is 
-`findAll()`, which can be expected to cause performance problems for small peers over time as the orders collection grows potentially very 
-large. Thus an expected update to the app is the implementation of a finer-grained subscription to subscribe to just the orders for the 
-selected location and to update for selection changes. 
-
-- Expected: Since orders will continue to accumulate in the Big Peer over time, local peers will want to evict order data regularly. The 
-expected eviction strategy feature to be implemented is to regularly (maybe in an AppWillBecomeActive callback) evict orders over a day old, 
-and the subscription would need to additionally filter out orders over a day old.  
- 
-- Expected: There is a known issue with POS grid layout where there is an inconsistent number of columns when rotating and/or adding order 
-items. The KDS grid view implementation seems more stable and may inform a fix for the POS grid view.  
-
-
 ## Project Setup and Run
 1. Clone this repo to a location on your machine, and open in Xcode.    
 2. Navigate to the project `Signing & Capabilities` tab and modify the `Team and Bundle Identifier` settings to your Apple developer account 

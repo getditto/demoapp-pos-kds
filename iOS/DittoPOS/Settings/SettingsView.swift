@@ -12,6 +12,7 @@ import DittoExportData
 import DittoExportLogs
 import DittoPeersList
 import DittoPresenceViewer
+import DittoPermissionsHealth
 import DittoSwift
 import SwiftUI
 
@@ -19,6 +20,7 @@ import SwiftUI
 class SettingsVM: ObservableObject {
     @Published var presentExportDataShare: Bool = false
     @Published var presentExportDataAlert: Bool = false
+    @Published var isHeartbeatOn: Bool = Settings.isHeartbeatOn
 }
 
 struct SettingsView: View {
@@ -51,6 +53,9 @@ struct SettingsView: View {
                     NavigationLink(destination: DittoDiskUsageView(ditto: ditto)) {
                         DittoToolsListItem(title: "Disk Usage", systemImage: "opticaldiscdrive", color: .secondary)
                     }
+                    NavigationLink(destination: PermissionsHealth()) {
+                        DittoToolsListItem(title: "Permissions Health", systemImage: "exclamationmark.triangle", color: .yellow)
+                    }
                 }
                 Section(header: Text("Exports")) {
                     NavigationLink(destination: LoggingDetailsView(loggingOption: $dittoService.loggingOption)) {
@@ -75,6 +80,16 @@ struct SettingsView: View {
                         #if !os(tvOS)
                         ExportData(ditto: ditto)
                         #endif
+                    }
+                }
+                Section("Observability") {
+                    NavigationLink(destination: HeartbeatConfig()) {
+                        DittoToolsListItem(title: "Heartbeat", systemImage: "heart.fill", color: vm.isHeartbeatOn ? .green : .red)
+                    }
+                }
+                Section {
+                    NavigationLink(destination: AdvancedSettings()) {
+                        DittoToolsListItem(title: "Advanced Settings", systemImage: "gear", color: .teal)
                     }
                 }
             }

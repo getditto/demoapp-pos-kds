@@ -17,9 +17,13 @@ class POSOrderVM: ObservableObject {
     init() {
         dataVM.$currentOrder
             .sink {[weak self] order in
-                guard let self = self, let order = order else { return }
-                barTitle = "Order #\(order.title)"
-                orderItems = order.orderItems
+                guard let self = self  else { return }
+                if let order = order {
+                    barTitle = "Order #\(order.title)"
+                    orderItems = order.orderItems
+                } else {
+                    barTitle = "Order #..."
+                }
             }
             .store(in: &cancellables)
     }

@@ -15,56 +15,70 @@ enum TabViews: Int, Identifiable {
 }
 
 class MainVM: ObservableObject {
-    @Published var selectedTab: TabViews = MainVM.storedSelectedTab() ?? (USE_DEFAULT_LOCATIONS ? .locations : .pos)
+    @Published var selectedTab: TabViews
     @Published var presentSettingsView = false
-    @Published var presentProfileScreen: Bool = false
+    @Published var presentCustomLocationScreen = false
+    @Published var presentLocationChooserAlert = false
     @Published var mainTitle = DittoService.shared.currentLocation?.name ?? "Please Select Location"
     private var cancellables = Set<AnyCancellable>()
+    private var dittoService = DittoService.shared
     
     init() {
-        if !USE_DEFAULT_LOCATIONS {
-            self.presentProfileScreen = DittoService.shared.currentLocationId == nil
+        if Settings.locationId == nil && Settings.useDemoLocations {
+            selectedTab = .locations
+        } else {
+            selectedTab = Settings.selectedTabView ?? .pos
         }
+
+        Settings.useDemoLocationsPublisher
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] enabled in
+                guard let self = self else { return }
+                
+                presentSettingsView = false
+                
+                if enabled {
+                    withAnimation {[weak self] in
+                        self?.presentCustomLocationScreen = false
+                        self?.selectedTab = .locations
+                    }
+                } else {
+                    withAnimation{[weak self] in
+                        self?.selectedTab = .pos
+                        self?.presentCustomLocationScreen = true
+                    }
+                }
+            }
+            .store(in: &cancellables)
         
         $selectedTab
             .dropFirst()
             .sink { tab in
-                Self.saveSelectedTab(tab)
+                Settings.selectedTabView = tab
             }
             .store(in: &cancellables)
-        
+
         // Switch to POS view after location is selected
-        DittoService.shared.$currentLocationId
+        dittoService.$currentLocationId
             .dropFirst()
             .sink {[weak self] locId in
-                guard let self = self else { return }
-                guard let _ = locId else {
-                    return
-                }
+                guard let self = self, locId != nil else { return }
                 selectedTab = .pos
             }
             .store(in: &cancellables)
         
         // Update main navbar title with current location name
-        DittoService.shared.$currentLocation
+        dittoService.$currentLocation
             .sink {[weak self] loc in
                 guard let self = self else { return }
-                guard let loc = loc else { return }
-                mainTitle = loc.name
+                if let loc = loc {
+                    mainTitle = loc.name
+                } else {
+                    mainTitle = "Please Select Location"
+                }
             }
             .store(in: &cancellables)
-    }
-}
-
-extension MainVM {
-    static func storedSelectedTab() -> TabViews? {
-        if let tabInt = UserDefaults.standard.storedSelectedTab {
-            return TabViews(rawValue: tabInt)
-        }
-        return nil
-    }
-    static func saveSelectedTab(_ tab: TabViews) {
-        UserDefaults.standard.storedSelectedTab = tab.rawValue
     }
 }
 
@@ -80,14 +94,17 @@ struct MainView: View {
                         Label("POS", systemImage: "dot.squareshape")
                     }
                     .tag(TabViews.pos)
+                    .sheet(isPresented: $vm.presentCustomLocationScreen) {
+                        CustomLocationScreen()
+                    }
                 
                 KDSView()
                     .tabItem {
                         Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
                     }
                     .tag(TabViews.kds)
-                
-                if USE_DEFAULT_LOCATIONS {
+
+                if Settings.useDemoLocations {
                     LocationsView()
                         .tabItem {
                             Label("Locations", systemImage: "globe")
@@ -95,29 +112,45 @@ struct MainView: View {
                         .tag(TabViews.locations)
                 }
             }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                if ENABLE_SETTINGS_VIEW {
-                    ToolbarItemGroup(placement: .navigationBarLeading ) {
-                        Button {
-                            vm.presentSettingsView = true
-                        } label: {
-                            Image(systemName: "gearshape")
-                        }
-                    }
-                }
-            }
             .sheet(isPresented: $vm.presentSettingsView) {
                 SettingsView()
             }
-            .sheet(isPresented: $vm.presentProfileScreen) {
-                ProfileScreen()
+            .onAppear {
+                if dittoService.locationSetupNotValid {
+                    vm.presentLocationChooserAlert = true
+                }
+            }
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarLeading ) {
+                    Button {
+                            vm.presentSettingsView = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
             }
             #if !os(tvOS)
             .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .navigationViewStyle(StackNavigationViewStyle())
+            .alert("Store Location Options", isPresented: $vm.presentLocationChooserAlert, actions: {
+                Button("Demo Locations")  {
+                    withAnimation {
+                        dittoService.updateLocationsSetup(option: .demo)
+                    }
+                }
+                Button("Custom Location") {
+                    dittoService.updateLocationsSetup(option: .custom)
+                    vm.presentCustomLocationScreen = true
+                }
+                }, message: {
+                    Text(
+                        "Choose demo restaurant locations and switch between them, or "
+                        + "create your own custom location."
+                    )
+                })
         }
     }
     
