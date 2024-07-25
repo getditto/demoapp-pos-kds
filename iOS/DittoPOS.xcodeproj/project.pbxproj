@@ -59,6 +59,7 @@
 		0E1E91AC2BA0FC9300046BC0 /* LogFileConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileConfig.swift; sourceTree = "<group>"; };
 		0E3768B72BAE2FD3009A7053 /* HeartbeatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConfig.swift; sourceTree = "<group>"; };
 		112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoExtensions.swift; sourceTree = "<group>"; };
+		114542C92C52866300DED6A7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
 		140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettings.swift; sourceTree = "<group>"; };
@@ -198,6 +199,7 @@
 				14DECF032A3A6859005BC2AE /* Utilities */,
 				149CABC52A32C43700729331 /* Env.swift */,
 				14CD51C22A2FE4880018DE87 /* Info.plist */,
+				114542C92C52866300DED6A7 /* PrivacyInfo.xcprivacy */,
 				14CD51B42A2FE2D60018DE87 /* Assets.xcassets */,
 				14CD51B62A2FE2D60018DE87 /* Preview Content */,
 			);
