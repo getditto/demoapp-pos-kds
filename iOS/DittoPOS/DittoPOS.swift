@@ -13,6 +13,8 @@ struct DittoPOS: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+                .accentColor(Color("mcd_red"))
+                .foregroundColor(.black)
         }
     }
 }
