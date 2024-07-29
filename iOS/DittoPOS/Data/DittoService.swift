@@ -8,6 +8,7 @@
 
 import Combine
 import DittoExportLogs
+import DittoHeartbeat
 import DittoSwift
 import SwiftUI
 
@@ -61,6 +62,11 @@ class DittoService: ObservableObject {
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
 
+    // Heartbeat
+    var heartbeatConfig: DittoHeartbeatConfig?
+    var heartbeatCallback: HeartbeatCallback = {_ in}
+    private var heartbeatVM: HeartbeatVM
+
     private let storeService: StoreService
     private let syncService: SyncService
 
@@ -70,6 +76,8 @@ class DittoService: ObservableObject {
         syncService.registerInitialSubscriptions()
 
         deviceId = String(ditto.siteID)
+
+        heartbeatVM = HeartbeatVM(ditto: ditto)
 
         // make sure our log level is set _before_ starting ditto.
         loggingOption = Settings.dittoLoggingOption
@@ -178,6 +186,23 @@ class DittoService: ObservableObject {
             return Future { promise in  promise(.success(nil)) }
         }
         return storeService.incompleteOrderFuture(locationId: locId, deviceId: device ?? deviceId)
+    }
+
+    //MARK: - Heartbeat Tool
+    func startHeartbeat() {
+        guard let heartbeatConfig = heartbeatConfig else {
+            print("Heartbeat Tool not Configured")
+            return
+        }
+
+        if self.heartbeatVM.isEnabled {
+            self.stopHeartbeat()
+        }
+        self.heartbeatVM.startHeartbeat(config: heartbeatConfig, callback: heartbeatCallback)
+    }
+
+    func stopHeartbeat() {
+        self.heartbeatVM.stopHeartbeat()
     }
 }
 
