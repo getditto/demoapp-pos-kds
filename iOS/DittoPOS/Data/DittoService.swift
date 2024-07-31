@@ -37,7 +37,11 @@ final class DittoInstance {
         Task {
             // Disabling the BLE setting for performance optimization.
             // This will be the default behavior starting with v4.8.0, so this can be removed once the SDK is updated.
-            try await ditto.store.execute(query: "ALTER SYSTEM SET mesh_chooser_avoid_redundant_bluetooth = false")
+            do {
+                try await ditto.store.execute(query: "ALTER SYSTEM SET mesh_chooser_avoid_redundant_bluetooth = false")
+            } catch {
+                assertionFailure(error.localizedDescription)
+            }
         }
     }
 }
