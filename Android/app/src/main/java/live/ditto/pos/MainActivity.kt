@@ -8,7 +8,6 @@ import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import live.ditto.pos.core.presentation.composables.screens.PosKdsApp
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
-import live.ditto.transports.DittoSyncPermissions
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -22,17 +21,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        checkDittoPermissions()
+        viewModel.checkDittoPermissions { missingPermissions ->
+            if (missingPermissions.isNotEmpty()) {
+                requestPermissionLauncher.launch(missingPermissions)
+            }
+        }
 
         setContent {
             PosKdsApp()
-        }
-    }
-
-    private fun checkDittoPermissions() {
-        val missing = DittoSyncPermissions(this).missingPermissions()
-        if (missing.isNotEmpty()) {
-            requestPermissionLauncher.launch(missing)
         }
     }
 }

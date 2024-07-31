@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import live.ditto.pos.core.presentation.composables.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
+import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
@@ -38,7 +39,8 @@ fun PosKdsApp(
 
     if (state.isSetupValid) {
         PosKdsApp(
-            navHostController = rememberNavController()
+            navHostController = rememberNavController(),
+            state = state
         )
     } else {
         InitialSetupScreen()
@@ -47,7 +49,8 @@ fun PosKdsApp(
 
 @Composable
 private fun PosKdsApp(
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    state: AppState
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -60,7 +63,8 @@ private fun PosKdsApp(
                 scope = scope
             ) {
                 PosKDSScaffold(
-                    navHostController = navHostController
+                    navHostController = navHostController,
+                    state = state
                 ) {
                     scope.launch {
                         drawerState.apply {
@@ -76,12 +80,10 @@ private fun PosKdsApp(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun PosKDSScaffold(
-    viewModel: CoreViewModel = hiltViewModel(),
     navHostController: NavHostController,
+    state: AppState,
     onNavigationClicked: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     Scaffold(
         bottomBar = {
             PosKdsNavigationBar(

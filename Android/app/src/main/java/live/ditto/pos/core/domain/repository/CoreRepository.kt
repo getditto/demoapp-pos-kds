@@ -8,25 +8,29 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
 private const val DATA_STORE_NAME = "settings"
 
+@Singleton
 class CoreRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
 
-    private val usingDemoLocationsKey = booleanPreferencesKey("using_demo_locations")
-    private val locationIdKey = stringPreferencesKey("location_id")
+    companion object {
+        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
+        private val usingDemoLocationsKey = booleanPreferencesKey("using_demo_locations")
+        private val locationIdKey = stringPreferencesKey("location_id")
+    }
 
-    fun isUsingDemoLocations(): Flow<Boolean> {
+    suspend fun isUsingDemoLocations(): Boolean {
         return context.dataStore.data
             .map { preferences ->
                 preferences[usingDemoLocationsKey] ?: false
-            }
+            }.first()
     }
 
     suspend fun shouldUseDemoLocations(useDemoLocations: Boolean) {
@@ -35,10 +39,16 @@ class CoreRepository @Inject constructor(
         }
     }
 
-    fun locationId(): Flow<String?> {
+    suspend fun locationId(): String {
         return context.dataStore.data
             .map { preferences ->
                 preferences[locationIdKey]
-            }
+            }.first() ?: ""
+    }
+
+    suspend fun setLocationId(locationId: String) {
+        context.dataStore.edit { settings ->
+            settings[locationIdKey] = locationId
+        }
     }
 }
