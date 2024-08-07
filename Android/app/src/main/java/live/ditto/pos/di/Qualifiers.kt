@@ -9,7 +9,3 @@ annotation class DittoOnlinePlaygroundAppId
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class DittoOnlinePlaygroundAppToken
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class DispatcherIO

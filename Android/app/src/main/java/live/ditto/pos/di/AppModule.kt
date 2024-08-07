@@ -57,7 +57,6 @@ internal object AppModule {
         return CoreRepository(context)
     }
 
-    @DispatcherIO
     @Provides
     fun provideDispatcherIO(): CoroutineDispatcher {
         return Dispatchers.IO

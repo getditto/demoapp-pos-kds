@@ -15,17 +15,17 @@ import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.demoMenuData
 import live.ditto.pos.core.data.findOrderById
-import live.ditto.pos.di.DispatcherIO
+import live.ditto.pos.pos.domain.usecase.GenerateOrderIdUseCase
 import live.ditto.pos.pos.domain.usecase.GetOrdersForLocationUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class PoSViewModel @Inject constructor(
     getOrdersForLocationUseCase: GetOrdersForLocationUseCase,
-    @DispatcherIO private val dispatcherIO: CoroutineDispatcher
+    dispatcherIO: CoroutineDispatcher,
+    private val generateOrderIdUseCase: GenerateOrderIdUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -64,7 +64,7 @@ class PoSViewModel @Inject constructor(
     private fun updateOrderItems(orders: List<Order>) {
         val currentState = _uiState.value
 
-        val updatedOrderId = generateOrderId(currentState.currentOrderId)
+        val updatedOrderId = generateOrderIdUseCase(currentOrderId = currentState.currentOrderId)
         val orderItems = createOrderItems(updatedOrderId, orders)
         val orderTotal = calculateOrderTotal(orderItems)
         _uiState.value = _uiState.value.copy(
@@ -104,12 +104,6 @@ class PoSViewModel @Inject constructor(
                 )
             }
         } ?: emptyList()
-    }
-
-    private fun generateOrderId(currentOrderId: String): String {
-        return currentOrderId.ifEmpty {
-            UUID.randomUUID().toString()
-        }
     }
 }
 
