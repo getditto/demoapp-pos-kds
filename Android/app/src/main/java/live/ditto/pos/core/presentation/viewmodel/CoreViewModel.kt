@@ -35,7 +35,7 @@ class CoreViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            validateSetup()
+            validateSetup(getCurrentLocationUseCase()?.id)
         }
     }
 
@@ -51,14 +51,16 @@ class CoreViewModel @Inject constructor(
         return getDittoInstanceUseCase()
     }
 
-    fun setCurrentLocation(locationId: String) {
+    fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch {
-            setCurrentLocationUseCase(locationId = locationId)
-            validateSetup()
+            validateSetup(locationId = locationId)
         }
     }
 
-    private suspend fun validateSetup() {
+    private suspend fun validateSetup(locationId: String? = null) {
+        locationId?.let {
+            setCurrentLocationUseCase(locationId = locationId)
+        }
         val isSetupValid = isSetupValidUseCase()
         updateSetupState(setupValid = isSetupValid)
         updateLocationName()

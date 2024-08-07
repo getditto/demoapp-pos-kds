@@ -9,12 +9,8 @@ class SetCurrentLocationUseCase @Inject constructor(
     private val dittoRepository: DittoRepository
 ) {
 
-    private val locationsSubscriptionQuery = """
-        SELECT * FROM COLLECTION locations (saleItemIds MAP)
-    """.trimIndent()
-
     suspend operator fun invoke(locationId: String) {
         coreRepository.setLocationId(locationId = locationId)
-        dittoRepository.subscribe(query = locationsSubscriptionQuery)
+        dittoRepository.startOrdersSubscription()
     }
 }

@@ -46,7 +46,7 @@ fun InitialSetupScreen(
             SetupScreens.DEMO_LOCATIONS -> {
                 DemoLocationsList(
                     onDemoLocationSelected = {
-                        coreViewModel.setCurrentLocation(locationId = it.id)
+                        coreViewModel.updateCurrentLocation(locationId = it.id)
                     }
                 )
             }

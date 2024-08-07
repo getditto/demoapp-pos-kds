@@ -37,7 +37,11 @@ private fun SaleItemsGridPreview() {
     val saleItemsPreviewData = mutableListOf<SaleItemUiModel>().apply {
         repeat(10) {
             add(
-                SaleItemUiModel(imageResource = R.drawable.burrito, label = "Burrito #${it + 1}")
+                SaleItemUiModel(
+                    id = "$it",
+                    imageResource = R.drawable.burrito,
+                    label = "Burrito #${it + 1}"
+                )
             )
         }
     }

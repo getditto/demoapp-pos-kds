@@ -2,7 +2,7 @@ package live.ditto.ditto_wrapper
 
 typealias DittoProperty = Map<String, Any>
 
-class MissingPropertyException(collectionKey: String): Exception("Missing property: $collectionKey")
+class MissingPropertyException(collectionKey: String, dittoProperty: DittoProperty): Exception("Missing property: $collectionKey from DittoProperty:\n $dittoProperty")
 
 /**
  * Deserialize a [DittoProperty] as the given type [T]
@@ -12,7 +12,7 @@ class MissingPropertyException(collectionKey: String): Exception("Missing proper
 @Suppress("UNCHECKED_CAST")
 fun <T> DittoProperty.deserializeProperty(collectionKey: String): T {
     val value = get(collectionKey) as? T
-    return value ?: throw MissingPropertyException(collectionKey)
+    return value ?: throw MissingPropertyException(collectionKey, this)
 }
 
 /**

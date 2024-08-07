@@ -68,6 +68,7 @@ fun LazyGridItemScope.SaleItem(
 private fun SaleItemPreview() {
     val saleItems = listOf(
         SaleItemUiModel(
+            id = "007",
             imageResource = R.drawable.burger,
             label = "Tasty Burger"
         )

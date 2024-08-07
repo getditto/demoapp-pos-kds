@@ -15,7 +15,8 @@ import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 @Composable
 fun CurrentOrder(
     orderId: String,
-    orderItems: List<OrderItemUiModel>
+    orderItems: List<OrderItemUiModel>,
+    orderTotal: String
 ) {
     Column(
         modifier = Modifier
@@ -27,7 +28,7 @@ fun CurrentOrder(
         OrderItemsList(
             orderItems = orderItems
         )
-        CheckoutSection()
+        CheckoutSection(orderTotal)
     }
 }
 
@@ -36,6 +37,7 @@ fun CurrentOrder(
 private fun CurrentOrderViewPreview() {
     CurrentOrder(
         orderId = "#2311FFC",
-        orderItems = emptyList()
+        orderItems = emptyList(),
+        orderTotal = "$13.37"
     )
 }

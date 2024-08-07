@@ -6,6 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.BuildConfig
@@ -53,5 +55,11 @@ internal object AppModule {
     @Provides
     fun provideCoreRepository(@ApplicationContext context: Context): CoreRepository {
         return CoreRepository(context)
+    }
+
+    @DispatcherIO
+    @Provides
+    fun provideDispatcherIO(): CoroutineDispatcher {
+        return Dispatchers.IO
     }
 }

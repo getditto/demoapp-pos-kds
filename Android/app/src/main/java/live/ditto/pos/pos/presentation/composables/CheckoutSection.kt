@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
 
 @Composable
-fun CheckoutSection() {
+fun CheckoutSection(orderTotal: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -35,7 +35,7 @@ fun CheckoutSection() {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = stringResource(R.string.label_total))
-            Text(text = "$3.50")
+            Text(text = orderTotal)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -68,5 +68,5 @@ fun CheckoutSection() {
 @Preview
 @Composable
 private fun CheckoutSectionPreview() {
-    CheckoutSection()
+    CheckoutSection("$13.37")
 }

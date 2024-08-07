@@ -41,7 +41,8 @@ fun PosScreen(
         ) {
             CurrentOrder(
                 orderId = state.currentOrderId,
-                orderItems = state.orderItems
+                orderItems = state.orderItems,
+                orderTotal = state.orderTotal
             )
         }
     }

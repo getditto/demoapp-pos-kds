@@ -16,7 +16,7 @@ import live.ditto.DittoStoreObserver
  */
 fun DittoStore.registerObserverAsFlow(
     query: String,
-    params: Map<String, String>,
+    params: Map<String, Any>,
     bufferCapacity: Int = Channel.UNLIMITED
 ): Flow<DittoQueryResult> = callbackFlow {
     val observer = registerObserver(query, params) { handler ->
