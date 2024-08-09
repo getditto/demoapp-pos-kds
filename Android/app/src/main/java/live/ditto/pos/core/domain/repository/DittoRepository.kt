@@ -6,7 +6,7 @@ import live.ditto.Ditto
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.core.data.Order
-import live.ditto.pos.core.data.ditto.DEFAULT_LOCATION_SYNC_QUERY
+import live.ditto.pos.core.data.ditto.OrdersDittoCollectionSubscription
 import live.ditto.pos.core.data.toOrder
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,14 +38,16 @@ class DittoRepository @Inject constructor(
 
     suspend fun startOrdersSubscription() {
         val locationId = coreRepository.locationId()
-        ordersSubscription = dittoStoreManager.subscribe(
-            query = DEFAULT_LOCATION_SYNC_QUERY,
-            args = mapOf("locationId" to locationId)
+        val ordersDittoCollectionSubscription = OrdersDittoCollectionSubscription(
+            locationId = locationId
         ) { dittoProperties ->
             dittoProperties.map {
                 it.toOrder()
             }
         }
+        ordersSubscription = dittoStoreManager.startSubscription(
+            dittoCollectionSubscription = ordersDittoCollectionSubscription
+        )
     }
 
     fun ordersFlow(): Flow<List<Order>> {

@@ -3,19 +3,41 @@ package live.ditto.ditto_wrapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import live.ditto.Ditto
-import live.ditto.DittoSubscription
 import live.ditto.DittoSyncSubscription
+import live.ditto.ditto_wrapper.dittowrappers.DittoCollectionSubscription
 
 class DittoStoreManager(
     private val ditto: Ditto
 ) {
 
-    private val subscriptions = mutableListOf<DittoSyncSubscription>()
+    /**
+     * Map of collection name to [DittoSyncSubscription]
+     */
+    private val currentSubscriptions: MutableMap<String, DittoSyncSubscription> = mutableMapOf()
 
-    fun <T> subscribe(
+    fun <T> startSubscription(
+        dittoCollectionSubscription: DittoCollectionSubscription<T>
+    ): Flow<T> {
+        registerSubscription(dittoCollectionSubscription)
+        return subscribe(
+            query = dittoCollectionSubscription.subscriptionQuery,
+            args = dittoCollectionSubscription.subscriptionQueryArgs,
+            deserialize = dittoCollectionSubscription.deserializer
+        )
+    }
+
+    private fun <T> registerSubscription(dittoCollectionSubscription: DittoCollectionSubscription<T>) {
+        val dittoSyncSubscription = ditto.sync.registerSubscription(
+            query = dittoCollectionSubscription.subscriptionQuery,
+            arguments = dittoCollectionSubscription.subscriptionQueryArgs
+        )
+        currentSubscriptions[dittoCollectionSubscription.collectionName] = dittoSyncSubscription
+    }
+
+    private fun <T> subscribe(
         query: String,
         args: Map<String, Any> = emptyMap(),
-        deserialize: (List<DittoProperty>) -> T
+        deserialize: DittoPropertyDeserializer<T>
     ): Flow<T> {
         return subscribe(query, args)
             .map { documents ->
@@ -27,12 +49,6 @@ class DittoStoreManager(
         subscriptionQuery: String,
         args: Map<String, Any> = emptyMap()
     ): Flow<List<DittoProperty>> {
-        subscriptions.add(
-            ditto.sync.registerSubscription(
-                query = subscriptionQuery,
-                arguments = args
-            )
-        )
         return ditto.store.registerObserverAsFlow(
             query = subscriptionQuery,
             params = args
