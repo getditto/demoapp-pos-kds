@@ -1,0 +1,28 @@
+package live.ditto.pos.pos.domain.usecase
+
+import live.ditto.pos.core.data.Order
+import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
+import javax.inject.Inject
+
+class CreateNewOrderUseCase @Inject constructor(
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val generateOrderIdUseCase: GenerateOrderIdUseCase
+) {
+
+    suspend operator fun invoke(): Order {
+        val currentLocationId = getCurrentLocationUseCase()?.id ?: ""
+        val currentOrderId = generateOrderIdUseCase()
+        return Order(
+            id = mapOf(
+                "id" to currentOrderId,
+                "locationId" to currentLocationId
+            ),
+            createdOn = "todo: create created on date generator",
+            deviceId = "todo: create device id use case",
+            saleItemIds = null,
+            status = OrderStatus.OPEN.ordinal,
+            transactionIds = emptyMap()
+        )
+    }
+}
