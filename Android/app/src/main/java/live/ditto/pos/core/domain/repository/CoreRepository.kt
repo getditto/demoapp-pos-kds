@@ -24,31 +24,59 @@ class CoreRepository @Inject constructor(
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
         private val usingDemoLocationsKey = booleanPreferencesKey("using_demo_locations")
         private val locationIdKey = stringPreferencesKey("location_id")
+        private val currentOrderId = stringPreferencesKey("current_order_id")
     }
 
     suspend fun isUsingDemoLocations(): Boolean {
-        return context.dataStore.data
-            .map { preferences ->
-                preferences[usingDemoLocationsKey] ?: false
-            }.first()
+        return getBooleanPreference(usingDemoLocationsKey)
     }
 
     suspend fun shouldUseDemoLocations(useDemoLocations: Boolean) {
-        context.dataStore.edit { settings ->
-            settings[usingDemoLocationsKey] = useDemoLocations
-        }
+        setPreferences(usingDemoLocationsKey, useDemoLocations)
     }
 
     suspend fun locationId(): String {
-        return context.dataStore.data
-            .map { preferences ->
-                preferences[locationIdKey]
-            }.first() ?: ""
+        return getStringPreference(locationIdKey)
     }
 
     suspend fun setLocationId(locationId: String) {
+        setPreferences(locationIdKey, locationId)
+    }
+
+    suspend fun currentOrderId(): String {
+        return getStringPreference(currentOrderId)
+    }
+
+    suspend fun setCurrentOrderId(orderId: String) {
+        setPreferences(currentOrderId, orderId)
+    }
+
+    private suspend fun getBooleanPreference(
+        preferencesKey: Preferences.Key<Boolean>,
+        defaultValue: Boolean = false
+    ): Boolean {
+        return context.dataStore.data
+            .map { preferences ->
+                preferences[preferencesKey] ?: defaultValue
+            }.first()
+    }
+
+    private suspend fun getStringPreference(
+        preferencesKey: Preferences.Key<String>,
+        defaultValue: String = ""
+    ): String {
+        return context.dataStore.data
+            .map { preferences ->
+                preferences[preferencesKey]
+            }.first() ?: defaultValue
+    }
+
+    private suspend fun <T> setPreferences(
+        preferencesKey: Preferences.Key<T>,
+        value: T
+    ) {
         context.dataStore.edit { settings ->
-            settings[locationIdKey] = locationId
+            settings[preferencesKey] = value
         }
     }
 }

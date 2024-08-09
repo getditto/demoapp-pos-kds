@@ -2,7 +2,6 @@ package live.ditto.pos.core.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import live.ditto.Ditto
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager

@@ -8,24 +8,21 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.Order
-import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.demoMenuData
-import live.ditto.pos.core.data.findOrderById
-import live.ditto.pos.pos.domain.usecase.GenerateOrderIdUseCase
-import live.ditto.pos.pos.domain.usecase.GetOrdersForLocationUseCase
+import live.ditto.pos.pos.domain.usecase.GetCurrentOpenOrderUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 import javax.inject.Inject
 
 @HiltViewModel
 class PoSViewModel @Inject constructor(
-    getOrdersForLocationUseCase: GetOrdersForLocationUseCase,
-    dispatcherIO: CoroutineDispatcher,
-    private val generateOrderIdUseCase: GenerateOrderIdUseCase
+    getCurrentOpenOrderUseCase: GetCurrentOpenOrderUseCase,
+    private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -38,10 +35,12 @@ class PoSViewModel @Inject constructor(
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
     init {
-        getOrdersForLocationUseCase()
-            .onEach(::updateOrderItems)
-            .flowOn(dispatcherIO)
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            getCurrentOpenOrderUseCase()
+                .onEach(::updateOrder)
+                .flowOn(dispatcherIO)
+                .collect()
+        }
     }
 
     fun addItemToCart(saleItem: SaleItemUiModel) {
@@ -61,14 +60,11 @@ class PoSViewModel @Inject constructor(
         return NumberFormat.getCurrencyInstance().format(price)
     }
 
-    private fun updateOrderItems(orders: List<Order>) {
-        val currentState = _uiState.value
-
-        val updatedOrderId = generateOrderIdUseCase(currentOrderId = currentState.currentOrderId)
-        val orderItems = createOrderItems(updatedOrderId, orders)
+    private fun updateOrder(order: Order) {
+        val orderItems = createOrderItems(order)
         val orderTotal = calculateOrderTotal(orderItems)
         _uiState.value = _uiState.value.copy(
-            currentOrderId = updatedOrderId,
+            currentOrderId = order.getOrderId(),
             orderItems = orderItems,
             orderTotal = orderTotal
         )
@@ -82,14 +78,8 @@ class PoSViewModel @Inject constructor(
         return formatPrice(total)
     }
 
-    private fun createOrderItems(orderId: String, orders: List<Order>): List<OrderItemUiModel> {
-        // todo: filter by order status
-        // from the filtered list get saleItemIds map where order id = orderId
-        // convert saleItemIds to a list of OrderItemUIModel or return empty list
-        val saleItemIds = orders
-            .filter { it.status == OrderStatus.OPEN.ordinal }
-            .findOrderById(orderId)
-            ?.allSaleItemIds()
+    private fun createOrderItems(order: Order): List<OrderItemUiModel> {
+        val saleItemIds = order.allSaleItemIds()
         return generateOrderItemUiModels(saleItemIds)
     }
 

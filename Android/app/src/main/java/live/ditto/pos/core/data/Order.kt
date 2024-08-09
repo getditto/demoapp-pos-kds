@@ -15,6 +15,10 @@ data class Order(
     fun allSaleItemIds(): Collection<String>? {
         return saleItemIds?.values
     }
+
+    fun getOrderId(): String {
+        return id["id"] ?: ""
+    }
 }
 
 fun DittoProperty.toOrder(): Order {
@@ -32,6 +36,6 @@ fun DittoProperty.toOrder(): Order {
 
 fun List<Order>.findOrderById(id: String): Order? {
     return find {
-        it.id["id"] == id
+        it.getOrderId() == id
     }
 }
