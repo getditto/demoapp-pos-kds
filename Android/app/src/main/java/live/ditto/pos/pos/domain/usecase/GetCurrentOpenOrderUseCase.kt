@@ -6,6 +6,7 @@ import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.findOrderById
 import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject
 
 /**
@@ -16,12 +17,17 @@ import javax.inject.Inject
 class GetCurrentOpenOrderUseCase @Inject constructor(
     private val dittoRepository: DittoRepository,
     private val generateOrderIdUseCase: GenerateOrderIdUseCase,
-    private val createNewOrderUseCase: CreateNewOrderUseCase
+    private val createNewOrderUseCase: CreateNewOrderUseCase,
+    private val currentLocationUseCase: GetCurrentLocationUseCase
 ) {
 
     suspend operator fun invoke(): Flow<Order> {
         val currentOrderId = generateOrderIdUseCase()
-        return dittoRepository.ordersFlow()
+        val locationId = currentLocationUseCase()?.id ?: ""
+        return dittoRepository.ordersForLocation(
+            locationId = locationId,
+            orderStatus = OrderStatus.OPEN
+        )
             .map { orders ->
                 getOrCreateNewOrder(orders, currentOrderId)
             }

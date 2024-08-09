@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.map
 import live.ditto.Ditto
 import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.dittowrappers.DittoCollectionSubscription
+import live.ditto.ditto_wrapper.dittowrappers.DittoLiveQuery
 
 class DittoStoreManager(
     private val ditto: Ditto
@@ -15,18 +16,7 @@ class DittoStoreManager(
      */
     private val currentSubscriptions: MutableMap<String, DittoSyncSubscription> = mutableMapOf()
 
-    fun <T> startSubscription(
-        dittoCollectionSubscription: DittoCollectionSubscription<T>
-    ): Flow<T> {
-        registerSubscription(dittoCollectionSubscription)
-        return subscribe(
-            query = dittoCollectionSubscription.subscriptionQuery,
-            args = dittoCollectionSubscription.subscriptionQueryArgs,
-            deserialize = dittoCollectionSubscription.deserializer
-        )
-    }
-
-    private fun <T> registerSubscription(dittoCollectionSubscription: DittoCollectionSubscription<T>) {
+    fun <T> registerSubscription(dittoCollectionSubscription: DittoCollectionSubscription<T>) {
         val dittoSyncSubscription = ditto.sync.registerSubscription(
             query = dittoCollectionSubscription.subscriptionQuery,
             arguments = dittoCollectionSubscription.subscriptionQueryArgs
@@ -34,18 +24,19 @@ class DittoStoreManager(
         currentSubscriptions[dittoCollectionSubscription.collectionName] = dittoSyncSubscription
     }
 
-    private fun <T> subscribe(
-        query: String,
-        args: Map<String, Any> = emptyMap(),
-        deserialize: DittoPropertyDeserializer<T>
+    fun <T> observeLiveQueryAsFlow(
+        dittoLiveQuery: DittoLiveQuery<T>,
     ): Flow<T> {
-        return subscribe(query, args)
+        val query = dittoLiveQuery.queryString
+        val args = dittoLiveQuery.arguments ?: emptyMap()
+        val documentDeserializer = dittoLiveQuery.documentDeserializer
+        return liveQueryAsFlow(query, args)
             .map { documents ->
-                deserialize(documents)
+                documentDeserializer(documents)
             }
     }
 
-    private fun subscribe(
+    private fun liveQueryAsFlow(
         subscriptionQuery: String,
         args: Map<String, Any> = emptyMap()
     ): Flow<List<DittoProperty>> {

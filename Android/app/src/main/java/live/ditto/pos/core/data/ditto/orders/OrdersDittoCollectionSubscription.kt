@@ -1,21 +1,21 @@
-package live.ditto.pos.core.data.ditto
+package live.ditto.pos.core.data.ditto.orders
 
-import live.ditto.ditto_wrapper.DittoPropertyDeserializer
 import live.ditto.ditto_wrapper.dittowrappers.DittoCollectionSubscription
 import live.ditto.pos.core.data.Order
 
 class OrdersDittoCollectionSubscription(
-    private val locationId: String,
-    private val ordersDittoPropertyDeserializer: DittoPropertyDeserializer<List<Order>>
+    private val locationId: String
 ) : DittoCollectionSubscription<List<Order>> {
+
+    companion object {
+    }
+
     override val collectionName: String
         get() = ORDERS_COLLECTION_NAME
     override val subscriptionQuery: String
-        get() = DEFAULT_LOCATION_SYNC_QUERY
+        get() = SUBSCRIPTION_QUERY.trimIndent()
     override val subscriptionQueryArgs: Map<String, Any>
-        get() = mapOf("locationId" to locationId)
+        get() = mapOf(LOCATION_ID_ATTRIBUTE_KEY to locationId)
     override val evictionQuery: String
         get() = "todo"
-    override val deserializer: DittoPropertyDeserializer<List<Order>>
-        get() = ordersDittoPropertyDeserializer
 }
