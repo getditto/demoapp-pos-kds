@@ -38,8 +38,14 @@ fun InitialSetupScreen(
         when (screen) {
             SetupScreens.INITIAL_SCREEN -> {
                 InitialLocationsDialog(
-                    onDemoLocationsClicked = { screen = SetupScreens.DEMO_LOCATIONS },
-                    onCustomLocationsClicked = { screen = SetupScreens.CUSTOM_LOCATION }
+                    onDemoLocationsClicked = {
+                        coreViewModel.shouldUseDemoLocations(true)
+                        screen = SetupScreens.DEMO_LOCATIONS
+                    },
+                    onCustomLocationsClicked = {
+                        coreViewModel.shouldUseDemoLocations(false)
+                        screen = SetupScreens.CUSTOM_LOCATION
+                    }
                 )
             }
 

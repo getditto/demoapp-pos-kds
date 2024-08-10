@@ -10,6 +10,7 @@ import live.ditto.Ditto
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.IsSetupValidUseCase
 import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
+import live.ditto.pos.core.domain.usecase.UseDemoLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetMissingPermissionsUseCase
 import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
@@ -22,7 +23,8 @@ class CoreViewModel @Inject constructor(
     private val isSetupValidUseCase: IsSetupValidUseCase,
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
-    private val setCurrentLocationUseCase: SetCurrentLocationUseCase
+    private val setCurrentLocationUseCase: SetCurrentLocationUseCase,
+    private val useDemoLocationUseCase: UseDemoLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -77,6 +79,12 @@ class CoreViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isSetupValid = setupValid
         )
+    }
+
+    fun shouldUseDemoLocations(shouldUseDemoLocations: Boolean) {
+        viewModelScope.launch {
+            useDemoLocationUseCase(shouldUseDemoLocations)
+        }
     }
 }
 

@@ -5,7 +5,7 @@ import javax.inject.Inject
 
 class UseDemoLocationUseCase @Inject constructor(private val repository: CoreRepository) {
 
-    suspend operator fun invoke(shouldUseDemoLocation: Boolean) {
-        repository.shouldUseDemoLocations(useDemoLocations = shouldUseDemoLocation)
+    suspend operator fun invoke(shouldUseDemoLocations: Boolean) {
+        repository.shouldUseDemoLocations(useDemoLocations = shouldUseDemoLocations)
     }
 }

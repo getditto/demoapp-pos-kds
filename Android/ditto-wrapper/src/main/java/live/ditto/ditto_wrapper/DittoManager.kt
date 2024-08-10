@@ -8,7 +8,6 @@ import live.ditto.DittoLogLevel
 import live.ditto.DittoLogger
 import live.ditto.android.DefaultAndroidDittoDependencies
 import live.ditto.transports.DittoSyncPermissions
-import javax.inject.Singleton
 
 private val TAG = DittoManager::class.java.name
 

@@ -1,11 +1,14 @@
 package live.ditto.pos.core.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import live.ditto.Ditto
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
+import live.ditto.pos.core.data.Location
 import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.ditto.location.GetAllLocationsDittoSelectQuery
 import live.ditto.pos.core.data.ditto.location.LocationsDittoCollectionSubscription
 import live.ditto.pos.core.data.ditto.orders.GetOrdersForLocationDittoQuery
 import live.ditto.pos.core.data.ditto.orders.OrdersDittoCollectionSubscription
@@ -22,10 +25,6 @@ class DittoRepository @Inject constructor(
 
     fun requireDitto(): Ditto {
         return dittoManager.requireDitto()
-    }
-
-    fun insertDefaultLocations() {
-        TODO("Not yet implemented")
     }
 
     fun refreshPermissions() {
@@ -76,5 +75,11 @@ class DittoRepository @Inject constructor(
             saleItemIdValue = saleItemId
         )
         dittoStoreManager.executeQuery(dittoQuery = addItemToOrderDittoQuery)
+    }
+
+    suspend fun getLocationById(locationId: String): Location? {
+        return dittoStoreManager.executeQuery(GetAllLocationsDittoSelectQuery())
+            .first()
+            .find { it.id == locationId }
     }
 }

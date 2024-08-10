@@ -3,16 +3,23 @@ package live.ditto.pos.core.domain.usecase
 import live.ditto.pos.core.data.Location
 import live.ditto.pos.core.data.demoLocations
 import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.core.domain.repository.DittoRepository
 import javax.inject.Inject
 
-class GetCurrentLocationUseCase @Inject constructor(private val coreRepository: CoreRepository) {
+class GetCurrentLocationUseCase @Inject constructor(
+    private val coreRepository: CoreRepository,
+    private val dittoRepository: DittoRepository
+) {
 
-    // todo: this is currently finding a location that exists in the demoLocations hardcoded array
-    // in the future this logic will change to consider whether demo locations or a custom location
-    // is used ot not
     suspend operator fun invoke(): Location? {
-        return demoLocations.find {
-            it.id == coreRepository.locationId()
+        val locationId = coreRepository.locationId()
+        if (locationId.isEmpty()) return null
+        return if (coreRepository.isUsingDemoLocations()) {
+            demoLocations.find {
+                it.id == locationId
+            }
+        } else {
+            dittoRepository.getLocationById(locationId = locationId)
         }
     }
 }

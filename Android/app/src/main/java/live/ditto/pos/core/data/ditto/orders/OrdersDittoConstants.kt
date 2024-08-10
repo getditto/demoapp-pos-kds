@@ -4,7 +4,7 @@ const val ORDERS_COLLECTION_NAME = "orders"
 
 const val LOCATION_ID_ATTRIBUTE_KEY = "locationId"
 
-const val SALE_ITEM_ID_KEY = ":saleItemIdKey"
+const val ORDERS_SALE_ITEM_ID_PLACEHOLDER = ":saleItemIdKey"
 
 const val SUBSCRIPTION_QUERY = """
     SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
@@ -25,7 +25,7 @@ const val ADD_ITEM_TO_ORDER_QUERY = """
     UPDATE COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
     SET
         saleItemIds -> (
-            $SALE_ITEM_ID_KEY = :saleItemIdValue
+            $ORDERS_SALE_ITEM_ID_PLACEHOLDER = :saleItemIdValue
         ),
         status = :status
     WHERE _id = :_id
