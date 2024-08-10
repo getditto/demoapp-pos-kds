@@ -14,7 +14,7 @@ import javax.inject.Inject
  * has the status of open. If that order is found, return it, otherwise this means we need to
  * create a new blank order
  */
-class GetCurrentOpenOrderUseCase @Inject constructor(
+class GetCurrentOrderUseCase @Inject constructor(
     private val dittoRepository: DittoRepository,
     private val generateOrderIdUseCase: GenerateOrderIdUseCase,
     private val createNewOrderUseCase: CreateNewOrderUseCase,
@@ -25,8 +25,7 @@ class GetCurrentOpenOrderUseCase @Inject constructor(
         val currentOrderId = generateOrderIdUseCase()
         val locationId = currentLocationUseCase()?.id ?: ""
         return dittoRepository.ordersForLocation(
-            locationId = locationId,
-            orderStatus = OrderStatus.OPEN
+            locationId = locationId
         )
             .map { orders ->
                 getOrCreateNewOrder(orders, currentOrderId)
@@ -34,7 +33,8 @@ class GetCurrentOpenOrderUseCase @Inject constructor(
     }
 
     private suspend fun getOrCreateNewOrder(orders: List<Order>, currentOrderId: String): Order {
-        return orders.filter { it.status == OrderStatus.OPEN.ordinal }
-            .findOrderById(currentOrderId) ?: createNewOrderUseCase()
+        return orders.filter {
+            it.status == OrderStatus.OPEN.ordinal || it.status == OrderStatus.IN_PROCESS.ordinal
+        }.findOrderById(currentOrderId) ?: createNewOrderUseCase()
     }
 }

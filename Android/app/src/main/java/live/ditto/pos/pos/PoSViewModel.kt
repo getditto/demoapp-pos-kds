@@ -14,14 +14,16 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.demoMenuData
-import live.ditto.pos.pos.domain.usecase.GetCurrentOpenOrderUseCase
+import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
+import live.ditto.pos.pos.domain.usecase.GetCurrentOrderUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 import javax.inject.Inject
 
 @HiltViewModel
 class PoSViewModel @Inject constructor(
-    getCurrentOpenOrderUseCase: GetCurrentOpenOrderUseCase,
+    getCurrentOrderUseCase: GetCurrentOrderUseCase,
+    private val addSaleItemToOrderUseCase: AddSaleItemToOrderUseCase,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -36,7 +38,7 @@ class PoSViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getCurrentOpenOrderUseCase()
+            getCurrentOrderUseCase()
                 .onEach(::updateOrder)
                 .flowOn(dispatcherIO)
                 .collect()
@@ -44,16 +46,9 @@ class PoSViewModel @Inject constructor(
     }
 
     fun addItemToCart(saleItem: SaleItemUiModel) {
-        val orderItem = OrderItemUiModel(
-            name = saleItem.label,
-            price = formatPrice(saleItem.price)
-        )
-        val orderItems = _uiState.value.orderItems.toMutableList().apply {
-            add(orderItem)
+        viewModelScope.launch(dispatcherIO) {
+            addSaleItemToOrderUseCase(saleItem = saleItem)
         }
-        _uiState.value = _uiState.value.copy(
-            orderItems = orderItems
-        )
     }
 
     private fun formatPrice(price: Float): String {

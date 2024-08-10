@@ -1,7 +1,8 @@
-package live.ditto.pos.core.data.ditto.orders
+package live.ditto.pos.pos.data.ditto
 
 import live.ditto.ditto_wrapper.dittowrappers.DittoQuery
 import live.ditto.pos.core.data.Order
+import live.ditto.pos.core.data.ditto.orders.INSERT_NEW_ORDER_QUERY
 
 class InsertNewOrderDittoQuery(private val order: Order) : DittoQuery {
 

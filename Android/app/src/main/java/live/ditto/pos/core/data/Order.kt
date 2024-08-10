@@ -8,7 +8,7 @@ data class Order(
     val id: Map<String, String>,
     val createdOn: String,
     val deviceId: String,
-    val saleItemIds: Map<String, String>?, // id to sale item id
+    val saleItemIds: MutableMap<String, String>?, // id to sale item id
     val status: Int,
     val transactionIds: Map<String, Int>
 ) {
@@ -38,7 +38,7 @@ fun DittoProperty.toOrder(): Order {
         id = deserializeProperty("_id"),
         createdOn = deserializeProperty("createdOn"),
         deviceId = deserializeProperty("deviceId"),
-        saleItemIds = try { deserializeProperty<Map<String, String>?>("saleItemIds") } catch (e: MissingPropertyException) {
+        saleItemIds = try { deserializeProperty<MutableMap<String, String>?>("saleItemIds") } catch (e: MissingPropertyException) {
             null
         },
         status = deserializeProperty("status"),

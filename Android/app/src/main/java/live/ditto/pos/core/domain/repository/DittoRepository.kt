@@ -6,9 +6,10 @@ import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.OrderStatus
-import live.ditto.pos.core.data.ditto.orders.GetAllOrdersForLocationDittoQuery
-import live.ditto.pos.core.data.ditto.orders.InsertNewOrderDittoQuery
+import live.ditto.pos.core.data.ditto.orders.GetOrdersForLocationDittoQuery
 import live.ditto.pos.core.data.ditto.orders.OrdersDittoCollectionSubscription
+import live.ditto.pos.pos.data.ditto.AddItemToOrderDittoQuery
+import live.ditto.pos.pos.data.ditto.InsertNewOrderDittoQuery
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,11 +44,10 @@ class DittoRepository @Inject constructor(
         )
     }
 
-    fun ordersForLocation(locationId: String, orderStatus: OrderStatus): Flow<List<Order>> {
+    fun ordersForLocation(locationId: String): Flow<List<Order>> {
         return dittoStoreManager.observeLiveQueryAsFlow(
-            GetAllOrdersForLocationDittoQuery(
-                locationId = locationId,
-                orderStatus = orderStatus
+            GetOrdersForLocationDittoQuery(
+                locationId = locationId
             )
         )
     }
@@ -57,5 +57,19 @@ class DittoRepository @Inject constructor(
             order = order
         )
         dittoStoreManager.executeQuery(dittoQuery = insertNewOrderQuery)
+    }
+
+    suspend fun addItemToOrder(
+        order: Order,
+        saleItemIdKey: String,
+        saleItemId: String
+    ) {
+        val addItemToOrderDittoQuery = AddItemToOrderDittoQuery(
+            orderId = order.id,
+            orderStatus = OrderStatus.IN_PROCESS,
+            saleItemIdKey = saleItemIdKey,
+            saleItemIdValue = saleItemId
+        )
+        dittoStoreManager.executeQuery(dittoQuery = addItemToOrderDittoQuery)
     }
 }
