@@ -10,7 +10,6 @@ class SetupDemoLocationsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke() {
-        coreRepository.setLocationId(locationId = "")
         coreRepository.shouldUseDemoLocations(useDemoLocations = true)
 
         dittoRepository.insertDefaultLocations()

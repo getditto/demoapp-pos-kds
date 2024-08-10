@@ -170,37 +170,30 @@ val demoTicketItems = listOf(
 val demoLocations = listOf(
     Location(
         id = "00001",
-        name = "Ham's Burgers",
-        saleItemIds = emptyMap()
+        name = "Ham's Burgers"
     ),
     Location(
         id = "00002",
-        name = "Sally's Salad Bar",
-        saleItemIds = emptyMap()
+        name = "Sally's Salad Bar"
     ),
     Location(
         id = "00003",
-        name = "Kyle's Kabobs",
-        saleItemIds = emptyMap()
+        name = "Kyle's Kabobs"
     ),
     Location(
         id = "00004",
-        name = "Frank's Falafels",
-        saleItemIds = emptyMap()
+        name = "Frank's Falafels"
     ),
     Location(
         id = "00005",
-        name = "Cathy's Crepes",
-        saleItemIds = emptyMap()
+        name = "Cathy's Crepes"
     ),
     Location(
         id = "00006",
-        name = "Gilbert's Gumbo",
-        saleItemIds = emptyMap()
+        name = "Gilbert's Gumbo"
     ),
     Location(
         id = "00007",
-        name = "Tarra's Tacos",
-        saleItemIds = emptyMap()
+        name = "Tarra's Tacos"
     )
 )

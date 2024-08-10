@@ -14,16 +14,16 @@ class DittoStoreManager(
 ) {
 
     /**
-     * Map of collection name to [DittoSyncSubscription]
+     * Map of [DittoCollectionSubscription] to [DittoSyncSubscription]
      */
-    private val currentSubscriptions: MutableMap<String, DittoSyncSubscription> = mutableMapOf()
+    private val currentSubscriptions: MutableMap<DittoCollectionSubscription, DittoSyncSubscription> = mutableMapOf()
 
-    fun <T> registerSubscription(dittoCollectionSubscription: DittoCollectionSubscription<T>) {
+    fun registerSubscription(dittoCollectionSubscription: DittoCollectionSubscription) {
         val dittoSyncSubscription = ditto.sync.registerSubscription(
             query = dittoCollectionSubscription.subscriptionQuery,
             arguments = dittoCollectionSubscription.subscriptionQueryArgs
         )
-        currentSubscriptions[dittoCollectionSubscription.collectionName] = dittoSyncSubscription
+        currentSubscriptions[dittoCollectionSubscription] = dittoSyncSubscription
     }
 
     fun <T> observeLiveQueryAsFlow(

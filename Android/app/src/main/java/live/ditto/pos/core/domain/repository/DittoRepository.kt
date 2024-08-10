@@ -6,6 +6,7 @@ import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.ditto.location.LocationsDittoCollectionSubscription
 import live.ditto.pos.core.data.ditto.orders.GetOrdersForLocationDittoQuery
 import live.ditto.pos.core.data.ditto.orders.OrdersDittoCollectionSubscription
 import live.ditto.pos.pos.data.ditto.AddItemToOrderDittoQuery
@@ -42,6 +43,10 @@ class DittoRepository @Inject constructor(
         dittoStoreManager.registerSubscription(
             dittoCollectionSubscription = ordersDittoCollectionSubscription
         )
+    }
+
+    fun startLocationSubscription() {
+        dittoStoreManager.registerSubscription(LocationsDittoCollectionSubscription())
     }
 
     fun ordersForLocation(locationId: String): Flow<List<Order>> {
