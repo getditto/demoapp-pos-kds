@@ -1,11 +1,13 @@
 package live.ditto.ditto_wrapper
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import live.ditto.Ditto
 import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.dittowrappers.DittoCollectionSubscription
-import live.ditto.ditto_wrapper.dittowrappers.DittoLiveQuery
+import live.ditto.ditto_wrapper.dittowrappers.DittoQuery
+import live.ditto.ditto_wrapper.dittowrappers.DittoSelectQuery
 
 class DittoStoreManager(
     private val ditto: Ditto
@@ -25,15 +27,33 @@ class DittoStoreManager(
     }
 
     fun <T> observeLiveQueryAsFlow(
-        dittoLiveQuery: DittoLiveQuery<T>,
+        dittoQuery: DittoSelectQuery<T>,
     ): Flow<T> {
-        val query = dittoLiveQuery.queryString
-        val args = dittoLiveQuery.arguments ?: emptyMap()
-        val documentDeserializer = dittoLiveQuery.documentDeserializer
+        val query = dittoQuery.queryString
+        val args = dittoQuery.arguments
+        val documentDeserializer = dittoQuery.documentDeserializer
         return liveQueryAsFlow(query, args)
             .map { documents ->
                 documentDeserializer(documents)
             }
+    }
+
+    suspend fun executeQuery(dittoQuery: DittoQuery) {
+        ditto.store.execute(
+            query = dittoQuery.queryString,
+            arguments = dittoQuery.arguments
+        )
+    }
+
+    suspend fun <T> executeQuery(dittoSelectQuery: DittoSelectQuery<T>): Flow<T> {
+        return flow {
+            ditto.store.execute(
+                query = dittoSelectQuery.queryString,
+                arguments = dittoSelectQuery.arguments
+            ).items.map { dittoQueryResultItem ->
+                dittoQueryResultItem.value
+            }
+        }
     }
 
     private fun liveQueryAsFlow(

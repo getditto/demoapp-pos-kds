@@ -19,6 +19,18 @@ data class Order(
     fun getOrderId(): String {
         return id["id"] ?: ""
     }
+
+    fun serializeAsMap(): Map<String, Any> {
+        val orderMap = mutableMapOf<String, Any>()
+        return orderMap.apply {
+            this["_id"] = id
+            this["createdOn"] = createdOn
+            this["deviceId"] = deviceId
+            saleItemIds?.let { this["saleItemIds"] = it }
+            this["status"] = status
+            this["transactionIds"] = transactionIds
+        }
+    }
 }
 
 fun DittoProperty.toOrder(): Order {

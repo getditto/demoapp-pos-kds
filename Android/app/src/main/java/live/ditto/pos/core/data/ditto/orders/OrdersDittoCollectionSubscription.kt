@@ -10,12 +10,8 @@ class OrdersDittoCollectionSubscription(
     companion object {
     }
 
-    override val collectionName: String
-        get() = ORDERS_COLLECTION_NAME
-    override val subscriptionQuery: String
-        get() = SUBSCRIPTION_QUERY.trimIndent()
-    override val subscriptionQueryArgs: Map<String, Any>
-        get() = mapOf(LOCATION_ID_ATTRIBUTE_KEY to locationId)
-    override val evictionQuery: String
-        get() = "todo"
+    override val collectionName: String = ORDERS_COLLECTION_NAME
+    override val subscriptionQuery: String = SUBSCRIPTION_QUERY.trimIndent()
+    override val subscriptionQueryArgs: Map<String, Any> = mapOf(LOCATION_ID_ATTRIBUTE_KEY to locationId)
+    override val evictionQuery: String = "todo"
 }
