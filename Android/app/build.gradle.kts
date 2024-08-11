@@ -123,6 +123,7 @@ dependencies {
 
     implementation(files("./libs/DittoToolsViewer.aar"))
 
+    // todo: remove local imports
     // these deps have to be pulled in when testing with a local .aar
     implementation(libs.live.ditto.databrowser)
     implementation(libs.live.ditto.exportlogs)
@@ -139,6 +140,9 @@ dependencies {
 
     // Jetpack Datastore
     implementation(libs.androidx.datastore.preferences)
+
+    // KotlinX DateTime
+    implementation(libs.kotlinx.datetime)
 }
 
 kapt {

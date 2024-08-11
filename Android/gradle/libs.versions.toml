@@ -21,6 +21,7 @@ live-ditto-exportlogs = "0.0.5"
 live-ditto-health = "0.0.4"
 appcompat = "1.7.0"
 material = "1.12.0"
+kotlinxDatetime = "0.6.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -52,6 +53,7 @@ live-ditto-exportlogs = { module = "live.ditto:dittoexportlogs", version.ref = "
 live-ditto-health = { module = "live.ditto:health", version.ref = "live-ditto-health" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

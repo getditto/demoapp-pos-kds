@@ -9,6 +9,7 @@ import javax.inject.Inject
 class CreateNewOrderUseCase @Inject constructor(
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val generateOrderIdUseCase: GenerateOrderIdUseCase,
+    private val currentTimeStringUseCase: GetCurrentTimeStringUseCase,
     private val dittoRepository: DittoRepository
 ) {
 
@@ -20,8 +21,8 @@ class CreateNewOrderUseCase @Inject constructor(
                 "id" to currentOrderId,
                 "locationId" to currentLocationId
             ),
-            createdOn = "todo: create created on date generator",
-            deviceId = "todo: create device id use case",
+            createdOn = currentTimeStringUseCase(),
+            deviceId = dittoRepository.getDeviceId(), // todo
             saleItemIds = null,
             status = OrderStatus.OPEN.ordinal,
             transactionIds = emptyMap()
