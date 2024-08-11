@@ -74,7 +74,7 @@ class PoSViewModel @Inject constructor(
     }
 
     private fun createOrderItems(order: Order): List<OrderItemUiModel> {
-        val saleItemIds = order.allSaleItemIds()
+        val saleItemIds = order.sortedSaleItemIds()
         return generateOrderItemUiModels(saleItemIds)
     }
 

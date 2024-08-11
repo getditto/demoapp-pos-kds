@@ -1,5 +1,6 @@
 package live.ditto.pos.core.data
 
+import kotlinx.datetime.Instant
 import live.ditto.ditto_wrapper.DittoProperty
 import live.ditto.ditto_wrapper.MissingPropertyException
 import live.ditto.ditto_wrapper.deserializeProperty
@@ -12,8 +13,12 @@ data class Order(
     val status: Int,
     val transactionIds: Map<String, Int>
 ) {
-    fun allSaleItemIds(): Collection<String>? {
-        return saleItemIds?.values
+    fun sortedSaleItemIds(): Collection<String>? {
+        return saleItemIds?.mapKeys {
+            Instant.parse(it.key.substringAfter("_"))
+        }
+            ?.toSortedMap()
+            ?.values
     }
 
     fun getOrderId(): String {
@@ -38,7 +43,9 @@ fun DittoProperty.toOrder(): Order {
         id = deserializeProperty("_id"),
         createdOn = deserializeProperty("createdOn"),
         deviceId = deserializeProperty("deviceId"),
-        saleItemIds = try { deserializeProperty<MutableMap<String, String>?>("saleItemIds") } catch (e: MissingPropertyException) {
+        saleItemIds = try {
+            deserializeProperty<MutableMap<String, String>?>("saleItemIds")
+        } catch (e: MissingPropertyException) {
             null
         },
         status = deserializeProperty("status"),
