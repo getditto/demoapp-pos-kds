@@ -5,12 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.Order
@@ -30,6 +31,8 @@ class PoSViewModel @Inject constructor(
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
+    private var ordersJob: Job? = null
+
     private val _uiState = MutableStateFlow(
         PosUiState(
             currentOrderId = "",
@@ -41,31 +44,34 @@ class PoSViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getCurrentOrderUseCase()
-                .onEach(::updateOrder)
-                .flowOn(dispatcherIO)
-                .collect()
+            updateCurrentOrder()
         }
     }
 
     fun addItemToCart(saleItem: SaleItemUiModel) {
         viewModelScope.launch(dispatcherIO) {
-            addSaleItemToOrderUseCase(saleItem = saleItem)
+            addSaleItemToOrderUseCase(saleItemId = saleItem.id)
         }
     }
 
     fun payForOrder() {
+        ordersJob?.cancel()
         viewModelScope.launch(dispatcherIO) {
             val currentOrder = getCurrentOrderUseCase().first()
             payForOrderUseCase(order = currentOrder)
+
+            updateCurrentOrder()
         }
     }
 
-    private fun formatPrice(price: Float): String {
-        return NumberFormat.getCurrencyInstance().format(price)
+    private suspend fun updateCurrentOrder() {
+        ordersJob = getCurrentOrderUseCase()
+            .onEach { updateAppState(it) }
+            .flowOn(dispatcherIO)
+            .launchIn(viewModelScope)
     }
 
-    private fun updateOrder(order: Order) {
+    private fun updateAppState(order: Order) {
         val orderItems = createOrderItems(order)
         val orderTotal = calculateOrderTotal(orderItems)
         _uiState.value = _uiState.value.copy(
@@ -81,6 +87,10 @@ class PoSViewModel @Inject constructor(
             total += it.rawPrice
         }
         return formatPrice(total)
+    }
+
+    private fun formatPrice(price: Float): String {
+        return NumberFormat.getCurrencyInstance().format(price)
     }
 
     private fun createOrderItems(order: Order): List<OrderItemUiModel> {

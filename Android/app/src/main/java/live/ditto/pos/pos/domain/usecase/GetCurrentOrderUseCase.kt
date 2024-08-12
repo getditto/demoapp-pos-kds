@@ -33,8 +33,9 @@ class GetCurrentOrderUseCase @Inject constructor(
     }
 
     private suspend fun getOrCreateNewOrder(orders: List<Order>, currentOrderId: String): Order {
-        return orders.filter {
+        val order = orders.findOrderById(currentOrderId)?.takeIf {
             it.status == OrderStatus.OPEN.ordinal || it.status == OrderStatus.IN_PROCESS.ordinal
-        }.findOrderById(currentOrderId) ?: createNewOrderUseCase()
+        }
+        return order ?: createNewOrderUseCase()
     }
 }

@@ -12,7 +12,7 @@ class PayForOrderUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(order: Order) {
-        dittoRepository.updateOrderStatus(order, OrderStatus.PROCESSED)
         coreRepository.setCurrentOrderId("")
+        dittoRepository.updateOrderStatus(order, OrderStatus.PROCESSED)
     }
 }

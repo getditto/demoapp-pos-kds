@@ -2,7 +2,6 @@ package live.ditto.pos.pos.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import live.ditto.pos.core.domain.repository.DittoRepository
-import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 import java.util.UUID
 import javax.inject.Inject
 
@@ -19,7 +18,7 @@ class AddSaleItemToOrderUseCase @Inject constructor(
         const val SALE_ITEM_ID_FORMAT = "%s_%s"
     }
 
-    suspend operator fun invoke(saleItem: SaleItemUiModel) {
+    suspend operator fun invoke(saleItemId: String) {
         val currentOrder = getCurrentOrderUseCase().first()
 
         val saleItemIdKey = generateSaleItemIdKey()
@@ -27,7 +26,7 @@ class AddSaleItemToOrderUseCase @Inject constructor(
         dittoRepository.addItemToOrder(
             order = currentOrder,
             saleItemIdKey = saleItemIdKey,
-            saleItemId = saleItem.id
+            saleItemId = saleItemId
         )
     }
 
