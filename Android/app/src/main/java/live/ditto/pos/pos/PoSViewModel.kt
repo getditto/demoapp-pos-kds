@@ -64,6 +64,10 @@ class PoSViewModel @Inject constructor(
         }
     }
 
+    fun cancelOrder() {
+        // todo
+    }
+
     private suspend fun updateCurrentOrder() {
         ordersJob = getCurrentOrderUseCase()
             .onEach { updateAppState(it) }

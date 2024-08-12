@@ -17,7 +17,8 @@ fun CurrentOrder(
     orderId: String,
     orderItems: List<OrderItemUiModel>,
     orderTotal: String,
-    onPayButtonClicked: () -> Unit
+    onPayButtonClicked: () -> Unit,
+    onCancelButtonClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -32,7 +33,8 @@ fun CurrentOrder(
         CheckoutSection(
             orderTotal = orderTotal,
             isPayButtonEnabled = orderItems.isNotEmpty(),
-            onPayButtonClicked = onPayButtonClicked
+            onPayButtonClicked = onPayButtonClicked,
+            onCancelButtonClicked = onCancelButtonClicked
         )
     }
 }
@@ -44,6 +46,7 @@ private fun CurrentOrderViewPreview() {
         orderId = "#2311FFC",
         orderItems = emptyList(),
         orderTotal = "$13.37",
-        onPayButtonClicked = { }
+        onPayButtonClicked = { },
+        onCancelButtonClicked = {}
     )
 }

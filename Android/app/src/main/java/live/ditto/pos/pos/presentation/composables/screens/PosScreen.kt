@@ -43,7 +43,8 @@ fun PosScreen(
                 orderId = state.currentOrderId,
                 orderItems = state.orderItems,
                 orderTotal = state.orderTotal,
-                onPayButtonClicked = { viewModel.payForOrder() }
+                onPayButtonClicked = { viewModel.payForOrder() },
+                onCancelButtonClicked = { viewModel.cancelOrder() }
             )
         }
     }
