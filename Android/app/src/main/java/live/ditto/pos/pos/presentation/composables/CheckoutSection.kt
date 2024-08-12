@@ -27,6 +27,7 @@ import live.ditto.pos.R
 @Composable
 fun CheckoutSection(
     orderTotal: String,
+    isPayButtonEnabled: Boolean,
     onPayButtonClicked: () -> Unit
 ) {
     Column(
@@ -45,10 +46,15 @@ fun CheckoutSection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Box {
+                val colorFilter = if (isPayButtonEnabled) {
+                    ColorFilter.tint(Color.Red)
+                } else {
+                    ColorFilter.tint(Color.LightGray)
+                }
                 Image(
                     imageVector = Icons.Filled.Cancel,
                     contentDescription = stringResource(R.string.button_cancel_order),
-                    colorFilter = ColorFilter.tint(Color.Red),
+                    colorFilter = colorFilter,
                     modifier = Modifier
                         .width(48.dp)
                         .height(48.dp)
@@ -57,6 +63,7 @@ fun CheckoutSection(
                 )
             }
             Button(
+                enabled = isPayButtonEnabled,
                 onClick = { onPayButtonClicked() },
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
@@ -73,6 +80,7 @@ fun CheckoutSection(
 private fun CheckoutSectionPreview() {
     CheckoutSection(
         orderTotal = "$13.37",
+        isPayButtonEnabled = true,
         onPayButtonClicked = {}
     )
 }

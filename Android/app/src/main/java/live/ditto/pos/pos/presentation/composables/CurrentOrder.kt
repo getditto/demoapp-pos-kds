@@ -31,6 +31,7 @@ fun CurrentOrder(
         )
         CheckoutSection(
             orderTotal = orderTotal,
+            isPayButtonEnabled = orderItems.isNotEmpty(),
             onPayButtonClicked = onPayButtonClicked
         )
     }
