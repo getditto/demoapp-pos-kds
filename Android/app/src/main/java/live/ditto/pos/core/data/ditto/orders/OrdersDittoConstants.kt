@@ -19,6 +19,7 @@ const val GET_ORDERS_FOR_LOCATION_QUERY = """
 const val INSERT_NEW_ORDER_QUERY = """
     INSERT INTO COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
     DOCUMENTS (:new)
+    ON ID CONFLICT DO NOTHING
 """
 
 const val ADD_ITEM_TO_ORDER_QUERY = """
@@ -28,5 +29,11 @@ const val ADD_ITEM_TO_ORDER_QUERY = """
             $ORDERS_SALE_ITEM_ID_PLACEHOLDER = :saleItemIdValue
         ),
         status = :status
+    WHERE _id = :_id
+"""
+
+const val UPDATE_ORDER_STATUS_QUERY = """
+    UPDATE $ORDERS_COLLECTION_NAME
+    SET status = :status
     WHERE _id = :_id
 """

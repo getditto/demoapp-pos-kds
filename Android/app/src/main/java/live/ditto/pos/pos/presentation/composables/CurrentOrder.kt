@@ -16,7 +16,8 @@ import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 fun CurrentOrder(
     orderId: String,
     orderItems: List<OrderItemUiModel>,
-    orderTotal: String
+    orderTotal: String,
+    onPayButtonClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -28,7 +29,10 @@ fun CurrentOrder(
         OrderItemsList(
             orderItems = orderItems
         )
-        CheckoutSection(orderTotal)
+        CheckoutSection(
+            orderTotal = orderTotal,
+            onPayButtonClicked = onPayButtonClicked
+        )
     }
 }
 
@@ -38,6 +42,7 @@ private fun CurrentOrderViewPreview() {
     CurrentOrder(
         orderId = "#2311FFC",
         orderItems = emptyList(),
-        orderTotal = "$13.37"
+        orderTotal = "$13.37",
+        onPayButtonClicked = { }
     )
 }

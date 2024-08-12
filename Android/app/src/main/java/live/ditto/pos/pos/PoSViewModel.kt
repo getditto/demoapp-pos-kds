@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -16,14 +17,16 @@ import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.demoMenuData
 import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
 import live.ditto.pos.pos.domain.usecase.GetCurrentOrderUseCase
+import live.ditto.pos.pos.domain.usecase.PayForOrderUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 import javax.inject.Inject
 
 @HiltViewModel
 class PoSViewModel @Inject constructor(
-    getCurrentOrderUseCase: GetCurrentOrderUseCase,
+    private val getCurrentOrderUseCase: GetCurrentOrderUseCase,
     private val addSaleItemToOrderUseCase: AddSaleItemToOrderUseCase,
+    private val payForOrderUseCase: PayForOrderUseCase,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -48,6 +51,13 @@ class PoSViewModel @Inject constructor(
     fun addItemToCart(saleItem: SaleItemUiModel) {
         viewModelScope.launch(dispatcherIO) {
             addSaleItemToOrderUseCase(saleItem = saleItem)
+        }
+    }
+
+    fun payForOrder() {
+        viewModelScope.launch(dispatcherIO) {
+            val currentOrder = getCurrentOrderUseCase().first()
+            payForOrderUseCase(order = currentOrder)
         }
     }
 

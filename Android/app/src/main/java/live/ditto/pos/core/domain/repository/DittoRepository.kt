@@ -14,6 +14,7 @@ import live.ditto.pos.core.data.ditto.orders.GetOrdersForLocationDittoQuery
 import live.ditto.pos.core.data.ditto.orders.OrdersDittoCollectionSubscription
 import live.ditto.pos.pos.data.ditto.AddItemToOrderDittoQuery
 import live.ditto.pos.pos.data.ditto.InsertNewOrderDittoQuery
+import live.ditto.pos.pos.data.ditto.UpdateOrderStatusDittoQuery
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -79,6 +80,14 @@ class DittoRepository @Inject constructor(
             saleItemIdValue = saleItemId
         )
         dittoStoreManager.executeQuery(dittoQuery = addItemToOrderDittoQuery)
+    }
+
+    suspend fun updateOrderStatus(order: Order, orderStatus: OrderStatus) {
+        val updateOrderStatusQuery = UpdateOrderStatusDittoQuery(
+            orderId = order.id,
+            orderStatus = orderStatus
+        )
+        dittoStoreManager.executeQuery(dittoQuery = updateOrderStatusQuery)
     }
 
     suspend fun getLocationById(locationId: String): Location? {

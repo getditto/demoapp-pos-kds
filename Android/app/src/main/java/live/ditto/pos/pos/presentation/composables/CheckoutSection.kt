@@ -25,7 +25,10 @@ import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
 
 @Composable
-fun CheckoutSection(orderTotal: String) {
+fun CheckoutSection(
+    orderTotal: String,
+    onPayButtonClicked: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -54,7 +57,7 @@ fun CheckoutSection(orderTotal: String) {
                 )
             }
             Button(
-                onClick = { /*TODO*/ },
+                onClick = { onPayButtonClicked() },
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
                 modifier = Modifier.fillMaxWidth()
@@ -68,5 +71,8 @@ fun CheckoutSection(orderTotal: String) {
 @Preview
 @Composable
 private fun CheckoutSectionPreview() {
-    CheckoutSection("$13.37")
+    CheckoutSection(
+        orderTotal = "$13.37",
+        onPayButtonClicked = {}
+    )
 }
