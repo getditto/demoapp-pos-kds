@@ -1,10 +1,11 @@
-package live.ditto.pos.core.data.ditto.orders
+package live.ditto.pos.core.data.orders.ditto
 
 const val ORDERS_COLLECTION_NAME = "orders"
 
 const val LOCATION_ID_ATTRIBUTE_KEY = "locationId"
 
-const val ORDERS_SALE_ITEM_ID_PLACEHOLDER = ":saleItemIdKey"
+const val ORDERS_SALE_ITEM_ID_PLACEHOLDER = "{saleItemIdKey}"
+const val ORDERS_TRANSACTION_ID_PLACEHOLDER = "{transactionId}"
 
 const val SUBSCRIPTION_QUERY = """
     SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
@@ -26,7 +27,7 @@ const val ADD_ITEM_TO_ORDER_QUERY = """
     UPDATE COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
     SET
         saleItemIds -> (
-            $ORDERS_SALE_ITEM_ID_PLACEHOLDER = :saleItemIdValue
+            `$ORDERS_SALE_ITEM_ID_PLACEHOLDER` = :saleItemIdValue
         ),
         status = :status
     WHERE _id = :_id
@@ -35,5 +36,14 @@ const val ADD_ITEM_TO_ORDER_QUERY = """
 const val UPDATE_ORDER_STATUS_QUERY = """
     UPDATE $ORDERS_COLLECTION_NAME
     SET status = :status
+    WHERE _id = :_id
+"""
+
+const val ADD_TRANSACTION_TO_ORDER_QUERY = """
+    UPDATE COLLECTION $ORDERS_COLLECTION_NAME (transactionIds MAP)
+    SET
+        transactionIds -> (
+            `$ORDERS_TRANSACTION_ID_PLACEHOLDER` = :status
+        )
     WHERE _id = :_id
 """

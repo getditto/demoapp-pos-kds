@@ -5,13 +5,16 @@ import kotlinx.coroutines.flow.first
 import live.ditto.Ditto
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
-import live.ditto.pos.core.data.Location
-import live.ditto.pos.core.data.Order
-import live.ditto.pos.core.data.OrderStatus
-import live.ditto.pos.core.data.ditto.location.GetAllLocationsDittoSelectQuery
-import live.ditto.pos.core.data.ditto.location.LocationsDittoCollectionSubscription
-import live.ditto.pos.core.data.ditto.orders.GetOrdersForLocationDittoQuery
-import live.ditto.pos.core.data.ditto.orders.OrdersDittoCollectionSubscription
+import live.ditto.pos.core.data.locations.Location
+import live.ditto.pos.core.data.locations.ditto.GetAllLocationsDittoSelectQuery
+import live.ditto.pos.core.data.locations.ditto.LocationsDittoCollectionSubscription
+import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.core.data.orders.ditto.AddTransactionToOrderDittoQuery
+import live.ditto.pos.core.data.orders.ditto.GetOrdersForLocationDittoQuery
+import live.ditto.pos.core.data.orders.ditto.OrdersDittoCollectionSubscription
+import live.ditto.pos.core.data.transactions.Transaction
+import live.ditto.pos.core.data.transactions.ditto.AddNewTransactionDittoQuery
 import live.ditto.pos.pos.data.ditto.AddItemToOrderDittoQuery
 import live.ditto.pos.pos.data.ditto.InsertNewOrderDittoQuery
 import live.ditto.pos.pos.data.ditto.UpdateOrderStatusDittoQuery
@@ -94,5 +97,21 @@ class DittoRepository @Inject constructor(
         return dittoStoreManager.executeQuery(GetAllLocationsDittoSelectQuery())
             .first()
             .find { it.id == locationId }
+    }
+
+    suspend fun addTransaction(
+        transaction: Transaction,
+        order: Order
+    ) {
+        val addNewTransactionQuery = AddNewTransactionDittoQuery(
+            transaction = transaction
+        )
+        dittoStoreManager.executeQuery(dittoQuery = addNewTransactionQuery)
+
+        val addTransactionToOrderQuery = AddTransactionToOrderDittoQuery(
+            transaction = transaction,
+            orderId = order.id
+        )
+        dittoStoreManager.executeQuery(dittoQuery = addTransactionToOrderQuery)
     }
 }

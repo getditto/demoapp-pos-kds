@@ -1,4 +1,4 @@
-package live.ditto.pos.core.data
+package live.ditto.pos.core.data.orders
 
 enum class OrderStatus(title: String) {
     OPEN("open"),

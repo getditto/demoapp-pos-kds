@@ -6,5 +6,5 @@ data class SaleItemUiModel(
     val id: String,
     @DrawableRes val imageResource: Int,
     val label: String,
-    val price: Float = 0f
+    val price: Double = 0.0
 )

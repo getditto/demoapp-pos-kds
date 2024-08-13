@@ -2,9 +2,9 @@ package live.ditto.pos.pos.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import live.ditto.pos.core.data.Order
-import live.ditto.pos.core.data.OrderStatus
-import live.ditto.pos.core.data.findOrderById
+import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.core.data.orders.findOrderById
 import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject

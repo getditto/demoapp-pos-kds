@@ -1,9 +1,9 @@
-package live.ditto.pos.core.data.ditto.location
+package live.ditto.pos.core.data.locations.ditto
 
 import live.ditto.ditto_wrapper.DittoPropertyDeserializer
 import live.ditto.ditto_wrapper.dittowrappers.DittoSelectQuery
-import live.ditto.pos.core.data.Location
-import live.ditto.pos.core.data.toLocation
+import live.ditto.pos.core.data.locations.Location
+import live.ditto.pos.core.data.locations.toLocation
 
 class GetAllLocationsDittoSelectQuery : DittoSelectQuery<List<Location>> {
 

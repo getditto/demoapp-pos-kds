@@ -1,7 +1,7 @@
 package live.ditto.pos.pos.domain.usecase
 
-import live.ditto.pos.core.data.Order
-import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderStatus
 import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject
@@ -22,7 +22,7 @@ class CreateNewOrderUseCase @Inject constructor(
                 "locationId" to currentLocationId
             ),
             createdOn = currentTimeStringUseCase(),
-            deviceId = dittoRepository.getDeviceId(), // todo
+            deviceId = dittoRepository.getDeviceId(),
             saleItemIds = null,
             status = OrderStatus.OPEN.ordinal,
             transactionIds = emptyMap()

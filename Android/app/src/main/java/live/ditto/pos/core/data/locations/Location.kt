@@ -1,4 +1,4 @@
-package live.ditto.pos.core.data
+package live.ditto.pos.core.data.locations
 
 import live.ditto.ditto_wrapper.DittoProperty
 import live.ditto.ditto_wrapper.deserializeProperty

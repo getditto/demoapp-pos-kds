@@ -1,7 +1,7 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.data.Location
 import live.ditto.pos.core.data.demoLocations
+import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
 import javax.inject.Inject

@@ -22,8 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import live.ditto.pos.core.data.Location
 import live.ditto.pos.core.data.demoLocations
+import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 
 @Composable

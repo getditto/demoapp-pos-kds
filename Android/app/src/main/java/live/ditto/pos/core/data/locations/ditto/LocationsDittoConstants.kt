@@ -1,4 +1,4 @@
-package live.ditto.pos.core.data.ditto.location
+package live.ditto.pos.core.data.locations.ditto
 
 const val LOCATIONS_COLLECTIONS_NAME = "locations"
 

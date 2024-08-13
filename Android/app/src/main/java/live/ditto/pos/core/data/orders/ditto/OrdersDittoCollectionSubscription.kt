@@ -1,4 +1,4 @@
-package live.ditto.pos.core.data.ditto.orders
+package live.ditto.pos.core.data.orders.ditto
 
 import live.ditto.ditto_wrapper.dittowrappers.DittoCollectionSubscription
 

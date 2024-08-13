@@ -9,14 +9,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import live.ditto.pos.core.data.Order
 import live.ditto.pos.core.data.demoMenuData
+import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
+import live.ditto.pos.pos.domain.usecase.CalculateOrderTotalUseCase
 import live.ditto.pos.pos.domain.usecase.GetCurrentOrderUseCase
 import live.ditto.pos.pos.domain.usecase.PayForOrderUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
@@ -28,6 +28,7 @@ class PoSViewModel @Inject constructor(
     private val getCurrentOrderUseCase: GetCurrentOrderUseCase,
     private val addSaleItemToOrderUseCase: AddSaleItemToOrderUseCase,
     private val payForOrderUseCase: PayForOrderUseCase,
+    private val calculateOrderTotalUseCase: CalculateOrderTotalUseCase,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -57,9 +58,7 @@ class PoSViewModel @Inject constructor(
     fun payForOrder() {
         ordersJob?.cancel()
         viewModelScope.launch(dispatcherIO) {
-            val currentOrder = getCurrentOrderUseCase().first()
-            payForOrderUseCase(order = currentOrder)
-
+            payForOrderUseCase()
             updateCurrentOrder()
         }
     }
@@ -77,7 +76,7 @@ class PoSViewModel @Inject constructor(
 
     private fun updateAppState(order: Order) {
         val orderItems = createOrderItems(order)
-        val orderTotal = calculateOrderTotal(orderItems)
+        val orderTotal = formattedOrderTotal(order)
         _uiState.value = _uiState.value.copy(
             currentOrderId = order.getOrderId(),
             orderItems = orderItems,
@@ -85,15 +84,12 @@ class PoSViewModel @Inject constructor(
         )
     }
 
-    private fun calculateOrderTotal(orderItems: List<OrderItemUiModel>): String {
-        var total = 0F
-        orderItems.forEach {
-            total += it.rawPrice
-        }
+    private fun formattedOrderTotal(order: Order): String {
+        val total = calculateOrderTotalUseCase(order = order)
         return formatPrice(total)
     }
 
-    private fun formatPrice(price: Float): String {
+    private fun formatPrice(price: Double): String {
         return NumberFormat.getCurrencyInstance().format(price)
     }
 
@@ -108,8 +104,8 @@ class PoSViewModel @Inject constructor(
                 val saleItem = demoMenuData.find { it.id == id }
                 OrderItemUiModel(
                     name = saleItem?.label ?: "",
-                    price = formatPrice(saleItem?.price ?: 0F),
-                    rawPrice = saleItem?.price ?: 0F
+                    price = formatPrice(saleItem?.price ?: 0.0),
+                    rawPrice = saleItem?.price ?: 0.0
                 )
             }
         } ?: emptyList()
