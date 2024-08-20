@@ -27,13 +27,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.core.data.demoTicketItems
+import live.ditto.pos.core.data.orders.OrderStatus
 import live.ditto.pos.kds.TicketItemUi
-import live.ditto.pos.ui.theme.SelectedTicketBackground
-import live.ditto.pos.ui.theme.UnselectedTicketBackground
+import live.ditto.pos.ui.theme.CanceledStatusTicketColor
+import live.ditto.pos.ui.theme.DeliveredStatusTicketColor
+import live.ditto.pos.ui.theme.InProcessStatusTicketColor
+import live.ditto.pos.ui.theme.OpenStatusTicketColor
+import live.ditto.pos.ui.theme.ProcessedStatusTicketColor
 
 @Composable
 fun TicketGrid(ticketItems: List<TicketItemUi>) {
@@ -65,13 +70,23 @@ fun TicketItem(ticketItemUi: TicketItemUi) {
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            TicketHeader(ticketItemUi.header, isSelected)
+            val ticketColor = when (ticketItemUi.orderStatus) {
+                OrderStatus.OPEN -> OpenStatusTicketColor
+                OrderStatus.IN_PROCESS -> InProcessStatusTicketColor
+                OrderStatus.PROCESSED -> ProcessedStatusTicketColor
+                OrderStatus.DELIVERED -> DeliveredStatusTicketColor
+                OrderStatus.CANCELED -> CanceledStatusTicketColor
+            }
+            TicketHeader(
+                headerText = ticketItemUi.header,
+                ticketColor = ticketColor
+            )
             TicketItems(ticketItemUi.items)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(28.dp)
-                    .background(if (isSelected) SelectedTicketBackground else UnselectedTicketBackground)
+                    .background(color = ticketColor)
             ) {
                 if (ticketItemUi.isPaid) {
                     val icon = Icons.Outlined.CheckCircle
@@ -116,8 +131,11 @@ private fun TicketItems(itemsMap: HashMap<String, Int>) {
 }
 
 @Composable
-private fun TicketHeader(headerText: String, isSelected: Boolean) {
-    Box(modifier = Modifier.background(color = if (isSelected) SelectedTicketBackground else UnselectedTicketBackground)) {
+private fun TicketHeader(
+    headerText: String,
+    ticketColor: Color
+) {
+    Box(modifier = Modifier.background(color = ticketColor)) {
         Text(
             text = headerText,
             modifier = Modifier
@@ -137,7 +155,7 @@ private fun TicketItemsPreview() {
 @Preview
 @Composable
 private fun TicketHeaderPreview() {
-    TicketHeader(headerText = "Header Text", true)
+    TicketHeader(headerText = "Header Text", OpenStatusTicketColor)
 }
 
 @Preview
