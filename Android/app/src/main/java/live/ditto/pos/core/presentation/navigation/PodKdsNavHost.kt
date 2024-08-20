@@ -26,14 +26,7 @@ fun PosKdsNavHost(
             KdsScreen()
         }
         composable(NavigationDrawerItem.DittoToolsDrawerItem.route) {
-            DittoToolsViewer(
-                ditto = viewModel.requireDitto(),
-                onExitTools = {
-                    navHostController.navigate(BottomNavItem.PointOfSale.route) {
-                        popUpTo(BottomNavItem.PointOfSale.route)
-                    }
-                }
-            )
+            DittoToolsViewer(ditto = viewModel.requireDitto())
         }
     }
 }

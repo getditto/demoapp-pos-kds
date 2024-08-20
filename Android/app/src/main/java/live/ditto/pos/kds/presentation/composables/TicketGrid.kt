@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.core.data.demoTicketItems
+import live.ditto.pos.kds.TicketItemUi
 import live.ditto.pos.ui.theme.SelectedTicketBackground
 import live.ditto.pos.ui.theme.UnselectedTicketBackground
 
@@ -124,11 +125,6 @@ private fun TicketHeader(headerText: String, isSelected: Boolean) {
         )
     }
 }
-
-data class TicketItemUi(
-    val header: String,
-    val items: HashMap<String, Int>
-)
 
 @Preview
 @Composable

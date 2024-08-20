@@ -2,7 +2,8 @@ package live.ditto.pos.core.data
 
 import live.ditto.pos.R
 import live.ditto.pos.core.data.locations.Location
-import live.ditto.pos.kds.presentation.composables.TicketItemUi
+import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.kds.TicketItemUi
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 
@@ -155,7 +156,9 @@ val demoTicketItems = listOf(
             "Burger" to 1,
             "Coffee" to 1,
             "Milk" to 3
-        )
+        ),
+        isPaid = true,
+        orderStatus = OrderStatus.PROCESSED
     ),
     TicketItemUi(
         header = "9:56 AM #09FBC2",
@@ -164,7 +167,9 @@ val demoTicketItems = listOf(
             "Coffee" to 1,
             "Corn" to 1,
             "Cereal" to 5
-        )
+        ),
+        isPaid = false,
+        orderStatus = OrderStatus.IN_PROCESS
     )
 )
 
