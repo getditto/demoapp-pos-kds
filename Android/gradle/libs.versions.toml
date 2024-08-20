@@ -4,7 +4,8 @@ agp = "8.3.0"
 composeBom = "2024.02.02"
 coreKtx = "1.12.0"
 datastorePreferences = "1.1.1"
-ditto = "4.7.3"
+ditto = "4.7.4"
+ditto-tools = "SNAPSHOT"
 espressoCore = "3.5.1"
 hiltAndroid = "2.51"
 hiltNavigationCompose = "1.2.0"
@@ -15,10 +16,6 @@ ktlint = "11.6.1"
 lifecycleRuntimeKtx = "2.7.0"
 materialIconsExtendedAndroid = "1.6.3"
 navigationCompose = "2.7.7"
-ditto-presence-viewer = "0.0.4"
-live-ditto-databrowser = "0.0.5"
-live-ditto-exportlogs = "0.0.5"
-live-ditto-health = "0.0.4"
 appcompat = "1.7.0"
 material = "1.12.0"
 kotlinxDatetime = "0.6.0"
@@ -43,14 +40,11 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 ditto = { module = "live.ditto:ditto", version.ref = "ditto" }
+ditto-tools-viewer = { module = "live.ditto:dittotoolsviewer", version.ref = "ditto-tools" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { module = "junit:junit", version.ref = "junit" }
-live-ditto-presenceviewer = { module = "live.ditto:dittopresenceviewer", version.ref = "ditto-presence-viewer" }
-live-ditto-databrowser = { module = "live.ditto:dittodatabrowser", version.ref = "live-ditto-databrowser" }
-live-ditto-exportlogs = { module = "live.ditto:dittoexportlogs", version.ref = "live-ditto-exportlogs" }
-live-ditto-health = { module = "live.ditto:health", version.ref = "live-ditto-health" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }

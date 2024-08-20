@@ -121,22 +121,7 @@ dependencies {
     // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
 
-    implementation(files("./libs/DittoToolsViewer.aar"))
-
-    // todo: remove local imports
-    // these deps have to be pulled in when testing with a local .aar
-    implementation(libs.live.ditto.databrowser)
-    implementation(libs.live.ditto.exportlogs)
-    implementation(libs.live.ditto.presenceviewer)
-    implementation(files("./libs/DittoExporter.aar"))
-
-    implementation(files("./libs/DittoHeartbeat.aar"))
-
-    implementation(files("./libs/DittoDiskUsage.aar"))
-
-    implementation(libs.live.ditto.health)
-    implementation(files("./libs/DittoPresenceDegradationReporter.aar"))
-    implementation(files("./libs/DittoHealthMetrics.aar"))
+    implementation(libs.ditto.tools.viewer)
 
     // Jetpack Datastore
     implementation(libs.androidx.datastore.preferences)
