@@ -73,14 +73,16 @@ fun TicketItem(ticketItemUi: TicketItemUi) {
                     .height(28.dp)
                     .background(if (isSelected) SelectedTicketBackground else UnselectedTicketBackground)
             ) {
-                val icon = Icons.Outlined.CheckCircle
-                Image(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .align(Alignment.CenterEnd),
-                    imageVector = icon,
-                    contentDescription = "Check Mark"
-                )
+                if (ticketItemUi.isPaid) {
+                    val icon = Icons.Outlined.CheckCircle
+                    Image(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.CenterEnd),
+                        imageVector = icon,
+                        contentDescription = "Check Mark"
+                    )
+                }
             }
         }
     }
