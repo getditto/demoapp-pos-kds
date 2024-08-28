@@ -47,3 +47,10 @@ const val ADD_TRANSACTION_TO_ORDER_QUERY = """
         )
     WHERE _id = :_id
 """
+
+const val CLEAR_SALE_ITEMS_ORDER_QUERY = """
+    UPDATE COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP)
+    SET
+        saleItemIds -> tombstone()
+    WHERE _id = :_id
+"""

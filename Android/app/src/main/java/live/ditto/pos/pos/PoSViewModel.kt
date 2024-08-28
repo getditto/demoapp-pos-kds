@@ -17,6 +17,7 @@ import live.ditto.pos.core.data.demoMenuData
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
 import live.ditto.pos.pos.domain.usecase.CalculateOrderTotalUseCase
+import live.ditto.pos.pos.domain.usecase.ClearCurrentOrderSaleItemsUseCase
 import live.ditto.pos.pos.domain.usecase.GetCurrentOrderUseCase
 import live.ditto.pos.pos.domain.usecase.PayForOrderUseCase
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
@@ -29,6 +30,7 @@ class PoSViewModel @Inject constructor(
     private val addSaleItemToOrderUseCase: AddSaleItemToOrderUseCase,
     private val payForOrderUseCase: PayForOrderUseCase,
     private val calculateOrderTotalUseCase: CalculateOrderTotalUseCase,
+    private val clearCurrentOrderSaleItemsUseCase: ClearCurrentOrderSaleItemsUseCase,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -63,8 +65,10 @@ class PoSViewModel @Inject constructor(
         }
     }
 
-    fun cancelOrder() {
-        // todo
+    fun clearItems() {
+        viewModelScope.launch {
+            clearCurrentOrderSaleItemsUseCase()
+        }
     }
 
     private suspend fun updateCurrentOrder() {

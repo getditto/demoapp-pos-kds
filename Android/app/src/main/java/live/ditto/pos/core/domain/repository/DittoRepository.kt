@@ -16,6 +16,7 @@ import live.ditto.pos.core.data.orders.ditto.OrdersDittoCollectionSubscription
 import live.ditto.pos.core.data.transactions.Transaction
 import live.ditto.pos.core.data.transactions.ditto.AddNewTransactionDittoQuery
 import live.ditto.pos.pos.data.ditto.AddItemToOrderDittoQuery
+import live.ditto.pos.pos.data.ditto.ClearSaleItemsDittoQuery
 import live.ditto.pos.pos.data.ditto.InsertNewOrderDittoQuery
 import live.ditto.pos.pos.data.ditto.UpdateOrderStatusDittoQuery
 import javax.inject.Inject
@@ -113,5 +114,10 @@ class DittoRepository @Inject constructor(
             orderId = order.id
         )
         dittoStoreManager.executeQuery(dittoQuery = addTransactionToOrderQuery)
+    }
+
+    suspend fun clearSaleItemIds(order: Order) {
+        val clearSaleItemsDittoQuery = ClearSaleItemsDittoQuery(order = order)
+        dittoStoreManager.executeQuery(dittoQuery = clearSaleItemsDittoQuery)
     }
 }

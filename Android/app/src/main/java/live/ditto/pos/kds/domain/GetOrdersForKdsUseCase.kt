@@ -18,9 +18,17 @@ class GetOrdersForKdsUseCase @Inject constructor(
         return dittoRepository.ordersForLocation(locationId)
             .map { orders ->
                 orders.filter { order ->
-                    order.status == OrderStatus.IN_PROCESS.ordinal ||
-                        order.status == OrderStatus.PROCESSED.ordinal
+                    order.hasCorrectOrderStatus() && order.hasItems()
                 }
             }
+    }
+
+    private fun Order.hasItems(): Boolean {
+        return this.saleItemIds?.isNotEmpty() ?: false
+    }
+
+    private fun Order.hasCorrectOrderStatus(): Boolean {
+        return this.status == OrderStatus.IN_PROCESS.ordinal ||
+            this.status == OrderStatus.PROCESSED.ordinal
     }
 }
