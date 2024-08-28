@@ -4,6 +4,7 @@ import kotlinx.datetime.Instant
 import live.ditto.ditto_wrapper.DittoProperty
 import live.ditto.ditto_wrapper.MissingPropertyException
 import live.ditto.ditto_wrapper.deserializeProperty
+import live.ditto.pos.core.data.transactions.TransactionStatus
 
 data class Order(
     val id: Map<String, String>,
@@ -13,6 +14,11 @@ data class Order(
     val status: Int,
     val transactionIds: Map<String, Int>
 ) {
+
+    fun isPaid(): Boolean {
+        return transactionIds.values.contains(TransactionStatus.COMPLETE.ordinal)
+    }
+
     fun sortedSaleItemIds(): Collection<String>? {
         return saleItemIds?.mapKeys {
             Instant.parse(it.key.substringAfter("_"))

@@ -22,8 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +39,10 @@ import live.ditto.pos.ui.theme.OpenStatusTicketColor
 import live.ditto.pos.ui.theme.ProcessedStatusTicketColor
 
 @Composable
-fun TicketGrid(ticketItems: List<TicketItemUi>) {
+fun TicketGrid(
+    ticketItems: List<TicketItemUi>,
+    onTicketClicked: (orderId: String) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -49,22 +50,24 @@ fun TicketGrid(ticketItems: List<TicketItemUi>) {
         contentPadding = PaddingValues(8.dp)
     ) {
         items(ticketItems) { ticketItem ->
-            TicketItem(ticketItemUi = ticketItem)
+            TicketItem(
+                ticketItemUi = ticketItem,
+                onTicketClicked = onTicketClicked
+            )
         }
     }
 }
 
 @Composable
-fun TicketItem(ticketItemUi: TicketItemUi) {
-    var isSelected by remember {
-        mutableStateOf(false)
-    }
-
+fun TicketItem(
+    ticketItemUi: TicketItemUi,
+    onTicketClicked: (orderId: String) -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
-        onClick = { isSelected = !isSelected }
+        onClick = { onTicketClicked(ticketItemUi.orderId) }
     ) {
         Column(
             modifier = Modifier
@@ -161,11 +164,17 @@ private fun TicketHeaderPreview() {
 @Preview
 @Composable
 private fun TicketItemPreview() {
-    TicketItem(ticketItemUi = demoTicketItems.first())
+    TicketItem(
+        ticketItemUi = demoTicketItems.first(),
+        onTicketClicked = {}
+    )
 }
 
 @Preview
 @Composable
 private fun TicketGridPreview() {
-    TicketGrid(ticketItems = demoTicketItems)
+    TicketGrid(
+        ticketItems = demoTicketItems,
+        onTicketClicked = {}
+    )
 }

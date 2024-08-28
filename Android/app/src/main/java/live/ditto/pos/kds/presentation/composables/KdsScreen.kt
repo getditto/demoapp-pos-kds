@@ -13,7 +13,12 @@ fun KdsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    TicketGrid(ticketItems = state.tickets)
+    TicketGrid(
+        ticketItems = state.tickets,
+        onTicketClicked = { orderId ->
+            viewModel.updateTicketStatus(orderId)
+        }
+    )
 }
 
 @Preview

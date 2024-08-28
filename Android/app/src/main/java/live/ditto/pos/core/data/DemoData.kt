@@ -158,7 +158,8 @@ val demoTicketItems = listOf(
             "Milk" to 3
         ),
         isPaid = true,
-        orderStatus = OrderStatus.PROCESSED
+        orderStatus = OrderStatus.PROCESSED,
+        orderId = ""
     ),
     TicketItemUi(
         header = "9:56 AM #09FBC2",
@@ -169,7 +170,8 @@ val demoTicketItems = listOf(
             "Cereal" to 5
         ),
         isPaid = false,
-        orderStatus = OrderStatus.IN_PROCESS
+        orderStatus = OrderStatus.IN_PROCESS,
+        orderId = ""
     )
 )
 
