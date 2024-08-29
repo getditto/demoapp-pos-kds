@@ -24,8 +24,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import live.ditto.pos.core.presentation.composables.PosKDSNavigationDrawer
-import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
+import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
+import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
@@ -87,6 +87,7 @@ private fun PosKDSScaffold(
     Scaffold(
         bottomBar = {
             PosKdsNavigationBar(
+                showDemoLocationsNavItem = state.isDemoLocationsMode,
                 onItemClick = {
                     navHostController.navigate(route = it.route)
                 }

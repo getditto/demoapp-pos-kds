@@ -1,4 +1,4 @@
-package live.ditto.pos.core.presentation.composables
+package live.ditto.pos.core.presentation.composables.navigation
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -15,16 +15,20 @@ import live.ditto.pos.core.presentation.navigation.BottomNavItem
 
 @Composable
 fun PosKdsNavigationBar(
+    showDemoLocationsNavItem: Boolean,
     onItemClick: (bottomNavItem: BottomNavItem) -> Unit
 ) {
     var selectedItemIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
 
-    val bottomNavItems = listOf(
-        BottomNavItem.PointOfSale,
-        BottomNavItem.KitchenDisplay
-    )
+    val bottomNavItems = buildList {
+        add(BottomNavItem.PointOfSale)
+        add(BottomNavItem.KitchenDisplay)
+        if (showDemoLocationsNavItem) {
+            add(BottomNavItem.DemoLocationSelection)
+        }
+    }
 
     NavigationBar {
         bottomNavItems.forEachIndexed { index, item ->
@@ -56,6 +60,7 @@ fun PosKdsNavigationBar(
 @Composable
 private fun PosKdsNavigationBarPreview() {
     PosKdsNavigationBar(
+        showDemoLocationsNavItem = true,
         onItemClick = { }
     )
 }

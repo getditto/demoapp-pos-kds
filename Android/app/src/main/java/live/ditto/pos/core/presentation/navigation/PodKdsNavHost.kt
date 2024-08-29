@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import live.ditto.dittotoolsviewer.presentation.DittoToolsViewer
+import live.ditto.pos.core.presentation.composables.screens.DemoLocationSelectionScreen
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
@@ -24,6 +25,9 @@ fun PosKdsNavHost(
         }
         composable(BottomNavItem.KitchenDisplay.route) {
             KdsScreen()
+        }
+        composable(BottomNavItem.DemoLocationSelection.route) {
+            DemoLocationSelectionScreen()
         }
         composable(NavigationDrawerItem.DittoToolsDrawerItem.route) {
             DittoToolsViewer(ditto = viewModel.requireDitto())

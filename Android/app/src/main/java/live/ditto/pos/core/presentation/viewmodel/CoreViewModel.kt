@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import live.ditto.Ditto
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.IsSetupValidUseCase
+import live.ditto.pos.core.domain.usecase.IsUsingDemoLocationsUseCase
 import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.UseDemoLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
@@ -24,13 +25,15 @@ class CoreViewModel @Inject constructor(
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
     private val setCurrentLocationUseCase: SetCurrentLocationUseCase,
-    private val useDemoLocationUseCase: UseDemoLocationUseCase
+    private val useDemoLocationUseCase: UseDemoLocationUseCase,
+    private val isUsingDemoLocationsUseCase: IsUsingDemoLocationsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         AppState(
             currentLocationName = "",
-            isSetupValid = false
+            isSetupValid = false,
+            isDemoLocationsMode = false
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -59,13 +62,28 @@ class CoreViewModel @Inject constructor(
         }
     }
 
+    fun shouldUseDemoLocations(shouldUseDemoLocations: Boolean) {
+        viewModelScope.launch {
+            useDemoLocationUseCase(shouldUseDemoLocations)
+            updateIsUsingDemoLocations(isUsingDemoLocations = shouldUseDemoLocations)
+        }
+    }
+
     private suspend fun validateSetup(locationId: String? = null) {
         locationId?.let {
             setCurrentLocationUseCase(locationId = locationId)
         }
         val isSetupValid = isSetupValidUseCase()
+        val isUsingDemoLocations = isUsingDemoLocationsUseCase()
         updateSetupState(setupValid = isSetupValid)
         updateLocationName()
+        updateIsUsingDemoLocations(isUsingDemoLocations = isUsingDemoLocations)
+    }
+
+    private fun updateIsUsingDemoLocations(isUsingDemoLocations: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isDemoLocationsMode = isUsingDemoLocations
+        )
     }
 
     private suspend fun updateLocationName() {
@@ -80,15 +98,10 @@ class CoreViewModel @Inject constructor(
             isSetupValid = setupValid
         )
     }
-
-    fun shouldUseDemoLocations(shouldUseDemoLocations: Boolean) {
-        viewModelScope.launch {
-            useDemoLocationUseCase(shouldUseDemoLocations)
-        }
-    }
 }
 
 data class AppState(
     val currentLocationName: String,
-    val isSetupValid: Boolean
+    val isSetupValid: Boolean,
+    val isDemoLocationsMode: Boolean
 )

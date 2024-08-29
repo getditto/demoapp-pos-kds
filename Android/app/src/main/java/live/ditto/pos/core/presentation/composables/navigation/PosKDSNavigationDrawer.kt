@@ -1,4 +1,4 @@
-package live.ditto.pos.core.presentation.composables
+package live.ditto.pos.core.presentation.composables.navigation
 
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ModalDrawerSheet

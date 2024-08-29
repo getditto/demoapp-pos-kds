@@ -2,8 +2,10 @@ package live.ditto.pos.core.presentation.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,5 +29,12 @@ sealed class BottomNavItem(
         selectedIcon = Icons.Filled.Receipt,
         unselectedIcon = Icons.Outlined.Receipt,
         label = R.string.navigation_label_kds
+    )
+
+    data object DemoLocationSelection : BottomNavItem(
+        route = "location_selection",
+        selectedIcon = Icons.Filled.LocationOn,
+        unselectedIcon = Icons.Outlined.LocationOn,
+        label = R.string.navigation_label_location
     )
 }

@@ -1,14 +1,9 @@
 package live.ditto.pos.core.presentation.composables.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -18,12 +13,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import live.ditto.pos.core.data.demoLocations
-import live.ditto.pos.core.data.locations.Location
+import live.ditto.pos.core.presentation.composables.CardWithTitle
+import live.ditto.pos.core.presentation.composables.DemoLocationsList
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 
 @Composable
@@ -87,22 +81,6 @@ private fun InitialLocationsDialog(
 }
 
 @Composable
-private fun DemoLocationsList(
-    onDemoLocationSelected: (Location) -> Unit
-) {
-    CardWithTitle(title = "Please Select Location") {
-        demoLocations.forEach {
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onDemoLocationSelected(it) }
-            ) {
-                Text(text = it.name)
-            }
-        }
-    }
-}
-
-@Composable
 private fun CustomLocationScreen() {
     CardWithTitle(title = "Profile") {
         var companyName by rememberSaveable {
@@ -128,27 +106,6 @@ private fun CustomLocationScreen() {
             onClick = { /*TODO*/ }
         ) {
             Text(text = "Save")
-        }
-    }
-}
-
-@Composable
-private fun CardWithTitle(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
-            content()
         }
     }
 }
