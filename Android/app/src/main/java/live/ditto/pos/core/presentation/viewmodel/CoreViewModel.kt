@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import live.ditto.Ditto
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
@@ -71,7 +72,7 @@ class CoreViewModel @Inject constructor(
 
     private suspend fun validateSetup(locationId: String? = null) {
         locationId?.let {
-            setCurrentLocationUseCase(locationId = locationId)
+            setCurrentLocationUseCase(locationId = it)
         }
         val isSetupValid = isSetupValidUseCase()
         val isUsingDemoLocations = isUsingDemoLocationsUseCase()
@@ -81,22 +82,28 @@ class CoreViewModel @Inject constructor(
     }
 
     private fun updateIsUsingDemoLocations(isUsingDemoLocations: Boolean) {
-        _uiState.value = _uiState.value.copy(
-            isDemoLocationsMode = isUsingDemoLocations
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                isDemoLocationsMode = isUsingDemoLocations
+            )
+        }
     }
 
     private suspend fun updateLocationName() {
         val locationName = getCurrentLocationUseCase()?.name ?: ""
-        _uiState.value = _uiState.value.copy(
-            currentLocationName = locationName
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentLocationName = locationName
+            )
+        }
     }
 
     private fun updateSetupState(setupValid: Boolean) {
-        _uiState.value = _uiState.value.copy(
-            isSetupValid = setupValid
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                isSetupValid = setupValid
+            )
+        }
     }
 }
 

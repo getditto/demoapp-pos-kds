@@ -27,7 +27,9 @@ fun PosKdsNavHost(
             KdsScreen()
         }
         composable(BottomNavItem.DemoLocationSelection.route) {
-            DemoLocationSelectionScreen()
+            DemoLocationSelectionScreen(
+                navHostController = navHostController
+            )
         }
         composable(NavigationDrawerItem.DittoToolsDrawerItem.route) {
             DittoToolsViewer(ditto = viewModel.requireDitto())
