@@ -151,7 +151,8 @@ val demoOrderItems = listOf(
 
 val demoTicketItems = listOf(
     TicketItemUi(
-        header = "9:59 AM #8921DD",
+        time = "9:59 AM",
+        shortOrderId = "e893j3",
         items = hashMapOf(
             "Burger" to 1,
             "Coffee" to 1,
@@ -162,7 +163,8 @@ val demoTicketItems = listOf(
         orderId = ""
     ),
     TicketItemUi(
-        header = "9:56 AM #09FBC2",
+        time = "4:29 PM",
+        shortOrderId = "08n3iuo48",
         items = hashMapOf(
             "Fruit Salad" to 2,
             "Coffee" to 1,

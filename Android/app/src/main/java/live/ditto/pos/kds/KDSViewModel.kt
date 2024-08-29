@@ -19,6 +19,8 @@ import live.ditto.pos.core.data.orders.OrderStatus
 import live.ditto.pos.core.data.orders.findOrderById
 import live.ditto.pos.kds.domain.GetOrdersForKdsUseCase
 import live.ditto.pos.kds.domain.UpdateKDSOrderStatus
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +29,11 @@ class KDSViewModel @Inject constructor(
     private val updateKDSOrderStatus: UpdateKDSOrderStatus,
     private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
+
+    companion object {
+        private const val INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        private const val OUTPUT_DATE_FORMAT = "h:mm a"
+    }
 
     private var ordersJob: Job? = null
 
@@ -67,18 +74,42 @@ class KDSViewModel @Inject constructor(
     }
 
     private fun updateTickets(orders: List<Order>) {
-        val ticketItems = orders.map {
-            TicketItemUi(
-                header = it.getOrderId().substring(0, 8),
-                items = generateItems(it.sortedSaleItemIds()),
-                isPaid = it.isPaid(),
-                orderStatus = OrderStatus.entries[it.status],
-                orderId = it.getOrderId()
-            )
+        val inProcessOrders = orders.filter { it.status == OrderStatus.IN_PROCESS.ordinal }
+            .sortedByDescending { it.createdOn }
+        val processedOrders = orders.filter { it.status == OrderStatus.PROCESSED.ordinal }
+            .sortedByDescending { it.createdOn }
+
+        val inProcessTickets = inProcessOrders.map {
+            createTicketItemUiFromOrder(it)
+        }
+        val processedTickets = processedOrders.map {
+            createTicketItemUiFromOrder(it)
         }
         _uiState.value = _uiState.value.copy(
-            tickets = ticketItems
+            tickets = inProcessTickets + processedTickets
         )
+    }
+
+    private fun createTicketItemUiFromOrder(order: Order): TicketItemUi {
+        return TicketItemUi(
+            time = generateOrderTime(inputDateTimeString = order.createdOn),
+            shortOrderId = generateShortOrderId(orderId = order.getOrderId()),
+            items = generateItems(order.sortedSaleItemIds()),
+            isPaid = order.isPaid(),
+            orderStatus = OrderStatus.entries[order.status],
+            orderId = order.getOrderId()
+        )
+    }
+
+    private fun generateShortOrderId(orderId: String): String {
+        return orderId.substring(0, 8)
+    }
+
+    private fun generateOrderTime(inputDateTimeString: String): String {
+        val inputFormat = SimpleDateFormat(INPUT_DATE_FORMAT, Locale.getDefault())
+        val outputFormat = SimpleDateFormat(OUTPUT_DATE_FORMAT, Locale.getDefault())
+        val inputDate = inputFormat.parse(inputDateTimeString)
+        return inputDate?.let { outputFormat.format(it) } ?: ""
     }
 
     private fun generateItems(sortedSaleItemIds: Collection<String>?): HashMap<String, Int> {
@@ -104,7 +135,8 @@ data class KdsUiState(
 )
 
 data class TicketItemUi(
-    val header: String,
+    val time: String,
+    val shortOrderId: String,
     val items: HashMap<String, Int>,
     val isPaid: Boolean,
     val orderStatus: OrderStatus,

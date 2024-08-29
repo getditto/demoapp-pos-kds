@@ -21,14 +21,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import live.ditto.pos.R
 import live.ditto.pos.core.data.demoTicketItems
 import live.ditto.pos.core.data.orders.OrderStatus
 import live.ditto.pos.kds.TicketItemUi
@@ -81,7 +81,11 @@ fun TicketItem(
                 OrderStatus.CANCELED -> CanceledStatusTicketColor
             }
             TicketHeader(
-                headerText = ticketItemUi.header,
+                headerText = stringResource(
+                    R.string.kds_ticket_header,
+                    ticketItemUi.time,
+                    ticketItemUi.shortOrderId
+                ),
                 ticketColor = ticketColor
             )
             TicketItems(ticketItemUi.items)
