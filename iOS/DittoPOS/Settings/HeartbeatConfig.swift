@@ -13,8 +13,6 @@ import DittoPermissionsHealth
 import DittoDiskUsage
 
 class HeartbeatConfigVM: ObservableObject {
-    
-    var heartbeatVM: HeartbeatVM = HeartbeatVM(ditto: DittoService.shared.ditto)
     @Published var isHeartbeatOn: Bool = Settings.isHeartbeatOn
 
     //Heartbeat config
@@ -42,26 +40,6 @@ class HeartbeatConfigVM: ObservableObject {
     @Published var newLocationAttributesKey: String = ""
     @Published var newLocationAttributesValue: String = ""
     
-    func startHeartbeat() {
-        if self.heartbeatVM.isEnabled {
-            self.stopHeartbeat()
-        }
-        let healthMetricProviders: [HealthMetricProvider] = [
-            DittoPermissionsHealth.BluetoothManager(),
-            DittoPermissionsHealth.NetworkManager(),
-            DittoDiskUsage.DiskUsageViewModel(ditto: DittoService.shared.ditto)
-        ]
-        let hbConfig = DittoHeartbeatConfig(id: Settings.deviceId,
-                                            secondsInterval: self.secondsInterval,
-                                            metadata: self.metaData,
-                                            healthMetricProviders: healthMetricProviders)
-        self.heartbeatVM.startHeartbeat(config: hbConfig) {_ in }
-    }
-    
-    func stopHeartbeat() {
-        self.heartbeatVM.stopHeartbeat()
-    }
-    
     func saveConfig() {
         //construct location
         self.location["locationId"] = self.locationId
@@ -77,11 +55,21 @@ class HeartbeatConfigVM: ObservableObject {
         Settings.isHeartbeatOn = self.isHeartbeatOn
         Settings.secondsInterval = self.secondsInterval
         Settings.metaData = self.metaData
-        
+
+        let healthMetricProviders: [HealthMetricProvider] = [
+            DittoPermissionsHealth.BluetoothManager(),
+            DittoPermissionsHealth.NetworkManager(),
+            DittoDiskUsage.DiskUsageViewModel(ditto: DittoService.shared.ditto)
+        ]
+        DittoService.shared.heartbeatConfig = DittoHeartbeatConfig(id: Settings.deviceId,
+                                                                   secondsInterval: self.secondsInterval,
+                                                                   metadata: self.metaData,
+                                                                   healthMetricProviders: healthMetricProviders)
+
         if self.isHeartbeatOn {
-            self.startHeartbeat()
+            DittoService.shared.startHeartbeat()
         } else {
-            self.stopHeartbeat()
+            DittoService.shared.stopHeartbeat()
         }
     }
     
