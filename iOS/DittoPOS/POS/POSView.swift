@@ -16,18 +16,12 @@ class POSViewModel: ObservableObject {
     }
     
     func updateWidths() {
-//        switch UIDevice.current.orientation {
-//        case .landscapeLeft, .landscapeRight:
-//            menuViewWidth = .screenWidth * 0.66
-//            orderViewWidth = .screenWidth * 0.30
-//        default:
         menuViewWidth = .screenWidth * 0.56
         #if os(tvOS)
         orderViewWidth = .screenWidth * 0.30
         #else
         orderViewWidth = .screenWidth * 0.40
         #endif
-        //        }
     }
 }
 
