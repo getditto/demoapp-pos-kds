@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import live.ditto.pos.LocalActivity
 import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
@@ -33,7 +34,7 @@ import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @Composable
 fun PosKdsApp(
-    viewModel: CoreViewModel = hiltViewModel()
+    viewModel: CoreViewModel = hiltViewModel(LocalActivity.current)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 

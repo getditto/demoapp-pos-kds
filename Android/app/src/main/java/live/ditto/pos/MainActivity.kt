@@ -5,9 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import dagger.hilt.android.AndroidEntryPoint
 import live.ditto.pos.core.presentation.composables.screens.PosKdsApp
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+
+val LocalActivity = staticCompositionLocalOf<ComponentActivity> {
+    error("LocalActivity is not present")
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -28,7 +34,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            PosKdsApp()
+            CompositionLocalProvider(LocalActivity provides this@MainActivity) {
+                PosKdsApp()
+            }
         }
     }
 }
