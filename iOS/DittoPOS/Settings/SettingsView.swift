@@ -44,11 +44,12 @@ struct SettingsView: View {
                     NavigationLink(destination: PeersListView(ditto: ditto)) {
                             DittoToolsListItem(title: "Peers List", systemImage: "network", color: .blue)
                     }
-                    
+                    #if !os(tvOS)
                     NavigationLink(destination: PresenceView(ditto: ditto)) {
                         DittoToolsListItem(title: "Presence Viewer", systemImage: "network", color: .pink)
                     }
-                    
+                    #endif
+
                     NavigationLink(destination: DittoDiskUsageView(ditto: ditto)) {
                         DittoToolsListItem(title: "Disk Usage", systemImage: "opticaldiscdrive", color: .secondary)
                     }
@@ -76,7 +77,9 @@ struct SettingsView: View {
                     .foregroundColor(textColor)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .sheet(isPresented: $vm.presentExportDataShare) {
+                        #if !os(tvOS)
                         ExportData(ditto: ditto)
+                        #endif
                     }
                 }
                 Section("Observability") {
@@ -90,7 +93,11 @@ struct SettingsView: View {
                     }
                 }
             }
+            #if !os(tvOS)
             .listStyle(InsetGroupedListStyle())
+            #else
+            .listStyle(.grouped)
+            #endif
             .navigationViewStyle(StackNavigationViewStyle())
             .navigationTitle("Ditto Tools")
             .alert("Export Ditto Directory", isPresented: $vm.presentExportDataAlert) {
