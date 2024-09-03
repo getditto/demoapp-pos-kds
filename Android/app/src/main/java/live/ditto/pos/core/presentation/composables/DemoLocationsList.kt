@@ -5,6 +5,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import live.ditto.pos.R
 import live.ditto.pos.core.data.demoLocations
 import live.ditto.pos.core.data.locations.Location
 
@@ -15,7 +17,7 @@ fun DemoLocationsList(
 ) {
     CardWithTitle(
         modifier = modifier,
-        title = "Please Select Location"
+        title = stringResource(R.string.location_selection_title)
     ) {
         demoLocations.forEach {
             Button(

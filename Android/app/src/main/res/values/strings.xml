@@ -11,5 +11,16 @@
     <string name="navigation_drawer_label_ditto_tools">Ditto Tools</string>
     <string name="current_order_id">Order: %1$s</string>
     <string name="kds_ticket_header">%1$s #%2$s</string>
+    <string name="custom_location_company_name">Company name</string>
+    <string name="custom_location_card_title">Profile</string>
+    <string name="custom_location_location_name_label">Location name</string>
+    <string name="custom_location_save_button">Save</string>
+    <string name="store_locations_options_card_title">Store Location Options</string>
+    <string name="custom_location_card_description">Custom locations are coming soon! Currently only Demo locations are available.</string>
+    <string name="button_demo_locations">Demo Locations</string>
+    <string name="button_custom_location">Custom Location</string>
+    <string name="ticket_paid_description">Check Mark</string>
+    <string name="location_selection_title">Please Select Location</string>
+    <string name="hamburger_menu">Menu</string>
 
 </resources>

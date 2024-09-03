@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,6 +26,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import live.ditto.pos.LocalActivity
+import live.ditto.pos.R
 import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
@@ -103,7 +105,7 @@ private fun PosKDSScaffold(
                     .centerAlignedTopAppBarColors(containerColor = Color.LightGray),
                 navigationIcon = {
                     IconButton(onClick = { onNavigationClicked() }) {
-                        Icon(imageVector = Icons.Filled.Menu, contentDescription = "Menu")
+                        Icon(imageVector = Icons.Filled.Menu, contentDescription = stringResource(R.string.hamburger_menu))
                     }
                 }
             )

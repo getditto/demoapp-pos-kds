@@ -13,9 +13,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import live.ditto.pos.R
 import live.ditto.pos.core.presentation.composables.CardWithTitle
 import live.ditto.pos.core.presentation.composables.DemoLocationsList
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
@@ -61,8 +63,8 @@ private fun InitialLocationsDialog(
     onDemoLocationsClicked: () -> Unit,
     onCustomLocationsClicked: () -> Unit
 ) {
-    CardWithTitle(title = "Store Location Options") {
-        Text(text = "Choose demo restaurant locations and switch between them, or create your own custom location.")
+    CardWithTitle(title = stringResource(R.string.store_locations_options_card_title)) {
+        Text(text = stringResource(R.string.custom_location_card_description))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(
@@ -71,10 +73,13 @@ private fun InitialLocationsDialog(
             )
         ) {
             Button(onClick = { onDemoLocationsClicked() }) {
-                Text(text = "Demo Locations")
+                Text(text = stringResource(R.string.button_demo_locations))
             }
-            Button(onClick = { onCustomLocationsClicked() }) {
-                Text(text = "Custom Location")
+            Button(
+                enabled = false,
+                onClick = { onCustomLocationsClicked() }
+            ) {
+                Text(text = stringResource(R.string.button_custom_location))
             }
         }
     }
@@ -82,7 +87,7 @@ private fun InitialLocationsDialog(
 
 @Composable
 private fun CustomLocationScreen() {
-    CardWithTitle(title = "Profile") {
+    CardWithTitle(title = stringResource(R.string.custom_location_card_title)) {
         var companyName by rememberSaveable {
             mutableStateOf("")
         }
@@ -91,13 +96,13 @@ private fun CustomLocationScreen() {
         }
         TextField(
             modifier = Modifier.fillMaxWidth(),
-            label = { Text(text = "Company name") },
+            label = { Text(text = stringResource(R.string.custom_location_company_name)) },
             value = companyName,
             onValueChange = { companyName = it }
         )
         TextField(
             modifier = Modifier.fillMaxWidth(),
-            label = { Text(text = "Location name") },
+            label = { Text(text = stringResource(R.string.custom_location_location_name_label)) },
             value = locationName,
             onValueChange = { locationName = it }
         )
@@ -105,7 +110,7 @@ private fun CustomLocationScreen() {
         Button(
             onClick = { /*TODO*/ }
         ) {
-            Text(text = "Save")
+            Text(text = stringResource(R.string.custom_location_save_button))
         }
     }
 }

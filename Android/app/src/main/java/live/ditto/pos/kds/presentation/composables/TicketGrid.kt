@@ -102,7 +102,7 @@ fun TicketItem(
                             .padding(4.dp)
                             .align(Alignment.CenterEnd),
                         imageVector = icon,
-                        contentDescription = "Check Mark"
+                        contentDescription = stringResource(R.string.ticket_paid_description)
                     )
                 }
             }
