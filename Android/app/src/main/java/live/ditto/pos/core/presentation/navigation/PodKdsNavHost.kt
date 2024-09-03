@@ -32,7 +32,10 @@ fun PosKdsNavHost(
             )
         }
         composable(NavigationDrawerItem.DittoToolsDrawerItem.route) {
-            DittoToolsViewer(ditto = viewModel.requireDitto())
+            DittoToolsViewer(
+                ditto = viewModel.requireDitto(),
+                onExitTools = { navHostController.popBackStack() }
+            )
         }
     }
 }

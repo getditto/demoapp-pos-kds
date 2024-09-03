@@ -11,4 +11,5 @@
     <string name="navigation_drawer_label_ditto_tools">Ditto Tools</string>
     <string name="current_order_id">Order: %1$s</string>
     <string name="kds_ticket_header">%1$s #%2$s</string>
+
 </resources>
