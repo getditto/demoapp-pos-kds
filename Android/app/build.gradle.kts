@@ -70,12 +70,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-    // prevent duplicate classes error when building
-    configurations.forEach {
-        it.exclude("live.ditto", "dittoexporter")
-        it.exclude("live.ditto", "health")
-    }
 }
 
 dependencies {
