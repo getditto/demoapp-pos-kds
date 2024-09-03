@@ -5,10 +5,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import live.ditto.pos.core.presentation.navigation.BottomNavItem
@@ -18,10 +14,6 @@ fun PosKdsNavigationBar(
     showDemoLocationsNavItem: Boolean,
     onItemClick: (bottomNavItem: BottomNavItem) -> Unit
 ) {
-    var selectedItemIndex by rememberSaveable {
-        mutableIntStateOf(0)
-    }
-
     val bottomNavItems = buildList {
         add(BottomNavItem.PointOfSale)
         add(BottomNavItem.KitchenDisplay)
@@ -31,20 +23,15 @@ fun PosKdsNavigationBar(
     }
 
     NavigationBar {
-        bottomNavItems.forEachIndexed { index, item ->
+        bottomNavItems.forEach { item ->
             NavigationBarItem(
-                selected = selectedItemIndex == index,
+                selected = false,
                 onClick = {
-                    selectedItemIndex = index
                     onItemClick(item)
                 },
                 icon = {
                     Icon(
-                        imageVector = if (index == selectedItemIndex) {
-                            item.selectedIcon
-                        } else {
-                            item.unselectedIcon
-                        },
+                        imageVector = item.selectedIcon,
                         contentDescription = stringResource(id = item.label)
                     )
                 },
