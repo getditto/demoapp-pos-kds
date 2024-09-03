@@ -24,16 +24,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
-import live.ditto.pos.pos.data.SaleItemUiModel
+import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 
 @Composable
-fun LazyGridItemScope.SaleItem(saleItemUiModel: SaleItemUiModel, modifier: Modifier = Modifier) {
+fun LazyGridItemScope.SaleItem(
+    modifier: Modifier = Modifier,
+    saleItemUiModel: SaleItemUiModel,
+    onClick: () -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
         modifier = modifier
-            .fillMaxHeight()
+            .fillMaxHeight(),
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -63,13 +68,17 @@ fun LazyGridItemScope.SaleItem(saleItemUiModel: SaleItemUiModel, modifier: Modif
 private fun SaleItemPreview() {
     val saleItems = listOf(
         SaleItemUiModel(
+            id = "007",
             imageResource = R.drawable.burger,
             label = "Tasty Burger"
         )
     )
     LazyVerticalGrid(columns = GridCells.Adaptive(120.dp)) {
         items(saleItems) { saleItem ->
-            SaleItem(saleItemUiModel = saleItem)
+            SaleItem(
+                saleItemUiModel = saleItem,
+                onClick = { }
+            )
         }
     }
 }

@@ -1,9 +1,7 @@
 package live.ditto.pos.pos.presentation.composables
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,7 +24,12 @@ import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
 
 @Composable
-fun CheckoutSection() {
+fun CheckoutSection(
+    orderTotal: String,
+    isPayButtonEnabled: Boolean,
+    onPayButtonClicked: () -> Unit,
+    onCancelButtonClicked: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -35,26 +39,19 @@ fun CheckoutSection() {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = stringResource(R.string.label_total))
-            Text(text = "$3.50")
+            Text(text = orderTotal)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box {
-                Image(
-                    imageVector = Icons.Filled.Cancel,
-                    contentDescription = stringResource(R.string.button_cancel_order),
-                    colorFilter = ColorFilter.tint(Color.Red),
-                    modifier = Modifier
-                        .width(48.dp)
-                        .height(48.dp)
-                        .clickable {
-                        }
-                )
-            }
+            CancelButton(
+                enabled = isPayButtonEnabled,
+                onCancelButtonClicked = onCancelButtonClicked
+            )
             Button(
-                onClick = { /*TODO*/ },
+                enabled = isPayButtonEnabled,
+                onClick = { onPayButtonClicked() },
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
                 modifier = Modifier.fillMaxWidth()
@@ -65,8 +62,38 @@ fun CheckoutSection() {
     }
 }
 
+@Composable
+private fun CancelButton(
+    enabled: Boolean,
+    onCancelButtonClicked: () -> Unit
+) {
+    val colorFilter = if (enabled) {
+        ColorFilter.tint(Color.Red)
+    } else {
+        ColorFilter.tint(Color.LightGray)
+    }
+    IconButton(
+        enabled = enabled,
+        onClick = { onCancelButtonClicked() }
+    ) {
+        Image(
+            imageVector = Icons.Filled.Cancel,
+            contentDescription = stringResource(R.string.button_cancel_order),
+            colorFilter = colorFilter,
+            modifier = Modifier
+                .width(48.dp)
+                .height(48.dp)
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun CheckoutSectionPreview() {
-    CheckoutSection()
+    CheckoutSection(
+        orderTotal = "$13.37",
+        isPayButtonEnabled = true,
+        onPayButtonClicked = {},
+        onCancelButtonClicked = {}
+    )
 }

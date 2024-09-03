@@ -8,6 +8,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }
@@ -15,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Ditto PoS KDS Demo"
 include(":app")
+include(":ditto-wrapper")

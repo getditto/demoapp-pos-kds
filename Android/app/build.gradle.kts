@@ -5,9 +5,9 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.jetbrains.kotlin.kapt)
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.jetbrains.kotlin.kapt)
 }
 
 android {
@@ -76,12 +76,14 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(project(":ditto-wrapper"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -93,6 +95,7 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
@@ -111,6 +114,14 @@ dependencies {
     // Extended material icons
     // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
+
+    implementation(libs.ditto.tools.viewer)
+
+    // Jetpack Datastore
+    implementation(libs.androidx.datastore.preferences)
+
+    // KotlinX DateTime
+    implementation(libs.kotlinx.datetime)
 }
 
 kapt {

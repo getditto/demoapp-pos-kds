@@ -21,21 +21,28 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import live.ditto.pos.R
 import live.ditto.pos.core.data.demoTicketItems
-import live.ditto.pos.ui.theme.SelectedTicketBackground
-import live.ditto.pos.ui.theme.UnselectedTicketBackground
+import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.kds.TicketItemUi
+import live.ditto.pos.ui.theme.CanceledStatusTicketColor
+import live.ditto.pos.ui.theme.DeliveredStatusTicketColor
+import live.ditto.pos.ui.theme.InProcessStatusTicketColor
+import live.ditto.pos.ui.theme.OpenStatusTicketColor
+import live.ditto.pos.ui.theme.ProcessedStatusTicketColor
 
 @Composable
-fun TicketGrid(ticketItems: List<TicketItemUi>) {
+fun TicketGrid(
+    ticketItems: List<TicketItemUi>,
+    onTicketClicked: (orderId: String) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -43,43 +50,61 @@ fun TicketGrid(ticketItems: List<TicketItemUi>) {
         contentPadding = PaddingValues(8.dp)
     ) {
         items(ticketItems) { ticketItem ->
-            TicketItem(ticketItemUi = ticketItem)
+            TicketItem(
+                ticketItemUi = ticketItem,
+                onTicketClicked = onTicketClicked
+            )
         }
     }
 }
 
 @Composable
-fun TicketItem(ticketItemUi: TicketItemUi) {
-    var isSelected by remember {
-        mutableStateOf(false)
-    }
-
+fun TicketItem(
+    ticketItemUi: TicketItemUi,
+    onTicketClicked: (orderId: String) -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
-        onClick = { isSelected = !isSelected }
+        onClick = { onTicketClicked(ticketItemUi.orderId) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            TicketHeader(ticketItemUi.header, isSelected)
+            val ticketColor = when (ticketItemUi.orderStatus) {
+                OrderStatus.OPEN -> OpenStatusTicketColor
+                OrderStatus.IN_PROCESS -> InProcessStatusTicketColor
+                OrderStatus.PROCESSED -> ProcessedStatusTicketColor
+                OrderStatus.DELIVERED -> DeliveredStatusTicketColor
+                OrderStatus.CANCELED -> CanceledStatusTicketColor
+            }
+            TicketHeader(
+                headerText = stringResource(
+                    R.string.kds_ticket_header,
+                    ticketItemUi.time,
+                    ticketItemUi.shortOrderId
+                ),
+                ticketColor = ticketColor
+            )
             TicketItems(ticketItemUi.items)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(28.dp)
-                    .background(if (isSelected) SelectedTicketBackground else UnselectedTicketBackground)
+                    .background(color = ticketColor)
             ) {
-                val icon = Icons.Outlined.CheckCircle
-                Image(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .align(Alignment.CenterEnd),
-                    imageVector = icon,
-                    contentDescription = "Check Mark"
-                )
+                if (ticketItemUi.isPaid) {
+                    val icon = Icons.Outlined.CheckCircle
+                    Image(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.CenterEnd),
+                        imageVector = icon,
+                        contentDescription = stringResource(R.string.ticket_paid_description)
+                    )
+                }
             }
         }
     }
@@ -113,8 +138,11 @@ private fun TicketItems(itemsMap: HashMap<String, Int>) {
 }
 
 @Composable
-private fun TicketHeader(headerText: String, isSelected: Boolean) {
-    Box(modifier = Modifier.background(color = if (isSelected) SelectedTicketBackground else UnselectedTicketBackground)) {
+private fun TicketHeader(
+    headerText: String,
+    ticketColor: Color
+) {
+    Box(modifier = Modifier.background(color = ticketColor)) {
         Text(
             text = headerText,
             modifier = Modifier
@@ -125,11 +153,6 @@ private fun TicketHeader(headerText: String, isSelected: Boolean) {
     }
 }
 
-data class TicketItemUi(
-    val header: String,
-    val items: HashMap<String, Int>
-)
-
 @Preview
 @Composable
 private fun TicketItemsPreview() {
@@ -139,17 +162,23 @@ private fun TicketItemsPreview() {
 @Preview
 @Composable
 private fun TicketHeaderPreview() {
-    TicketHeader(headerText = "Header Text", true)
+    TicketHeader(headerText = "Header Text", OpenStatusTicketColor)
 }
 
 @Preview
 @Composable
 private fun TicketItemPreview() {
-    TicketItem(ticketItemUi = demoTicketItems.first())
+    TicketItem(
+        ticketItemUi = demoTicketItems.first(),
+        onTicketClicked = {}
+    )
 }
 
 @Preview
 @Composable
 private fun TicketGridPreview() {
-    TicketGrid(ticketItems = demoTicketItems)
+    TicketGrid(
+        ticketItems = demoTicketItems,
+        onTicketClicked = {}
+    )
 }

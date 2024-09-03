@@ -1,65 +1,123 @@
 package live.ditto.pos.core.presentation.composables.screens
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import live.ditto.pos.core.presentation.composables.PosKdsNavigationBar
-import live.ditto.pos.core.presentation.navigation.BottomNavItem
+import kotlinx.coroutines.launch
+import live.ditto.pos.LocalActivity
+import live.ditto.pos.R
+import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
+import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
+import live.ditto.pos.core.presentation.viewmodel.AppState
+import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @Composable
-fun PosKdsApp() {
-    val bottomNavItems = listOf(
-        BottomNavItem.PointOfSale,
-        BottomNavItem.KitchenDisplay
-    )
-    PosKdsApp(navHostController = rememberNavController(), bottomNavItems)
+fun PosKdsApp(
+    viewModel: CoreViewModel = hiltViewModel(LocalActivity.current)
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    if (state.isSetupValid) {
+        PosKdsApp(
+            navHostController = rememberNavController(),
+            state = state
+        )
+    } else {
+        InitialSetupScreen()
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PosKdsApp(
     navHostController: NavHostController,
-    bottomNavItems: List<BottomNavItem>
+    state: AppState
 ) {
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
     DittoPoSKDSDemoTheme {
         Surface {
-            Scaffold(
-                bottomBar = {
-                    PosKdsNavigationBar(
-                        bottomNavItems = bottomNavItems
-                    ) {
-                        navHostController.navigate(route = it.route)
+            PosKDSNavigationDrawer(
+                navController = navHostController,
+                drawerState = drawerState,
+                scope = scope
+            ) {
+                PosKDSScaffold(
+                    navHostController = navHostController,
+                    state = state
+                ) {
+                    scope.launch {
+                        drawerState.apply {
+                            if (isClosed) open() else close()
+                        }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun PosKDSScaffold(
+    navHostController: NavHostController,
+    state: AppState,
+    onNavigationClicked: () -> Unit
+) {
+    Scaffold(
+        bottomBar = {
+            PosKdsNavigationBar(
+                showDemoLocationsNavItem = state.isDemoLocationsMode,
+                onItemClick = {
+                    navHostController.navigate(route = it.route)
+                }
+            )
+        },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(text = state.currentLocationName)
                 },
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = {
-                            Text(text = "McDitto's")
-                        },
-                        colors = TopAppBarDefaults
-                            .centerAlignedTopAppBarColors(containerColor = Color.LightGray)
-                    )
-                },
-                content = {
-                    Surface(modifier = Modifier.padding(it)) {
-                        PosKdsNavHost(navHostController = navHostController)
+                colors = TopAppBarDefaults
+                    .centerAlignedTopAppBarColors(containerColor = Color.LightGray),
+                navigationIcon = {
+                    IconButton(onClick = { onNavigationClicked() }) {
+                        Icon(imageVector = Icons.Filled.Menu, contentDescription = stringResource(R.string.hamburger_menu))
                     }
                 }
             )
+        },
+        content = {
+            Surface(modifier = Modifier.padding(it)) {
+                PosKdsNavHost(
+                    navHostController = navHostController
+                )
+            }
         }
-    }
+    )
 }
 
 @Preview
