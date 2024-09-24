@@ -637,7 +637,7 @@
 		};
 		07AE54C92C81814400E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftTools" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getditto/DittoSwiftTools.git";
+			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 6.0.0;
