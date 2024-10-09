@@ -29,11 +29,17 @@ final class DittoInstance {
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
-        ditto = Ditto(identity: .onlinePlayground(
+        ditto = Ditto(identity: .onlineWithAuthentication(
             appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: true
+            authenticationDelegate: AuthDelegate(),
+            enableDittoCloudSync: true // To test cloud offline scenarios, change this to false
         ), persistenceDirectory: persistenceDirURL)
+
+//        ditto = Ditto(identity: .onlinePlayground(
+//            appID: Env.DITTO_APP_ID,
+//            token: Env.DITTO_PLAYGROUND_TOKEN,
+//            enableDittoCloudSync: true
+//        ), persistenceDirectory: persistenceDirURL)
     }
 }
 
@@ -87,6 +93,9 @@ class DittoService: ObservableObject {
                 self?.resetLogging()
             }
             .store(in: &cancellables)
+
+        // Replace with your server's IP address here
+        ditto.transportConfig.connect.tcpServers.insert("192.168.4.22:4000")
 
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -469,4 +478,29 @@ fileprivate final class SyncService {
         ordersSubscription?.cancel()
         ordersSubscription = nil
     }
+}
+
+
+// MARK: - AuthDelegate
+
+private final class AuthDelegate: DittoAuthenticationDelegate {
+    func authenticationRequired(authenticator: DittoSwift.DittoAuthenticator) {
+        // This intentionally stubs out auth for this demo, and expect an app to use the "Allos Everyone" Replit webhook from https://docs.ditto.live/auth-and-authorization/cloud-authentication
+        // The "Name" of your webhook in the portal must match the provider name of `replit-everyone` as seen below
+        authenticator.login(token: "token", provider: "replit-everyone", completion: { clientInfo, error in
+            if let error = error {
+                print("login error - \(error)")
+            }
+            if let clientInfo = clientInfo {
+                print("login clientInfo - \(clientInfo))")
+            }
+        })
+    }
+    
+    func authenticationExpiringSoon(authenticator: DittoSwift.DittoAuthenticator, secondsRemaining: Int64) {
+        // Defer to the main login method for this demo
+        authenticationRequired(authenticator: authenticator)
+    }
+    
+
 }
