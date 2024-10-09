@@ -32,14 +32,8 @@ final class DittoInstance {
         ditto = Ditto(identity: .onlineWithAuthentication(
             appID: Env.DITTO_APP_ID,
             authenticationDelegate: AuthDelegate(),
-            enableDittoCloudSync: true // To test cloud offline scenarios, change this to false
+            enableDittoCloudSync: false // To test cloud offline scenarios, change this to false
         ), persistenceDirectory: persistenceDirURL)
-
-//        ditto = Ditto(identity: .onlinePlayground(
-//            appID: Env.DITTO_APP_ID,
-//            token: Env.DITTO_PLAYGROUND_TOKEN,
-//            enableDittoCloudSync: true
-//        ), persistenceDirectory: persistenceDirURL)
     }
 }
 
