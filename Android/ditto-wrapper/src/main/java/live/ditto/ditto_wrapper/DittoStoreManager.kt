@@ -1,7 +1,6 @@
 package live.ditto.ditto_wrapper
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import live.ditto.Ditto
 import live.ditto.DittoSyncSubscription
@@ -43,17 +42,6 @@ class DittoStoreManager(
             query = dittoQuery.queryString,
             arguments = dittoQuery.arguments
         )
-    }
-
-    suspend fun <T> executeQuery(dittoSelectQuery: DittoSelectQuery<T>): Flow<T> {
-        return flow {
-            ditto.store.execute(
-                query = dittoSelectQuery.queryString,
-                arguments = dittoSelectQuery.arguments
-            ).items.map { dittoQueryResultItem ->
-                dittoQueryResultItem.value
-            }
-        }
     }
 
     private fun liveQueryAsFlow(

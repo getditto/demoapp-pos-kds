@@ -96,7 +96,7 @@ class DittoRepository @Inject constructor(
     }
 
     suspend fun getLocationById(locationId: String): Location? {
-        return dittoStoreManager.executeQuery(GetAllLocationsDittoSelectQuery())
+        return dittoStoreManager.observeLiveQueryAsFlow(GetAllLocationsDittoSelectQuery())
             .first()
             .find { it.id == locationId }
     }
