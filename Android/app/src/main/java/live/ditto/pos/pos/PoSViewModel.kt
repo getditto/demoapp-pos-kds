@@ -66,7 +66,7 @@ class PoSViewModel @Inject constructor(
     }
 
     fun clearItems() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherIO) {
             clearCurrentOrderSaleItemsUseCase()
         }
     }

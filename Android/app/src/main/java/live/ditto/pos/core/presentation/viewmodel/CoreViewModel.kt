@@ -3,6 +3,7 @@ package live.ditto.pos.core.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -58,13 +59,13 @@ class CoreViewModel @Inject constructor(
     }
 
     fun updateCurrentLocation(locationId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             validateSetup(locationId = locationId)
         }
     }
 
     fun shouldUseDemoLocations(shouldUseDemoLocations: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             useDemoLocationUseCase(shouldUseDemoLocations)
             updateIsUsingDemoLocations(isUsingDemoLocations = shouldUseDemoLocations)
         }

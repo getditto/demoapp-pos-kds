@@ -45,7 +45,7 @@ class KDSViewModel @Inject constructor(
     val uiState: StateFlow<KdsUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherIo) {
             getOrdersForTickets()
         }
     }
