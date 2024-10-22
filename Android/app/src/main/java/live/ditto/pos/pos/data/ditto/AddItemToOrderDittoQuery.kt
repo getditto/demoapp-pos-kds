@@ -13,7 +13,10 @@ class AddItemToOrderDittoQuery(
 ) : DittoQuery {
 
     override val queryString: String
-        get() = ADD_ITEM_TO_ORDER_QUERY.trimIndent().replace(ORDERS_SALE_ITEM_ID_PLACEHOLDER, "$saleItemIdKey")
+        get() = ADD_ITEM_TO_ORDER_QUERY.trimIndent().replace(
+            oldValue = ORDERS_SALE_ITEM_ID_PLACEHOLDER,
+            newValue = saleItemIdKey
+        )
     override val arguments: Map<String, Any>
         get() = mapOf(
             "_id" to orderId,

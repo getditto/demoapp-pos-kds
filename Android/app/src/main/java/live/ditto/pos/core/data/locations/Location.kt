@@ -7,7 +7,15 @@ data class Location(
     val id: String,
     val name: String,
     val saleItemIds: Map<String, String> = emptyMap()
-)
+) {
+    fun serializeAsMap(): Map<String, Any> {
+        return mapOf(
+            "_id" to id,
+            "name" to name,
+            "saleItemIds" to saleItemIds
+        )
+    }
+}
 
 fun DittoProperty.toLocation(): Location {
     return Location(

@@ -13,6 +13,7 @@ import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.IsSetupValidUseCase
 import live.ditto.pos.core.domain.usecase.IsUsingDemoLocationsUseCase
 import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
+import live.ditto.pos.core.domain.usecase.UpdateCustomLocationUseCase
 import live.ditto.pos.core.domain.usecase.UseDemoLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetMissingPermissionsUseCase
@@ -28,7 +29,8 @@ class CoreViewModel @Inject constructor(
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
     private val setCurrentLocationUseCase: SetCurrentLocationUseCase,
     private val useDemoLocationUseCase: UseDemoLocationUseCase,
-    private val isUsingDemoLocationsUseCase: IsUsingDemoLocationsUseCase
+    private val isUsingDemoLocationsUseCase: IsUsingDemoLocationsUseCase,
+    private val updateCustomLocationUseCase: UpdateCustomLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -42,7 +44,7 @@ class CoreViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            validateSetup(getCurrentLocationUseCase()?.id)
+            validateSetup()
         }
     }
 
@@ -60,7 +62,8 @@ class CoreViewModel @Inject constructor(
 
     fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            validateSetup(locationId = locationId)
+            setCurrentLocationUseCase(locationId = locationId)
+            validateSetup()
         }
     }
 
@@ -71,7 +74,18 @@ class CoreViewModel @Inject constructor(
         }
     }
 
-    private suspend fun validateSetup(locationId: String? = null) {
+    fun updateCustomLocation(companyName: String, locationName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            updateCustomLocationUseCase(
+                companyName = companyName,
+                locationName = locationName
+            )
+            validateSetup()
+        }
+    }
+
+    private suspend fun validateSetup() {
+        val locationId = getCurrentLocationUseCase()?.id
         locationId?.let {
             setCurrentLocationUseCase(locationId = it)
         }

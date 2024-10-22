@@ -39,7 +39,6 @@ fun InitialSetupScreen(
                         screen = SetupScreens.DEMO_LOCATIONS
                     },
                     onCustomLocationsClicked = {
-                        coreViewModel.shouldUseDemoLocations(false)
                         screen = SetupScreens.CUSTOM_LOCATION
                     }
                 )
@@ -53,7 +52,14 @@ fun InitialSetupScreen(
                 )
             }
 
-            SetupScreens.CUSTOM_LOCATION -> CustomLocationScreen()
+            SetupScreens.CUSTOM_LOCATION -> CustomLocationScreen(
+                onSaveButtonClicked = { companyName, locationName ->
+                    coreViewModel.updateCustomLocation(
+                        companyName = companyName,
+                        locationName = locationName
+                    )
+                }
+            )
         }
     }
 }
@@ -76,7 +82,6 @@ private fun InitialLocationsDialog(
                 Text(text = stringResource(R.string.button_demo_locations))
             }
             Button(
-                enabled = false,
                 onClick = { onCustomLocationsClicked() }
             ) {
                 Text(text = stringResource(R.string.button_custom_location))
@@ -86,7 +91,9 @@ private fun InitialLocationsDialog(
 }
 
 @Composable
-private fun CustomLocationScreen() {
+private fun CustomLocationScreen(
+    onSaveButtonClicked: (companyName: String, locationName: String) -> Unit
+) {
     CardWithTitle(title = stringResource(R.string.custom_location_card_title)) {
         var companyName by rememberSaveable {
             mutableStateOf("")
@@ -108,7 +115,7 @@ private fun CustomLocationScreen() {
         )
 
         Button(
-            onClick = { /*TODO*/ }
+            onClick = { onSaveButtonClicked(companyName, locationName) }
         ) {
             Text(text = stringResource(R.string.custom_location_save_button))
         }
