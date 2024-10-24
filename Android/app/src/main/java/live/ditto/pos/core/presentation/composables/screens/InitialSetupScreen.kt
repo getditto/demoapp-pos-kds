@@ -94,13 +94,13 @@ private fun InitialLocationsDialog(
 private fun CustomLocationScreen(
     onSaveButtonClicked: (companyName: String, locationName: String) -> Unit
 ) {
+    var companyName by rememberSaveable {
+        mutableStateOf("")
+    }
+    var locationName by rememberSaveable {
+        mutableStateOf("")
+    }
     CardWithTitle(title = stringResource(R.string.custom_location_card_title)) {
-        var companyName by rememberSaveable {
-            mutableStateOf("")
-        }
-        var locationName by rememberSaveable {
-            mutableStateOf("")
-        }
         TextField(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(text = stringResource(R.string.custom_location_company_name)) },
@@ -115,6 +115,7 @@ private fun CustomLocationScreen(
         )
 
         Button(
+            enabled = companyName.isNotBlank() && locationName.isNotBlank(),
             onClick = { onSaveButtonClicked(companyName, locationName) }
         ) {
             Text(text = stringResource(R.string.custom_location_save_button))

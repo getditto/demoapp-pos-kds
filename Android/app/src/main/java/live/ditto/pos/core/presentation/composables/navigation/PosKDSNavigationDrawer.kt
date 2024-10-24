@@ -3,8 +3,6 @@ package live.ditto.pos.core.presentation.composables.navigation
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
@@ -19,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
+import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem.AdvancedSettingsDrawerItem
 import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem.DittoToolsDrawerItem
 
 @Composable
@@ -50,22 +50,44 @@ private fun NavigationDrawerContent(
 ) {
     ModalDrawerSheet {
         Spacer(modifier = Modifier.height(16.dp))
-        NavigationDrawerItem(
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-            label = { Text(text = stringResource(DittoToolsDrawerItem.label)) },
-            selected = false,
-            onClick = {
-                scope.launch {
-                    drawerState.close()
-                }
-                navController.navigate(DittoToolsDrawerItem.route)
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Build,
-                    contentDescription = stringResource(id = DittoToolsDrawerItem.label)
-                )
-            }
+        PosKdsNavigationDrawerItem(
+            navigationDrawerItem = DittoToolsDrawerItem,
+            scope = scope,
+            drawerState = drawerState,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        PosKdsNavigationDrawerItem(
+            navigationDrawerItem = AdvancedSettingsDrawerItem,
+            scope = scope,
+            drawerState = drawerState,
+            navController = navController
         )
     }
+}
+
+@Composable
+private fun PosKdsNavigationDrawerItem(
+    navigationDrawerItem: NavigationDrawerItem,
+    scope: CoroutineScope,
+    drawerState: DrawerState,
+    navController: NavHostController
+) {
+    NavigationDrawerItem(
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+        label = { Text(text = stringResource(navigationDrawerItem.label)) },
+        selected = false,
+        onClick = {
+            scope.launch {
+                drawerState.close()
+            }
+            navController.navigate(navigationDrawerItem.route)
+        },
+        icon = {
+            Icon(
+                imageVector = navigationDrawerItem.icon,
+                contentDescription = stringResource(id = navigationDrawerItem.label)
+            )
+        }
+    )
 }

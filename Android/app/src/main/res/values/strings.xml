@@ -22,5 +22,10 @@
     <string name="ticket_paid_description">Check Mark</string>
     <string name="location_selection_title">Please Select Location</string>
     <string name="hamburger_menu">Menu</string>
+    <string name="navigation_drawer_label_advanced_settings">Advanced Settings</string>
+    <string name="settings_use_demo_locations_name">Use demo locations</string>
+    <string name="settings_use_demo_locations_description">You can switch between stock, shared demo restaurant locations or you can create a custom location and all orders in your demo will be for that location.</string>
+    <string name="settings_location_section_header">Location</string>
+    <string name="advanced_settings_title">Advanced Settings</string>
 
 </resources>
