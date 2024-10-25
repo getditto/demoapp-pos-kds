@@ -7,5 +7,6 @@ class UseDemoLocationUseCase @Inject constructor(private val repository: CoreRep
 
     suspend operator fun invoke(shouldUseDemoLocations: Boolean) {
         repository.shouldUseDemoLocations(useDemoLocations = shouldUseDemoLocations)
+        repository.setLocationId(locationId = "")
     }
 }

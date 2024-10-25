@@ -8,6 +8,6 @@ class IsUsingDemoLocationsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(): Boolean {
-        return coreRepository.isUsingDemoLocations()
+        return coreRepository.isUsingDemoLocations() ?: false
     }
 }

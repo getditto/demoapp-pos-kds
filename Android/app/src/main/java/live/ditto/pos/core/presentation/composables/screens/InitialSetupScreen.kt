@@ -24,10 +24,11 @@ import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
 
 @Composable
 fun InitialSetupScreen(
+    initialScreen: SetupScreens = SetupScreens.INITIAL_SCREEN,
     coreViewModel: CoreViewModel = hiltViewModel()
 ) {
     var screen by rememberSaveable {
-        mutableStateOf(SetupScreens.INITIAL_SCREEN)
+        mutableStateOf(initialScreen)
     }
 
     Dialog(onDismissRequest = { /*TODO*/ }) {
@@ -122,8 +123,7 @@ private fun CustomLocationScreen(
         }
     }
 }
-
-private enum class SetupScreens {
+enum class SetupScreens {
     INITIAL_SCREEN,
     DEMO_LOCATIONS,
     CUSTOM_LOCATION

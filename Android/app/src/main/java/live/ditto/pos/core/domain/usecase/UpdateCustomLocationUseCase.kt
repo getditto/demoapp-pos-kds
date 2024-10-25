@@ -7,7 +7,8 @@ import javax.inject.Inject
 
 class UpdateCustomLocationUseCase @Inject constructor(
     private val coreRepository: CoreRepository,
-    private val dittoRepository: DittoRepository
+    private val dittoRepository: DittoRepository,
+    private val setCurrentLocationUseCase: SetCurrentLocationUseCase
 ) {
 
     suspend operator fun invoke(companyName: String, locationName: String) {
@@ -17,6 +18,6 @@ class UpdateCustomLocationUseCase @Inject constructor(
         )
         dittoRepository.insertCustomLocation(customLocation = customLocation)
         coreRepository.shouldUseDemoLocations(useDemoLocations = false)
-        coreRepository.setLocationId(locationId = customLocation.id)
+        setCurrentLocationUseCase(locationId = customLocation.id)
     }
 }

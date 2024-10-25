@@ -14,7 +14,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -22,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
 import live.ditto.pos.R
 import live.ditto.pos.core.presentation.composables.CardWithTitle
 import live.ditto.pos.core.presentation.composables.InnerCardWithTitle
@@ -31,7 +29,8 @@ import live.ditto.pos.core.presentation.viewmodel.SettingsViewModel
 @Composable
 fun AdvancedSettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onSettingsUpdated: () -> Unit = {}
 ) {
     val settingsState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -48,6 +47,7 @@ fun AdvancedSettingsScreen(
                 checkedState = settingsState.isUsingDemoLocations,
                 onToggleChanged = {
                     viewModel.shouldUseDemoLocations(it)
+                    onSettingsUpdated()
                 }
             )
         }
@@ -93,8 +93,6 @@ private fun SwitchSettingsItem(
     checkedState: Boolean,
     onToggleChanged: (state: Boolean) -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -121,9 +119,7 @@ private fun SwitchSettingsItem(
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(checked = checkedState, onCheckedChange = {
-                        scope.launch {
-                            onToggleChanged(it)
-                        }
+                        onToggleChanged(it)
                     })
                 }
             }

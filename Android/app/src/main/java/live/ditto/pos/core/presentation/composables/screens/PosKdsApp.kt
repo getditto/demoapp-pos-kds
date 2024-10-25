@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import live.ditto.pos.LocalActivity
 import live.ditto.pos.R
+import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
@@ -40,20 +41,39 @@ fun PosKdsApp(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    if (state.isSetupValid) {
-        PosKdsApp(
-            navHostController = rememberNavController(),
-            state = state
-        )
-    } else {
-        InitialSetupScreen()
+    val scope = rememberCoroutineScope()
+
+    when (state.appConfigurationState) {
+        AppConfigurationState.VALID -> {
+            PosKdsApp(
+                navHostController = rememberNavController(),
+                state = state,
+                onSettingsUpdated = {
+                    scope.launch {
+                        viewModel.updateAppState()
+                    }
+                }
+            )
+        }
+
+        AppConfigurationState.LOCATION_NEEDED -> {
+            val initialSetupScreen = if (state.isDemoLocationsMode) {
+                SetupScreens.DEMO_LOCATIONS
+            } else {
+                SetupScreens.CUSTOM_LOCATION
+            }
+            InitialSetupScreen(initialScreen = initialSetupScreen)
+        }
+
+        AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED -> InitialSetupScreen()
     }
 }
 
 @Composable
 private fun PosKdsApp(
     navHostController: NavHostController,
-    state: AppState
+    state: AppState,
+    onSettingsUpdated: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -67,14 +87,16 @@ private fun PosKdsApp(
             ) {
                 PosKDSScaffold(
                     navHostController = navHostController,
-                    state = state
-                ) {
-                    scope.launch {
-                        drawerState.apply {
-                            if (isClosed) open() else close()
+                    state = state,
+                    onNavigationClicked = {
+                        scope.launch {
+                            drawerState.apply {
+                                if (isClosed) open() else close()
+                            }
                         }
-                    }
-                }
+                    },
+                    onSettingsUpdated = onSettingsUpdated
+                )
             }
         }
     }
@@ -85,7 +107,8 @@ private fun PosKdsApp(
 private fun PosKDSScaffold(
     navHostController: NavHostController,
     state: AppState,
-    onNavigationClicked: () -> Unit
+    onNavigationClicked: () -> Unit,
+    onSettingsUpdated: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -105,7 +128,10 @@ private fun PosKDSScaffold(
                     .centerAlignedTopAppBarColors(containerColor = Color.LightGray),
                 navigationIcon = {
                     IconButton(onClick = { onNavigationClicked() }) {
-                        Icon(imageVector = Icons.Filled.Menu, contentDescription = stringResource(R.string.hamburger_menu))
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = stringResource(R.string.hamburger_menu)
+                        )
                     }
                 }
             )
@@ -113,7 +139,8 @@ private fun PosKDSScaffold(
         content = {
             Surface(modifier = Modifier.padding(it)) {
                 PosKdsNavHost(
-                    navHostController = navHostController
+                    navHostController = navHostController,
+                    onSettingsUpdated = onSettingsUpdated
                 )
             }
         }

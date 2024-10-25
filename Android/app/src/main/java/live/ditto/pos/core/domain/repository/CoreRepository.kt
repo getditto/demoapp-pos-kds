@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,7 @@ class CoreRepository @Inject constructor(
         private val currentOrderId = stringPreferencesKey("current_order_id")
     }
 
-    suspend fun isUsingDemoLocations(): Boolean {
+    suspend fun isUsingDemoLocations(): Boolean? {
         return getBooleanPreference(usingDemoLocationsKey)
     }
 
@@ -52,13 +53,12 @@ class CoreRepository @Inject constructor(
     }
 
     private suspend fun getBooleanPreference(
-        preferencesKey: Preferences.Key<Boolean>,
-        defaultValue: Boolean = false
-    ): Boolean {
+        preferencesKey: Preferences.Key<Boolean>
+    ): Boolean? {
         return context.dataStore.data
             .map { preferences ->
-                preferences[preferencesKey] ?: defaultValue
-            }.first()
+                preferences[preferencesKey]
+            }.firstOrNull()
     }
 
     private suspend fun getStringPreference(

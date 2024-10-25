@@ -9,8 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import live.ditto.Ditto
+import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase
+import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
-import live.ditto.pos.core.domain.usecase.IsSetupValidUseCase
 import live.ditto.pos.core.domain.usecase.IsUsingDemoLocationsUseCase
 import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.UpdateCustomLocationUseCase
@@ -24,7 +25,7 @@ import javax.inject.Inject
 class CoreViewModel @Inject constructor(
     private val refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
     private val getDittoInstanceUseCase: GetDittoInstanceUseCase,
-    private val isSetupValidUseCase: IsSetupValidUseCase,
+    private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
     private val setCurrentLocationUseCase: SetCurrentLocationUseCase,
@@ -36,7 +37,7 @@ class CoreViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         AppState(
             currentLocationName = "",
-            isSetupValid = false,
+            appConfigurationState = AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED,
             isDemoLocationsMode = false
         )
     )
@@ -44,7 +45,7 @@ class CoreViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            validateSetup()
+            updateAppState()
         }
     }
 
@@ -63,7 +64,7 @@ class CoreViewModel @Inject constructor(
     fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             setCurrentLocationUseCase(locationId = locationId)
-            validateSetup()
+            updateAppState()
         }
     }
 
@@ -80,18 +81,14 @@ class CoreViewModel @Inject constructor(
                 companyName = companyName,
                 locationName = locationName
             )
-            validateSetup()
+            updateAppState()
         }
     }
 
-    private suspend fun validateSetup() {
-        val locationId = getCurrentLocationUseCase()?.id
-        locationId?.let {
-            setCurrentLocationUseCase(locationId = it)
-        }
-        val isSetupValid = isSetupValidUseCase()
+    suspend fun updateAppState() {
+        val isSetupValid = appConfigurationStateUseCase()
         val isUsingDemoLocations = isUsingDemoLocationsUseCase()
-        updateSetupState(setupValid = isSetupValid)
+        updateAppConfigurationState(appConfigurationState = isSetupValid)
         updateLocationName()
         updateIsUsingDemoLocations(isUsingDemoLocations = isUsingDemoLocations)
     }
@@ -113,10 +110,10 @@ class CoreViewModel @Inject constructor(
         }
     }
 
-    private fun updateSetupState(setupValid: Boolean) {
+    private fun updateAppConfigurationState(appConfigurationState: AppConfigurationState) {
         _uiState.update { currentState ->
             currentState.copy(
-                isSetupValid = setupValid
+                appConfigurationState = appConfigurationState
             )
         }
     }
@@ -124,6 +121,6 @@ class CoreViewModel @Inject constructor(
 
 data class AppState(
     val currentLocationName: String,
-    val isSetupValid: Boolean,
+    val appConfigurationState: AppConfigurationState,
     val isDemoLocationsMode: Boolean
 )

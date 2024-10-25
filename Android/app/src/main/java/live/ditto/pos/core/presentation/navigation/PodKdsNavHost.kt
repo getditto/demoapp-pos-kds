@@ -15,7 +15,8 @@ import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 @Composable
 fun PosKdsNavHost(
     navHostController: NavHostController,
-    viewModel: CoreViewModel = hiltViewModel()
+    viewModel: CoreViewModel = hiltViewModel(),
+    onSettingsUpdated: () -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -39,7 +40,12 @@ fun PosKdsNavHost(
             )
         }
         composable(NavigationDrawerItem.AdvancedSettingsDrawerItem.route) {
-            AdvancedSettingsScreen()
+            AdvancedSettingsScreen(
+                onSettingsUpdated = {
+                    navHostController.popBackStack()
+                    onSettingsUpdated()
+                }
+            )
         }
     }
 }
