@@ -136,7 +136,7 @@ extension Order: DittoDecodable {
 }
 
 extension Order {
-    static func new(
+    @MainActor static func new(
         locationId: String,
         createdOn: Date = Date(),
         status: OrderStatus = .open
@@ -354,7 +354,7 @@ extension Order {
 
 // MARK: - Preview
 extension Order {
-    static func preview() -> Order {
+    @MainActor static func preview() -> Order {
         Order.new(locationId: "PreviewLocationId")
     }
 }

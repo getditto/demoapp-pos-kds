@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 
-class AdvancedSettingsVM: ObservableObject {
+@MainActor class AdvancedSettingsVM: ObservableObject {
     @Published var shouldUseDemo: Bool = Settings.useDemoLocations
     private var shadowUseDemo: Bool = Settings.useDemoLocations
     

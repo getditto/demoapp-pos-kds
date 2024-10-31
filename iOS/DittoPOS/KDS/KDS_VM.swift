@@ -11,7 +11,7 @@ import DittoSwift
 import Foundation
 
 /// Supplies published orders array to OrdersGridView
-class KDS_VM: ObservableObject {
+@MainActor class KDS_VM: ObservableObject {
     @Published private(set) var orders = [Order]()
     private let dittoService = DittoService.shared
     private var orderDocsCancellable = AnyCancellable({})

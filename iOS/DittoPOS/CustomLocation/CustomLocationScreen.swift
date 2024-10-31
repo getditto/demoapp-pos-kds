@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-class CustomLocationVM: ObservableObject {
+@MainActor class CustomLocationVM: ObservableObject {
     @Published var companyName: String = ""
     @Published var locationName: String = ""
     @Published var saveButtonDisabled = false

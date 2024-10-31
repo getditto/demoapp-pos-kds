@@ -9,7 +9,7 @@
 import Combine
 import SwiftUI
 
-class POSOrderVM: ObservableObject {
+@MainActor class POSOrderVM: ObservableObject {
     @ObservedObject var dataVM = POS_VM.shared
     @Published var orderItems = [OrderItem]()
     @Published var barTitle = "Order #\(POS_VM.shared.currentOrder?.title ?? "...")"

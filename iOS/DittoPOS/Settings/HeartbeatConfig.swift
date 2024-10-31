@@ -12,7 +12,7 @@ import DittoHealthMetrics
 import DittoPermissionsHealth
 import DittoDiskUsage
 
-class HeartbeatConfigVM: ObservableObject {
+@MainActor class HeartbeatConfigVM: ObservableObject {
     @Published var isHeartbeatOn: Bool = Settings.isHeartbeatOn
 
     //Heartbeat config

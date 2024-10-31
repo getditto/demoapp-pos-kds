@@ -18,7 +18,7 @@ struct LocationRowView: View {
     }
 }
 
-class LocationsVM: ObservableObject {
+@MainActor class LocationsVM: ObservableObject {
     @ObservedObject var dataVM = DittoService.shared
     @Published var selectedItem: Location?
     @Published var locations = [Location]()
