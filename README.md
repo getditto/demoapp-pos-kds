@@ -88,3 +88,14 @@ playground token.
 ```DITTO_PLAYGROUND_TOKEN=a01b2c34-5d6e-7fgh-ijkl-8mno9p0q12r3```.  
 6. Clean (**Command + Shift + K**), then build (**Command + B**). This will generate `Env.swift`. 
 The project is now configured for the portal app.    
+
+
+## Scripts
+Scripts are provided as way to perform various metric testing. Within each script are the instructions on how to use it as well as the purpose of each one.
+
+For each script you will need to:
+1. Setup your own Cloud URL Endpoint. See [Cloud URL Endpoint](https://docs.ditto.live/cloud/http-api/getting-started#RBdx2) for more info.
+2. Setup your own auth token. See [HTTP API - Authorization](https://docs.ditto.live/cloud/http-api/getting-started#RBdx2) for more info.
+
+### Available Scripts:
+1. INSERT_Orders - Used to Insert generic orders on an interval.
