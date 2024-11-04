@@ -9,7 +9,7 @@
 import Combine
 import SwiftUI
 
-class KDSOrderVM: ObservableObject {
+@MainActor class KDSOrderVM: ObservableObject {
     @Published var order: Order
     private var cancelleables = Set<AnyCancellable>()
         

@@ -42,7 +42,7 @@ let defaultLoggingOption: DittoLogger.LoggingOptions = .error
 // Used to constrain orders subscriptions to 1 day old or newer
 let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
-class DittoService: ObservableObject {
+@MainActor class DittoService: ObservableObject {
     @Published var loggingOption: DittoLogger.LoggingOptions
     private var cancellables = Set<AnyCancellable>()
 

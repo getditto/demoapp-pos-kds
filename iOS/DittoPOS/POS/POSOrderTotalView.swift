@@ -9,7 +9,7 @@
 import Combine
 import SwiftUI
 
-class POSOrderTotalVM: ObservableObject {
+@MainActor class POSOrderTotalVM: ObservableObject {
     @Published var orderIsPaid: Bool = false
     @Published var orderIsEmpty: Bool
     @Published var orderTotal: Double = 0.0

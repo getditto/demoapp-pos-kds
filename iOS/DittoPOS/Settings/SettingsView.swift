@@ -17,7 +17,7 @@ import DittoSwift
 import SwiftUI
 
 
-class SettingsVM: ObservableObject {
+@MainActor class SettingsVM: ObservableObject {
     @Published var presentExportDataShare: Bool = false
     @Published var presentExportDataAlert: Bool = false
     @Published var isHeartbeatOn: Bool = Settings.isHeartbeatOn

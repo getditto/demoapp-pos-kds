@@ -14,7 +14,7 @@ enum TabViews: Int, Identifiable {
     var id: Self { self }
 }
 
-class MainVM: ObservableObject {
+@MainActor class MainVM: ObservableObject {
     @Published var selectedTab: TabViews
     @Published var presentSettingsView = false
     @Published var presentCustomLocationScreen = false

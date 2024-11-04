@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-class POSViewModel: ObservableObject {
+@MainActor class POSViewModel: ObservableObject {
     @Published var menuViewWidth: CGFloat = 0.0
     @Published var orderViewWidth: CGFloat = 0.0
     init() {

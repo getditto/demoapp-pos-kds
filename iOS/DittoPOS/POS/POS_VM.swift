@@ -10,7 +10,7 @@ import Combine
 import DittoSwift
 import SwiftUI
 
-class POS_VM: ObservableObject {
+@MainActor class POS_VM: ObservableObject {
     static var shared = POS_VM()
     
     @Published private(set) var currentOrder: Order?
