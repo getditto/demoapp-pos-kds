@@ -11,7 +11,9 @@ The UI is presented as TabView with three tabs:
 are in process of being prepared, and `processed` - meaning prepared and ready for delivery.  
 
 This app is designed to work on iPhone and iPad devices in both Portrait and Landscape orientation modes. It may be optimal to use 
-iPhones as order entry devices in the POS tab in Landscape orientation, and iPad for KDS view, also in Landscape mode.  
+iPhones as order entry devices in the POS tab in Landscape orientation, and iPad for KDS view, also in Landscape mode.
+
+For support, please contact Ditto Support (<support@ditto.live>).
 
 
 ## Default Demo Locations or User-defined Location  
