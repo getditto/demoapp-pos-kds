@@ -55,6 +55,7 @@
 		14DECF1F2A3D13F0005BC2AE /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF1E2A3D13F0005BC2AE /* Utils.swift */; };
 		14DECF212A3D16DF005BC2AE /* KDSOrdersGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */; };
 		14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */; };
+		C92865022CDB8385007716FA /* BackgroundTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92865012CDB8385007716FA /* BackgroundTimer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +97,7 @@
 		14DECF1E2A3D13F0005BC2AE /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		14DECF202A3D16DF005BC2AE /* KDSOrdersGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrdersGridView.swift; sourceTree = "<group>"; };
 		14FFFEEE2A43639A00DD6806 /* POSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderItemView.swift; sourceTree = "<group>"; };
+		C92865012CDB8385007716FA /* BackgroundTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTimer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -222,6 +224,7 @@
 		14DECF032A3A6859005BC2AE /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				C92865012CDB8385007716FA /* BackgroundTimer.swift */,
 				14039BEF2A4789AE001903ED /* CurrencyUtils.swift */,
 				14DECF1E2A3D13F0005BC2AE /* Utils.swift */,
 			);
@@ -373,6 +376,7 @@
 				14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */,
 				1460E33D2A93DCC8007A2A6D /* KDS_VM.swift in Sources */,
 				14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */,
+				C92865022CDB8385007716FA /* BackgroundTimer.swift in Sources */,
 				14CD51BF2A2FE3EE0018DE87 /* DittoService.swift in Sources */,
 				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
@@ -535,7 +539,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"DittoPOS/Preview Content\"";
-				DEVELOPMENT_TEAM = 3T2VMFZPPQ;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -573,7 +577,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"DittoPOS/Preview Content\"";
-				DEVELOPMENT_TEAM = 3T2VMFZPPQ;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;

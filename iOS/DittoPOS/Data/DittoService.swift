@@ -29,15 +29,14 @@ final class DittoInstance {
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
-        ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: true
-        ), persistenceDirectory: persistenceDirURL)
+        ditto = Ditto(identity: DittoIdentity.onlinePlayground(appID: Env.DITTO_APP_ID, token: Env.DITTO_PLAYGROUND_TOKEN, enableDittoCloudSync: false, customAuthURL: URL(string: "https://\(Env.DITTO_APP_ID).cloud-dev.ditto.live")))
+        var config = DittoTransportConfig()
+        config.connect.webSocketURLs.insert("wss://\(Env.DITTO_APP_ID).cloud-dev.ditto.live")
+        ditto.transportConfig = config
     }
 }
 
-let defaultLoggingOption: DittoLogger.LoggingOptions = .error
+let defaultLoggingOption: DittoLogger.LoggingOptions = .info
 
 // Used to constrain orders subscriptions to 1 day old or newer
 let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
@@ -70,24 +69,31 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
     private let storeService: StoreService
     private let syncService: SyncService
 
+    private let nwChecker: NetworkChecker
+    
     private init() {
         storeService = StoreService(ditto.store)
         syncService = SyncService(ditto.sync)
         syncService.registerInitialSubscriptions()
-
+        
         deviceId = String(ditto.siteID)
 
         heartbeatVM = HeartbeatVM(ditto: ditto)
-
+        
         // make sure our log level is set _before_ starting ditto.
         loggingOption = Settings.dittoLoggingOption
+        
+        nwChecker = NetworkChecker(primaryUrl: URL(string: "wss://94534741-918a-4eb2-8914-6e72b39c1718.cloud-dev.ditto.live")!, fallbackUrl: URL(string: "ws://localhost:8080")!, ditto: ditto)
+        nwChecker.startPeriodicCheck()
+        
         $loggingOption
             .sink {[weak self] option in
                 Settings.dittoLoggingOption = option
                 self?.resetLogging()
             }
             .store(in: &cancellables)
-
+        
+        try! ditto.disableSyncWithV3()
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         if !isPreview {
@@ -147,7 +153,7 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
             print("DS.smallPeerInfo.metadata: Error \(error)")
         }
     }
-
+    
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
         storeService.selectByIDObservePublisher(order)
             .compactMap { $0 }
