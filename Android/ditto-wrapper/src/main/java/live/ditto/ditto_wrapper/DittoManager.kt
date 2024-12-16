@@ -26,6 +26,7 @@ class DittoManager(
             )
             DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
             Ditto(androidDependencies, identity).apply {
+                disableSyncWithV3()
                 startSync()
             }
         } catch (e: Exception) {
