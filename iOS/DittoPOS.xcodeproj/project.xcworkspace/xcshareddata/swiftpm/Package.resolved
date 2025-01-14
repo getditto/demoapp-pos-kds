@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getditto/DittoPresenceViewerCore.git",
       "state" : {
-        "branch" : "BP/box",
-        "revision" : "3a1de47707b2e5a557c7f9b543634a1b4dbba957"
+        "revision" : "d7e8f40814e189e2b9a136390b47178ea8db320b",
+        "version" : "2.0.0"
       }
     },
     {
@@ -25,7 +25,7 @@
       "location" : "https://github.com/getditto/DittoSwiftTools",
       "state" : {
         "branch" : "BP/extract_presence_viewer",
-        "revision" : "8db95c20e861578b5aa666747b9df0f4ede788fe"
+        "revision" : "0553aa15922025a194815d9cc58d9af92db9db11"
       }
     },
     {
