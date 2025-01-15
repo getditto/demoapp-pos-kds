@@ -2,8 +2,7 @@
 
 ## Overview    
 
-This app is designed to work on iPhone and iPad devices in both Portrait and Landscape orientation modes. It may be optimal to use 
-iPhones as order entry devices in the POS tab in Landscape orientation, and iPad for KDS view, also in Landscape mode.
+The app is designed to work on both phones and tablets. There is *some* support for dark mode, but some UI elements may not appear correctly in terms of colors.
 
 For support, please contact Ditto Support (<support@ditto.live>). 
 
