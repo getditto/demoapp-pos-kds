@@ -15,7 +15,9 @@ The app works on both iOS and Android and can sync between iOS and Android devic
 For support, please contact Ditto Support (<support@ditto.live>).
 
 ## Running the Apps
-Please see the README in either the `iOS` or `Android` folders for instructions on running for either platform.
+Please see the README in either the `iOS` or `Android` folders for instructions for building and running the code.
+
+Apps are available from the respective app stores: [iOS App Store](https://apps.apple.com/us/app/ditto-pos/id6449074700) | [Google Play store](https://play.google.com/store/apps/details?id=live.ditto.pos).
 
 ## App Features and Notes
 
