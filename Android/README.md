@@ -1,27 +1,24 @@
-# Ditto PoS KDS - Android
+# DittoPOS  
 
-Android version of the PoS KDS demo app
+## Overview    
 
-Currently a work in progress, but will be expected to have feature parity with the iOS version, as
-well as a DQL implementation.
+The app is designed to work on both phones and tablets. There is *some* support for dark mode, but some UI elements may not appear correctly in terms of colors.
 
-## Building the App
+For support, please contact Ditto Support (<support@ditto.live>). 
 
-You need to setup some environment variables in order to build this project:
+## Project Setup and Run
 
-1. Create/login to your account on the [Ditto portal](https://portal.ditto.live/apps)
-2. Follow the steps to create/add an app (if you haven't already). Doing so will create the ID and
-   token you will need for the next steps.
-3. Open your `local.properties` file and add the following variables, replacing with your own
-   information:
+### Installing from the App Store
+If you'd like to just view the app, it is available in the [Play store](https://play.google.com/store/apps/details?id=live.ditto.pos). No setup is required for this. If you'd like to build and run the app, see the instructions below.
 
-```  
+### Building and Running the App in Android Studio
+1. In your [Ditto portal](https://portal.ditto.live), create an app to generate an App ID and 
+playground token.  
+2. Clone this repo to a location on your machine, and open in Android Studio.    
+3. Create a `local.properties` file or if you already have one, open it. 
+4. In the `local.properties` file add the following entries (replacing with your actual App ID and playground token):
+```
 dittoOnlinePlaygroundAppId="your app id"
 dittoOnlinePlaygroundToken="your playground token"
- ```  
-
-* `dittoOnlinePlaygroundAppId` is the App ID used by Ditto; this needs to be the same on each device
-  running the
-  app in order for them to see each other, including across different platforms.
-* `dittoOnlinePlaygroundToken` is the online playground token. This is used when using the online
-  playground identity type.
+```
+5. Hit the green play button to run the app
