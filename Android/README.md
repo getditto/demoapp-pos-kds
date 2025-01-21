@@ -22,3 +22,5 @@ dittoOnlinePlaygroundAppId="your app id"
 dittoOnlinePlaygroundToken="your playground token"
 ```
 5. Hit the green play button to run the app
+
+Compatible with Android Automotive OS (AAOS)
