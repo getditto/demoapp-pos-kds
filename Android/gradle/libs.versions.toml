@@ -7,6 +7,7 @@ datastorePreferences = "1.1.1"
 ditto = "4.9.0"
 ditto-tools = "3.0.1"
 espressoCore = "3.5.1"
+gson = "2.10.1"
 hiltAndroid = "2.51"
 hiltNavigationCompose = "1.2.0"
 junit = "4.13.2"
@@ -19,6 +20,7 @@ navigationCompose = "2.7.7"
 appcompat = "1.7.0"
 material = "1.12.0"
 kotlinxDatetime = "0.6.0"
+volley = "1.2.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -41,6 +43,7 @@ androidx-material-icons-extended-android = { module = "androidx.compose.material
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 ditto = { module = "live.ditto:ditto", version.ref = "ditto" }
 ditto-tools-viewer = { module = "live.ditto:dittotoolsviewer", version.ref = "ditto-tools" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
@@ -48,6 +51,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+volley = { module = "com.android.volley:volley", version.ref = "volley" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

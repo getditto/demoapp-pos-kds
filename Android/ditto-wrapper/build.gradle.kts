@@ -60,4 +60,10 @@ dependencies {
 
     // Ditto
     implementation(libs.ditto)
+
+    //Hyperlog & its dependencies
+    implementation("com.solusguard.hyperlog:hyperlog:1.1.0")
+    implementation(libs.volley)
+    implementation(libs.gson)
+
 }

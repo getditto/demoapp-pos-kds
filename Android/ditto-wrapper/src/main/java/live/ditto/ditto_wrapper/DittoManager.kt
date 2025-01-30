@@ -4,10 +4,12 @@ import android.content.Context
 import android.util.Log
 import live.ditto.Ditto
 import live.ditto.DittoIdentity
+import live.ditto.DittoLog
 import live.ditto.DittoLogLevel
 import live.ditto.DittoLogger
 import live.ditto.android.DefaultAndroidDittoDependencies
 import live.ditto.transports.DittoSyncPermissions
+import com.hypertrack.hyperlog.HyperLog;
 
 private val TAG = DittoManager::class.java.name
 
@@ -19,16 +21,33 @@ class DittoManager(
     private val ditto: Ditto? by lazy {
         try {
             val androidDependencies = DefaultAndroidDittoDependencies(context)
+            HyperLog.initialize(context)
             val identity = DittoIdentity.OnlinePlayground(
                 androidDependencies,
                 appId = dittoOnlinePlaygroundAppId,
                 token = dittoOnlinePlaygroundToken
             )
-            DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
+            DittoLogger.minimumLogLevel = DittoLogLevel.WARNING
+
+            // Callback that sends all logs to Hyperlog
+            DittoLogger.setCustomLogCallback { dittoLogLevel, dittoMessageString  ->
+                val formattedMessage = "[ditto] - $dittoMessageString"
+
+                when(dittoLogLevel) {
+                    DittoLogLevel.DEBUG -> HyperLog.d(TAG, formattedMessage)
+                    DittoLogLevel.INFO -> HyperLog.i(TAG,  formattedMessage)
+                    DittoLogLevel.WARNING -> HyperLog.w(TAG, formattedMessage)
+                    DittoLogLevel.ERROR -> HyperLog.e(TAG, formattedMessage)
+                    DittoLogLevel.VERBOSE -> HyperLog.v(TAG, formattedMessage)
+                }
+            }
             Ditto(androidDependencies, identity).apply {
                 disableSyncWithV3()
                 startSync()
+
             }
+
+
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())
             null
