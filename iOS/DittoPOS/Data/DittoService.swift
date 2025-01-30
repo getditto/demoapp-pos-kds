@@ -37,13 +37,16 @@ final class DittoInstance {
     }
 }
 
-let defaultLoggingOption: DittoLogger.LoggingOptions = .error
+let defaultLoggingOption: DittoLogLevel = .error
 
 // Used to constrain orders subscriptions to 1 day old or newer
 let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
 @MainActor class DittoService: ObservableObject {
-    @Published var loggingOption: DittoLogger.LoggingOptions
+    
+    @State var isLoggingEnabled = DittoLogger.enabled
+    
+    @Published var loggingOption: DittoLogLevel
     private var cancellables = Set<AnyCancellable>()
 
     @Published private(set) var allLocations = [Location]()
@@ -283,14 +286,14 @@ extension DittoService {
 extension DittoService {
     
     private func resetLogging() {
-        let logOption = Settings.dittoLoggingOption
-        switch logOption {
-        case .disabled:
-            DittoLogger.enabled = false
-        default:
-            DittoLogger.enabled = true
-            DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
+        // Update DittoLogger's enabled state based on the @State var
+        DittoLogger.enabled = isLoggingEnabled
+        
+        if isLoggingEnabled {
+            // Set the minimum log level based on Settings.dittoLoggingOption
+            DittoLogger.minimumLogLevel = Settings.dittoLoggingOption
             
+            // Configure the log file URL if available
             if let logFileURL = LogFileConfig.createLogFileURL() {
                 DittoLogger.setLogFileURL(logFileURL)
             }
