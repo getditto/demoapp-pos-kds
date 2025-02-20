@@ -639,8 +639,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 6.0.0;
+				branch = BP/extract_presence_viewer;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
