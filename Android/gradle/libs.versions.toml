@@ -1,17 +1,17 @@
 [versions]
 activityCompose = "1.9.0"
-agp = "8.7.1"
+agp = "8.9.2"
 composeBom = "2024.02.02"
 coreKtx = "1.12.0"
 datastorePreferences = "1.1.1"
-ditto = "4.9.0"
-ditto-tools = "3.0.1"
+ditto = "4.10.2"
+ditto-tools = "4.0.2"
 espressoCore = "3.5.1"
-hiltAndroid = "2.51"
+hiltAndroid = "2.56.1"
 hiltNavigationCompose = "1.2.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
-kotlin = "1.9.22"
+kotlin = "2.1.20"
 ktlint = "11.6.1"
 lifecycleRuntimeKtx = "2.7.0"
 materialIconsExtendedAndroid = "1.6.3"
@@ -40,7 +40,7 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 ditto = { module = "live.ditto:ditto", version.ref = "ditto" }
-ditto-tools-viewer = { module = "live.ditto:dittotoolsviewer", version.ref = "ditto-tools" }
+ditto-tools = { module = "live.ditto:ditto-tools-android", version.ref = "ditto-tools" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
@@ -56,3 +56,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
 jetbrains-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+kotlin-plugin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.jetbrains.kotlin.kapt)
+    alias(libs.plugins.kotlin.plugin.compose)
 }
 
 android {
@@ -115,7 +116,7 @@ dependencies {
     // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
 
-    implementation(libs.ditto.tools.viewer)
+    implementation(libs.ditto.tools)
 
     // Jetpack Datastore
     implementation(libs.androidx.datastore.preferences)
