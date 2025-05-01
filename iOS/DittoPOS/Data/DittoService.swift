@@ -34,19 +34,15 @@ final class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN,
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
+
+        ditto.smallPeerInfo.isEnabled = true
     }
 }
-
-let defaultLoggingOption: DittoLogLevel = .error
 
 // Used to constrain orders subscriptions to 1 day old or newer
 let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
 @MainActor class DittoService: ObservableObject {
-    
-    @State var isLoggingEnabled = DittoLogger.enabled
-    
-    @Published var loggingOption: DittoLogLevel
     private var cancellables = Set<AnyCancellable>()
 
     @Published private(set) var allLocations = [Location]()
@@ -81,15 +77,6 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         deviceId = String(ditto.siteID)
 
         heartbeatVM = HeartbeatVM(ditto: ditto)
-
-        // make sure our log level is set _before_ starting ditto.
-        loggingOption = Settings.dittoLoggingOption
-        $loggingOption
-            .sink {[weak self] option in
-                Settings.dittoLoggingOption = option
-                self?.resetLogging()
-            }
-            .store(in: &cancellables)
 
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -279,25 +266,6 @@ extension DittoService {
         let location = allLocations.first { $0.id == locId }
         currentLocation = location
         currentLocationSubject.value = location
-    }
-}
-
-// MARK: - Logging
-extension DittoService {
-    
-    private func resetLogging() {
-        // Update DittoLogger's enabled state based on the @State var
-        DittoLogger.enabled = isLoggingEnabled
-        
-        if isLoggingEnabled {
-            // Set the minimum log level based on Settings.dittoLoggingOption
-            DittoLogger.minimumLogLevel = Settings.dittoLoggingOption
-            
-            // Configure the log file URL if available
-            if let logFileURL = LogFileConfig.createLogFileURL() {
-                DittoLogger.setLogFileURL(logFileURL)
-            }
-        }
     }
 }
 
