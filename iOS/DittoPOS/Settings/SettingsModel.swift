@@ -14,7 +14,7 @@ import Foundation
 struct Settings {
     static var defaults = UserDefaults.standard
     
-    static var dittoLoggingOption: DittoLogger.LoggingOptions {
+    static var dittoLoggingOption: DittoLogLevel {
         get { defaults.storedLoggingOption }
         set(value) { defaults.storedLoggingOption = value }
     }
@@ -81,7 +81,6 @@ extension Settings {
 
 extension UserDefaults {
     public struct UserDefaultsKeys {
-        static var loggingOption: String { "live.ditto.DittoPOS.loggingOption" }
         static var currentLocationId: String { "live.ditto.DittoPOS.currentLocationId" }
         static var selectedTab: String { "live.ditto.DittoPOS.selectedTab" }
         //rename: keep legacy "userKey" key
@@ -118,16 +117,61 @@ extension UserDefaults {
         }
     }
     
-    var storedLoggingOption: DittoLogger.LoggingOptions {
+    var storedLoggingOption: DittoLogLevel {
         get {
-            let logOption = integer(forKey: UserDefaultsKeys.loggingOption)
-            guard logOption != 0 else {
-                return DittoLogger.LoggingOptions(rawValue: defaultLoggingOption.rawValue)!
+            /// Migrates the stored logging option from the legacy key to the new system.
+            ///
+            /// This function checks if a value exists under the legacy key (`"live.ditto.DittoPOS.loggingOption"`) in `UserDefaults`.
+            /// If a non-zero value is found, it is manually mapped to the appropriate `DittoLogLevel`
+            /// and stored using the new storage mechanism. The legacy key is removed after migration
+            /// to ensure it is no longer used.
+            ///
+            /// - Important: This function must be called before accessing or restoring the current logging option
+            /// to ensure any legacy values are migrated correctly.
+            func migrateFromLegacyStorage() {
+                let oldKey = "live.ditto.DittoPOS.loggingOption"
+                
+                // Check if a value exists for the old key
+                guard object(forKey: oldKey) != nil else { return }
+                
+                // Retrieve the integer value stored with the legacy key
+                let rawValue = integer(forKey: oldKey)
+                
+                // Manually map legacy values to the correct DittoLogLevel
+                let mappedLogLevel: DittoLogLevel?
+                switch rawValue {
+                case 0:
+                    mappedLogLevel = nil  // 0 indicates no logging, skip migration
+                case 1:
+                    mappedLogLevel = .error
+                case 2:
+                    mappedLogLevel = .warning
+                case 3:
+                    mappedLogLevel = .info
+                case 4:
+                    mappedLogLevel = .debug
+                default:
+                    mappedLogLevel = nil  // Unknown values, skip migration
+                }
+                
+                // Save the mapped value if valid
+                if let logLevel = mappedLogLevel {
+                    logLevel.saveToStorage()
+                }
+                
+                // Remove the old key
+                removeObject(forKey: oldKey)
             }
-            return DittoLogger.LoggingOptions(rawValue: logOption)!
+            
+            // Perform migration before restoring the value
+            migrateFromLegacyStorage()
+            
+            // Restore the log level from storage, defaulting to `.error` if no value is found
+            return DittoLogLevel.restoreFromStorage()
         }
-        set(value) {
-            set(value.rawValue, forKey: UserDefaultsKeys.loggingOption)
+        set {
+            // Save the new log level to storage
+            newValue.saveToStorage()
         }
     }
 }
