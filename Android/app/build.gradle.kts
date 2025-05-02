@@ -19,8 +19,8 @@ android {
         applicationId = "live.ditto.pos"
         minSdk = 28
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.0.0"
+        versionCode = 5
+        versionName = "5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
