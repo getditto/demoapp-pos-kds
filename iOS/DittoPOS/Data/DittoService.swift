@@ -34,6 +34,20 @@ final class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN,
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
+        
+        Task {
+            // https://docs.ditto.live/sdk/latest/sync/managing-redundant-bluetooth-le-connections#disabling-redundant-connections
+            try await ditto.store.execute(
+                query:
+                    "ALTER SYSTEM SET mesh_chooser_avoid_redundant_bluetooth = false"
+            )
+            
+            // disable strict mode - allows for DQL with counters and objects as CRDT maps, must be called before startSync
+            // TODO - insert doc link
+            try await ditto.store.execute(
+                query: "ALTER SYSTEM SET DQL_STRICT_MODE = false"
+            )
+        }
 
         ditto.smallPeerInfo.isEnabled = true
     }
