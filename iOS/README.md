@@ -20,8 +20,11 @@ credentials to provision building to your device.
 playground token.   
 4. In Terminal, run `cp .env.template .env` at the Xcode project root directory.   
 5. Edit `.env` to add environment variables from the portal as in the following example:   
-```DITTO_APP_ID=a01b2c34-5d6e-7fgh-ijkl-8mno9p0q12r3``` 
-```DITTO_PLAYGROUND_TOKEN=a01b2c34-5d6e-7fgh-ijkl-8mno9p0q12r3```.  
+``` bash
+DITTO_APP_ID=replace_with_your_app_id
+DITTO_PLAYGROUND_TOKEN=replace_with_your_playground_token
+DITTO_WEBSOCKET_URL=replace_with_your_websocket_url
+```
 6. Clean (**Command + Shift + K**), then build (**Command + B**). This will generate `Env.swift`. 
 The project is now configured for the portal app.    
 
