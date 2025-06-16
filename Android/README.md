@@ -18,8 +18,9 @@ playground token.
 3. Create a `local.properties` file or if you already have one, open it. 
 4. In the `local.properties` file add the following entries (replacing with your actual App ID and playground token):
 ```
-dittoOnlinePlaygroundAppId="your app id"
-dittoOnlinePlaygroundToken="your playground token"
+dittoOnlinePlaygroundAppId="replace-with-your-app-id"
+dittoOnlinePlaygroundToken="replace-with-your-playground-token"
+dittoWebsocketURL="wss://your-app-id.cloud.ditto.live"
 ```
 5. Hit the green play button to run the app
 
