@@ -36,7 +36,7 @@ class DittoManager(
                     try {
                         store.execute(query = "ALTER SYSTEM SET DQL_STRICT_MODE = false")
                         startSync()
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         Log.e(TAG, "Failed to execute DQL mode query: ${e.message}")
                     }
                 }
