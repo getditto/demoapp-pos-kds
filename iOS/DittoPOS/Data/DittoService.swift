@@ -34,6 +34,14 @@ final class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN,
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
+        
+        Task {
+            // disable strict mode - allows for DQL with counters and objects as CRDT maps, must be called before startSync
+            // https://docs.ditto.live/dql/strict-mode 
+            try await ditto.store.execute(
+                query: "ALTER SYSTEM SET DQL_STRICT_MODE = false"
+            )
+        }
 
         ditto.smallPeerInfo.isEnabled = true
     }

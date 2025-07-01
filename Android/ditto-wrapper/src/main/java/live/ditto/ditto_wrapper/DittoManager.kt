@@ -2,6 +2,9 @@ package live.ditto.ditto_wrapper
 
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import live.ditto.Ditto
 import live.ditto.DittoIdentity
 import live.ditto.DittoLogLevel
@@ -28,7 +31,15 @@ class DittoManager(
             Ditto(androidDependencies, identity).apply {
                 disableSyncWithV3()
                 smallPeerInfo.isEnabled = true
-                startSync()
+                // Launch the suspend query in a coroutine scope
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        store.execute(query = "ALTER SYSTEM SET DQL_STRICT_MODE = false")
+                        startSync()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Failed to execute DQL mode query: ${e.message}")
+                    }
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())

@@ -13,7 +13,7 @@ plugins {
 
 android {
     namespace = "live.ditto.pos"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "live.ditto.pos"
