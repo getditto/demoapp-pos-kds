@@ -20,7 +20,7 @@ playground token.
 ```
 dittoOnlinePlaygroundAppId="replace-with-your-app-id"
 dittoOnlinePlaygroundToken="replace-with-your-playground-token"
-dittoWebsocketURL="wss://your-app-id.cloud.ditto.live"
+dittoWebsocketURL="replace-with-your-websocket-url"
 ```
 5. Hit the green play button to run the app
 
