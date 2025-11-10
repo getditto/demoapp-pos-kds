@@ -39,6 +39,12 @@ android {
             "DITTO_ONLINE_PLAYGROUND_TOKEN",
             getLocalProperty("dittoOnlinePlaygroundToken")
         )
+
+        buildConfigField(
+            "String",
+            "DITTO_WEBSOCKET_URL",
+            getLocalProperty("dittoWebsocketURL")
+        )
     }
 
     buildTypes {

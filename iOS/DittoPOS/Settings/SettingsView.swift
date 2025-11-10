@@ -20,18 +20,13 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var vm = SettingsVM()
-    @ObservedObject var dittoService = DittoService.shared
-    private let ditto = DittoService.shared.ditto
-    
-    private var textColor: Color {
-        colorScheme == .dark ? .white : .black
-    }
+    @ObservedObject var dittoInstance = DittoInstance.shared
     
     var body: some View {
         NavigationView {
             List{
                 Section(header: Text("Debugging")) {
-                    NavigationLink(destination: AllToolsMenu(ditto: ditto)) {
+                    NavigationLink(destination: AllToolsMenu(ditto: dittoInstance.ditto)) {
                         DittoToolsListItem(title: "Ditto Tools", systemImage: "network", color: .orange)
                     }
                 }
@@ -53,7 +48,7 @@ struct SettingsView: View {
         Spacer()
     
         VStack {
-            Text("SDK Version: \(ditto.sdkVersion)")
+            Text("SDK Version: \(dittoInstance.ditto.sdkVersion)")
         }.padding()
     }
 }

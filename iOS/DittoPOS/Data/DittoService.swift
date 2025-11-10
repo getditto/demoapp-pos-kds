@@ -13,17 +13,18 @@ import DittoSwift
 import SwiftUI
 
 // MARK: - DittoInstance
-final class DittoInstance {
+final class DittoInstance: ObservableObject {
+    
     static var shared = DittoInstance()
     let ditto: Ditto
 
     private init() {
         // Assign new directory to avoid conflict with the old SkyService version.
-#if os(tvOS)
+        #if os(tvOS)
         let directory: FileManager.SearchPathDirectory = .cachesDirectory
-#else
+        #else
         let directory: FileManager.SearchPathDirectory = .documentDirectory
-#endif
+        #endif
 
         let persistenceDirURL = try? FileManager()
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -32,18 +33,36 @@ final class DittoInstance {
         ditto = Ditto(identity: .onlinePlayground(
             appID: Env.DITTO_APP_ID,
             token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: true
+            enableDittoCloudSync: false
         ), persistenceDirectory: persistenceDirURL)
         
-        Task {
-            // disable strict mode - allows for DQL with counters and objects as CRDT maps, must be called before startSync
-            // https://docs.ditto.live/dql/strict-mode 
-            try await ditto.store.execute(
-                query: "ALTER SYSTEM SET DQL_STRICT_MODE = false"
-            )
+        ditto.updateTransportConfig { transportConfig in
+            // Set the Ditto Websocket URL
+            transportConfig.connect.webSocketURLs.insert(Env.DITTO_WEBSOCKET_URL)
         }
-
-        ditto.smallPeerInfo.isEnabled = true
+        
+        do {
+            // Disable sync with V3 Ditto
+            try ditto.disableSyncWithV3()
+        } catch let error {
+            print("ERROR: disableSyncWithV3() failed with error \"\(error)\"")
+        }
+        
+        Task {
+            do {
+                // disable strict mode - allows for DQL with counters and objects as CRDT maps, must be called before startSync
+                // https://docs.ditto.live/dql/strict-mode
+                try await ditto.store.execute(query: "ALTER SYSTEM SET DQL_STRICT_MODE = false")
+                
+                // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
+                let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+                if !isPreview {
+                    try ditto.startSync()
+                }
+            } catch let error {
+                print("ERROR: Setting DQL_STRICT_MODE or starting sync failed with error \"\(error)\"")
+            }
+        }
     }
 }
 
@@ -85,12 +104,6 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         deviceId = String(ditto.siteID)
 
         heartbeatVM = HeartbeatVM(ditto: ditto)
-
-        // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
-        let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-        if !isPreview {
-            try! ditto.startSync()
-        }
         
         updateLocationsPublisher()
 

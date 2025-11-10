@@ -17,19 +17,26 @@ private val TAG = DittoManager::class.java.name
 class DittoManager(
     val context: Context,
     dittoOnlinePlaygroundAppId: String,
-    dittoOnlinePlaygroundToken: String
+    dittoOnlinePlaygroundToken: String,
+    dittoWebsocketURL: String
 ) {
     private val ditto: Ditto? by lazy {
         try {
             val androidDependencies = DefaultAndroidDittoDependencies(context)
             val identity = DittoIdentity.OnlinePlayground(
-                androidDependencies,
+                dependencies = androidDependencies,
                 appId = dittoOnlinePlaygroundAppId,
-                token = dittoOnlinePlaygroundToken
+                token = dittoOnlinePlaygroundToken,
+                enableDittoCloudSync = false
             )
             DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
             Ditto(androidDependencies, identity).apply {
                 disableSyncWithV3()
+
+                updateTransportConfig { config ->
+                    config.connect.websocketUrls.add(dittoWebsocketURL)
+                }
+
                 smallPeerInfo.isEnabled = true
                 // Launch the suspend query in a coroutine scope
                 CoroutineScope(Dispatchers.IO).launch {
@@ -41,6 +48,7 @@ class DittoManager(
                     }
                 }
             }
+
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())
             null
