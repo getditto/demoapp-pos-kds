@@ -18,7 +18,7 @@ android {
     defaultConfig {
         applicationId = "live.ditto.pos"
         minSdk = 28
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 6
         versionName = "1"
 
