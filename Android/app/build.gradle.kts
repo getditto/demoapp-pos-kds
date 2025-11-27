@@ -19,7 +19,7 @@ android {
         applicationId = "live.ditto.pos"
         minSdk = 28
         targetSdk = 35
-        versionCode = 6
+        versionCode = 7
         versionName = "1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
