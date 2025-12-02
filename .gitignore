@@ -113,6 +113,7 @@ out/
 # Gradle files
 .gradle/
 build/
+Android/app/release/
 
 # Local configuration file (sdk path, etc)
 local.properties
