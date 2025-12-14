@@ -10,11 +10,20 @@ const val ORDERS_TRANSACTION_ID_PLACEHOLDER = "{transactionId}"
 const val SUBSCRIPTION_QUERY = """
     SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
     WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY
+        AND createdOn > :$TTL_ATTRIBUTE_KEY
     """
 
 const val GET_ORDERS_FOR_LOCATION_QUERY = """
     SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
-    WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY 
+    WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY
+"""
+
+const val TTL_ATTRIBUTE_KEY = "ttl"
+
+const val GET_ORDERS_FOR_LOCATION_WITH_TTL_QUERY = """
+    SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
+    WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY
+        AND createdOn > :$TTL_ATTRIBUTE_KEY
 """
 
 const val INSERT_NEW_ORDER_QUERY = """

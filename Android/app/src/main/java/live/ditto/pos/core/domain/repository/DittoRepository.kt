@@ -12,7 +12,7 @@ import live.ditto.pos.core.data.locations.ditto.LocationsDittoCollectionSubscrip
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrderStatus
 import live.ditto.pos.core.data.orders.ditto.AddTransactionToOrderDittoQuery
-import live.ditto.pos.core.data.orders.ditto.GetOrdersForLocationDittoQuery
+import live.ditto.pos.core.data.orders.ditto.GetOrdersForLocationWithTTLDittoQuery
 import live.ditto.pos.core.data.orders.ditto.OrdersDittoCollectionSubscription
 import live.ditto.pos.core.data.transactions.Transaction
 import live.ditto.pos.core.data.transactions.ditto.AddNewTransactionDittoQuery
@@ -60,8 +60,9 @@ class DittoRepository @Inject constructor(
 
     fun ordersForLocation(locationId: String): Flow<List<Order>> {
         return dittoStoreManager.observeLiveQueryAsFlow(
-            GetOrdersForLocationDittoQuery(
-                locationId = locationId
+            GetOrdersForLocationWithTTLDittoQuery(
+                locationId = locationId,
+                ttlHours = 24
             )
         )
     }
