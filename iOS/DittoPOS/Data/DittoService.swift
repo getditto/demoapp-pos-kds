@@ -32,6 +32,10 @@ final class DittoInstance {
             token: Env.DITTO_PLAYGROUND_TOKEN,
             enableDittoCloudSync: true
         ), persistenceDirectory: persistenceDirURL)
+
+        // Use modern DQL syntax (no COLLECTION keyword, no MAP type hints, dot notation)
+        // https://docs.ditto.live/dql/strict-mode
+        Task { try? await ditto.store.execute(query: "ALTER SYSTEM SET DQL_STRICT_MODE = false") }
     }
 }
 
@@ -61,7 +65,7 @@ final class DittoInstance {
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         if !isPreview {
-            try! ditto.startSync()
+            try! ditto.sync.start()
         }
         
         updateLocationsPublisher()
@@ -145,8 +149,6 @@ final class DittoInstance {
     }
 
     func updateOrderTransaction(_ order: Order, with transx: Transaction) {
-        // NOTE: DQL v1 (4.5.x) doesn't support write transactions, so these
-        // are written to the store asynchronously for now.
         storeService.insert(transaction: transx)
         storeService.add(transx, to: order)
     }

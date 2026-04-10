@@ -26,29 +26,27 @@ const val ORDERS_SALE_ITEM_ID_PLACEHOLDER = "{saleItemIdKey}"
 const val ORDERS_TRANSACTION_ID_PLACEHOLDER = "{transactionId}"
 
 const val SUBSCRIPTION_QUERY = """
-    SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
+    SELECT * FROM $ORDERS_COLLECTION_NAME
     WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY
         AND createdOn > :TTL
     """
 
 const val GET_ORDERS_FOR_LOCATION_QUERY = """
-    SELECT * FROM COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
+    SELECT * FROM $ORDERS_COLLECTION_NAME
     WHERE _id.locationId = :$LOCATION_ID_ATTRIBUTE_KEY
         AND createdOn > :TTL
 """
 
 const val INSERT_NEW_ORDER_QUERY = """
-    INSERT INTO COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
+    INSERT INTO $ORDERS_COLLECTION_NAME
     DOCUMENTS (:new)
     ON ID CONFLICT DO NOTHING
 """
 
 const val ADD_ITEM_TO_ORDER_QUERY = """
-    UPDATE COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP, transactionIds MAP)
+    UPDATE $ORDERS_COLLECTION_NAME
     SET
-        saleItemIds -> (
-            `$ORDERS_SALE_ITEM_ID_PLACEHOLDER` = :saleItemIdValue
-        ),
+        saleItemIds.`$ORDERS_SALE_ITEM_ID_PLACEHOLDER` = :saleItemIdValue,
         status = :status
     WHERE _id = :_id
 """
@@ -60,17 +58,13 @@ const val UPDATE_ORDER_STATUS_QUERY = """
 """
 
 const val ADD_TRANSACTION_TO_ORDER_QUERY = """
-    UPDATE COLLECTION $ORDERS_COLLECTION_NAME (transactionIds MAP)
-    SET
-        transactionIds -> (
-            `$ORDERS_TRANSACTION_ID_PLACEHOLDER` = :status
-        )
+    UPDATE $ORDERS_COLLECTION_NAME
+    SET transactionIds.`$ORDERS_TRANSACTION_ID_PLACEHOLDER` = :status
     WHERE _id = :_id
 """
 
 const val CLEAR_SALE_ITEMS_ORDER_QUERY = """
-    UPDATE COLLECTION $ORDERS_COLLECTION_NAME (saleItemIds MAP)
-    SET
-        saleItemIds -> tombstone()
+    UPDATE $ORDERS_COLLECTION_NAME
+    UNSET saleItemIds
     WHERE _id = :_id
 """

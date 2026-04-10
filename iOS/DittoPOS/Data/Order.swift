@@ -191,7 +191,7 @@ extension Order {
     var selectByIDQuery: DittoQuery {
         (
             string: """
-                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                SELECT * FROM \(Self.collectionName)
                 WHERE _id = :_id
             """,
             args: [
@@ -203,7 +203,7 @@ extension Order {
     var insertNewQuery: DittoQuery {
         (
             string: """
-                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                INSERT INTO \(Self.collectionName)
                 DOCUMENTS (:new)
             """,
             args: [
@@ -221,11 +221,9 @@ extension Order {
     func addItemQuery(orderItem: OrderItem) -> DittoQuery {
         (
             string: """
-                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                UPDATE \(Self.collectionName)
                 SET
-                    saleItemIds -> (
-                        "\(orderItem.id)" = :itemID
-                    ),
+                    saleItemIds."\(orderItem.id)" = :itemID,
                     status = :status
                 WHERE _id = :_id
             """,
@@ -254,10 +252,9 @@ extension Order {
     var clearSaleItemIdsQuery: DittoQuery {
         (
             string: """
-                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
-                SET
-                    saleItemIds -> tombstone(),
-                    status = :status
+                UPDATE \(Self.collectionName)
+                SET status = :status
+                UNSET saleItemIds
                 WHERE _id = :_id
             """,
             args: [
@@ -270,11 +267,11 @@ extension Order {
     var resetQuery: DittoQuery {
         (
             string: """
-                UPDATE COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                UPDATE \(Self.collectionName)
                 SET
-                    saleItemIds -> tombstone(),
                     status = :status,
                     createdOn = :createdOn
+                UNSET saleItemIds
                 WHERE _id = :_id
             """,
             args: [
@@ -288,11 +285,8 @@ extension Order {
     func addTransactionQuery(transaction: Transaction) -> DittoQuery {
         (
             string: """
-                UPDATE COLLECTION \(Self.collectionName) (transactionIds MAP)
-                SET
-                    transactionIds -> (
-                        "\(transaction.id)" = :status
-                    )
+                UPDATE \(Self.collectionName)
+                SET transactionIds."\(transaction.id)" = :status
                 WHERE _id = :_id
             """,
             args: [
@@ -305,7 +299,7 @@ extension Order {
     static func ordersQuerySinceTTL(locId: String) -> DittoQuery {
         (
             string: """
-                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                SELECT * FROM \(Self.collectionName)
                 WHERE _id.locationId = :locId
                     AND createdOn > :TTL
             """,
@@ -319,7 +313,7 @@ extension Order {
     static var defaultLocationSyncQuery: DittoQuery {
         (
             string: """
-                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                SELECT * FROM \(Self.collectionName)
                 WHERE _id.locationId = :locationId
             """,
             args: ["locationId": "00000"]
@@ -329,7 +323,7 @@ extension Order {
     static func incompleteOrderQuery(locationId: String) -> DittoQuery {
         (
             string: """
-                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
+                SELECT * FROM \(Self.collectionName)
                 WHERE _id.locationId = :locationId
                     AND createdOn > :TTL
                     AND transactionIds = :transIds

@@ -25,9 +25,14 @@ class DittoManager(
                 token = dittoOnlinePlaygroundToken
             )
             DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
-            Ditto(androidDependencies, identity).apply {
-                disableSyncWithV3()
-                startSync()
+            Ditto(androidDependencies, identity).also { ditto ->
+                // Use modern DQL syntax (no COLLECTION keyword, no MAP type hints, dot notation)
+                // https://docs.ditto.live/dql/strict-mode
+                kotlinx.coroutines.runBlocking {
+                    ditto.store.execute("ALTER SYSTEM SET DQL_STRICT_MODE = false")
+                }
+                ditto.disableSyncWithV3()
+                ditto.startSync()
             }
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())
