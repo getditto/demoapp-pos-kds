@@ -53,7 +53,6 @@ while true; do
               \"locationId\": \"00001\"
             },
             \"createdOn\": \"$CURRENT_TIMESTAMP\",
-            \"deviceId\": \"9385746202362977847\",
             \"saleItemIds\": {
               \"$SALEITEM_KEY_1\": \"00012\",
               \"$SALEITEM_KEY_2\": \"00012\",

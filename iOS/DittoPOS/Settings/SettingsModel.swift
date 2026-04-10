@@ -7,23 +7,11 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
-import DittoSwift
-import DittoExportLogs
 import Foundation
 
 struct Settings {
     static var defaults = UserDefaults.standard
-    
-    static var dittoLoggingOption: DittoLogger.LoggingOptions {
-        get { defaults.storedLoggingOption }
-        set(value) { defaults.storedLoggingOption = value }
-    }
-    
-    static var deviceId: String {
-        get { defaults.storedDeviceId }
-        set(value) { defaults.storedDeviceId = value }
-    }
-    
+
     static var locationId: String? {
         get { defaults.storedLocationId }
         set(value) { defaults.storedLocationId = value }
@@ -56,57 +44,14 @@ struct Settings {
 
 }
 
-// MARK: Observability data
-extension Settings {
-    
-    static private var _metaData: [String:Any] = [:]
-    static private var _isHeartbeatOn: Bool = false
-    static private var _secondsInterval: Int = 30
-    
-    static var metaData: [String:Any] {
-        get { _metaData }
-        set (value) { _metaData = value }
-    }
-    
-    static var isHeartbeatOn: Bool {
-        get { _isHeartbeatOn }
-        set (value) { _isHeartbeatOn = value }
-    }
-    
-    static var secondsInterval: Int {
-        get { _secondsInterval }
-        set (value) { _secondsInterval = value }
-    }
-}
-
 extension UserDefaults {
     public struct UserDefaultsKeys {
-        static var loggingOption: String { "live.ditto.DittoPOS.loggingOption" }
         static var currentLocationId: String { "live.ditto.DittoPOS.currentLocationId" }
         static var selectedTab: String { "live.ditto.DittoPOS.selectedTab" }
         //rename: keep legacy "userKey" key
         static var customLocationKey: String { "live.ditto.DittoPOS.userKey" }
         static var useDemoLocations: String { "live.ditto.DittoPOS.useDemoLocations" }
-        
-        static var deviceId: String {"live.ditto.DittoPOS.deviceId"}
     }
-    
-    var storedDeviceId: String {
-        get {
-            if let deviceId = string(forKey: UserDefaultsKeys.deviceId) {
-                return deviceId
-            } else {
-                //demo purposes only. User should set deviceId from a persistant unique Id, usually from an MDM.
-                let newDeviceId = UUID().uuidString
-                set(newDeviceId, forKey: UserDefaultsKeys.deviceId)
-                return newDeviceId
-            }
-        }
-        set(value) {
-            set(value, forKey: UserDefaultsKeys.deviceId)
-        }
-    }
-    
 
     // stored location from both user-defined and default demo locations selection
     var storedLocationId: String? {
@@ -118,18 +63,6 @@ extension UserDefaults {
         }
     }
     
-    var storedLoggingOption: DittoLogger.LoggingOptions {
-        get {
-            let logOption = integer(forKey: UserDefaultsKeys.loggingOption)
-            guard logOption != 0 else {
-                return DittoLogger.LoggingOptions(rawValue: defaultLoggingOption.rawValue)!
-            }
-            return DittoLogger.LoggingOptions(rawValue: logOption)!
-        }
-        set(value) {
-            set(value.rawValue, forKey: UserDefaultsKeys.loggingOption)
-        }
-    }
 }
 
 // use case: switch between demo locations and user-defined

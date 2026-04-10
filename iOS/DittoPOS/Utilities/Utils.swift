@@ -118,8 +118,13 @@ extension DateFormatter {
         return f
     }
     
-    static func isoTimeFromNowString(_ seconds: TimeInterval) -> String {
-        isoDate.string(from: Date().addingTimeInterval(seconds))
+    /// Local midnight (start of today), formatted as ISO 8601.
+    /// Using a fixed daily boundary means every device at the same
+    /// location produces the same subscription query, which is
+    /// important for Ditto sync efficiency.
+    static var startOfTodayString: String {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        return isoDate.string(from: startOfDay)
     }
 }
 

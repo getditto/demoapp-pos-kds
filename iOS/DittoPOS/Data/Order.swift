@@ -88,7 +88,6 @@ enum OrderStatus: Int, CaseIterable, Codable {
 //--------------------------------------------------------------------------------------------------
 struct Order: Identifiable, Hashable {
     let _id: [String: String] //[id, locationId]
-    let deviceId: String
     var saleItemIds = [String: String]() //[saleItemId, timestamp]
     var transactionIds = [String: TransactionStatus]() // transaction.id, transaction.status
     var createdOn: Date
@@ -119,7 +118,6 @@ extension Order: DittoDecodable {
         let statusInt = value["status"] as? Int
         var order = Order(
             _id: value["_id"] as! [String: String],
-            deviceId: value["deviceId"] as! String,
             createdOn: DateFormatter.isoDate.date(from: value["createdOn"] as! String) ?? Date(),
             status: statusInt != nil ? OrderStatus(rawValue: statusInt!)! : .open
         )
@@ -136,14 +134,13 @@ extension Order: DittoDecodable {
 }
 
 extension Order {
-    @MainActor static func new(
+    static func new(
         locationId: String,
         createdOn: Date = Date(),
         status: OrderStatus = .open
     ) -> Order {
         Order(
             _id: Self.newId(locId: locationId),
-            deviceId: DittoService.shared.deviceId,
             createdOn: createdOn,
             status: status
         )
@@ -212,7 +209,6 @@ extension Order {
             args: [
                 "new": [
                     "_id": _id,
-                    "deviceId": deviceId,
                     "saleItemIds": saleItemIds,
                     "transactionIds": transactionIds,
                     "createdOn": DateFormatter.isoDate.string(from: createdOn),
@@ -315,7 +311,7 @@ extension Order {
             """,
             args: [
                 "locId": locId,
-                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL)
+                "TTL": DateFormatter.startOfTodayString
             ]
         )
     }
@@ -330,20 +326,18 @@ extension Order {
         )
     }
 
-    static func incompleteOrderQuery(locationId: String, deviceId: String) -> DittoQuery {
+    static func incompleteOrderQuery(locationId: String) -> DittoQuery {
         (
             string: """
                 SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP, transactionIds MAP)
                 WHERE _id.locationId = :locationId
                     AND createdOn > :TTL
-                    AND deviceId = :deviceId
                     AND transactionIds = :transIds
                 ORDER BY createdOn ASC
             """,
             args: [
                 "locationId": locationId,
-                "TTL": DateFormatter.isoTimeFromNowString(-OrderTTL),
-                "deviceId": deviceId,
+                "TTL": DateFormatter.startOfTodayString,
                 "transIds": [String: Int]()
             ]
         )
@@ -354,7 +348,7 @@ extension Order {
 
 // MARK: - Preview
 extension Order {
-    @MainActor static func preview() -> Order {
+    static func preview() -> Order {
         Order.new(locationId: "PreviewLocationId")
     }
 }

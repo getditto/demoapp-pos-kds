@@ -11,7 +11,8 @@ class GetOrdersForLocationDittoQuery(
 
     override val queryString: String = GET_ORDERS_FOR_LOCATION_QUERY.trimIndent()
     override val arguments: Map<String, Any> = mapOf(
-        LOCATION_ID_ATTRIBUTE_KEY to locationId
+        LOCATION_ID_ATTRIBUTE_KEY to locationId,
+        TTL_ATTRIBUTE_KEY to ttlTimestamp()
     )
     override val documentDeserializer: DittoPropertyDeserializer<List<Order>>
         get() = { dittoProperties ->

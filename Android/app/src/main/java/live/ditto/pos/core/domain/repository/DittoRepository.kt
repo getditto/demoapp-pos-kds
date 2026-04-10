@@ -41,10 +41,6 @@ class DittoRepository @Inject constructor(
         return dittoManager.missingPermissions()
     }
 
-    fun getDeviceId(): String {
-        return dittoManager.requireDitto().siteId.toString()
-    }
-
     fun startOrdersSubscription(locationId: String) {
         val ordersDittoCollectionSubscription = OrdersDittoCollectionSubscription(
             locationId = locationId

@@ -22,7 +22,6 @@ class CreateNewOrderUseCase @Inject constructor(
                 "locationId" to currentLocationId
             ),
             createdOn = currentTimeStringUseCase(),
-            deviceId = dittoRepository.getDeviceId(),
             saleItemIds = null,
             status = OrderStatus.OPEN.ordinal,
             transactionIds = emptyMap()

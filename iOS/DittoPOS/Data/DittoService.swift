@@ -7,8 +7,6 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
-import DittoExportLogs
-import DittoHeartbeat
 import DittoSwift
 import SwiftUI
 
@@ -37,13 +35,7 @@ final class DittoInstance {
     }
 }
 
-let defaultLoggingOption: DittoLogger.LoggingOptions = .error
-
-// Used to constrain orders subscriptions to 1 day old or newer
-let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
-
 @MainActor class DittoService: ObservableObject {
-    @Published var loggingOption: DittoLogger.LoggingOptions
     private var cancellables = Set<AnyCancellable>()
 
     @Published private(set) var allLocations = [Location]()
@@ -55,17 +47,8 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
-    
-    //ditto.siteID as String to partition ordering to devices
-    private(set) var deviceId: String
-
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
-
-    // Heartbeat
-    var heartbeatConfig: DittoHeartbeatConfig?
-    var heartbeatCallback: HeartbeatCallback = {_ in}
-    private var heartbeatVM: HeartbeatVM
 
     private let storeService: StoreService
     private let syncService: SyncService
@@ -74,19 +57,6 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         storeService = StoreService(ditto.store)
         syncService = SyncService(ditto.sync)
         syncService.registerInitialSubscriptions()
-
-        deviceId = String(ditto.siteID)
-
-        heartbeatVM = HeartbeatVM(ditto: ditto)
-
-        // make sure our log level is set _before_ starting ditto.
-        loggingOption = Settings.dittoLoggingOption
-        $loggingOption
-            .sink {[weak self] option in
-                Settings.dittoLoggingOption = option
-                self?.resetLogging()
-            }
-            .store(in: &cancellables)
 
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -181,28 +151,11 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         storeService.add(transx, to: order)
     }
 
-    func incompleteOrderFuture(locationId: String? = nil, device: String? = nil) -> Future<Order?, Never> {
+    func incompleteOrderFuture(locationId: String? = nil) -> Future<Order?, Never> {
         guard let locId = locationId ?? currentLocationId else {
             return Future { promise in  promise(.success(nil)) }
         }
-        return storeService.incompleteOrderFuture(locationId: locId, deviceId: device ?? deviceId)
-    }
-
-    //MARK: - Heartbeat Tool
-    func startHeartbeat() {
-        guard let heartbeatConfig = heartbeatConfig else {
-            print("Heartbeat Tool not Configured")
-            return
-        }
-
-        if self.heartbeatVM.isEnabled {
-            self.stopHeartbeat()
-        }
-        self.heartbeatVM.startHeartbeat(config: heartbeatConfig, callback: heartbeatCallback)
-    }
-
-    func stopHeartbeat() {
-        self.heartbeatVM.stopHeartbeat()
+        return storeService.incompleteOrderFuture(locationId: locId)
     }
 }
 
@@ -276,25 +229,6 @@ extension DittoService {
         let location = allLocations.first { $0.id == locId }
         currentLocation = location
         currentLocationSubject.value = location
-    }
-}
-
-// MARK: - Logging
-extension DittoService {
-    
-    private func resetLogging() {
-        let logOption = Settings.dittoLoggingOption
-        switch logOption {
-        case .disabled:
-            DittoLogger.enabled = false
-        default:
-            DittoLogger.enabled = true
-            DittoLogger.minimumLogLevel = DittoLogLevel(rawValue: logOption.rawValue)!
-            
-            if let logFileURL = LogFileConfig.createLogFileURL() {
-                DittoLogger.setLogFileURL(logFileURL)
-            }
-        }
     }
 }
 
@@ -392,9 +326,9 @@ fileprivate struct StoreService {
             .eraseToAnyPublisher()
     }
 
-    func incompleteOrderFuture(locationId: String, deviceId: String) -> Future<Order?, Never> {
+    func incompleteOrderFuture(locationId: String) -> Future<Order?, Never> {
         print("DS.\(#function) --> in")
-        let query = Order.incompleteOrderQuery(locationId: locationId, deviceId: deviceId)
+        let query = Order.incompleteOrderQuery(locationId: locationId)
         return Future { promise in
             Task {
                 do {
