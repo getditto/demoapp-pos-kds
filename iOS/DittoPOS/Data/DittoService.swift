@@ -47,6 +47,7 @@ final class DittoInstance {
 
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
+
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
 
@@ -61,25 +62,31 @@ final class DittoInstance {
         // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
         let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         if !isPreview {
+            if let locId = Settings.locationId {
+                setRoutingConfig(locationId: locId)
+            }
             try! ditto.startSync()
         }
-        
+
         updateLocationsPublisher()
 
         currentLocationId = Settings.locationId
-        
+
         $currentLocationId
             .combineLatest($allLocations)
             .sink {[weak self] locId, allLocations in
                 guard let locId = locId, let self = self else { return }
-                
+
                 if locId != Settings.locationId {
                     Settings.locationId = locId
                 }
 
-                if Settings.useDemoLocations {
-                    storeService.setupDemoLocations()
-                }
+                // Restart sync with routing config for the new location
+                self.ditto.stopSync()
+                self.setRoutingConfig(locationId: locId)
+                do { try self.ditto.startSync() } catch { print("Failed to restart sync: \(error)") }
+
+                storeService.setupDemoLocations()
 
                 // reset subscription for new location
                 syncService.cancelOrdersSubscription()
@@ -93,29 +100,6 @@ final class DittoInstance {
                 }
             }
             .store(in: &cancellables)
-    }
-
-    // use case: store user-defined location
-    func saveCustomLocation(company: String, location: String) {
-        let loc = CustomLocation(companyName: company, locationName: location)
-        guard let jsonData = JSONEncoder.encodedObject(loc) else {
-            print("DS.\(#function): jsonData from custom location FAILED --> RETURN")
-            return
-        }
-
-        Settings.customLocation = jsonData
-        
-        storeService.insertLocation(of: loc)
-
-        // setting here will save locationId and update subscriptions in sink above
-        currentLocationId = loc.locationId
-        
-        do {
-            // add locationId to small_peer_info metadata
-            try ditto.smallPeerInfo.setMetadata(["locationId": loc.locationId])
-        } catch {
-            print("DS.smallPeerInfo.metadata: Error \(error)")
-        }
     }
 
     func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
@@ -157,40 +141,17 @@ final class DittoInstance {
         }
         return storeService.incompleteOrderFuture(locationId: locId)
     }
+
 }
 
 extension DittoService {
-    enum LocationsSetupOption { case demo, custom }
-    
+
     var locationSetupNotValid: Bool {
-        Settings.locationId == nil && Settings.useDemoLocations == false
+        Settings.locationId == nil
     }
 
-    func updateLocationsSetup(option: LocationsSetupOption) {
-        switch option {
-        case .demo: resetToDemoLocations()
-        case .custom: resetToCustomLocation()
-        }
-    }
-    
-    func updateDemoLocationsSetting(enable: Bool) {
-        if enable { resetToDemoLocations() }
-        else { resetToCustomLocation() }
-    }
-    
-    func resetToDemoLocations() {
-        Settings.customLocation = nil
-        Settings.useDemoLocations = true
+    func resetLocationSelection() {
         storeService.setupDemoLocations()
-        locationsSetupCommon()
-    }
-    
-    func resetToCustomLocation() {
-        Settings.useDemoLocations = false
-        locationsSetupCommon()
-    }
-    
-    private func locationsSetupCommon() {
         updateLocationsPublisher()
         Settings.locationId = nil
         currentLocation = nil
@@ -200,14 +161,28 @@ extension DittoService {
 
 // MARK: - Private
 extension DittoService {
+
+    /// Sets routing config derived from the numeric location ID so that devices
+    /// at the same location share a sync group and routing hint.
+    private func setRoutingConfig(locationId: String) {
+        guard let value = UInt32(locationId) else { return }
+
+        ditto.updateTransportConfig { config in
+            // Isolate the peer-to-peer mesh to devices at this location.
+            // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
+            config.global.syncGroup = value
+
+            // Tell the Big Peer to co-locate data for this location.
+            // https://docs.ditto.live/sdk/latest/deployment/setting-routing-hints
+            config.global.routingHint = value
+        }
+    }
+
     private func updateLocationsPublisher() {
         allLocationsCancellable = storeService
             .allLocationsObservePublisher()
             .map { locations in
-                if Settings.useDemoLocations {
-                    return locations.filter { Location.demoLocationsIds.contains($0.id) }
-                }
-                return locations
+                locations.filter { Location.demoLocationsIds.contains($0.id) }
             }
             .assign(to: \.allLocations, on: self)
     }
@@ -238,12 +213,6 @@ fileprivate struct StoreService {
 
     init(_ store: DittoStore) {
         self.store = store
-    }
-
-    func insertLocation(of customLoc: CustomLocation) {
-        let loc = Location(id: customLoc.locationId, name: customLoc.locationName)
-        let query = loc.insertNewQuery
-        exec(query: query)
     }
 
     func insert(order: Order) {

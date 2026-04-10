@@ -11,6 +11,7 @@ class SetCurrentLocationUseCase @Inject constructor(
 
     suspend operator fun invoke(locationId: String) {
         coreRepository.setLocationId(locationId = locationId)
+        dittoRepository.setRoutingConfig(locationId = locationId)
         dittoRepository.startOrdersSubscription(locationId = locationId)
     }
 }

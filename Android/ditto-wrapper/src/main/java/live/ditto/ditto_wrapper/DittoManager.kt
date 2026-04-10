@@ -35,6 +35,25 @@ class DittoManager(
         }
     }
 
+    /// Sets routing config derived from the numeric location ID so that devices
+    /// at the same location share a sync group and routing hint.
+    fun setRoutingConfig(locationId: String) {
+        val value = locationId.toUIntOrNull() ?: return
+        val ditto = requireDitto()
+
+        ditto.stopSync()
+        ditto.updateTransportConfig { config ->
+            // Isolate the peer-to-peer mesh to devices at this location.
+            // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
+            config.global.syncGroup = value
+
+            // Tell the Big Peer to co-locate data for this location.
+            // https://docs.ditto.live/sdk/latest/deployment/setting-routing-hints
+            config.global.routingHint = value
+        }
+        ditto.startSync()
+    }
+
     fun requireDitto(): Ditto {
         return ditto ?: throw DittoNotCreatedException()
     }
