@@ -4,7 +4,7 @@
 
 The app is designed to work on both phones and tablets. There is *some* support for dark mode, but some UI elements may not appear correctly in terms of colors.
 
-For support, please contact Ditto Support (<support@ditto.live>). 
+For support, please contact Ditto Support (<support@ditto.com>). 
 
 ## Project Setup and Run
 
