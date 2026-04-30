@@ -94,6 +94,7 @@ iOSInjectionProject/
 *.aar
 *.ap_
 *.aab
+*.dm
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -105,12 +106,14 @@ iOSInjectionProject/
 bin/
 gen/
 out/
+
 #  Uncomment the following line in case you need and you don't have the release build type files in your app
 # release/
 
 # Gradle files
 .gradle/
 build/
+Android/app/release/
 
 # Local configuration file (sdk path, etc)
 local.properties

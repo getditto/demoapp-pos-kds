@@ -12,7 +12,7 @@ are in process of being prepared, and `processed` - meaning prepared and ready f
 
 The app works on both iOS and Android and can sync between iOS and Android devices as well. 
 
-For support, please contact Ditto Support (<support@ditto.live>).
+For support, please contact Ditto Support (<support@ditto.com>).
 
 ## Running the Apps
 Please see the README in either the `iOS` or `Android` folders for instructions for building and running the code.

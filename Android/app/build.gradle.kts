@@ -8,17 +8,18 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.jetbrains.kotlin.kapt)
+    alias(libs.plugins.kotlin.plugin.compose)
 }
 
 android {
     namespace = "live.ditto.pos"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "live.ditto.pos"
         minSdk = 28
-        targetSdk = 34
-        versionCode = 4
+        targetSdk = 35
+        versionCode = 7
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -37,6 +38,12 @@ android {
             "String",
             "DITTO_ONLINE_PLAYGROUND_TOKEN",
             getLocalProperty("dittoOnlinePlaygroundToken")
+        )
+
+        buildConfigField(
+            "String",
+            "DITTO_WEBSOCKET_URL",
+            getLocalProperty("dittoWebsocketURL")
         )
     }
 
@@ -115,7 +122,7 @@ dependencies {
     // todo: remove and just grab individual icons
     implementation(libs.androidx.material.icons.extended.android)
 
-    implementation(libs.ditto.tools.viewer)
+    implementation(libs.ditto.tools)
 
     // Jetpack Datastore
     implementation(libs.androidx.datastore.preferences)

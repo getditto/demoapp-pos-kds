@@ -62,7 +62,7 @@ extension UserDefaults {
             set(value, forKey: UserDefaultsKeys.currentLocationId)
         }
     }
-    
+
 }
 
 // use case: switch between demo locations and user-defined
