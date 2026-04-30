@@ -4,7 +4,7 @@
 
 The app is designed to work on both phones and tablets. There is *some* support for dark mode, but some UI elements may not appear correctly in terms of colors.
 
-For support, please contact Ditto Support (<support@ditto.live>). 
+For support, please contact Ditto Support (<support@ditto.com>). 
 
 ## Project Setup and Run
 
@@ -16,10 +16,11 @@ If you'd like to just view the app, it is available in the [Play store](https://
 playground token.  
 2. Clone this repo to a location on your machine, and open in Android Studio.    
 3. Create a `local.properties` file or if you already have one, open it. 
-4. In the `local.properties` file add the following entries (replacing with your actual App ID and playground token):
+4. In the `local.properties` file add the following entries (keep the quotes):
 ```
-dittoOnlinePlaygroundAppId="your app id"
-dittoOnlinePlaygroundToken="your playground token"
+dittoOnlinePlaygroundAppId="replace-with-your-app-id"
+dittoOnlinePlaygroundToken="replace-with-your-playground-token"
+dittoWebsocketURL="replace-with-your-websocket-url"
 ```
 5. Hit the green play button to run the app
 

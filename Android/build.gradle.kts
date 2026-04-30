@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.google.dagger.hilt.android) apply false
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.jetbrains.kotlin.kapt) apply false
-
+    alias(libs.plugins.kotlin.plugin.compose) apply false
 }
 
 val deletePreviousGitHOok by tasks.registering(Delete::class) {
