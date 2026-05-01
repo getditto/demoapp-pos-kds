@@ -1,5 +1,7 @@
 package live.ditto.pos.core.data
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -10,9 +12,10 @@ data class CartLineItem(
     val saleItemId: String,
     val name: String,
     val imageName: String,
-    val price: Money,
+    val price: Price,
     val qty: Int = 1,
-    val createdOn: String = isoNow()
+    @Serializable(with = DittoInstantSerializer::class)
+    val createdAt: Instant = Clock.System.now()
 ) {
     companion object {
         fun newLineItemId(): String = UUID.randomUUID().toString()

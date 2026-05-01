@@ -1,6 +1,7 @@
 package live.ditto.pos.core.data
 
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -81,8 +82,6 @@ object StatusLogDerivation {
     }
 
     /** (timestamp, status wire value) pair for a single new transition. */
-    fun entry(status: OrderStatus, at: String = isoNow()): Pair<String, String> =
-        at to status.wireValue
+    fun entry(status: OrderStatus, at: Instant = Clock.System.now()): Pair<String, String> =
+        at.toDittoIsoString() to status.wireValue
 }
-
-fun isoNow(): String = Clock.System.now().toString()

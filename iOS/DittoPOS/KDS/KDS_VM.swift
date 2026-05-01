@@ -31,7 +31,7 @@ import Foundation
                 }
                 let sorted = filtered.sorted { lhs, rhs in
                     if lhs.status == rhs.status {
-                        return lhs.createdOn > rhs.createdOn
+                        return lhs.createdAt > rhs.createdAt
                     }
                     return lhs.status.rank < rhs.status.rank
                 }

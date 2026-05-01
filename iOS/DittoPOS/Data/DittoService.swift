@@ -309,17 +309,17 @@ fileprivate struct StoreService {
     }
 
     func reset(order: Order) {
-        let createdOnNow = DateFormatter.isoDate.string(from: Date())
+        let createdAtNow = DateFormatter.isoDate.string(from: Date())
         var args: [String: Any?] = [
             "id": order._id.id,
             "locationId": order._id.locationId,
-            "createdOn": createdOnNow
+            "createdAt": createdAtNow
         ]
         if order.cart.isEmpty {
             exec(
                 """
                 UPDATE \(Order.collectionName)
-                SET createdOn = :createdOn
+                SET createdAt = :createdAt
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
                 args: args
@@ -329,7 +329,7 @@ fileprivate struct StoreService {
             exec(
                 """
                 UPDATE \(Order.collectionName)
-                SET createdOn = :createdOn
+                SET createdAt = :createdAt
                 UNSET \(unsetList)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
@@ -426,7 +426,7 @@ fileprivate final class SyncService {
                 query: """
                     SELECT * FROM \(Order.collectionName)
                     WHERE _id.locationId = :locationId
-                        AND createdOn > :TTL
+                        AND createdAt > :TTL
                     """,
                 arguments: ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
             )
@@ -477,7 +477,7 @@ fileprivate enum Eviction {
 
         do {
             _ = try await store.execute(
-                query: "EVICT FROM \(Order.collectionName) WHERE createdOn <= :TTL",
+                query: "EVICT FROM \(Order.collectionName) WHERE createdAt <= :TTL",
                 arguments: ["TTL": DateFormatter.startOfTodayString]
             )
             UserDefaults.standard.set(now, forKey: lastRunKey)

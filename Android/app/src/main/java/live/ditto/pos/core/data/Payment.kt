@@ -1,5 +1,7 @@
 package live.ditto.pos.core.data
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -37,9 +39,10 @@ enum class PaymentStatus {
 @Serializable
 data class Payment(
     val type: PaymentType,
-    val amount: Money,
+    val amount: Price,
     val status: PaymentStatus = PaymentStatus.COMPLETE,
-    val createdOn: String = isoNow()
+    @Serializable(with = DittoInstantSerializer::class)
+    val createdAt: Instant = Clock.System.now()
 ) {
     companion object {
         fun newPaymentId(): String = UUID.randomUUID().toString()

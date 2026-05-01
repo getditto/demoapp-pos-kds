@@ -16,6 +16,7 @@ import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.toDittoIsoString
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,7 +53,7 @@ constructor(
             query = """
                     SELECT * FROM ${Order.COLLECTION_NAME}
                     WHERE _id.locationId = :locationId
-                        AND createdOn > :TTL
+                        AND createdAt > :TTL
             """.trimIndent(),
             args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
         )
@@ -82,7 +83,7 @@ constructor(
             query = """
                     SELECT * FROM ${Order.COLLECTION_NAME}
                     WHERE _id.locationId = :locationId
-                        AND createdOn > :TTL
+                        AND createdAt > :TTL
             """.trimIndent(),
             args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
         )
@@ -124,23 +125,23 @@ constructor(
     }
 
     suspend fun resetOrder(order: Order) {
-        val createdOnNow = Clock.System.now().toString()
+        val createdAtNow = Clock.System.now().toDittoIsoString()
         val baseArgs = mapOf<String, Any>(
             "id" to order.id,
             "locationId" to order.locationId,
-            "createdOn" to createdOnNow
+            "createdAt" to createdAtNow
         )
         val query = if (order.cart.isEmpty()) {
             """
                 UPDATE ${Order.COLLECTION_NAME}
-                SET createdOn = :createdOn
+                SET createdAt = :createdAt
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent()
         } else {
             val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
             """
                 UPDATE ${Order.COLLECTION_NAME}
-                SET createdOn = :createdOn
+                SET createdAt = :createdAt
                 UNSET $unsetList
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent()
@@ -173,7 +174,7 @@ constructor(
 
         try {
             ditto.store.execute(
-                "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdOn <= :TTL",
+                "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
                 mapOf("TTL" to startOfTodayIso())
             ).use { }
             prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
@@ -191,5 +192,5 @@ constructor(
 
 private fun startOfTodayIso(): String {
     val tz = TimeZone.currentSystemDefault()
-    return Clock.System.now().toLocalDateTime(tz).date.atStartOfDayIn(tz).toString()
+    return Clock.System.now().toLocalDateTime(tz).date.atStartOfDayIn(tz).toDittoIsoString()
 }

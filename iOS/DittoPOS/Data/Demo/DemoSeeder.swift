@@ -6,6 +6,10 @@
 //
 
 // Demo-only orchestration. Seed content is in LocationSeed / SaleItemSeed.
+//
+// `INITIAL DOCUMENTS` writes each document only if it doesn't already exist
+// — idempotent and peer-safe, so every device can run this on launch and
+// the network converges on a single copy.
 
 import DittoSwift
 import Foundation
@@ -20,34 +24,46 @@ struct DemoSeeder {
     }
 
     func seedLocations() async {
-        for location in LocationSeed.demoLocations {
-            await execute(
-                """
-                INSERT INTO \(Location.collectionName)
-                INITIAL DOCUMENTS (deserialize_json(:json))
-                """,
-                args: ["json": (try? location.dittoJSONString()) ?? "{}"],
-                label: "seedLocations"
-            )
-        }
+        await bulkInitialInsert(
+            into: Location.collectionName,
+            documents: LocationSeed.demoLocations,
+            label: "seedLocations"
+        )
     }
 
     func seedSaleItems() async {
-        for item in SaleItemSeed.saleItemsForAllLocations() {
-            await execute(
-                """
-                INSERT INTO \(SaleItem.collectionName)
-                INITIAL DOCUMENTS (deserialize_json(:json))
-                """,
-                args: ["json": (try? item.dittoJSONString()) ?? "{}"],
-                label: "seedSaleItems"
-            )
-        }
+        await bulkInitialInsert(
+            into: SaleItem.collectionName,
+            documents: SaleItemSeed.saleItemsForAllLocations(),
+            label: "seedSaleItems"
+        )
     }
 
-    private func execute(_ query: String, args: [String: Any?], label: String) async {
+    /// Single bulk `INSERT INTO ... INITIAL DOCUMENTS (...), (...), ...`
+    /// — one round-trip for the whole seed set.
+    private func bulkInitialInsert<T: Encodable>(
+        into collectionName: String,
+        documents: [T],
+        label: String
+    ) async {
+        guard !documents.isEmpty else { return }
+
+        var args: [String: Any?] = [:]
+        var placeholders: [String] = []
+        for (index, document) in documents.enumerated() {
+            let key = "d\(index)"
+            args[key] = (try? document.dittoJSONString()) ?? "{}"
+            placeholders.append("(deserialize_json(:\(key)))")
+        }
+
         do {
-            _ = try await store.execute(query: query, arguments: args)
+            _ = try await store.execute(
+                query: """
+                    INSERT INTO \(collectionName)
+                    INITIAL DOCUMENTS \(placeholders.joined(separator: ", "))
+                    """,
+                arguments: args
+            )
         } catch {
             print("DemoSeeder.\(label): ERROR \(error.localizedDescription)")
         }

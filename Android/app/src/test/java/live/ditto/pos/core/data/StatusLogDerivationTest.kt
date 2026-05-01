@@ -1,5 +1,6 @@
 package live.ditto.pos.core.data
 
+import kotlinx.datetime.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -65,9 +66,19 @@ class StatusLogDerivationTest {
     }
 
     @Test
-    fun `entry returns wire value paired with timestamp`() {
-        val (ts, value) = StatusLogDerivation.entry(OrderStatus.PROCESSED, at = "2026-04-01T12:00:00.000Z")
+    fun `entry returns wire value paired with timestamp in canonical ditto format`() {
+        val instant = Instant.parse("2026-04-01T12:00:00.000Z")
+        val (ts, value) = StatusLogDerivation.entry(OrderStatus.PROCESSED, at = instant)
         assertEquals("2026-04-01T12:00:00.000Z", ts)
         assertEquals("processed", value)
+    }
+
+    @Test
+    fun `entry pads sub-millisecond instants to three fractional digits`() {
+        // Anything with non-zero nanoseconds must still serialize as 3-digit
+        // ms precision so DQL string comparisons stay chronological.
+        val instant = Instant.parse("2026-04-01T12:00:00Z")
+        val (ts, _) = StatusLogDerivation.entry(OrderStatus.PROCESSED, at = instant)
+        assertEquals("2026-04-01T12:00:00.000Z", ts)
     }
 }

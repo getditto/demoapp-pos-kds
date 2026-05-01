@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 // Whole-number minor units (cents for USD) avoids floating-point drift.
 @Serializable
-data class Money(
+data class Price(
     val amount: Int,
     val currency: Currency = Currency.USD
 ) {

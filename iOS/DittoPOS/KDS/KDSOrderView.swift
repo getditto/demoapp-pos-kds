@@ -81,7 +81,7 @@ struct KDSOrderView: View {
 
     var titleText: String { vm.order.title }
     var timestampText: String {
-        DateFormatter.shortTime.string(from: vm.order.createdOn)
+        DateFormatter.shortTime.string(from: vm.order.createdAt)
     }
 }
 

@@ -1,14 +1,16 @@
 package live.ditto.pos.core.data.orders
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import live.ditto.pos.core.data.CartLineItem
+import live.ditto.pos.core.data.DittoInstantSerializer
 import live.ditto.pos.core.data.DocumentID
-import live.ditto.pos.core.data.Money
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.Payment
+import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.StatusLogDerivation
-import live.ditto.pos.core.data.isoNow
 import java.util.UUID
 
 @Serializable
@@ -17,7 +19,8 @@ data class Order(
     val cart: Map<String, CartLineItem> = emptyMap(),
     val payments: Map<String, Payment> = emptyMap(),
     @SerialName("status_log") val statusLog: Map<String, String> = emptyMap(),
-    val createdOn: String
+    @Serializable(with = DittoInstantSerializer::class)
+    val createdAt: Instant
 ) {
     val id: String get() = documentId.id
     val locationId: String get() = documentId.locationId
@@ -27,10 +30,10 @@ data class Order(
     val isPaid: Boolean get() = status == OrderStatus.CANCELED || payments.isNotEmpty()
 
     val sortedLineItems: List<CartLineItem>
-        get() = cart.values.sortedBy { it.createdOn }
+        get() = cart.values.sortedBy { it.createdAt }
 
     val totalCents: Int get() = sortedLineItems.sumOf { it.price.amount * it.qty }
-    val total: Money get() = Money(totalCents)
+    val total: Price get() = Price(totalCents)
 
     /** name → quantity, used by KDS summary view. */
     val summary: Map<String, Int>
@@ -47,7 +50,7 @@ data class Order(
     fun addingPayment(payment: Payment, paymentId: String): Order =
         copy(payments = payments + (paymentId to payment))
 
-    fun appendingStatus(newStatus: OrderStatus, at: String = isoNow()): Order {
+    fun appendingStatus(newStatus: OrderStatus, at: Instant = Clock.System.now()): Order {
         val (timestamp, statusValue) = StatusLogDerivation.entry(newStatus, at = at)
         return copy(statusLog = statusLog + (timestamp to statusValue))
     }
@@ -57,16 +60,16 @@ data class Order(
 
         fun new(
             locationId: String,
-            createdOn: String = isoNow(),
+            createdAt: Instant = Clock.System.now(),
             status: OrderStatus = OrderStatus.OPEN
         ): Order {
-            val (timestamp, statusValue) = StatusLogDerivation.entry(status, at = createdOn)
+            val (timestamp, statusValue) = StatusLogDerivation.entry(status, at = createdAt)
             return Order(
                 documentId = DocumentID(id = UUID.randomUUID().toString(), locationId = locationId),
                 cart = emptyMap(),
                 payments = emptyMap(),
                 statusLog = mapOf(timestamp to statusValue),
-                createdOn = createdOn
+                createdAt = createdAt
             )
         }
     }

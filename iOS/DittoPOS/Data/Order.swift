@@ -13,10 +13,10 @@ struct Order: Identifiable, Hashable, Codable {
     var cart: [String: CartLineItem]
     var payments: [String: Payment]
     var statusLog: [String: String]      // iso-timestamp → OrderStatus.rawValue
-    var createdOn: Date
+    var createdAt: Date
 
     private enum CodingKeys: String, CodingKey {
-        case _id, cart, payments, createdOn
+        case _id, cart, payments, createdAt
         case statusLog = "status_log"
     }
 
@@ -37,16 +37,16 @@ struct Order: Identifiable, Hashable, Codable {
 extension Order {
     static func new(
         locationId: String,
-        createdOn: Date = Date(),
+        createdAt: Date = Date(),
         status: OrderStatus = .open
     ) -> Order {
-        let entry = StatusLogDerivation.entry(status, at: createdOn)
+        let entry = StatusLogDerivation.entry(status, at: createdAt)
         return Order(
             _id: DocumentID(id: UUID().uuidString, locationId: locationId),
             cart: [:],
             payments: [:],
             statusLog: [entry.key: entry.value],
-            createdOn: createdOn
+            createdAt: createdAt
         )
     }
 }
@@ -78,7 +78,7 @@ extension Order {
 // MARK: - Derived views
 extension Order {
     var sortedLineItems: [CartLineItem] {
-        cart.values.sorted { $0.createdOn < $1.createdOn }
+        cart.values.sorted { $0.createdAt < $1.createdAt }
     }
 
     var totalCents: Int {

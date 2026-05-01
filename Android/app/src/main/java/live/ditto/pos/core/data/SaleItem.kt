@@ -8,7 +8,7 @@ data class SaleItem(
     @SerialName("_id") val documentId: DocumentID,
     val name: String,
     val imageName: String, // canonical wire key; resolve via ImageNameMapping
-    val price: Money
+    val price: Price
 ) {
     val id: String get() = documentId.id
     val locationId: String get() = documentId.locationId
@@ -26,7 +26,7 @@ data class SaleItem(
             documentId = DocumentID(id = id, locationId = locationId),
             name = name,
             imageName = imageName,
-            price = Money(cents)
+            price = Price(cents)
         )
     }
 }

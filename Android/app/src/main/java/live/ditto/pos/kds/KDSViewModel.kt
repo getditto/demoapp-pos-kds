@@ -15,11 +15,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
@@ -33,7 +35,6 @@ constructor(
 ) : ViewModel() {
 
     companion object {
-        private const val INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         private const val OUTPUT_DATE_FORMAT = "h:mm a"
     }
 
@@ -81,9 +82,9 @@ constructor(
 
     private fun updateTickets(orders: List<Order>) {
         val inProcess = orders.filter { it.status == OrderStatus.IN_PROCESS }
-            .sortedByDescending { it.createdOn }
+            .sortedByDescending { it.createdAt }
         val processed = orders.filter { it.status == OrderStatus.PROCESSED }
-            .sortedByDescending { it.createdOn }
+            .sortedByDescending { it.createdAt }
 
         _uiState.value = _uiState.value.copy(
             tickets = (inProcess + processed).map(::toTicketUi)
@@ -91,7 +92,7 @@ constructor(
     }
 
     private fun toTicketUi(order: Order): TicketItemUi = TicketItemUi(
-        time = generateOrderTime(order.createdOn),
+        time = generateOrderTime(order.createdAt),
         shortOrderId = order.title,
         items = HashMap(order.summary),
         isPaid = order.isPaid,
@@ -99,12 +100,9 @@ constructor(
         orderId = order.id
     )
 
-    private fun generateOrderTime(inputDateTimeString: String): String {
-        val inputFormat = SimpleDateFormat(INPUT_DATE_FORMAT, Locale.getDefault())
+    private fun generateOrderTime(instant: Instant): String {
         val outputFormat = SimpleDateFormat(OUTPUT_DATE_FORMAT, Locale.getDefault())
-        return runCatching {
-            inputFormat.parse(inputDateTimeString)?.let { outputFormat.format(it) }
-        }.getOrNull().orEmpty()
+        return outputFormat.format(Date(instant.toEpochMilliseconds()))
     }
 }
 

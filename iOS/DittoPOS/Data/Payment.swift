@@ -19,18 +19,18 @@ struct Payment: Codable, Hashable, Equatable {
     let type: PaymentType
     let amount: Price
     let status: PaymentStatus
-    let createdOn: Date
+    let createdAt: Date
 
     init(
         type: PaymentType,
         amount: Price,
         status: PaymentStatus = .complete,
-        createdOn: Date = Date()
+        createdAt: Date = Date()
     ) {
         self.type = type
         self.amount = amount
         self.status = status
-        self.createdOn = createdOn
+        self.createdAt = createdAt
     }
 
     static func newPaymentId() -> String { UUID().uuidString }

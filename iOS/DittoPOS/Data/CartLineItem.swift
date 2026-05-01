@@ -15,7 +15,7 @@ struct CartLineItem: Codable, Hashable, Equatable {
     let imageName: String
     let price: Price
     var qty: Int
-    let createdOn: Date
+    let createdAt: Date
 
     init(
         saleItemId: String,
@@ -23,14 +23,14 @@ struct CartLineItem: Codable, Hashable, Equatable {
         imageName: String,
         price: Price,
         qty: Int = 1,
-        createdOn: Date = Date()
+        createdAt: Date = Date()
     ) {
         self.saleItemId = saleItemId
         self.name = name
         self.imageName = imageName
         self.price = price
         self.qty = qty
-        self.createdOn = createdOn
+        self.createdAt = createdAt
     }
 
     init(from saleItem: SaleItem, qty: Int = 1) {

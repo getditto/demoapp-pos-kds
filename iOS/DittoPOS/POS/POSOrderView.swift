@@ -23,7 +23,7 @@ import SwiftUI
                 if let order = order {
                     barTitle = "Order #\(order.title)"
                     orderItems = order.cart
-                        .sorted { $0.value.createdOn < $1.value.createdOn }
+                        .sorted { $0.value.createdAt < $1.value.createdAt }
                         .map { (id: $0.key, item: $0.value) }
                 } else {
                     barTitle = "Order #..."
