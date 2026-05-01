@@ -2,31 +2,27 @@ package live.ditto.pos.core.domain.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.encodeToString
 import live.ditto.Ditto
 import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.demo.DemoSeeder
-import live.ditto.pos.core.data.dittoJson
+import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
+import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DittoRepository @Inject constructor(
+class DittoRepository
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val dittoManager: DittoManager
 ) {
@@ -54,17 +50,18 @@ class DittoRepository @Inject constructor(
         registerSub(
             key = "orders",
             query = """
-                SELECT * FROM ${Order.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
-                    AND createdOn > :TTL
+                    SELECT * FROM ${Order.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                        AND createdOn > :TTL
             """.trimIndent(),
             args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
         )
         registerSub(
             key = "sale_items",
             query = """
-                SELECT * FROM ${SaleItem.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
+                    SELECT * FROM ${SaleItem.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                    ORDER BY name
             """.trimIndent(),
             args = mapOf("locationId" to locationId)
         )
@@ -78,49 +75,39 @@ class DittoRepository @Inject constructor(
     // ----- Observers -----
 
     fun observeAllLocations(): Flow<List<Location>> =
-        observeJsonStrings("SELECT * FROM ${Location.COLLECTION_NAME}")
-            .map { jsons -> jsons.mapNotNull { decodeOrNull<Location>(it) } }
+        ditto.store.observeAsFlow("SELECT * FROM ${Location.COLLECTION_NAME}")
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
-        observeJsonStrings(
+        ditto.store.observeAsFlow(
             query = """
-                SELECT * FROM ${Order.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
-                    AND createdOn > :TTL
+                    SELECT * FROM ${Order.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                        AND createdOn > :TTL
             """.trimIndent(),
             args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
-        ).map { jsons -> jsons.mapNotNull { decodeOrNull<Order>(it) } }
+        )
 
     fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =
-        observeJsonStrings(
+        ditto.store.observeAsFlow(
             query = """
-                SELECT * FROM ${SaleItem.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
+                    SELECT * FROM ${SaleItem.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                    ORDER BY name
             """.trimIndent(),
             args = mapOf("locationId" to locationId)
-        ).map { jsons -> jsons.mapNotNull { decodeOrNull<SaleItem>(it) } }
-
-    private fun observeJsonStrings(
-        query: String,
-        args: Map<String, Any> = emptyMap()
-    ): Flow<List<String>> = callbackFlow {
-        val observer = ditto.store.registerObserver(query, args) { result ->
-            trySendBlocking(result.items.map { it.jsonString() })
-        }
-        awaitClose { observer.close() }
-    }.buffer(Channel.UNLIMITED)
+        )
 
     // ----- Mutations -----
 
     suspend fun upsertOrder(order: Order) {
         ditto.store.execute(
             """
-            INSERT INTO ${Order.COLLECTION_NAME}
-            DOCUMENTS (deserialize_json(:json))
-            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
+                INSERT INTO ${Order.COLLECTION_NAME}
+                DOCUMENTS (deserialize_json(:json))
+                ON ID CONFLICT DO UPDATE_LOCAL_DIFF
             """.trimIndent(),
-            mapOf("json" to dittoJson.encodeToString(order))
-        )
+            mapOf("json" to order.dittoJsonString())
+        ).use { }
     }
 
     suspend fun clearCart(order: Order) {
@@ -128,53 +115,48 @@ class DittoRepository @Inject constructor(
         val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
         ditto.store.execute(
             """
-            UPDATE ${Order.COLLECTION_NAME}
-            UNSET $unsetList
-            WHERE _id.id = :id AND _id.locationId = :locationId
+                UPDATE ${Order.COLLECTION_NAME}
+                UNSET $unsetList
+                WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf("id" to order.id, "locationId" to order.locationId)
-        )
+        ).use { }
     }
 
     suspend fun resetOrder(order: Order) {
-        val createdOnNow = isoNow()
+        val createdOnNow = Clock.System.now().toString()
         val baseArgs = mapOf<String, Any>(
             "id" to order.id,
             "locationId" to order.locationId,
             "createdOn" to createdOnNow
         )
-        if (order.cart.isEmpty()) {
-            ditto.store.execute(
-                """
+        val query = if (order.cart.isEmpty()) {
+            """
                 UPDATE ${Order.COLLECTION_NAME}
                 SET createdOn = :createdOn
                 WHERE _id.id = :id AND _id.locationId = :locationId
-                """.trimIndent(),
-                baseArgs
-            )
+            """.trimIndent()
         } else {
             val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
-            ditto.store.execute(
-                """
+            """
                 UPDATE ${Order.COLLECTION_NAME}
                 SET createdOn = :createdOn
                 UNSET $unsetList
                 WHERE _id.id = :id AND _id.locationId = :locationId
-                """.trimIndent(),
-                baseArgs
-            )
+            """.trimIndent()
         }
+        ditto.store.execute(query, baseArgs).use { }
     }
 
     suspend fun insertCustomLocation(location: Location) {
         ditto.store.execute(
             """
-            INSERT INTO ${Location.COLLECTION_NAME}
-            DOCUMENTS (deserialize_json(:json))
-            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
+                INSERT INTO ${Location.COLLECTION_NAME}
+                DOCUMENTS (deserialize_json(:json))
+                ON ID CONFLICT DO UPDATE_LOCAL_DIFF
             """.trimIndent(),
-            mapOf("json" to dittoJson.encodeToString(location))
-        )
+            mapOf("json" to location.dittoJsonString())
+        ).use { }
     }
 
     // ----- Lifecycle -----
@@ -193,7 +175,7 @@ class DittoRepository @Inject constructor(
             ditto.store.execute(
                 "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdOn <= :TTL",
                 mapOf("TTL" to startOfTodayIso())
-            )
+            ).use { }
             prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
         } catch (error: Throwable) {
             android.util.Log.w("Eviction", error.message.orEmpty())
@@ -206,11 +188,6 @@ class DittoRepository @Inject constructor(
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }
 }
-
-private inline fun <reified T> decodeOrNull(json: String): T? =
-    runCatching { dittoJson.decodeFromString<T>(json) }.getOrNull()
-
-private fun isoNow(): String = Clock.System.now().toString()
 
 private fun startOfTodayIso(): String {
     val tz = TimeZone.currentSystemDefault()

@@ -13,7 +13,7 @@ import SwiftUI
 @MainActor class AdvancedSettingsVM: ObservableObject {
     @Published var shouldUseDemo: Bool = Settings.useDemoLocations
     private var shadowUseDemo: Bool = Settings.useDemoLocations
-    
+
     func saveSettings() {
         if shadowUseDemo != shouldUseDemo {
             DittoService.shared.updateDemoLocationsSetting(enable: shouldUseDemo)

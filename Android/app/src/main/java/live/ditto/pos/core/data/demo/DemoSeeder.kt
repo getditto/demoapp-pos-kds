@@ -2,10 +2,9 @@ package live.ditto.pos.core.data.demo
 
 // Demo-only orchestration. Seed content is in LocationSeed / SaleItemSeed.
 
-import kotlinx.serialization.encodeToString
 import live.ditto.Ditto
 import live.ditto.pos.core.data.SaleItem
-import live.ditto.pos.core.data.dittoJson
+import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
 
 class DemoSeeder(private val ditto: Ditto) {
@@ -22,7 +21,7 @@ class DemoSeeder(private val ditto: Ditto) {
                     INSERT INTO ${Location.COLLECTION_NAME}
                     INITIAL DOCUMENTS (deserialize_json(:json))
                 """.trimIndent(),
-                args = mapOf("json" to dittoJson.encodeToString(location)),
+                args = mapOf("json" to location.dittoJsonString()),
                 label = "seedLocations"
             )
         }
@@ -35,7 +34,7 @@ class DemoSeeder(private val ditto: Ditto) {
                     INSERT INTO ${SaleItem.COLLECTION_NAME}
                     INITIAL DOCUMENTS (deserialize_json(:json))
                 """.trimIndent(),
-                args = mapOf("json" to dittoJson.encodeToString(item)),
+                args = mapOf("json" to item.dittoJsonString()),
                 label = "seedSaleItems"
             )
         }
@@ -43,7 +42,7 @@ class DemoSeeder(private val ditto: Ditto) {
 
     private suspend fun execute(query: String, args: Map<String, Any>, label: String) {
         try {
-            ditto.store.execute(query, args)
+            ditto.store.execute(query, args).use { }
         } catch (error: Throwable) {
             android.util.Log.w("DemoSeeder", "$label: ${error.message}")
         }

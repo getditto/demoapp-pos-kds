@@ -4,8 +4,14 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Order status as a timestamp-keyed audit log. Current value is derived at
-// read time via "most-advanced state wins" — stale writes never regress.
+// Order status modeled as a timestamp-keyed audit log instead of a single
+// LWW field. Every transition is preserved (Ditto's add-wins map merge);
+// the "current" status is *derived* at read time using "most-advanced state
+// wins." A stale device coming online late and writing an older state cannot
+// regress the order's status — the older entry stays in the log for
+// auditability but the read-time derivation ignores it.
+//
+// See: https://docs.ditto.live/best-practices/conflict-resolution-patterns
 @Serializable
 enum class OrderStatus {
     @SerialName("open")

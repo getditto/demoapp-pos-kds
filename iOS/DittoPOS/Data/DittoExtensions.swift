@@ -10,119 +10,104 @@ import Combine
 import DittoSwift
 import Foundation
 
+// MARK: - JSON encoding / decoding
+
+enum DittoDateFormatting {
+    static let iso8601: Date.ISO8601FormatStyle = .ditto
+}
+
+extension Date.ISO8601FormatStyle {
+    static var ditto: Date.ISO8601FormatStyle {
+        .iso8601
+            .year().month().day()
+            .timeZone(separator: .omitted)
+            .time(includingFractionalSeconds: true)
+            .timeSeparator(.colon)
+    }
+}
+
 extension JSONEncoder {
-    static let ditto: JSONEncoder = {
-        let e = JSONEncoder()
-        e.dateEncodingStrategy = .custom { date, encoder in
-            var c = encoder.singleValueContainer()
-            try c.encode(DateFormatter.isoDate.string(from: date))
+    static var ditto: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.formatted(DittoDateFormatting.iso8601))
         }
-        return e
-    }()
+        return encoder
+    }
 }
 
 extension JSONDecoder {
-    static let ditto: JSONDecoder = {
-        let d = JSONDecoder()
-        d.dateDecodingStrategy = .custom { decoder in
-            let c = try decoder.singleValueContainer()
-            let s = try c.decode(String.self)
-            guard let date = DateFormatter.isoDate.date(from: s) else {
-                throw DecodingError.dataCorruptedError(
-                    in: c,
-                    debugDescription: "Invalid ISO 8601 date: \(s)"
-                )
-            }
-            return date
+    static var ditto: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            return try DittoDateFormatting.iso8601.parse(raw)
         }
-        return d
-    }()
+        return decoder
+    }
 }
 
 extension Encodable {
     /// Encode to a JSON string for passing to DQL `deserialize_json(:arg)`.
-    func dittoJSONString() -> String {
-        do {
-            let data = try JSONEncoder.ditto.encode(self)
-            return String(data: data, encoding: .utf8) ?? "{}"
-        } catch {
-            fatalError("dittoJSONString: encoding \(Self.self) failed: \(error)")
-        }
+    func dittoJSONString() throws -> String {
+        let data = try JSONEncoder.ditto.encode(self)
+        return String(data: data, encoding: .utf8) ?? "{}"
     }
 }
 
-// MARK: - Extensions of `execute`
-extension DittoStore {
-
-    // Emit with mapped objects as an array
-    func executePublisher<T: Decodable>(query: String, arguments: [String: Any?]? = [:], mapTo: T.Type) -> AnyPublisher<[T], Error> {
-        return Future { promise in
-            Task.init {
-                do {
-                    let result = try await self.execute(query: query, arguments: arguments ?? [:])
-                    let items = result.items.compactMap { item in
-                        try? JSONDecoder.ditto.decode(T.self, from: item.jsonData())
-                    }
-                    promise(.success(items))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }.eraseToAnyPublisher()
-    }
-
-    // Emit with a mapped object as a single value instead of an array
-    func executePublisher<T: Decodable>(query: String, arguments: [String: Any?]? = [:], mapTo: T.Type, onlyFirst: Bool) -> AnyPublisher<T?, Error> {
-        return Future { promise in
-            Task.init {
-                do {
-                    let result = try await self.execute(query: query, arguments: arguments ?? [:])
-                    guard let first = result.items.first else { return promise(.success(nil)) }
-                    let item = try? JSONDecoder.ditto.decode(T.self, from: first.jsonData())
-                    promise(.success(item))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }.eraseToAnyPublisher()
+extension DittoQueryResultItem {
+    func decode<T: Decodable>(decoder: JSONDecoder = .ditto) throws -> T {
+        defer { dematerialize() }
+        return try decoder.decode(T.self, from: jsonData())
     }
 }
 
-// MARK: - Extensions of `registerObserver`
-extension DittoStore {
+extension DittoQueryResult {
+    /// Decodes every item; throws on any failure. Use when you need all-or-nothing.
+    func decode<T: Decodable>(decoder: JSONDecoder = .ditto) throws -> [T] {
+        try items.map { try $0.decode(decoder: decoder) }
+    }
 
-    // Send mapped objects as an array
-    func observePublisher<T: Decodable>(query: String, arguments: [String: Any?]? = nil, deliverOn queue: DispatchQueue = .main, mapTo: T.Type) -> AnyPublisher<[T], Error> {
+    /// Decodes every item, silently dropping any that fail. Use for observers
+    /// where one bad document shouldn't blank the rest.
+    func decodeOrSkip<T: Decodable>(decoder: JSONDecoder = .ditto) -> [T] {
+        items.compactMap { try? $0.decode(decoder: decoder) }
+    }
+}
+
+// MARK: - Combine wrappers
+
+extension DittoStore {
+    /// Uses Ditto's `handlerWithSignalNext` overload so we can apply
+    /// backpressure: `signalNext()` is called only after `subject.send(...)`
+    /// completes. With a non-buffered downstream this gates Ditto's next
+    /// delivery on consumer readiness; with `PassthroughSubject` the
+    /// difference is small but the pattern is the canonical one.
+    func observePublisher<T: Decodable>(
+        query: String,
+        arguments: [String: Any?]? = nil,
+        deliverOn queue: DispatchQueue = .main,
+        mapTo: T.Type
+    ) -> AnyPublisher<[T], Error> {
         let subject = PassthroughSubject<[T], Error>()
-
         do {
-            try self.registerObserver(query: query, arguments: arguments, deliverOn: queue) { result in
-                let items = result.items.compactMap { item in
-                    try? JSONDecoder.ditto.decode(T.self, from: item.jsonData())
+            try self.registerObserver(
+                query: query,
+                arguments: arguments,
+                deliverOn: queue,
+                handlerWithSignalNext: { result, signalNext in
+                    // Decode first; signalNext only after the consumer has the
+                    // decoded payload so Ditto's next delivery is gated on us
+                    // having actually finished this one.
+                    let items: [T] = result.decodeOrSkip()
+                    subject.send(items)
+                    signalNext()
                 }
-                subject.send(items)
-            }
+            )
         } catch {
             subject.send(completion: .failure(error))
         }
-
-        return subject.eraseToAnyPublisher()
-    }
-
-    // Send a mapped object as a single value instead of an array
-    func observePublisher<T: Decodable>(query: String, arguments: [String: Any?]? = nil, deliverOn queue: DispatchQueue = .main, mapTo: T.Type, onlyFirst: Bool) -> AnyPublisher<T?, Error> {
-        let subject = PassthroughSubject<T?, Error>()
-
-        do {
-            try self.registerObserver(query: query, arguments: arguments, deliverOn: queue) { result in
-                guard let first = result.items.first else { return subject.send(nil) }
-                let item = try? JSONDecoder.ditto.decode(T.self, from: first.jsonData())
-                subject.send(item)
-            }
-        } catch {
-            subject.send(completion: .failure(error))
-        }
-
         return subject.eraseToAnyPublisher()
     }
 }

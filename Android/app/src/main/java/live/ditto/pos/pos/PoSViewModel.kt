@@ -89,7 +89,7 @@ class PoSViewModel @Inject constructor(
         saleItemsJob = dittoRepository.observeLocationSaleItems(locationId)
             .onEach { items ->
                 _uiState.value = _uiState.value.copy(
-                    saleItems = items.sortedBy { it.name }.map(SaleItemUiModel::from)
+                    saleItems = items.map(SaleItemUiModel::from)
                 )
             }
             .flowOn(dispatcherIO)

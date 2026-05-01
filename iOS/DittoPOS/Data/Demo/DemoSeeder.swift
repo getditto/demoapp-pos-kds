@@ -26,7 +26,7 @@ struct DemoSeeder {
                 INSERT INTO \(Location.collectionName)
                 INITIAL DOCUMENTS (deserialize_json(:json))
                 """,
-                args: ["json": location.dittoJSONString()],
+                args: ["json": (try? location.dittoJSONString()) ?? "{}"],
                 label: "seedLocations"
             )
         }
@@ -39,7 +39,7 @@ struct DemoSeeder {
                 INSERT INTO \(SaleItem.collectionName)
                 INITIAL DOCUMENTS (deserialize_json(:json))
                 """,
-                args: ["json": item.dittoJSONString()],
+                args: ["json": (try? item.dittoJSONString()) ?? "{}"],
                 label: "seedSaleItems"
             )
         }

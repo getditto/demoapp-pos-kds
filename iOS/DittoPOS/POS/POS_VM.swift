@@ -24,7 +24,6 @@ import SwiftUI
         // filtered to the current location.
         dittoService.$locationSaleItems
             .receive(on: DispatchQueue.main)
-            .map { $0.sorted { $0.name < $1.name } }
             .assign(to: \.saleItems, on: self)
             .store(in: &cancellables)
 

@@ -272,24 +272,26 @@ fileprivate struct StoreService {
 
     func insertLocation(of customLocation: CustomLocation) {
         let location = Location(id: customLocation.locationId, name: customLocation.locationName)
+        guard let json = try? location.dittoJSONString() else { return }
         exec(
             """
             INSERT INTO \(Location.collectionName)
             DOCUMENTS (deserialize_json(:json))
             ON ID CONFLICT DO UPDATE_LOCAL_DIFF
             """,
-            args: ["json": location.dittoJSONString()]
+            args: ["json": json]
         )
     }
 
     func upsert(order: Order) {
+        guard let json = try? order.dittoJSONString() else { return }
         exec(
             """
             INSERT INTO \(Order.collectionName)
             DOCUMENTS (deserialize_json(:json))
             ON ID CONFLICT DO UPDATE_LOCAL_DIFF
             """,
-            args: ["json": order.dittoJSONString()]
+            args: ["json": json]
         )
     }
 
@@ -380,12 +382,12 @@ fileprivate struct StoreService {
         store.observePublisher(
             query: """
                 SELECT * FROM \(Order.collectionName)
-                WHERE _id = deserialize_json(:_idJson)
+                WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
-            arguments: ["_idJson": order._id.dittoJSONString()],
-            mapTo: Order.self,
-            onlyFirst: true
+            arguments: ["id": order._id.id, "locationId": order._id.locationId],
+            mapTo: Order.self
         )
+            .map(\.first)
             .catch { error in
                 assertionFailure("ERROR with \(#function)" + error.localizedDescription)
                 return Empty<Order?, Never>()
@@ -444,6 +446,7 @@ fileprivate final class SyncService {
                 query: """
                     SELECT * FROM \(SaleItem.collectionName)
                     WHERE _id.locationId = :locationId
+                    ORDER BY name
                     """,
                 arguments: ["locationId": locationId]
             )

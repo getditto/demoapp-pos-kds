@@ -7,8 +7,14 @@
 
 import Foundation
 
-// Order status as a timestamp-keyed audit log. Current value is derived at
-// read time via "most-advanced state wins" — stale writes never regress.
+// Order status modeled as a timestamp-keyed audit log instead of a single
+// LWW field. Every transition is preserved (Ditto's add-wins map merge);
+// the "current" status is *derived* at read time using "most-advanced state
+// wins." A stale device coming online late and writing an older state cannot
+// regress the order's status — the older entry stays in the log for
+// auditability but the read-time derivation ignores it.
+//
+// See: https://docs.ditto.live/best-practices/conflict-resolution-patterns
 enum OrderStatus: String, CaseIterable, Codable {
     case open
     case inProcess
@@ -49,6 +55,6 @@ enum StatusLogDerivation {
     }
 
     static func entry(_ status: OrderStatus, at date: Date = Date()) -> (key: String, value: String) {
-        (DateFormatter.isoDate.string(from: date), status.rawValue)
+        (date.formatted(DittoDateFormatting.iso8601), status.rawValue)
     }
 }
