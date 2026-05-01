@@ -56,14 +56,21 @@ import SwiftUI
 
         // Refresh the local copy of the current order whenever the synced
         // collection changes. The synced version may have updates from another
-        // device, so we look up our order by id and re-bind to it.
+        // device, so we look up our order by id and re-bind to it. Only assign
+        // when we find a match — right after startNewOrder writes a doc, the
+        // observer hasn't round-tripped yet and the new id isn't in `orders`,
+        // so a nil assignment here would clobber the freshly-created order.
         dittoService.$locationOrders
             .receive(on: DispatchQueue.main)
             .sink { [weak self] orders in
                 guard let self,
                       let orderId = currentOrder?.documentId.id,
-                      let locationId = dittoService.currentLocationId else { return }
-                currentOrder = orders.first { $0.documentId.id == orderId && $0.documentId.locationId == locationId }
+                      let locationId = dittoService.currentLocationId,
+                      let match = orders.first(where: {
+                          $0.documentId.id == orderId && $0.documentId.locationId == locationId
+                      })
+                else { return }
+                currentOrder = match
             }
             .store(in: &cancellables)
     }

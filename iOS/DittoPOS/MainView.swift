@@ -67,17 +67,11 @@ enum TabViews: Int, Identifiable {
             }
             .store(in: &cancellables)
         
-        // Update main navbar title with current location name
+        // Update main navbar title with current location name.
         dittoService.$currentLocation
-            .sink {[weak self] location in
-                guard let self = self else { return }
-                if let location = location {
-                    mainTitle = location.name
-                } else {
-                    mainTitle = "Please Select Location"
-                }
-            }
-            .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .map { $0?.name ?? "Please Select Location" }
+            .assign(to: &$mainTitle)
     }
 }
 
@@ -129,8 +123,8 @@ struct MainView: View {
                     }
                 }
             }
+            .navigationTitle(vm.mainTitle)
             #if !os(tvOS)
-            .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .navigationViewStyle(StackNavigationViewStyle())
