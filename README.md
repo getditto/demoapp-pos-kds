@@ -2,9 +2,9 @@
 
 ## Overview
 
-A demo Point-of-Sale + Kitchen Display System for a fast food chain. Customer
-orders are entered in the POS view and appear in real time on the KDS view as
-they move through the kitchen workflow.
+A demo Point-of-Sale + Kitchen Display System for a quick service restaurant
+chain. Customer orders are entered in the POS view and appear in real time on
+the KDS view as they move through the kitchen workflow.
 
 The UI has three tabs:
 
