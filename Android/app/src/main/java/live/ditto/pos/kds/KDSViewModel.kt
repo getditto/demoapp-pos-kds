@@ -5,26 +5,30 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.kds.domain.GetOrdersForKdsUseCase
-import live.ditto.pos.kds.domain.UpdateKDSOrderStatus
+import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.core.domain.repository.DittoRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class KDSViewModel @Inject constructor(
-    private val getOrdersForKdsUseCase: GetOrdersForKdsUseCase,
-    private val updateKDSOrderStatus: UpdateKDSOrderStatus,
+class KDSViewModel
+@Inject
+constructor(
+    private val coreRepository: CoreRepository,
+    private val dittoRepository: DittoRepository,
     private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -40,22 +44,39 @@ class KDSViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatcherIo) {
-            getOrdersForTickets()
+            ordersJob = activeKitchenOrders()
+                .onEach(::updateTickets)
+                .flowOn(dispatcherIo)
+                .launchIn(viewModelScope)
         }
     }
 
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
-            val orders = getOrdersForKdsUseCase().first()
-            orders.firstOrNull { it.id == orderId }?.let { updateKDSOrderStatus(it) }
+            val order = activeKitchenOrders().first().firstOrNull { it.id == orderId }
+                ?: return@launch
+            val nextStatus = when (order.status) {
+                OrderStatus.IN_PROCESS -> OrderStatus.PROCESSED
+                OrderStatus.PROCESSED -> OrderStatus.DELIVERED
+                else -> return@launch
+            }
+            dittoRepository.upsertOrder(order.appendingStatus(nextStatus))
+
+            if (nextStatus == OrderStatus.PROCESSED && coreRepository.currentOrderId() == order.id) {
+                coreRepository.setCurrentOrderId("")
+            }
         }
     }
 
-    private suspend fun getOrdersForTickets() {
-        ordersJob = getOrdersForKdsUseCase()
-            .onEach(::updateTickets)
-            .flowOn(dispatcherIo)
-            .launchIn(viewModelScope)
+    // Orders the kitchen cares about: in-process or processed, with items.
+    private suspend fun activeKitchenOrders(): Flow<List<Order>> {
+        val locationId = coreRepository.locationId()
+        return dittoRepository.observeLocationOrders(locationId).map { orders ->
+            orders.filter { order ->
+                (order.status == OrderStatus.IN_PROCESS || order.status == OrderStatus.PROCESSED) &&
+                    order.cart.isNotEmpty()
+            }
+        }
     }
 
     private fun updateTickets(orders: List<Order>) {
