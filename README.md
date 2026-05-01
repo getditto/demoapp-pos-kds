@@ -112,9 +112,8 @@ script's header documents its purpose and inputs.
 
 To run a script you'll need:
 
-1. A Cloud URL endpoint —
-   [docs](https://docs.ditto.live/cloud/http-api/getting-started#RBdx2).
-2. An HTTP API auth token — same docs.
+1. A [Cloud URL endpoint](https://docs.ditto.live/cloud/http-api/getting-started#cloud-url-endpoint).
+2. An [HTTP API key](https://docs.ditto.live/cloud/http-api/auth-and-params#api-key).
 
 Available:
 

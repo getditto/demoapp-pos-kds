@@ -1,73 +1,69 @@
-# Purpose:
-# This script will simulate order generation for the POS demo app. It will generate a new order at a given configurable Interval (seconds).
-# Every new order will be set to the satus value of 1; which is the first initial status after an order is created.
-# Bumping the order must be done from the iOS or Android app.
-
-# HOW TO USE:
-# 1. Replace "https://<CLOUD_ENDPOINT>/api/v4/store/execute" with your own cloud url Endpoint. Read more about the cloud url endpoint here: https://docs.ditto.live/cloud/http-api/getting-started#RBdx2
-# 2. Replace `--header 'Authorization: <AUTHORIZATION-TOKEN>' with your own auth token. Read more about auth tokens here: https://docs.ditto.live/cloud/http-api/authorization
-# 3. Open the iOS or Android POS app
-# 4. Run this script
-
-
 #!/bin/bash
+#
+# Purpose:
+# Simulates order generation for the POS demo app. Inserts a new pos_orders
+# document at a configurable interval. Each generated order is in the
+# `inProcess` status (one cart item) so it shows up immediately in the KDS
+# view. Advancing/paying orders must still be done from the iOS or Android app.
+#
+# How to use:
+# 1. Set CLOUD_ENDPOINT to your own Cloud URL endpoint:
+#    https://docs.ditto.live/cloud/http-api/getting-started#cloud-url-endpoint
+# 2. Set API_KEY to your own HTTP API key:
+#    https://docs.ditto.live/cloud/http-api/auth-and-params#api-key
+# 3. Open the iOS or Android POS app and select a location.
+# 4. Set LOCATION_ID below to the location you selected (default 00001).
+# 5. Run this script.
 
-# Interval in seconds (change this value to your desired interval)
-INTERVAL=1
+set -euo pipefail
 
-# Function to generate a random UUID (macOS uses uuidgen)
-generate_uuid() {
-  uuidgen
-}
+# ----- Configuration -----
+CLOUD_ENDPOINT="https://<YOUR-CLOUD-ENDPOINT>.cloud.ditto.live/api/v4/store/execute"
+API_KEY="<YOUR-API-KEY>"
+LOCATION_ID="00001"
+INTERVAL=1  # seconds between inserts
 
-# Function to get the current timestamp in ISO 8601 format
-get_current_timestamp() {
-  date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"
-}
+# Hand-picked sale item from the seed catalog (id 00012 = Milk, $2.00).
+SALE_ITEM_ID="00012"
+SALE_ITEM_NAME="Milk"
+SALE_ITEM_IMAGE="milk"
+SALE_ITEM_CENTS=200
 
-# Run until interrupted
+# ----- Helpers -----
+generate_uuid() { uuidgen; }
+iso_now() { date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"; }
+
+# ----- Loop -----
 while true; do
-  # Generate random UUIDs
-  ID_UUID=$(generate_uuid)
-  TRANSACTION_UUID=$(generate_uuid)
+  ORDER_ID=$(generate_uuid)
+  LINE_ITEM_ID=$(generate_uuid)
+  NOW=$(iso_now)
 
-  # Generate current timestamp
-  CURRENT_TIMESTAMP=$(get_current_timestamp)
-
-  # Generate random UUIDs and timestamps for saleItemIds
-  SALEITEM_KEY_1="$(generate_uuid)_$(get_current_timestamp)"
-  SALEITEM_KEY_2="$(generate_uuid)_$(get_current_timestamp)"
-  SALEITEM_KEY_3="$(generate_uuid)_$(get_current_timestamp)"
-  SALEITEM_KEY_4="$(generate_uuid)_$(get_current_timestamp)"
-  SALEITEM_KEY_5="$(generate_uuid)_$(get_current_timestamp)"
-
-  curl -X POST "https://ef7f7d95-81ba-44f6-bdfe-eb74ee57d520.cloud.ditto.live/api/v4/store/execute" \
-    --header 'Authorization: PDFCfhxPcTtlf9zS1wh8JPQxovAXlqjfd2mb98CaP4cuBqduS2lZmL6VtFGT' \
-    --header 'Content-Type: application/json' \
+  curl -sS -X POST "$CLOUD_ENDPOINT" \
+    --header "Authorization: $API_KEY" \
+    --header "Content-Type: application/json" \
     --data-raw "{
-        \"statement\": \"INSERT INTO orders DOCUMENTS (:new)\",
-        \"args\": {
-          \"new\": {
-            \"_id\": {
-              \"id\": \"$ID_UUID\",
-              \"locationId\": \"00001\"
-            },
-            \"createdOn\": \"$CURRENT_TIMESTAMP\",
-            \"saleItemIds\": {
-              \"$SALEITEM_KEY_1\": \"00012\",
-              \"$SALEITEM_KEY_2\": \"00012\",
-              \"$SALEITEM_KEY_3\": \"00012\",
-              \"$SALEITEM_KEY_4\": \"00012\",
-              \"$SALEITEM_KEY_5\": \"00012\"
-            },
-            \"status\": 1,
-            \"transactionIds\": {
-              \"$TRANSACTION_UUID\": 2
+      \"statement\": \"INSERT INTO pos_orders DOCUMENTS (:new) ON ID CONFLICT DO UPDATE_LOCAL_DIFF\",
+      \"args\": {
+        \"new\": {
+          \"_id\": { \"id\": \"$ORDER_ID\", \"locationId\": \"$LOCATION_ID\" },
+          \"cart\": {
+            \"$LINE_ITEM_ID\": {
+              \"saleItemId\": \"$SALE_ITEM_ID\",
+              \"name\": \"$SALE_ITEM_NAME\",
+              \"imageName\": \"$SALE_ITEM_IMAGE\",
+              \"price\": { \"amount\": $SALE_ITEM_CENTS, \"currency\": \"usd\" },
+              \"qty\": 1,
+              \"createdAt\": \"$NOW\"
             }
-          }
+          },
+          \"payments\": {},
+          \"status_log\": { \"$NOW\": \"inProcess\" },
+          \"createdAt\": \"$NOW\"
         }
-    }"
-  
-  # Wait for the defined interval
-  sleep $INTERVAL
+      }
+    }" \
+    && echo
+
+  sleep "$INTERVAL"
 done
