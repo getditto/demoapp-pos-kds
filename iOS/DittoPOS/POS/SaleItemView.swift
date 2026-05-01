@@ -10,18 +10,18 @@ import SwiftUI
 
 struct SaleItemView: View {
     let item: SaleItem
-    
+
     init(_ item: SaleItem, length: CGFloat = 0) {
         self.item = item
     }
-    
+
     var body: some View {
         VStack {
             Spacer()
-            Image(item.imageName)
+            Image(ImageNameMapping.assetName(for: item.imageName))
                 .resizable()
-                
-            Text(item.title)
+
+            Text(item.name)
                 .scaledFont(size: 16)
         }
         .lineLimit(1)
@@ -31,6 +31,15 @@ struct SaleItemView: View {
 
 struct POSItemView_Previews: PreviewProvider {
     static var previews: some View {
-        SaleItemView(SaleItem.demoItems.first!, length: 80)
+        SaleItemView(
+            SaleItem.seed(
+                id: "preview",
+                locationId: "preview",
+                name: "Burger",
+                imageName: "burger",
+                cents: 850
+            ),
+            length: 80
+        )
     }
 }

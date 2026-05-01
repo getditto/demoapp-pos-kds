@@ -12,46 +12,45 @@ import SwiftUI
 @MainActor class POSOrderTotalVM: ObservableObject {
     @Published var orderIsPaid: Bool = false
     @Published var orderIsEmpty: Bool
-    @Published var orderTotal: Double = 0.0
+    @Published var orderTotal: Price = Price(cents: 0)
     private var cancellables = Set<AnyCancellable>()
     private var dataVM = POS_VM.shared
-    
+
     init() {
         let dvm = POS_VM.shared
-        if let currOrder = dvm.currentOrder {
-            self.orderIsEmpty = currOrder.saleItemIds.isEmpty
+        if let curOrder = dvm.currentOrder {
+            self.orderIsEmpty = curOrder.cart.isEmpty
         } else {
             self.orderIsEmpty = true
         }
-        
-        // Pay/Cancel button enablement
+
         dataVM.$currentOrder
             .sink {[weak self] order in
                 guard let self = self else { return }
                 guard let order = order else { return }
-                
+
                 orderTotal = order.total
-                if orderIsEmpty != order.saleItemIds.isEmpty {
+                if orderIsEmpty != order.cart.isEmpty {
                     orderIsEmpty.toggle()
                 }
                 if orderIsPaid != order.isPaid {
                     orderIsPaid.toggle()
                 }
             }
-            .store(in: &cancellables)        
+            .store(in: &cancellables)
     }
-    
+
     var disableButtons: Bool {
         orderIsPaid || orderIsEmpty
     }
-    
+
     func payOrder() {
         dataVM.payCurrentOrder()
     }
-    
+
     func cancelOrder() {
-        if let items = dataVM.currentOrder?.saleItemIds, !items.isEmpty {
-            dataVM.clearCurrentOrderSaleItemIds()
+        if let order = dataVM.currentOrder, !order.cart.isEmpty {
+            dataVM.clearCurrentOrderCart()
         }
     }
 }
@@ -64,11 +63,11 @@ struct POSOrderTotalView: View {
             HStack(alignment: .bottom, spacing: 0) {
                 Text("Total")
                 Spacer()
-                Text(vm.orderTotal.currencyFormatted())
+                Text(vm.orderTotal.description)
             }
             .scaledFont(size: 16)
             .padding(.vertical, 4)
-            
+
             HStack {
                 Button {
                     print("Cancel button tapped")
@@ -81,7 +80,7 @@ struct POSOrderTotalView: View {
                 .disabled(vm.disableButtons)
 
                 Spacer()
-                
+
                 Button {
                     print("Pay button tapped")
                     vm.payOrder()

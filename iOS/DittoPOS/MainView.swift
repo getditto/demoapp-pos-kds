@@ -62,18 +62,18 @@ enum TabViews: Int, Identifiable {
         // Switch to POS view after location is selected
         dittoService.$currentLocationId
             .dropFirst()
-            .sink {[weak self] locId in
-                guard let self = self, locId != nil else { return }
+            .sink {[weak self] locationId in
+                guard let self = self, locationId != nil else { return }
                 selectedTab = .pos
             }
             .store(in: &cancellables)
         
         // Update main navbar title with current location name
         dittoService.$currentLocation
-            .sink {[weak self] loc in
+            .sink {[weak self] location in
                 guard let self = self else { return }
-                if let loc = loc {
-                    mainTitle = loc.name
+                if let location = location {
+                    mainTitle = location.name
                 } else {
                     mainTitle = "Please Select Location"
                 }

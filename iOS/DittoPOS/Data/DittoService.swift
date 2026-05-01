@@ -8,11 +8,10 @@
 
 import Combine
 import DittoSwift
-import SwiftUI
 
 // MARK: - DittoInstance
 final class DittoInstance: ObservableObject {
-    
+
     static var shared = DittoInstance()
     let ditto: Ditto
 
@@ -35,12 +34,10 @@ final class DittoInstance: ObservableObject {
         ), persistenceDirectory: persistenceDirURL)
 
         ditto.updateTransportConfig { transportConfig in
-            // Set the Ditto Websocket URL
             transportConfig.connect.webSocketURLs.insert(Env.DITTO_WEBSOCKET_URL)
         }
 
         do {
-            // Disable sync with V3 Ditto
             try ditto.disableSyncWithV3()
         } catch let error {
             print("ERROR: disableSyncWithV3() failed with error \"\(error)\"")
@@ -48,11 +45,9 @@ final class DittoInstance: ObservableObject {
 
         Task {
             do {
-                // disable strict mode - allows for DQL with counters and objects as CRDT maps, must be called before sync starts
-                // https://docs.ditto.live/dql/strict-mode
+                // disable strict mode - allows for DQL with counters and objects as CRDT maps
                 try await ditto.store.execute(query: "ALTER SYSTEM SET DQL_STRICT_MODE = false")
 
-                // Prevent Xcode previews from syncing: non preview simulators and real devices can sync
                 let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
                 if !isPreview {
                     try ditto.sync.start()
@@ -76,6 +71,10 @@ final class DittoInstance: ObservableObject {
 
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
+
+    @Published private(set) var locationSaleItems = [SaleItem]()
+    private var saleItemsCancellable = AnyCancellable({})
+
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
 
@@ -85,57 +84,60 @@ final class DittoInstance: ObservableObject {
     private init() {
         storeService = StoreService(ditto.store)
         syncService = SyncService(ditto.sync)
-        syncService.registerInitialSubscriptions()
+        syncService.registerLocationsSubscription()
+
+        Task { @MainActor in
+            await DemoSeeder(store: ditto.store).seedAll()
+            await Eviction.runIfDue(store: ditto.store)
+        }
 
         updateLocationsPublisher()
 
         currentLocationId = Settings.locationId
-        
+
         $currentLocationId
             .combineLatest($allLocations)
-            .sink {[weak self] locId, allLocations in
-                guard let locId = locId, let self = self else { return }
-                
-                if locId != Settings.locationId {
-                    Settings.locationId = locId
+            .sink {[weak self] locationId, _ in
+                guard let locationId = locationId, let self = self else { return }
+
+                if locationId != Settings.locationId {
+                    Settings.locationId = locationId
                 }
 
                 if Settings.useDemoLocations {
-                    storeService.setupDemoLocations()
-                }
-
-                // reset subscription for new location
-                syncService.cancelOrdersSubscription()
-                syncService.registerOrdersSinceTTLSubscription(locId: locId)
-
-                updateOrdersPublisher(locId)
-                Task {
-                    await MainActor.run {[weak self] in
-                        self?.updateCurrentLocation(locId)
+                    Task { @MainActor in
+                        await DemoSeeder(store: self.ditto.store).seedLocations()
                     }
                 }
+
+                syncService.cancelOrdersSubscription()
+                syncService.cancelSaleItemsSubscription()
+                syncService.registerOrdersSinceTTLSubscription(locationId: locationId)
+                syncService.registerSaleItemsSubscription(locationId: locationId)
+
+                updateOrdersPublisher(locationId)
+                updateSaleItemsPublisher(locationId)
+                updateCurrentLocation(locationId)
             }
             .store(in: &cancellables)
     }
 
     // use case: store user-defined location
     func saveCustomLocation(company: String, location: String) {
-        let loc = CustomLocation(companyName: company, locationName: location)
-        guard let jsonData = JSONEncoder.encodedObject(loc) else {
+        let customLocation = CustomLocation(companyName: company, locationName: location)
+        guard let jsonData = JSONEncoder.encodedObject(customLocation) else {
             print("DS.\(#function): jsonData from custom location FAILED --> RETURN")
             return
         }
 
         Settings.customLocation = jsonData
-        
-        storeService.insertLocation(of: loc)
 
-        // setting here will save locationId and update subscriptions in sink above
-        currentLocationId = loc.locationId
-        
+        storeService.insertLocation(of: customLocation)
+
+        currentLocationId = customLocation.locationId
+
         do {
-            // add locationId to small_peer_info metadata
-            try ditto.smallPeerInfo.setMetadata(["locationId": loc.locationId])
+            try ditto.smallPeerInfo.setMetadata(["locationId": customLocation.locationId])
         } catch {
             print("DS.smallPeerInfo.metadata: Error \(error)")
         }
@@ -148,41 +150,37 @@ final class DittoInstance: ObservableObject {
     }
 
     func add(order: Order) {
-        storeService.insert(order: order)
+        storeService.upsert(order: order)
     }
 
-    func add(item: OrderItem, to order: Order) {
-        storeService.add(item: item, to: order)
+    func add(item: CartLineItem, lineItemId: String, to order: Order) {
+        let updated = order.addingCartLineItem(item, lineItemId: lineItemId)
+        storeService.upsert(order: updated)
     }
 
     func updateStatus(of order: Order, with status: OrderStatus) {
-        storeService.updateStatus(of: order, with: status)
+        let updated = order.appendingStatus(status)
+        storeService.upsert(order: updated)
     }
 
-    func clearSaleItemIds(of order: Order) {
-        storeService.clearSaleItemIds(of: order)
+    func clearCart(of order: Order) {
+        storeService.clearCart(of: order)
     }
 
     func reset(order: Order) {
         storeService.reset(order: order)
     }
 
-    func updateOrderTransaction(_ order: Order, with transx: Transaction) {
-        storeService.insert(transaction: transx)
-        storeService.add(transx, to: order)
+    func addPayment(_ payment: Payment, paymentId: String, to order: Order) {
+        let updated = order.addingPayment(payment, paymentId: paymentId)
+        storeService.upsert(order: updated)
     }
 
-    func incompleteOrderFuture(locationId: String? = nil) -> Future<Order?, Never> {
-        guard let locId = locationId ?? currentLocationId else {
-            return Future { promise in  promise(.success(nil)) }
-        }
-        return storeService.incompleteOrderFuture(locationId: locId)
-    }
 }
 
 extension DittoService {
     enum LocationsSetupOption { case demo, custom }
-    
+
     var locationSetupNotValid: Bool {
         Settings.locationId == nil && Settings.useDemoLocations == false
     }
@@ -193,24 +191,26 @@ extension DittoService {
         case .custom: resetToCustomLocation()
         }
     }
-    
+
     func updateDemoLocationsSetting(enable: Bool) {
         if enable { resetToDemoLocations() }
         else { resetToCustomLocation() }
     }
-    
+
     func resetToDemoLocations() {
         Settings.customLocation = nil
         Settings.useDemoLocations = true
-        storeService.setupDemoLocations()
+        Task { @MainActor in
+            await DemoSeeder(store: ditto.store).seedLocations()
+        }
         locationsSetupCommon()
     }
-    
+
     func resetToCustomLocation() {
         Settings.useDemoLocations = false
         locationsSetupCommon()
     }
-    
+
     private func locationsSetupCommon() {
         updateLocationsPublisher()
         Settings.locationId = nil
@@ -226,15 +226,14 @@ extension DittoService {
             .allLocationsObservePublisher()
             .map { locations in
                 if Settings.useDemoLocations {
-                    return locations.filter { Location.demoLocationsIds.contains($0.id) }
+                    return locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
                 }
                 return locations
             }
             .assign(to: \.allLocations, on: self)
     }
 
-
-    private func updateOrdersPublisher(_ locId: String) {
+    private func updateOrdersPublisher(_ locationId: String) {
         guard let subscription = syncService.ordersSubscription else { return }
 
         allOrdersCancellable = storeService
@@ -245,9 +244,19 @@ extension DittoService {
             .assign(to: \.locationOrders, on: self)
     }
 
-    private func updateCurrentLocation(_ locId: String?) {
-        guard let locId = locId else { return }
-        let location = allLocations.first { $0.id == locId }
+    private func updateSaleItemsPublisher(_ locationId: String) {
+        guard let subscription = syncService.saleItemsSubscription else { return }
+        saleItemsCancellable = storeService
+            .allSaleItemsObservePublisher(
+                queryString: subscription.queryString,
+                queryArgs: subscription.queryArguments
+            )
+            .assign(to: \.locationSaleItems, on: self)
+    }
+
+    private func updateCurrentLocation(_ locationId: String?) {
+        guard let locationId = locationId else { return }
+        let location = allLocations.first { $0.id == locationId }
         currentLocation = location
         currentLocationSubject.value = location
     }
@@ -261,52 +270,22 @@ fileprivate struct StoreService {
         self.store = store
     }
 
-    func insertLocation(of customLoc: CustomLocation) {
-        let loc = Location(id: customLoc.locationId, name: customLoc.locationName)
-        let query = loc.insertNewQuery
-        exec(query: query)
+    func insertLocation(of customLocation: CustomLocation) {
+        let location = Location(id: customLocation.locationId, name: customLocation.locationName)
+        exec(query: location.insertNewQuery)
     }
 
-    func insert(order: Order) {
-        let query = order.insertNewQuery
-        exec(query: query)
+    func upsert(order: Order) {
+        exec(query: order.upsertQuery)
     }
 
-    func setupDemoLocations(_ demoLocations: [Location] = Location.demoLocations) {
-        demoLocations.forEach { loc in
-            let query = loc.insertDefaultQuery
-            exec(query: query)
-        }
-    }
-
-    func add(item: OrderItem, to order: Order) {
-        let query = order.addItemQuery(orderItem: item)
-        exec(query: query)
-    }
-
-    func updateStatus(of order: Order, with status: OrderStatus) {
-        let query = order.updateStatusQuery(status: status)
-        exec(query: query)
-    }
-
-    func clearSaleItemIds(of order: Order) {
-        let query = order.clearSaleItemIdsQuery
+    func clearCart(of order: Order) {
+        guard let query = order.clearCartQuery else { return }
         exec(query: query)
     }
 
     func reset(order: Order) {
-        let query = order.resetQuery
-        exec(query: query)
-    }
-
-    func insert(transaction: Transaction) {
-        let query = transaction.insertNewQuery
-        exec(query: query)
-    }
-
-    func add(_ transaction: Transaction, to order: Order) {
-        let query = order.addTransactionQuery(transaction: transaction)
-        exec(query: query)
+        exec(query: order.resetQuery)
     }
 
     private func exec(query: DittoQuery, function: String = #function) {
@@ -328,11 +307,20 @@ fileprivate struct StoreService {
             .eraseToAnyPublisher()
     }
 
-    func allOrdersObservePublisher(queryString: String, queryArgs: [String:Any?]?) -> AnyPublisher<[Order], Never> {
+    func allOrdersObservePublisher(queryString: String, queryArgs: [String: Any?]?) -> AnyPublisher<[Order], Never> {
         store.observePublisher(query: queryString, arguments: queryArgs, mapTo: Order.self)
             .catch { error in
                 assertionFailure("ERROR with \(#function)" + error.localizedDescription)
                 return Empty<[Order], Never>()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func allSaleItemsObservePublisher(queryString: String, queryArgs: [String: Any?]?) -> AnyPublisher<[SaleItem], Never> {
+        store.observePublisher(query: queryString, arguments: queryArgs, mapTo: SaleItem.self)
+            .catch { error in
+                assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+                return Empty<[SaleItem], Never>()
             }
             .eraseToAnyPublisher()
     }
@@ -347,69 +335,34 @@ fileprivate struct StoreService {
             .eraseToAnyPublisher()
     }
 
-    func incompleteOrderFuture(locationId: String) -> Future<Order?, Never> {
-        print("DS.\(#function) --> in")
-        let query = Order.incompleteOrderQuery(locationId: locationId)
-        return Future { promise in
-            Task {
-                do {
-                    let result = try await self.store.execute(query: query.string, arguments: query.args)
-                    if let item = result.items.first {
-//                        print("DS.\(#function): incomplete order FOUND")
-                        var order = Order(value: item.value)
-                        order.createdOn = Date()
-                        order.saleItemIds.removeAll()
-                        order.status = .open
-                        
-                        // The returned Order object is only to immediately update the UI by the caller;
-                        // a new Order object will be created by the observer when locationOrders is
-                        // updated by the following call to reset/update the order in the collection
-                        reset(order: order)
-                        
-                        promise(.success(Order(value: item.value)))
-                    } else {
-//                        print("DS.\(#function): incomplete order NOT FOUND --> return nil")
-                        return promise(.success(nil))
-                    }
-                } catch {
-                    print(
-                        "DS.incompleteOrderPublisher: ERROR with  \(query.string) \(query.args):\n"
-                        + error.localizedDescription
-                    )
-                    return promise(.success(nil))
-                }
-            }
-        }
-    }
 }
 
 // MARK: - SyncService
 fileprivate final class SyncService {
     private let sync: DittoSync
 
-    private var locationsSubscription: DittoSyncSubscription? = nil
-    private(set) var ordersSubscription: DittoSyncSubscription? = nil
+    private var locationsSubscription: DittoSyncSubscription?
+    private(set) var ordersSubscription: DittoSyncSubscription?
+    private(set) var saleItemsSubscription: DittoSyncSubscription?
 
     init(_ sync: DittoSync) {
         self.sync = sync
     }
 
-    func registerInitialSubscriptions() {
+    /// Locations sub is the only one that runs at startup; orders and sale_items
+    /// register lazily once a location is chosen.
+    func registerLocationsSubscription() {
         do {
-            try locationsSubscription = sync.registerSubscription(
+            locationsSubscription = try sync.registerSubscription(
                 query: Location.selectAllQuery.string
-            )
-            try ordersSubscription = sync.registerSubscription(
-                query: Order.defaultLocationSyncQuery.string,
-                arguments: Order.defaultLocationSyncQuery.args
             )
         } catch {
             assertionFailure("ERROR with \(#function)" + error.localizedDescription)
         }
     }
 
-    func registerOrdersSinceTTLSubscription(locId: String) {
-        let query = Order.ordersQuerySinceTTL(locId: locId)
+    func registerOrdersSinceTTLSubscription(locationId: String) {
+        let query = Order.ordersQuerySinceTTL(locationId: locationId)
         do {
             ordersSubscription = try sync.registerSubscription(
                 query: query.string,
@@ -423,5 +376,46 @@ fileprivate final class SyncService {
     func cancelOrdersSubscription() {
         ordersSubscription?.cancel()
         ordersSubscription = nil
+    }
+
+    func registerSaleItemsSubscription(locationId: String) {
+        let query = SaleItem.locationMenuQuery(locationId: locationId)
+        do {
+            saleItemsSubscription = try sync.registerSubscription(
+                query: query.string,
+                arguments: query.args
+            )
+        } catch {
+            assertionFailure("ERROR with \(#function)" + error.localizedDescription)
+        }
+    }
+
+    func cancelSaleItemsSubscription() {
+        saleItemsSubscription?.cancel()
+        saleItemsSubscription = nil
+    }
+}
+
+// MARK: - Eviction
+
+/// Storage cleanup on app launch, gated to at most once per 24h.
+/// Observer queries filter by location/TTL, so this is purely about
+/// preventing the local store from accumulating expired orders.
+fileprivate enum Eviction {
+    private static let lastRunKey = "v2.lastEvictionAt"
+    private static let interval: TimeInterval = 60 * 60 * 24
+
+    static func runIfDue(store: DittoStore) async {
+        let now = Date().timeIntervalSince1970
+        let last = UserDefaults.standard.double(forKey: lastRunKey)
+        guard now - last >= interval else { return }
+
+        let query = Order.evictionQuery
+        do {
+            _ = try await store.execute(query: query.string, arguments: query.args)
+            UserDefaults.standard.set(now, forKey: lastRunKey)
+        } catch {
+            print("Eviction: ERROR \(error.localizedDescription)")
+        }
     }
 }

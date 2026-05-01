@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct POSGridView: View {
-    @Environment(\.horizontalSizeClass) private var HsizeClass    
+    @Environment(\.horizontalSizeClass) private var HsizeClass
     @ObservedObject var dataVM = POS_VM.shared
     @State var columns = [GridItem]()
 
@@ -22,12 +22,12 @@ struct POSGridView: View {
                         Button(action: {
                             dataVM.addOrderItem(item)
                         }, label: {
-                            VStack{
-                                Image(item.imageName)
+                            VStack {
+                                Image(ImageNameMapping.assetName(for: item.imageName))
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 200, height: 200)
-                                Text(item.title)
+                                Text(item.name)
                                     .font(.body)
                             }
                         })
@@ -49,11 +49,11 @@ struct POSGridView: View {
         }
         .onAppear { columns = cols() }
     }
-    
+
     func cols() -> [GridItem] {
         [GridItem(.adaptive(minimum: HsizeClass == .compact ? 100 : 160), alignment: .top)]
     }
-    
+
     var itemSide: CGFloat {
         HsizeClass == .compact ? 100 : 160
     }

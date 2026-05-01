@@ -32,7 +32,15 @@
 		14CD51BF2A2FE3EE0018DE87 /* DittoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CD51BE2A2FE3EE0018DE87 /* DittoService.swift */; };
 		14DECF062A3A68B0005BC2AE /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF052A3A68B0005BC2AE /* Location.swift */; };
 		14DECF082A3A7F76005BC2AE /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF072A3A7F76005BC2AE /* Order.swift */; };
-		14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF092A3B92D5005BC2AE /* Transaction.swift */; };
+		DAFEED01000000000000B001 /* CartLineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A001 /* CartLineItem.swift */; };
+		DAFEED01000000000000B002 /* Payment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A002 /* Payment.swift */; };
+		DAFEED01000000000000B003 /* StatusLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A003 /* StatusLog.swift */; };
+		DAFEED01000000000000B004 /* ImageNameMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A004 /* ImageNameMapping.swift */; };
+		DAFEED01000000000000B005 /* OrderStatusDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A005 /* OrderStatusDisplay.swift */; };
+		DAFEED01000000000000B00A /* DocumentID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A00A /* DocumentID.swift */; };
+		DAFEED01000000000000B007 /* LocationSeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A007 /* LocationSeed.swift */; };
+		DAFEED01000000000000B008 /* SaleItemSeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A008 /* SaleItemSeed.swift */; };
+		DAFEED01000000000000B009 /* DemoSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A009 /* DemoSeeder.swift */; };
 		14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF0C2A3BDC27005BC2AE /* POSView.swift */; };
 		14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF0E2A3BDC31005BC2AE /* KDSView.swift */; };
 		14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF102A3BDC3A005BC2AE /* LocationsView.swift */; };
@@ -72,7 +80,15 @@
 		14CD51C22A2FE4880018DE87 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		14DECF052A3A68B0005BC2AE /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		14DECF072A3A7F76005BC2AE /* Order.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Order.swift; sourceTree = "<group>"; };
-		14DECF092A3B92D5005BC2AE /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A001 /* CartLineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartLineItem.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A002 /* Payment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Payment.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A003 /* StatusLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusLog.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A004 /* ImageNameMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageNameMapping.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A005 /* OrderStatusDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderStatusDisplay.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A00A /* DocumentID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentID.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A007 /* LocationSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSeed.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A008 /* SaleItemSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemSeed.swift; sourceTree = "<group>"; };
+		DAFEED01000000000000A009 /* DemoSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSeeder.swift; sourceTree = "<group>"; };
 		14DECF0C2A3BDC27005BC2AE /* POSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSView.swift; sourceTree = "<group>"; };
 		14DECF0E2A3BDC31005BC2AE /* KDSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSView.swift; sourceTree = "<group>"; };
 		14DECF102A3BDC3A005BC2AE /* LocationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsView.swift; sourceTree = "<group>"; };
@@ -204,10 +220,25 @@
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
-				14DECF092A3B92D5005BC2AE /* Transaction.swift */,
-
+				DAFEED01000000000000A001 /* CartLineItem.swift */,
+				DAFEED01000000000000A002 /* Payment.swift */,
+				DAFEED01000000000000A003 /* StatusLog.swift */,
+				DAFEED01000000000000A004 /* ImageNameMapping.swift */,
+				DAFEED01000000000000A005 /* OrderStatusDisplay.swift */,
+				DAFEED01000000000000A00A /* DocumentID.swift */,
+				DAFEED01000000000000A006 /* Demo */,
 			);
 			path = Data;
+			sourceTree = "<group>";
+		};
+		DAFEED01000000000000A006 /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				DAFEED01000000000000A007 /* LocationSeed.swift */,
+				DAFEED01000000000000A008 /* SaleItemSeed.swift */,
+				DAFEED01000000000000A009 /* DemoSeeder.swift */,
+			);
+			path = Demo;
 			sourceTree = "<group>";
 		};
 		14AB43822AD7133900E58566 /* CustomLocation */ = {
@@ -342,7 +373,15 @@
 				1460E33D2A93DCC8007A2A6D /* KDS_VM.swift in Sources */,
 				14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */,
 				14CD51BF2A2FE3EE0018DE87 /* DittoService.swift in Sources */,
-				14DECF0A2A3B92D5005BC2AE /* Transaction.swift in Sources */,
+				DAFEED01000000000000B001 /* CartLineItem.swift in Sources */,
+				DAFEED01000000000000B002 /* Payment.swift in Sources */,
+				DAFEED01000000000000B003 /* StatusLog.swift in Sources */,
+				DAFEED01000000000000B004 /* ImageNameMapping.swift in Sources */,
+				DAFEED01000000000000B005 /* OrderStatusDisplay.swift in Sources */,
+				DAFEED01000000000000B00A /* DocumentID.swift in Sources */,
+				DAFEED01000000000000B007 /* LocationSeed.swift in Sources */,
+				DAFEED01000000000000B008 /* SaleItemSeed.swift in Sources */,
+				DAFEED01000000000000B009 /* DemoSeeder.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */,
 
@@ -521,7 +560,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "live.ditto.skyservice-pos.crew";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
@@ -560,7 +599,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.8;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "live.ditto.skyservice-pos.crew";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";

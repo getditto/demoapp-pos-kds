@@ -11,39 +11,39 @@ import SwiftUI
 
 @MainActor class KDSOrderVM: ObservableObject {
     @Published var order: Order
-    private var cancelleables = Set<AnyCancellable>()
-        
+    private var cancellables = Set<AnyCancellable>()
+
     init(_ order: Order) {
         self.order = order
-        
+
         DittoService.shared.orderPublisher(order)
-            .filter( {$0.status == .inProcess || $0.status == .processed} )
+            .filter { $0.status == .inProcess || $0.status == .processed }
             .sink {[weak self] updatedOrder in
                 self?.order = updatedOrder
             }
-            .store(in: &cancelleables)
+            .store(in: &cancellables)
     }
-    
+
     func incrementOrderStatus() {
-        let newStatus = OrderStatus(rawValue: order.status.rawValue + 1)!
-        DittoService.shared.updateStatus(of: order, with: newStatus)
+        guard let next = order.status.next else { return }
+        DittoService.shared.updateStatus(of: order, with: next)
     }
 }
 
 struct KDSOrderView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject var vm: KDSOrderVM
-    
+
     init(_ order: Order) {
         self._vm = StateObject(wrappedValue: KDSOrderVM(order))
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("\(timestampText) #\(titleText)")
                 .padding(4)
                 .fixedSize(horizontal: true, vertical: false)
-                .frame(maxWidth: .infinity)                
+                .frame(maxWidth: .infinity)
                 .border(vm.order.status.color, width: 2)
 
             ForEach(vm.order.summary.sorted(by: <), id: \.key) { key, value in
@@ -79,11 +79,9 @@ struct KDSOrderView: View {
         }
     }
 
-    var titleText: String {
-        "\(vm.order.title)"
-    }
+    var titleText: String { vm.order.title }
     var timestampText: String {
-        "\(DateFormatter.shortTime.string(from: vm.order.createdOn))"
+        DateFormatter.shortTime.string(from: vm.order.createdOn)
     }
 }
 

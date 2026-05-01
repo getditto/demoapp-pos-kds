@@ -21,9 +21,8 @@ struct KDSOrderItemView: View {
     }
 }
 
-
 struct KDSOrderItemView_Previews: PreviewProvider {
     static var previews: some View {
-        KDSOrderItemView(title: SaleItem.demoItems[0].title, count: 3)
+        KDSOrderItemView(title: "Burger", count: 3)
     }
 }
