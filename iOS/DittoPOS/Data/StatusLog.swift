@@ -54,7 +54,7 @@ enum StatusLogDerivation {
         return latest.status
     }
 
-    static func entry(_ status: OrderStatus, at date: Date = Date()) -> (key: String, value: String) {
+    static func entry(_ status: OrderStatus, at date: Date = Date()) -> (timestamp: String, status: String) {
         (date.formatted(DittoDateFormatting.iso8601), status.rawValue)
     }
 }

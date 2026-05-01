@@ -22,9 +22,7 @@ data class Order(
     @Serializable(with = DittoInstantSerializer::class)
     val createdAt: Instant
 ) {
-    val id: String get() = documentId.id
-    val locationId: String get() = documentId.locationId
-    val title: String get() = id.take(8)
+    val title: String get() = documentId.id.take(8)
 
     val status: OrderStatus get() = StatusLogDerivation.currentStatus(statusLog)
     val isPaid: Boolean get() = status == OrderStatus.CANCELED || payments.isNotEmpty()

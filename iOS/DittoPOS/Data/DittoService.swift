@@ -144,15 +144,15 @@ final class DittoInstance: ObservableObject {
             UNSET \(unsetList)
             WHERE _id.id = :id AND _id.locationId = :locationId
             """,
-            args: ["id": order._id.id, "locationId": order._id.locationId]
+            args: ["id": order.documentId.id, "locationId": order.documentId.locationId]
         )
     }
 
     func reset(order: Order) {
         let createdAtNow = Date().formatted(DittoDateFormatting.iso8601)
         var args: [String: Any?] = [
-            "id": order._id.id,
-            "locationId": order._id.locationId,
+            "id": order.documentId.id,
+            "locationId": order.documentId.locationId,
             "createdAt": createdAtNow
         ]
         let setClause = "SET createdAt = :createdAt"
@@ -199,7 +199,7 @@ final class DittoInstance: ObservableObject {
                 SELECT * FROM \(Order.collectionName)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
-            arguments: ["id": order._id.id, "locationId": order._id.locationId],
+            arguments: ["id": order.documentId.id, "locationId": order.documentId.locationId],
             mapTo: Order.self
         )
         .compactMap(\.first)
@@ -361,12 +361,14 @@ private enum Eviction {
         let last = UserDefaults.standard.double(forKey: lastRunKey)
         guard now - last >= interval else { return }
 
+        let ttl = DateFormatter.startOfTodayString
         do {
             _ = try await store.execute(
                 query: "EVICT FROM \(Order.collectionName) WHERE createdAt <= :TTL",
-                arguments: ["TTL": DateFormatter.startOfTodayString]
+                arguments: ["TTL": ttl]
             )
             UserDefaults.standard.set(now, forKey: lastRunKey)
+            print("Eviction: evicted orders with createdAt <= \(ttl)")
         } catch {
             print("Eviction: ERROR \(error.localizedDescription)")
         }

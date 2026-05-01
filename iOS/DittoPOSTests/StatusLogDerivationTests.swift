@@ -63,8 +63,8 @@ final class StatusLogDerivationTests: XCTestCase {
 
     func testEntryReturnsWireValueAndTimestamp() {
         let date = ISO8601DateFormatter().date(from: "2026-04-01T12:00:00Z")!
-        let pair = StatusLogDerivation.entry(.processed, at: date)
-        XCTAssertEqual(pair.value, "processed")
-        XCTAssertFalse(pair.key.isEmpty)
+        let entry = StatusLogDerivation.entry(.processed, at: date)
+        XCTAssertEqual(entry.status, "processed")
+        XCTAssertFalse(entry.timestamp.isEmpty)
     }
 }

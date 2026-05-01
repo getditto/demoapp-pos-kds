@@ -1,10 +1,9 @@
-///
+//
 //  Location.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/14/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Foundation
 

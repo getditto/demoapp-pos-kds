@@ -1,10 +1,9 @@
-///
+//
 //  POSOrderItemView.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/21/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import SwiftUI
 

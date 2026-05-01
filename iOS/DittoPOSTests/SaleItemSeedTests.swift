@@ -13,7 +13,7 @@ final class SaleItemSeedTests: XCTestCase {
     func testEveryDemoLocationHasAtLeastOneMenuItem() {
         let items = SaleItemSeed.saleItemsForAllLocations()
         for location in LocationSeed.demoLocations {
-            let perLocation = items.filter { $0.locationId == location.id }
+            let perLocation = items.filter { $0.documentId.locationId == location.id }
             XCTAssertFalse(
                 perLocation.isEmpty,
                 "Location \(location.id) (\(location.name)) has no menu items"
@@ -23,7 +23,7 @@ final class SaleItemSeedTests: XCTestCase {
 
     func testCompositeIdsAreUniqueAcrossAllSeededItems() {
         let items = SaleItemSeed.saleItemsForAllLocations()
-        let keys = items.map { "\($0.id)|\($0.locationId)" }
+        let keys = items.map { "\($0.documentId.id)|\($0.documentId.locationId)" }
         XCTAssertEqual(
             keys.count,
             Set(keys).count,
@@ -36,7 +36,7 @@ final class SaleItemSeedTests: XCTestCase {
             XCTAssertGreaterThan(
                 item.price.amount,
                 0,
-                "Item \(item.name) (\(item.id)) at \(item.locationId) has non-positive cents"
+                "Item \(item.name) (\(item.documentId.id)) at \(item.documentId.locationId) has non-positive cents"
             )
         }
     }

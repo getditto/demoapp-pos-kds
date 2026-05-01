@@ -10,7 +10,7 @@ class SaleItemSeedTest {
     fun `every demo location has at least one menu item`() {
         val items = SaleItemSeed.saleItemsForAllLocations()
         for (location in LocationSeed.demoLocations) {
-            val perLocation = items.filter { it.locationId == location.id }
+            val perLocation = items.filter { it.documentId.locationId == location.id }
             assertTrue(
                 "Location ${location.id} (${location.name}) has no menu items",
                 perLocation.isNotEmpty()
@@ -21,7 +21,7 @@ class SaleItemSeedTest {
     @Test
     fun `composite ids are unique across all seeded items`() {
         val items = SaleItemSeed.saleItemsForAllLocations()
-        val keys = items.map { it.id to it.locationId }
+        val keys = items.map { it.documentId.id to it.documentId.locationId }
         assertEquals(
             "Duplicate (id, locationId) pairs detected in seed data",
             keys.size,
@@ -34,7 +34,7 @@ class SaleItemSeedTest {
         val items = SaleItemSeed.saleItemsForAllLocations()
         for (item in items) {
             assertTrue(
-                "Item ${item.name} (${item.id}) at ${item.locationId} has non-positive cents",
+                "Item ${item.name} (${item.documentId.id}) at ${item.documentId.locationId} has non-positive cents",
                 item.price.amount > 0
             )
         }

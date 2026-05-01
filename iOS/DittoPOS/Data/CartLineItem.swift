@@ -35,7 +35,7 @@ struct CartLineItem: Codable, Hashable, Equatable {
 
     init(from saleItem: SaleItem, qty: Int = 1) {
         self.init(
-            saleItemId: saleItem.id,
+            saleItemId: saleItem.documentId.id,
             name: saleItem.name,
             imageName: saleItem.imageName,
             price: saleItem.price,

@@ -1,28 +1,26 @@
-///
+//
 //  Order.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/14/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Foundation
 
-struct Order: Identifiable, Hashable, Codable {
-    let _id: DocumentID
+struct Order: Hashable, Codable {
+    let documentId: DocumentID
     var cart: [String: CartLineItem]
     var payments: [String: Payment]
     var statusLog: [String: String]      // iso-timestamp → OrderStatus.rawValue
     var createdAt: Date
 
     private enum CodingKeys: String, CodingKey {
-        case _id, cart, payments, createdAt
+        case documentId = "_id"
+        case cart, payments, createdAt
         case statusLog = "status_log"
     }
 
-    var id: String { _id.id }
-    var locationId: String { _id.locationId }
-    var title: String { String(id.prefix(8)) }
+    var title: String { String(documentId.id.prefix(8)) }
 
     var status: OrderStatus { StatusLogDerivation.currentStatus(from: statusLog) }
 
@@ -42,10 +40,10 @@ extension Order {
     ) -> Order {
         let entry = StatusLogDerivation.entry(status, at: createdAt)
         return Order(
-            _id: DocumentID(id: UUID().uuidString, locationId: locationId),
+            documentId: DocumentID(id: UUID().uuidString, locationId: locationId),
             cart: [:],
             payments: [:],
-            statusLog: [entry.key: entry.value],
+            statusLog: [entry.timestamp: entry.status],
             createdAt: createdAt
         )
     }
@@ -57,7 +55,7 @@ extension Order {
         var copy = self
         copy.cart[lineItemId] = lineItem
         let entry = StatusLogDerivation.entry(.inProcess)
-        copy.statusLog[entry.key] = entry.value
+        copy.statusLog[entry.timestamp] = entry.status
         return copy
     }
 
@@ -70,7 +68,7 @@ extension Order {
     func appendingStatus(_ status: OrderStatus, at date: Date = Date()) -> Order {
         var copy = self
         let entry = StatusLogDerivation.entry(status, at: date)
-        copy.statusLog[entry.key] = entry.value
+        copy.statusLog[entry.timestamp] = entry.status
         return copy
     }
 }

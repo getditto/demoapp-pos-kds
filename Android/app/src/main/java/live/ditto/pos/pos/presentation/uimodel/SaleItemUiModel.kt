@@ -12,7 +12,7 @@ data class SaleItemUiModel(
 ) {
     companion object {
         fun from(saleItem: SaleItem): SaleItemUiModel = SaleItemUiModel(
-            id = saleItem.id,
+            id = saleItem.documentId.id,
             imageResource = ImageNameMapping.resourceFor(saleItem.imageName) ?: 0,
             label = saleItem.name,
             price = saleItem.price.dollars

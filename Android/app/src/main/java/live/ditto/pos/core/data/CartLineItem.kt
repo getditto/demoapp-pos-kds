@@ -21,7 +21,7 @@ data class CartLineItem(
         fun newLineItemId(): String = UUID.randomUUID().toString()
 
         fun from(saleItem: SaleItem, qty: Int = 1): CartLineItem = CartLineItem(
-            saleItemId = saleItem.id,
+            saleItemId = saleItem.documentId.id,
             name = saleItem.name,
             imageName = saleItem.imageName,
             price = saleItem.price,

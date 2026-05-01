@@ -54,7 +54,7 @@ constructor(
 
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
-            val order = activeKitchenOrders().first().firstOrNull { it.id == orderId }
+            val order = activeKitchenOrders().first().firstOrNull { it.documentId.id == orderId }
                 ?: return@launch
             val nextStatus = when (order.status) {
                 OrderStatus.IN_PROCESS -> OrderStatus.PROCESSED
@@ -63,7 +63,7 @@ constructor(
             }
             dittoRepository.upsertOrder(order.appendingStatus(nextStatus))
 
-            if (nextStatus == OrderStatus.PROCESSED && coreRepository.currentOrderId() == order.id) {
+            if (nextStatus == OrderStatus.PROCESSED && coreRepository.currentOrderId() == order.documentId.id) {
                 coreRepository.setCurrentOrderId("")
             }
         }
@@ -97,7 +97,7 @@ constructor(
         items = HashMap(order.summary),
         isPaid = order.isPaid,
         orderStatus = order.status,
-        orderId = order.id
+        orderId = order.documentId.id
     )
 
     private fun generateOrderTime(instant: Instant): String {

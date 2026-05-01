@@ -10,9 +10,6 @@ data class SaleItem(
     val imageName: String, // canonical wire key; resolve via ImageNameMapping
     val price: Price
 ) {
-    val id: String get() = documentId.id
-    val locationId: String get() = documentId.locationId
-
     companion object {
         const val COLLECTION_NAME = "sale_items"
 

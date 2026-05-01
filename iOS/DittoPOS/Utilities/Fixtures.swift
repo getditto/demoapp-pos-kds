@@ -2,8 +2,7 @@
 //  Fixtures.swift
 //  DittoPOS
 //
-//  Created by Erik Everson on 1/31/24.
-//  Copyright © 2024 DittoLive Incorporated. All rights reserved.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
 import Foundation
@@ -23,13 +22,13 @@ enum Fixtures {
     static let lineItem2 = CartLineItem(from: salesItem2)
 
     static let order1 = Order(
-        _id: DocumentID(id: "116BE13B-2FB3-4593-9CE7-2823504A27C6", locationId: "Test lab-Denver"),
+        documentId: DocumentID(id: "116BE13B-2FB3-4593-9CE7-2823504A27C6", locationId: "Test lab-Denver"),
         cart: [
             "04160E1B-D9E1-4560-8B6E-244F6AF19C25": lineItem1,
             "03A5A57E-99C3-4C64-A675-BEC5BA5CC3C0": lineItem2
         ],
         payments: [:],
-        statusLog: [statusEntry.key: statusEntry.value],
+        statusLog: [statusEntry.timestamp: statusEntry.status],
         createdAt: date
     )
 }

@@ -2,8 +2,7 @@
 //  DittoExtensions.swift
 //  DittoPOS
 //
-//  Created by Shunsuke Kondo on 2023/12/28.
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
 import Combine

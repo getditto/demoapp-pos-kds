@@ -61,7 +61,7 @@ constructor(
         viewModelScope.launch(dispatcherIO) {
             val locationId = getCurrentLocationUseCase()?.id ?: return@launch
             val match = dittoRepository.observeLocationSaleItems(locationId).first()
-                .firstOrNull { it.id == saleItem.id } ?: return@launch
+                .firstOrNull { it.documentId.id == saleItem.id } ?: return@launch
             val current = currentOrderFlow().first()
             val updated = current.addingCartLineItem(
                 CartLineItem.from(match),
@@ -96,7 +96,7 @@ constructor(
     private suspend fun currentOrderFlow() =
         dittoRepository.observeLocationOrders(activeLocationId()).map { orders ->
             val savedOrderId = coreRepository.currentOrderId()
-            orders.firstOrNull { it.id == savedOrderId }?.takeIf {
+            orders.firstOrNull { it.documentId.id == savedOrderId }?.takeIf {
                 it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
             } ?: createNewOrder()
         }
@@ -104,7 +104,7 @@ constructor(
     private suspend fun createNewOrder(): Order {
         val order = Order.new(locationId = activeLocationId())
         dittoRepository.upsertOrder(order)
-        coreRepository.setCurrentOrderId(order.id)
+        coreRepository.setCurrentOrderId(order.documentId.id)
         return order
     }
 
@@ -132,7 +132,7 @@ constructor(
 
     private fun renderOrder(order: Order) {
         _uiState.value = _uiState.value.copy(
-            currentOrderId = order.id,
+            currentOrderId = order.documentId.id,
             orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
             orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars)
         )

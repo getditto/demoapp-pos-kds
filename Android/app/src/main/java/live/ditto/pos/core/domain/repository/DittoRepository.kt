@@ -120,15 +120,15 @@ constructor(
                 UNSET $unsetList
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
-            mapOf("id" to order.id, "locationId" to order.locationId)
+            mapOf("id" to order.documentId.id, "locationId" to order.documentId.locationId)
         ).use { }
     }
 
     suspend fun resetOrder(order: Order) {
         val createdAtNow = Clock.System.now().toDittoIsoString()
         val baseArgs = mapOf<String, Any>(
-            "id" to order.id,
-            "locationId" to order.locationId,
+            "id" to order.documentId.id,
+            "locationId" to order.documentId.locationId,
             "createdAt" to createdAtNow
         )
         val query = if (order.cart.isEmpty()) {
@@ -172,12 +172,14 @@ constructor(
         val last = prefs.getLong(LAST_EVICTION_KEY, 0L)
         if (now - last < TWENTY_FOUR_HOURS_MILLIS) return
 
+        val ttl = startOfTodayIso()
         try {
             ditto.store.execute(
                 "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
-                mapOf("TTL" to startOfTodayIso())
+                mapOf("TTL" to ttl)
             ).use { }
             prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
+            android.util.Log.i("Eviction", "evicted orders with createdAt <= $ttl")
         } catch (error: Throwable) {
             android.util.Log.w("Eviction", error.message.orEmpty())
         }

@@ -1,10 +1,9 @@
-///
-//  DataViewModel.swift
+//
+//  POS_VM.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/16/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import DittoSwift
@@ -47,7 +46,7 @@ import SwiftUI
                     return
                 }
 
-                if let order = currentOrder, order.locationId == location.id && !order.isPaid {
+                if let order = currentOrder, order.documentId.locationId == location.id && !order.isPaid {
                     return
                 }
 
@@ -55,69 +54,49 @@ import SwiftUI
             }
             .store(in: &cancellables)
 
+        // Refresh the local copy of the current order whenever the synced
+        // collection changes. The synced version may have updates from another
+        // device, so we look up our order by id and re-bind to it.
         dittoService.$locationOrders
             .receive(on: DispatchQueue.main)
-            .sink {[weak self] orders in
-                guard let self = self else { return }
-                guard orders.count > 0 else { return }
-                guard let locationId = dittoService.currentLocationId else {
-                    print("POS_VM.dittoService.$locationOrders.sink: ERROR - NIL currentLocationId")
-                    return
-                }
-                guard let orderId = currentOrder?.id else { return }
-
-                if let order = orders.first(where: { $0.id == orderId && $0.locationId == locationId }) {
-                    currentOrder = order
-                } else {
-                    print("POS_VM.$locationOrders.sink: ERROR - matching doc not found for "
-                          + "(docId:\(orderId), locationId:\(locationId))")
-                }
+            .sink { [weak self] orders in
+                guard let self,
+                      let orderId = currentOrder?.documentId.id,
+                      let locationId = dittoService.currentLocationId else { return }
+                currentOrder = orders.first { $0.documentId.id == orderId && $0.documentId.locationId == locationId }
             }
             .store(in: &cancellables)
     }
 
     func addOrderItem(_ saleItem: SaleItem) {
-        guard let curOrder = currentOrder else {
-            print("Cannot add item: current order is NIL")
-            return
-        }
-        let lineItem = CartLineItem(from: saleItem)
-        let lineItemId = CartLineItem.newLineItemId()
-        dittoService.add(item: lineItem, lineItemId: lineItemId, to: curOrder)
+        guard let order = currentOrder else { return }
+        dittoService.add(
+            item: CartLineItem(from: saleItem),
+            lineItemId: CartLineItem.newLineItemId(),
+            to: order
+        )
     }
 
     func payCurrentOrder() {
-        guard let order = currentOrder else {
-            print("POS_VM.\(#function): ERROR - current order is nil")
-            return
-        }
-        let payment = Payment(
-            type: .cash,
-            amount: order.total,
-            status: .complete
-        )
-        let paymentId = Payment.newPaymentId()
-        dittoService.addPayment(payment, paymentId: paymentId, to: order)
+        guard let order = currentOrder else { return }
+        let payment = Payment(type: .cash, amount: order.total, status: .complete)
+        dittoService.addPayment(payment, paymentId: Payment.newPaymentId(), to: order)
 
-        // pause briefly to show paid state, then create new order automatically
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {[weak self] in
-            guard let self = self,
-                  let locationId = dittoService.currentLocationId else { return }
+        // Brief pause so the paid state is visible, then start a fresh order.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self, let locationId = dittoService.currentLocationId else { return }
             startNewOrder(for: locationId)
         }
+    }
+
+    func clearCurrentOrderCart() {
+        guard let order = currentOrder else { return }
+        dittoService.clearCart(of: order)
     }
 
     private func startNewOrder(for locationId: String) {
         let order = Order.new(locationId: locationId)
         currentOrder = order
         dittoService.add(order: order)
-    }
-
-    func clearCurrentOrderCart() {
-        guard let order = currentOrder else {
-            print("POS_VM.\(#function): ERROR: NIL currentOrder")
-            return
-        }
-        dittoService.clearCart(of: order)
     }
 }
