@@ -34,16 +34,3 @@ extension SaleItem {
         )
     }
 }
-
-// MARK: - Queries
-extension SaleItem {
-    static func locationMenuQuery(locationId: String) -> DittoQuery {
-        (
-            string: """
-                SELECT * FROM \(Self.collectionName)
-                WHERE _id.locationId = :locationId
-            """,
-            args: ["locationId": locationId]
-        )
-    }
-}

@@ -29,8 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
-import live.ditto.pos.core.data.demoTicketItems
-import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.kds.TicketItemUi
 import live.ditto.pos.ui.theme.CanceledStatusTicketColor
 import live.ditto.pos.ui.theme.DeliveredStatusTicketColor
@@ -153,10 +152,29 @@ private fun TicketHeader(
     }
 }
 
+private val previewTickets = listOf(
+    TicketItemUi(
+        time = "9:59 AM",
+        shortOrderId = "e893j3",
+        items = hashMapOf("Burger" to 1, "Coffee" to 1, "Milk" to 3),
+        isPaid = true,
+        orderStatus = OrderStatus.PROCESSED,
+        orderId = ""
+    ),
+    TicketItemUi(
+        time = "4:29 PM",
+        shortOrderId = "08n3iuo48",
+        items = hashMapOf("Fruit Salad" to 2, "Coffee" to 1, "Corn" to 1),
+        isPaid = false,
+        orderStatus = OrderStatus.IN_PROCESS,
+        orderId = ""
+    )
+)
+
 @Preview
 @Composable
 private fun TicketItemsPreview() {
-    TicketItems(itemsMap = demoTicketItems.first().items)
+    TicketItems(itemsMap = previewTickets.first().items)
 }
 
 @Preview
@@ -169,7 +187,7 @@ private fun TicketHeaderPreview() {
 @Composable
 private fun TicketItemPreview() {
     TicketItem(
-        ticketItemUi = demoTicketItems.first(),
+        ticketItemUi = previewTickets.first(),
         onTicketClicked = {}
     )
 }
@@ -178,7 +196,7 @@ private fun TicketItemPreview() {
 @Composable
 private fun TicketGridPreview() {
     TicketGrid(
-        ticketItems = demoTicketItems,
+        ticketItems = previewTickets,
         onTicketClicked = {}
     )
 }

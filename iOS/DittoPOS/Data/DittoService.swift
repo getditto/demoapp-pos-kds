@@ -272,34 +272,85 @@ fileprivate struct StoreService {
 
     func insertLocation(of customLocation: CustomLocation) {
         let location = Location(id: customLocation.locationId, name: customLocation.locationName)
-        exec(query: location.insertNewQuery)
+        exec(
+            """
+            INSERT INTO \(Location.collectionName)
+            DOCUMENTS (deserialize_json(:json))
+            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
+            """,
+            args: ["json": location.dittoJSONString()]
+        )
     }
 
     func upsert(order: Order) {
-        exec(query: order.upsertQuery)
+        exec(
+            """
+            INSERT INTO \(Order.collectionName)
+            DOCUMENTS (deserialize_json(:json))
+            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
+            """,
+            args: ["json": order.dittoJSONString()]
+        )
     }
 
     func clearCart(of order: Order) {
-        guard let query = order.clearCartQuery else { return }
-        exec(query: query)
+        guard !order.cart.isEmpty else { return }
+        let unsetList = order.cart.keys.map { "cart.\"\($0)\"" }.joined(separator: ", ")
+        exec(
+            """
+            UPDATE \(Order.collectionName)
+            UNSET \(unsetList)
+            WHERE _id.id = :id AND _id.locationId = :locationId
+            """,
+            args: ["id": order._id.id, "locationId": order._id.locationId]
+        )
     }
 
     func reset(order: Order) {
-        exec(query: order.resetQuery)
+        let createdOnNow = DateFormatter.isoDate.string(from: Date())
+        var args: [String: Any?] = [
+            "id": order._id.id,
+            "locationId": order._id.locationId,
+            "createdOn": createdOnNow
+        ]
+        if order.cart.isEmpty {
+            exec(
+                """
+                UPDATE \(Order.collectionName)
+                SET createdOn = :createdOn
+                WHERE _id.id = :id AND _id.locationId = :locationId
+                """,
+                args: args
+            )
+        } else {
+            let unsetList = order.cart.keys.map { "cart.\"\($0)\"" }.joined(separator: ", ")
+            exec(
+                """
+                UPDATE \(Order.collectionName)
+                SET createdOn = :createdOn
+                UNSET \(unsetList)
+                WHERE _id.id = :id AND _id.locationId = :locationId
+                """,
+                args: args
+            )
+        }
     }
 
-    private func exec(query: DittoQuery, function: String = #function) {
+    private func exec(_ query: String, args: [String: Any?] = [:], function: String = #function) {
         Task {
             do {
-                try await self.store.execute(query: query.string, arguments: query.args)
+                try await self.store.execute(query: query, arguments: args)
             } catch {
-                assertionFailure("ERROR with \(function) \(query.string) \(query.args): " + error.localizedDescription)
+                assertionFailure("ERROR with \(function) \(query) \(args): " + error.localizedDescription)
             }
         }
     }
 
     func allLocationsObservePublisher() -> AnyPublisher<[Location], Never> {
-        store.observePublisher(query: Location.selectAllQuery.string, mapTo: Location.self)
+        store.observePublisher(
+            query: "SELECT * FROM \(Location.collectionName)",
+            mapTo: Location.self
+        )
             .catch { error in
                 assertionFailure("ERROR with \(#function)" + error.localizedDescription)
                 return Empty<[Location], Never>()
@@ -326,15 +377,21 @@ fileprivate struct StoreService {
     }
 
     func selectByIDObservePublisher(_ order: Order) -> AnyPublisher<Order?, Never> {
-        let query = order.selectByIDQuery
-        return store.observePublisher(query: query.string, arguments: query.args, mapTo: Order.self, onlyFirst: true)
+        store.observePublisher(
+            query: """
+                SELECT * FROM \(Order.collectionName)
+                WHERE _id = deserialize_json(:_idJson)
+                """,
+            arguments: ["_idJson": order._id.dittoJSONString()],
+            mapTo: Order.self,
+            onlyFirst: true
+        )
             .catch { error in
                 assertionFailure("ERROR with \(#function)" + error.localizedDescription)
                 return Empty<Order?, Never>()
             }
             .eraseToAnyPublisher()
     }
-
 }
 
 // MARK: - SyncService
@@ -354,7 +411,7 @@ fileprivate final class SyncService {
     func registerLocationsSubscription() {
         do {
             locationsSubscription = try sync.registerSubscription(
-                query: Location.selectAllQuery.string
+                query: "SELECT * FROM \(Location.collectionName)"
             )
         } catch {
             assertionFailure("ERROR with \(#function)" + error.localizedDescription)
@@ -362,11 +419,14 @@ fileprivate final class SyncService {
     }
 
     func registerOrdersSinceTTLSubscription(locationId: String) {
-        let query = Order.ordersQuerySinceTTL(locationId: locationId)
         do {
             ordersSubscription = try sync.registerSubscription(
-                query: query.string,
-                arguments: query.args
+                query: """
+                    SELECT * FROM \(Order.collectionName)
+                    WHERE _id.locationId = :locationId
+                        AND createdOn > :TTL
+                    """,
+                arguments: ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
             )
         } catch {
             assertionFailure("ERROR with \(#function)" + error.localizedDescription)
@@ -379,11 +439,13 @@ fileprivate final class SyncService {
     }
 
     func registerSaleItemsSubscription(locationId: String) {
-        let query = SaleItem.locationMenuQuery(locationId: locationId)
         do {
             saleItemsSubscription = try sync.registerSubscription(
-                query: query.string,
-                arguments: query.args
+                query: """
+                    SELECT * FROM \(SaleItem.collectionName)
+                    WHERE _id.locationId = :locationId
+                    """,
+                arguments: ["locationId": locationId]
             )
         } catch {
             assertionFailure("ERROR with \(#function)" + error.localizedDescription)
@@ -410,9 +472,11 @@ fileprivate enum Eviction {
         let last = UserDefaults.standard.double(forKey: lastRunKey)
         guard now - last >= interval else { return }
 
-        let query = Order.evictionQuery
         do {
-            _ = try await store.execute(query: query.string, arguments: query.args)
+            _ = try await store.execute(
+                query: "EVICT FROM \(Order.collectionName) WHERE createdOn <= :TTL",
+                arguments: ["TTL": DateFormatter.startOfTodayString]
+            )
             UserDefaults.standard.set(now, forKey: lastRunKey)
         } catch {
             print("Eviction: ERROR \(error.localizedDescription)")

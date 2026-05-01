@@ -10,8 +10,6 @@ import Combine
 import DittoSwift
 import Foundation
 
-typealias DittoQuery = (string: String, args: [String: Any?])
-
 extension JSONEncoder {
     static let ditto: JSONEncoder = {
         let e = JSONEncoder()

@@ -13,10 +13,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import live.ditto.pos.core.data.demoMenuData
+import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.data.orders.OrderStatus
-import live.ditto.pos.core.data.orders.findOrderById
 import live.ditto.pos.kds.domain.GetOrdersForKdsUseCase
 import live.ditto.pos.kds.domain.UpdateKDSOrderStatus
 import java.text.SimpleDateFormat
@@ -37,11 +35,7 @@ class KDSViewModel @Inject constructor(
 
     private var ordersJob: Job? = null
 
-    private val _uiState = MutableStateFlow(
-        KdsUiState(
-            tickets = emptyList()
-        )
-    )
+    private val _uiState = MutableStateFlow(KdsUiState(tickets = emptyList()))
     val uiState: StateFlow<KdsUiState> = _uiState.asStateFlow()
 
     init {
@@ -53,16 +47,7 @@ class KDSViewModel @Inject constructor(
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
             val orders = getOrdersForKdsUseCase().first()
-            orders.findOrderById(id = orderId)
-                .also {
-                    updateOrderStatus(order = it)
-                }
-        }
-    }
-
-    private suspend fun updateOrderStatus(order: Order?) {
-        order?.let {
-            updateKDSOrderStatus(order = it)
+            orders.firstOrNull { it.id == orderId }?.let { updateKDSOrderStatus(it) }
         }
     }
 
@@ -74,59 +59,31 @@ class KDSViewModel @Inject constructor(
     }
 
     private fun updateTickets(orders: List<Order>) {
-        val inProcessOrders = orders.filter { it.status == OrderStatus.IN_PROCESS.ordinal }
+        val inProcess = orders.filter { it.status == OrderStatus.IN_PROCESS }
             .sortedByDescending { it.createdOn }
-        val processedOrders = orders.filter { it.status == OrderStatus.PROCESSED.ordinal }
+        val processed = orders.filter { it.status == OrderStatus.PROCESSED }
             .sortedByDescending { it.createdOn }
 
-        val inProcessTickets = inProcessOrders.map {
-            createTicketItemUiFromOrder(it)
-        }
-        val processedTickets = processedOrders.map {
-            createTicketItemUiFromOrder(it)
-        }
         _uiState.value = _uiState.value.copy(
-            tickets = inProcessTickets + processedTickets
+            tickets = (inProcess + processed).map(::toTicketUi)
         )
     }
 
-    private fun createTicketItemUiFromOrder(order: Order): TicketItemUi {
-        return TicketItemUi(
-            time = generateOrderTime(inputDateTimeString = order.createdOn),
-            shortOrderId = generateShortOrderId(orderId = order.getOrderId()),
-            items = generateItems(order.sortedSaleItemIds()),
-            isPaid = order.isPaid(),
-            orderStatus = OrderStatus.entries[order.status],
-            orderId = order.getOrderId()
-        )
-    }
-
-    private fun generateShortOrderId(orderId: String): String {
-        return orderId.substring(0, 8)
-    }
+    private fun toTicketUi(order: Order): TicketItemUi = TicketItemUi(
+        time = generateOrderTime(order.createdOn),
+        shortOrderId = order.title,
+        items = HashMap(order.summary),
+        isPaid = order.isPaid,
+        orderStatus = order.status,
+        orderId = order.id
+    )
 
     private fun generateOrderTime(inputDateTimeString: String): String {
         val inputFormat = SimpleDateFormat(INPUT_DATE_FORMAT, Locale.getDefault())
         val outputFormat = SimpleDateFormat(OUTPUT_DATE_FORMAT, Locale.getDefault())
-        val inputDate = inputFormat.parse(inputDateTimeString)
-        return inputDate?.let { outputFormat.format(it) } ?: ""
-    }
-
-    private fun generateItems(sortedSaleItemIds: Collection<String>?): HashMap<String, Int> {
-        val items: HashMap<String, Int> = HashMap()
-        sortedSaleItemIds?.mapNotNull { saleItemId ->
-            demoMenuData.find { it.id == saleItemId }
-        }?.forEach {
-            val itemName = it.label
-
-            val currentCount = items.getOrElse(
-                itemName
-            ) {
-                0
-            }
-            items[itemName] = currentCount + 1
-        }
-        return items
+        return runCatching {
+            inputFormat.parse(inputDateTimeString)?.let { outputFormat.format(it) }
+        }.getOrNull().orEmpty()
     }
 }
 

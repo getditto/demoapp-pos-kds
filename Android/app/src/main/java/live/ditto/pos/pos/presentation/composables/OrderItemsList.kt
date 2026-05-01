@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import live.ditto.pos.core.data.demoOrderItems
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 
 @Composable
@@ -57,7 +56,11 @@ fun OrderItem(orderItem: OrderItemUiModel) {
 private fun OrderItemsListPreview() {
     Column {
         OrderItemsList(
-            orderItems = demoOrderItems
+            orderItems = listOf(
+                OrderItemUiModel(name = "Burger", price = "$8.50"),
+                OrderItemUiModel(name = "Fries", price = "$3.50"),
+                OrderItemUiModel(name = "Coffee", price = "$1.95")
+            )
         )
     }
 }

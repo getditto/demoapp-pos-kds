@@ -13,8 +13,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import live.ditto.pos.core.data.demoMenuData
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
 import live.ditto.pos.pos.domain.usecase.CalculateOrderTotalUseCase
 import live.ditto.pos.pos.domain.usecase.ClearCurrentOrderSaleItemsUseCase
@@ -31,16 +32,20 @@ class PoSViewModel @Inject constructor(
     private val payForOrderUseCase: PayForOrderUseCase,
     private val calculateOrderTotalUseCase: CalculateOrderTotalUseCase,
     private val clearCurrentOrderSaleItemsUseCase: ClearCurrentOrderSaleItemsUseCase,
+    private val dittoRepository: DittoRepository,
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
     private var ordersJob: Job? = null
+    private var saleItemsJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         PosUiState(
             currentOrderId = "",
             orderItems = emptyList(),
-            orderTotal = "$0.00"
+            orderTotal = "$0.00",
+            saleItems = emptyList()
         )
     )
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
@@ -48,6 +53,7 @@ class PoSViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             updateCurrentOrder()
+            observeSaleItems()
         }
     }
 
@@ -78,46 +84,33 @@ class PoSViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private suspend fun observeSaleItems() {
+        val locationId = getCurrentLocationUseCase()?.id ?: return
+        saleItemsJob = dittoRepository.observeLocationSaleItems(locationId)
+            .onEach { items ->
+                _uiState.value = _uiState.value.copy(
+                    saleItems = items.sortedBy { it.name }.map(SaleItemUiModel::from)
+                )
+            }
+            .flowOn(dispatcherIO)
+            .launchIn(viewModelScope)
+    }
+
     private fun updateAppState(order: Order) {
-        val orderItems = createOrderItems(order)
-        val orderTotal = formattedOrderTotal(order)
         _uiState.value = _uiState.value.copy(
-            currentOrderId = order.getOrderId(),
-            orderItems = orderItems,
-            orderTotal = orderTotal
+            currentOrderId = order.id,
+            orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
+            orderTotal = formatPrice(calculateOrderTotalUseCase(order))
         )
     }
 
-    private fun formattedOrderTotal(order: Order): String {
-        val total = calculateOrderTotalUseCase(order = order)
-        return formatPrice(total)
-    }
-
-    private fun formatPrice(price: Double): String {
-        return NumberFormat.getCurrencyInstance().format(price)
-    }
-
-    private fun createOrderItems(order: Order): List<OrderItemUiModel> {
-        val saleItemIds = order.sortedSaleItemIds()
-        return generateOrderItemUiModels(saleItemIds)
-    }
-
-    private fun generateOrderItemUiModels(saleItemIds: Collection<String>?): List<OrderItemUiModel> {
-        return saleItemIds.let { ids ->
-            ids?.map { id ->
-                val saleItem = demoMenuData.find { it.id == id }
-                OrderItemUiModel(
-                    name = saleItem?.label ?: "",
-                    price = formatPrice(saleItem?.price ?: 0.0),
-                    rawPrice = saleItem?.price ?: 0.0
-                )
-            }
-        } ?: emptyList()
-    }
+    private fun formatPrice(price: Double): String =
+        NumberFormat.getCurrencyInstance().format(price)
 }
 
 data class PosUiState(
     val currentOrderId: String,
     val orderItems: List<OrderItemUiModel>,
-    val orderTotal: String
+    val orderTotal: String,
+    val saleItems: List<SaleItemUiModel>
 )

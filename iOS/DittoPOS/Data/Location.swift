@@ -19,34 +19,3 @@ struct Location: Identifiable, Hashable, Equatable, Codable {
 
     static let collectionName = "locations"
 }
-
-// MARK: - Query
-extension Location {
-    var insertDefaultQuery: DittoQuery {
-        (
-            string: """
-                INSERT INTO \(Self.collectionName)
-                INITIAL DOCUMENTS (deserialize_json(:json))
-                """,
-            args: ["json": dittoJSONString()]
-        )
-    }
-
-    var insertNewQuery: DittoQuery {
-        (
-            string: """
-                INSERT INTO \(Self.collectionName)
-                DOCUMENTS (deserialize_json(:json))
-                ON ID CONFLICT DO UPDATE_LOCAL_DIFF
-            """,
-            args: ["json": dittoJSONString()]
-        )
-    }
-
-    static var selectAllQuery: DittoQuery {
-        (
-            string: "SELECT * FROM \(Self.collectionName)",
-            args: [:]
-        )
-    }
-}

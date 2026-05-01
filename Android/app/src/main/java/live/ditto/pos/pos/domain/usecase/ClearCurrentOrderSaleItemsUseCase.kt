@@ -11,6 +11,6 @@ class ClearCurrentOrderSaleItemsUseCase @Inject constructor(
 
     suspend operator fun invoke() {
         val order = getCurrentOrderUseCase().first()
-        dittoRepository.clearSaleItemIds(order = order)
+        dittoRepository.clearCart(order)
     }
 }

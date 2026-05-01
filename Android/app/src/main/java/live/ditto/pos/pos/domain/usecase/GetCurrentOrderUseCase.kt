@@ -2,40 +2,33 @@ package live.ditto.pos.pos.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.data.orders.OrderStatus
-import live.ditto.pos.core.data.orders.findOrderById
+import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject
 
 /**
- * Gets the current order id and use it to find an order that currently exists with that ID that
- * has the status of open. If that order is found, return it, otherwise this means we need to
- * create a new blank order
+ * Returns a Flow of the order currently being built at the active location.
+ * Reuses the saved `currentOrderId` if a matching open/in-process order exists;
+ * otherwise creates a fresh order.
  */
 class GetCurrentOrderUseCase @Inject constructor(
+    private val coreRepository: CoreRepository,
     private val dittoRepository: DittoRepository,
-    private val generateOrderIdUseCase: GenerateOrderIdUseCase,
     private val createNewOrderUseCase: CreateNewOrderUseCase,
     private val currentLocationUseCase: GetCurrentLocationUseCase
 ) {
 
     suspend operator fun invoke(): Flow<Order> {
-        val currentOrderId = generateOrderIdUseCase()
         val locationId = currentLocationUseCase()?.id ?: ""
-        return dittoRepository.ordersForLocation(
-            locationId = locationId
-        )
-            .map { orders ->
-                getOrCreateNewOrder(orders, currentOrderId)
+        val savedOrderId = coreRepository.currentOrderId()
+        return dittoRepository.observeLocationOrders(locationId).map { orders ->
+            val match = orders.firstOrNull { it.id == savedOrderId }?.takeIf {
+                it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
             }
-    }
-
-    private suspend fun getOrCreateNewOrder(orders: List<Order>, currentOrderId: String): Order {
-        val order = orders.findOrderById(currentOrderId)?.takeIf {
-            it.status == OrderStatus.OPEN.ordinal || it.status == OrderStatus.IN_PROCESS.ordinal
+            match ?: createNewOrderUseCase().also { coreRepository.setCurrentOrderId(it.id) }
         }
-        return order ?: createNewOrderUseCase()
     }
 }

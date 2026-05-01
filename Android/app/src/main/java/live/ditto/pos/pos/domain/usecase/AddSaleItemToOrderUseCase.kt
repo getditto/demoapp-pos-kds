@@ -1,38 +1,26 @@
 package live.ditto.pos.pos.domain.usecase
 
 import kotlinx.coroutines.flow.first
+import live.ditto.pos.core.data.CartLineItem
 import live.ditto.pos.core.domain.repository.DittoRepository
-import java.util.UUID
+import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject
 
 class AddSaleItemToOrderUseCase @Inject constructor(
     private val getCurrentOrderUseCase: GetCurrentOrderUseCase,
-    private val currentTimeStringUseCase: GetCurrentTimeStringUseCase,
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val dittoRepository: DittoRepository
 ) {
 
-    companion object {
-        /**
-         * Format should be randomUUID_currentISO8601Time
-         */
-        const val SALE_ITEM_ID_FORMAT = "%s_%s"
-    }
-
     suspend operator fun invoke(saleItemId: String) {
         val currentOrder = getCurrentOrderUseCase().first()
+        val locationId = getCurrentLocationUseCase()?.id ?: return
 
-        val saleItemIdKey = generateSaleItemIdKey()
+        val saleItem = dittoRepository.observeLocationSaleItems(locationId).first()
+            .firstOrNull { it.id == saleItemId } ?: return
 
-        dittoRepository.addItemToOrder(
-            order = currentOrder,
-            saleItemIdKey = saleItemIdKey,
-            saleItemId = saleItemId
-        )
-    }
-
-    private fun generateSaleItemIdKey(): String {
-        val randomUUID = UUID.randomUUID().toString()
-        val currentDateTime = currentTimeStringUseCase()
-        return SALE_ITEM_ID_FORMAT.format(randomUUID, currentDateTime)
+        val lineItem = CartLineItem.from(saleItem)
+        val updated = currentOrder.addingCartLineItem(lineItem, lineItemId = CartLineItem.newLineItemId())
+        dittoRepository.upsertOrder(updated)
     }
 }
