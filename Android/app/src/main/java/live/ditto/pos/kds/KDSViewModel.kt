@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -25,6 +25,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class KDSViewModel
 @Inject
@@ -38,24 +39,37 @@ constructor(
         private const val OUTPUT_DATE_FORMAT = "h:mm a"
     }
 
-    private var ordersJob: Job? = null
+    // Most-recent snapshot of the kitchen orders feed, used by the click
+    // handler to find the order being advanced without re-collecting the flow.
+    private var latestOrders: List<Order> = emptyList()
 
     private val _uiState = MutableStateFlow(KdsUiState(tickets = emptyList()))
     val uiState: StateFlow<KdsUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch(dispatcherIo) {
-            ordersJob = activeKitchenOrders()
-                .onEach(::updateTickets)
-                .flowOn(dispatcherIo)
-                .launchIn(viewModelScope)
-        }
+        // Re-observe whenever locationId changes — flatMapLatest cancels the
+        // old observer and starts a fresh one for the new location.
+        coreRepository.locationIdFlow()
+            .filter { it.isNotEmpty() }
+            .flatMapLatest { locationId ->
+                dittoRepository.observeLocationOrders(locationId).map { orders ->
+                    orders.filter { order ->
+                        (order.status == OrderStatus.IN_PROCESS || order.status == OrderStatus.PROCESSED) &&
+                            order.cart.isNotEmpty()
+                    }
+                }
+            }
+            .onEach { orders ->
+                latestOrders = orders
+                updateTickets(orders)
+            }
+            .flowOn(dispatcherIo)
+            .launchIn(viewModelScope)
     }
 
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
-            val order = activeKitchenOrders().first().firstOrNull { it.documentId.id == orderId }
-                ?: return@launch
+            val order = latestOrders.firstOrNull { it.documentId.id == orderId } ?: return@launch
             val nextStatus = when (order.status) {
                 OrderStatus.IN_PROCESS -> OrderStatus.PROCESSED
                 OrderStatus.PROCESSED -> OrderStatus.DELIVERED
@@ -65,17 +79,6 @@ constructor(
 
             if (nextStatus == OrderStatus.PROCESSED && coreRepository.currentOrderId() == order.documentId.id) {
                 coreRepository.setCurrentOrderId("")
-            }
-        }
-    }
-
-    // Orders the kitchen cares about: in-process or processed, with items.
-    private suspend fun activeKitchenOrders(): Flow<List<Order>> {
-        val locationId = coreRepository.locationId()
-        return dittoRepository.observeLocationOrders(locationId).map { orders ->
-            orders.filter { order ->
-                (order.status == OrderStatus.IN_PROCESS || order.status == OrderStatus.PROCESSED) &&
-                    order.cart.isNotEmpty()
             }
         }
     }

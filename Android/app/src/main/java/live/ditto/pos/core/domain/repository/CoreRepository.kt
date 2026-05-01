@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -39,6 +41,16 @@ class CoreRepository @Inject constructor(
     suspend fun locationId(): String {
         return getStringPreference(locationIdKey)
     }
+
+    /**
+     * Reactive stream of the current location id. Empty string when not set.
+     * View models should `flatMapLatest` on this to switch their Ditto
+     * observers when the user picks a different location.
+     */
+    fun locationIdFlow(): Flow<String> =
+        context.dataStore.data
+            .map { it[locationIdKey] ?: "" }
+            .distinctUntilChanged()
 
     suspend fun setLocationId(locationId: String) {
         setPreferences(locationIdKey, locationId)
