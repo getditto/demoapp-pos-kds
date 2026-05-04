@@ -22,7 +22,7 @@ struct SettingsView: View {
                         .padding()
                 }
 
-                Text("SDK Version: \(ditto.sdkVersion)")
+                Text("SDK Version: \(Ditto.version)")
                     .padding()
             }
             .navigationTitle("Ditto Tools")
