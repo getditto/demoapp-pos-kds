@@ -42,7 +42,7 @@ extension Location {
     var insertDefaultQuery: DittoQuery {
         (
             string: """
-                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                INSERT INTO \(Self.collectionName)
                 INITIAL DOCUMENTS (:new)
                 """,
             args: [
@@ -58,7 +58,7 @@ extension Location {
     var insertNewQuery: DittoQuery {
         (
             string: """
-                INSERT INTO COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                INSERT INTO \(Self.collectionName)
                 DOCUMENTS (:new)
                 ON ID CONFLICT DO UPDATE
             """,
@@ -75,7 +75,7 @@ extension Location {
     static var selectAllQuery: DittoQuery {
         (
             string: """
-                SELECT * FROM COLLECTION \(Self.collectionName) (saleItemIds MAP)
+                SELECT * FROM \(Self.collectionName)
             """,
             args: [:]
         )
