@@ -7,8 +7,6 @@
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
-import DittoExportLogs
-import DittoHeartbeat
 import DittoSwift
 import SwiftUI
 
@@ -66,9 +64,6 @@ final class DittoInstance: ObservableObject {
     }
 }
 
-// Used to constrain orders subscriptions to 1 day old or newer
-let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
-
 @MainActor class DittoService: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
@@ -81,17 +76,8 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
 
     @Published private(set) var locationOrders = [Order]()
     private var allOrdersCancellable = AnyCancellable({})
-    
-    //ditto.siteID as String to partition ordering to devices
-    private(set) var deviceId: String
-
     static var shared = DittoService()
     let ditto = DittoInstance.shared.ditto
-
-    // Heartbeat
-    var heartbeatConfig: DittoHeartbeatConfig?
-    var heartbeatCallback: HeartbeatCallback = {_ in}
-    private var heartbeatVM: HeartbeatVM
 
     private let storeService: StoreService
     private let syncService: SyncService
@@ -101,10 +87,6 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         syncService = SyncService(ditto.sync)
         syncService.registerInitialSubscriptions()
 
-        deviceId = String(ditto.siteID)
-
-        heartbeatVM = HeartbeatVM(ditto: ditto)
-        
         updateLocationsPublisher()
 
         currentLocationId = Settings.locationId
@@ -192,28 +174,11 @@ let OrderTTL: TimeInterval = 60 * 60 * 24 //24hrs
         storeService.add(transx, to: order)
     }
 
-    func incompleteOrderFuture(locationId: String? = nil, device: String? = nil) -> Future<Order?, Never> {
+    func incompleteOrderFuture(locationId: String? = nil) -> Future<Order?, Never> {
         guard let locId = locationId ?? currentLocationId else {
             return Future { promise in  promise(.success(nil)) }
         }
-        return storeService.incompleteOrderFuture(locationId: locId, deviceId: device ?? deviceId)
-    }
-
-    //MARK: - Heartbeat Tool
-    func startHeartbeat() {
-        guard let heartbeatConfig = heartbeatConfig else {
-            print("Heartbeat Tool not Configured")
-            return
-        }
-
-        if self.heartbeatVM.isEnabled {
-            self.stopHeartbeat()
-        }
-        self.heartbeatVM.startHeartbeat(config: heartbeatConfig, callback: heartbeatCallback)
-    }
-
-    func stopHeartbeat() {
-        self.heartbeatVM.stopHeartbeat()
+        return storeService.incompleteOrderFuture(locationId: locId)
     }
 }
 
@@ -384,9 +349,9 @@ fileprivate struct StoreService {
             .eraseToAnyPublisher()
     }
 
-    func incompleteOrderFuture(locationId: String, deviceId: String) -> Future<Order?, Never> {
+    func incompleteOrderFuture(locationId: String) -> Future<Order?, Never> {
         print("DS.\(#function) --> in")
-        let query = Order.incompleteOrderQuery(locationId: locationId, deviceId: deviceId)
+        let query = Order.incompleteOrderQuery(locationId: locationId)
         return Future { promise in
             Task {
                 do {

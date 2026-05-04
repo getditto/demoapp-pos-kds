@@ -8,6 +8,9 @@ class OrdersDittoCollectionSubscription(
 
     override val collectionName = ORDERS_COLLECTION_NAME
     override val subscriptionQuery = SUBSCRIPTION_QUERY.trimIndent()
-    override val subscriptionQueryArgs: Map<String, Any> = mapOf(LOCATION_ID_ATTRIBUTE_KEY to locationId)
+    override val subscriptionQueryArgs: Map<String, Any> = mapOf(
+        LOCATION_ID_ATTRIBUTE_KEY to locationId,
+        TTL_ATTRIBUTE_KEY to ttlTimestamp()
+    )
     override val evictionQuery = "todo" // todo
 }

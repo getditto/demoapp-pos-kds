@@ -9,7 +9,6 @@ import live.ditto.pos.core.data.transactions.TransactionStatus
 data class Order(
     val id: Map<String, String>,
     val createdOn: String,
-    val deviceId: String,
     val saleItemIds: MutableMap<String, String>?, // id to sale item id
     val status: Int,
     val transactionIds: Map<String, Int>
@@ -36,7 +35,6 @@ data class Order(
         return orderMap.apply {
             this["_id"] = id
             this["createdOn"] = createdOn
-            this["deviceId"] = deviceId
             saleItemIds?.let { this["saleItemIds"] = it }
             this["status"] = status
             this["transactionIds"] = transactionIds
@@ -48,7 +46,6 @@ fun DittoProperty.toOrder(): Order {
     return Order(
         id = deserializeProperty("_id"),
         createdOn = deserializeProperty("createdOn"),
-        deviceId = deserializeProperty("deviceId"),
         saleItemIds = try {
             deserializeProperty<MutableMap<String, String>?>("saleItemIds")
         } catch (e: MissingPropertyException) {
