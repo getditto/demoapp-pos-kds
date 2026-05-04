@@ -9,7 +9,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import live.ditto.ditto_wrapper.DittoManager
-import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.BuildConfig
 import live.ditto.pos.core.domain.repository.CoreRepository
 import javax.inject.Singleton
@@ -32,14 +31,6 @@ internal object AppModule {
             dittoOnlinePlaygroundToken = dittoOnlinePlaygroundAppToken,
             dittoWebsocketURL = dittoWebsocketURL
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideDittoStoreManager(
-        dittoManager: DittoManager
-    ): DittoStoreManager {
-        return DittoStoreManager(dittoManager.requireDitto())
     }
 
     @DittoOnlinePlaygroundAppId

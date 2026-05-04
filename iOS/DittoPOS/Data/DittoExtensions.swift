@@ -2,87 +2,111 @@
 //  DittoExtensions.swift
 //  DittoPOS
 //
-//  Created by Shunsuke Kondo on 2023/12/28.
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
 import Combine
 import DittoSwift
+import Foundation
 
-typealias DittoQuery = (string: String, args: [String: Any?])
+// MARK: - JSON encoding / decoding
 
-protocol DittoDecodable {
-    init(value: [String: Any?])
+enum DittoDateFormatting {
+    static let iso8601: Date.ISO8601FormatStyle = .ditto
 }
 
-// MARK: - Extensions of `execute`
-extension DittoStore {
-
-    // Emit with mapped objects as an array
-    func executePublisher<T: DittoDecodable>(query: String, arguments: Dictionary<String, Any?>? = [:], mapTo: T.Type) -> AnyPublisher<[T], Error> {
-        return Future { promise in
-            Task.init {
-                do {
-                    let result = try await self.execute(query: query, arguments: arguments ?? [:])
-                    let items = result.items.compactMap { T(value: $0.value) }
-                    promise(.success(items))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }.eraseToAnyPublisher()
-    }
-
-    // Emit with a mapped object as a single value instead of an array
-    func executePublisher<T: DittoDecodable>(query: String, arguments: Dictionary<String, Any?>? = [:], mapTo: T.Type, onlyFirst: Bool) -> AnyPublisher<T?, Error> {
-        return Future { promise in
-            Task.init {
-                do {
-                    let result = try await self.execute(query: query, arguments: arguments ?? [:])
-                    guard let first = result.items.first else { return promise(.success(nil)) }
-                    let item = T(value: first.value)
-                    promise(.success(item))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }.eraseToAnyPublisher()
+extension Date.ISO8601FormatStyle {
+    static var ditto: Date.ISO8601FormatStyle {
+        .iso8601
+            .year().month().day()
+            .timeZone(separator: .omitted)
+            .time(includingFractionalSeconds: true)
+            .timeSeparator(.colon)
     }
 }
 
-// MARK: - Extensions of `registerObserver`
-extension DittoStore {
+extension JSONEncoder {
+    static var ditto: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.formatted(DittoDateFormatting.iso8601))
+        }
+        return encoder
+    }
+}
 
-    // Send mapped objects as an array
-    func observePublisher<T: DittoDecodable>(query: String, arguments: [String : Any?]? = nil, deliverOn queue: DispatchQueue = .main, mapTo: T.Type) -> AnyPublisher<[T], Error> {
+extension JSONDecoder {
+    static var ditto: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            return try DittoDateFormatting.iso8601.parse(raw)
+        }
+        return decoder
+    }
+}
+
+extension Encodable {
+    /// Encode to a JSON string for passing to DQL `deserialize_json(:arg)`.
+    func dittoJSONString() throws -> String {
+        let data = try JSONEncoder.ditto.encode(self)
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+}
+
+extension DittoQueryResultItem {
+    func decode<T: Decodable>(decoder: JSONDecoder = .ditto) throws -> T {
+        defer { dematerialize() }
+        return try decoder.decode(T.self, from: jsonData())
+    }
+}
+
+extension DittoQueryResult {
+    /// Decodes every item; throws on any failure. Use when you need all-or-nothing.
+    func decode<T: Decodable>(decoder: JSONDecoder = .ditto) throws -> [T] {
+        try items.map { try $0.decode(decoder: decoder) }
+    }
+
+    /// Decodes every item, silently dropping any that fail. Use for observers
+    /// where one bad document shouldn't blank the rest.
+    func decodeOrSkip<T: Decodable>(decoder: JSONDecoder = .ditto) -> [T] {
+        items.compactMap { try? $0.decode(decoder: decoder) }
+    }
+}
+
+// MARK: - Combine wrappers
+
+extension DittoStore {
+    /// Uses Ditto's `handlerWithSignalNext` overload so we can apply
+    /// backpressure: `signalNext()` is called only after `subject.send(...)`
+    /// completes. With a non-buffered downstream this gates Ditto's next
+    /// delivery on consumer readiness; with `PassthroughSubject` the
+    /// difference is small but the pattern is the canonical one.
+    func observePublisher<T: Decodable>(
+        query: String,
+        arguments: [String: Any?]? = nil,
+        deliverOn queue: DispatchQueue = .main,
+        mapTo: T.Type
+    ) -> AnyPublisher<[T], Error> {
         let subject = PassthroughSubject<[T], Error>()
-
         do {
-            try self.registerObserver(query: query, arguments: arguments, deliverOn: queue) { result in
-                let items = result.items.compactMap { T(value: $0.value) }
-                subject.send(items)
-            }
+            try self.registerObserver(
+                query: query,
+                arguments: arguments,
+                deliverOn: queue,
+                handlerWithSignalNext: { result, signalNext in
+                    // Decode first; signalNext only after the consumer has the
+                    // decoded payload so Ditto's next delivery is gated on us
+                    // having actually finished this one.
+                    let items: [T] = result.decodeOrSkip()
+                    subject.send(items)
+                    signalNext()
+                }
+            )
         } catch {
             subject.send(completion: .failure(error))
         }
-
-        return subject.eraseToAnyPublisher()
-    }
-
-    // Send a mapped object as a single value instead of an array
-    func observePublisher<T: DittoDecodable>(query: String, arguments: [String : Any?]? = nil, deliverOn queue: DispatchQueue = .main, mapTo: T.Type, onlyFirst: Bool) -> AnyPublisher<T?, Error> {
-        let subject = PassthroughSubject<T?, Error>()
-
-        do {
-            try self.registerObserver(query: query, arguments: arguments, deliverOn: queue) { result in
-                guard let first = result.items.first else { return subject.send(nil) }
-                let item = T(value: first.value)
-                subject.send(item)
-            }
-        } catch {
-            subject.send(completion: .failure(error))
-        }
-
         return subject.eraseToAnyPublisher()
     }
 }

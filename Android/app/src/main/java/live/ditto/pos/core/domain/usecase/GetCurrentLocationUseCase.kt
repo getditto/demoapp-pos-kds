@@ -1,6 +1,7 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.data.demoLocations
+import kotlinx.coroutines.flow.first
+import live.ditto.pos.core.data.demo.LocationSeed
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
@@ -20,11 +21,9 @@ class GetCurrentLocationUseCase @Inject constructor(
         return if (appConfigurationState == AppConfigurationState.VALID) {
             val locationId = coreRepository.locationId()
             if (isUsingDemoLocationsUseCase()) {
-                demoLocations.find {
-                    it.id == locationId
-                }
+                LocationSeed.demoLocations.find { it.id == locationId }
             } else {
-                dittoRepository.getLocationById(locationId = locationId)
+                dittoRepository.observeAllLocations().first().find { it.id == locationId }
             }
         } else {
             null

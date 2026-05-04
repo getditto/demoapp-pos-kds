@@ -1,10 +1,9 @@
-///
+//
 //  AdvancedSettings.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 3/7/24.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2024 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import SwiftUI
@@ -13,7 +12,7 @@ import SwiftUI
 @MainActor class AdvancedSettingsVM: ObservableObject {
     @Published var shouldUseDemo: Bool = Settings.useDemoLocations
     private var shadowUseDemo: Bool = Settings.useDemoLocations
-    
+
     func saveSettings() {
         if shadowUseDemo != shouldUseDemo {
             DittoService.shared.updateDemoLocationsSetting(enable: shouldUseDemo)

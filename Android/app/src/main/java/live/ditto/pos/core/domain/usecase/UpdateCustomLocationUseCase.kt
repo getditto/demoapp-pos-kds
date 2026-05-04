@@ -16,7 +16,7 @@ class UpdateCustomLocationUseCase @Inject constructor(
             id = "$companyName-$locationName",
             name = locationName
         )
-        dittoRepository.insertCustomLocation(customLocation = customLocation)
+        dittoRepository.insertCustomLocation(location = customLocation)
         coreRepository.shouldUseDemoLocations(useDemoLocations = false)
         setCurrentLocationUseCase(locationId = customLocation.id)
     }
