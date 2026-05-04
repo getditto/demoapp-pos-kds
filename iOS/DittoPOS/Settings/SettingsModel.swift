@@ -16,41 +16,23 @@ struct Settings {
         get { defaults.storedLocationId }
         set(value) { defaults.storedLocationId = value }
     }
-    
+
     static var selectedTabView: TabViews? {
         get { defaults.selectedTabView }
         set(value) { defaults.selectedTabView = value }
     }
     static var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> { defaults.selectedTabViewPublisher }
-    
-    static var useDemoLocations: Bool {
-        get { defaults.storedUseDemoLocations }
-        set(value) { defaults.storedUseDemoLocations = value }
-    }
-    static var useDemoLocationsPublisher: AnyPublisher<Bool, Never> { defaults.useDemoLocationsPublisher }
-    
-    static var customLocation: Data? {
-        get { defaults.storedCustomLocation }
-        set(value) { defaults.storedCustomLocation = value }
-    }
-    static var customLocationPublisher: AnyPublisher<Data?, Never> { defaults.customLocationPublisher }
-    
+
     // For testing only
     static func clearLocationsSetup() {
-        useDemoLocations = false
-        customLocation = nil
         locationId = nil
     }
-
 }
 
 extension UserDefaults {
     public struct UserDefaultsKeys {
         static var currentLocationId: String { "live.ditto.DittoPOS.currentLocationId" }
         static var selectedTab: String { "live.ditto.DittoPOS.selectedTab" }
-        //rename: keep legacy "userKey" key
-        static var customLocationKey: String { "live.ditto.DittoPOS.userKey" }
-        static var useDemoLocations: String { "live.ditto.DittoPOS.useDemoLocations" }
     }
 
     // stored location from both user-defined and default demo locations selection
@@ -61,35 +43,6 @@ extension UserDefaults {
         set(value) {
             set(value, forKey: UserDefaultsKeys.currentLocationId)
         }
-    }
-
-}
-
-// use case: switch between demo locations and user-defined
-extension UserDefaults {
-    @objc dynamic var storedUseDemoLocations: Bool {
-        get { return bool(forKey: UserDefaultsKeys.useDemoLocations) }
-        set(value) { set(value, forKey: UserDefaultsKeys.useDemoLocations) }
-    }
-    
-    var useDemoLocationsPublisher: AnyPublisher<Bool, Never> {
-        UserDefaults.standard
-            .publisher(for: \.storedUseDemoLocations)
-            .eraseToAnyPublisher()
-    }
-}
-
-// use case: user-defined location
-extension UserDefaults {
-    @objc dynamic var storedCustomLocation: Data? {
-        get { UserDefaults.standard.data(forKey: UserDefaultsKeys.customLocationKey) }
-        set { UserDefaults.standard.set(newValue, forKey: UserDefaultsKeys.customLocationKey) }
-    }
-
-    var customLocationPublisher: AnyPublisher<Data?, Never> {
-        UserDefaults.standard
-            .publisher(for: \.storedCustomLocation)
-            .eraseToAnyPublisher()
     }
 }
 
@@ -103,16 +56,16 @@ extension UserDefaults {
         set(newValue) {
             let tabInt = newValue?.rawValue ?? 0
             set(tabInt, forKey: UserDefaultsKeys.selectedTab)
-            
+
             let retTab = newValue == nil ? nil : TabViews(rawValue: tabInt)
             Self.selectedTabSubject.send(retTab)
         }
     }
-        
+
     // Workaround for UserDefaults does not support publishing optional Int natively, so to implement
     // selectedTabViewPublisher, we have to be notified when selectedTabView is updated (above).
     private static var selectedTabSubject = PassthroughSubject<TabViews?, Never>()
-    
+
     var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> {
         Self.selectedTabSubject
             .eraseToAnyPublisher()

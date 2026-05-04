@@ -7,7 +7,6 @@ import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.locations.ditto.GetAllLocationsDittoSelectQuery
-import live.ditto.pos.core.data.locations.ditto.InsertCustomLocationDittoQuery
 import live.ditto.pos.core.data.locations.ditto.LocationsDittoCollectionSubscription
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrderStatus
@@ -39,6 +38,10 @@ class DittoRepository @Inject constructor(
 
     fun getMissingPermissions(): Array<String> {
         return dittoManager.missingPermissions()
+    }
+
+    fun setRoutingConfig(locationId: String) {
+        dittoManager.setRoutingConfig(locationId)
     }
 
     fun startOrdersSubscription(locationId: String) {
@@ -116,12 +119,5 @@ class DittoRepository @Inject constructor(
     suspend fun clearSaleItemIds(order: Order) {
         val clearSaleItemsDittoQuery = ClearSaleItemsDittoQuery(order = order)
         dittoStoreManager.executeQuery(dittoQuery = clearSaleItemsDittoQuery)
-    }
-
-    suspend fun insertCustomLocation(customLocation: Location) {
-        val insertCustomLocationQuery = InsertCustomLocationDittoQuery(
-            customLocation = customLocation
-        )
-        dittoStoreManager.executeQuery(dittoQuery = insertCustomLocationQuery)
     }
 }

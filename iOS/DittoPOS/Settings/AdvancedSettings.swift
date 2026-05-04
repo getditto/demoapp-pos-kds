@@ -6,68 +6,25 @@
 //
 //  Copyright © 2024 DittoLive Incorporated. All rights reserved.
 
-import Combine
 import SwiftUI
 
 
-@MainActor class AdvancedSettingsVM: ObservableObject {
-    @Published var shouldUseDemo: Bool = Settings.useDemoLocations
-    private var shadowUseDemo: Bool = Settings.useDemoLocations
-    
-    func saveSettings() {
-        if shadowUseDemo != shouldUseDemo {
-            DittoService.shared.updateDemoLocationsSetting(enable: shouldUseDemo)
-        }
-    }
-}
-
 struct AdvancedSettings: View {
-    @Environment(\.dismiss) private var dismiss
-    @StateObject var vm = AdvancedSettingsVM()
-    
     var body: some View {
         List {
             Section {
-                HStack {
-                    VStack {
-                        Toggle(isOn: $vm.shouldUseDemo) {
-                            
-                            Text("Use demo locations").bold()
-                        }
-                        .padding(.bottom, 8)
-                        .overlay(Divider(), alignment: .bottom)
-                        
-                        Text(
-                            "You can switch between stock, shared demo restaurant locations.\n"
-                            + "Or, you create a custom location and all orders in your demo "
-                            + "will be for that location."
-                        )
-                        .font(.footnote)
-                        .padding(.trailing, 32)
-                    }
-                }
-            } header: {
-                if let locName = Settings.locationId, Settings.useDemoLocations == false {
+                if let locName = Settings.locationId {
                     Text("Current location: \"\(locName)\"")
+                } else {
+                    Text("No location selected")
                 }
             }
-            
-            Section {
-                HStack(alignment: .bottom) {
-                    Spacer()
-                    
-                    Button{
-                        vm.saveSettings()
-                    } label: {
-                        Text("Save")
-                    }
-                    .frame(alignment: .center)
-                    .disabled(vm.shouldUseDemo == Settings.useDemoLocations)
 
-                    Spacer()
+            Section {
+                Button("Reset Location") {
+                    DittoService.shared.resetLocationSelection()
                 }
             }
-            .interactiveDismissDisabled()
         }
     }
 }

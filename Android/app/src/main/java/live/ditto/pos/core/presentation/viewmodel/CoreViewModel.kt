@@ -12,10 +12,7 @@ import live.ditto.Ditto
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
-import live.ditto.pos.core.domain.usecase.IsUsingDemoLocationsUseCase
 import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
-import live.ditto.pos.core.domain.usecase.UpdateCustomLocationUseCase
-import live.ditto.pos.core.domain.usecase.UseDemoLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetMissingPermissionsUseCase
 import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
@@ -28,23 +25,27 @@ class CoreViewModel @Inject constructor(
     private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
-    private val setCurrentLocationUseCase: SetCurrentLocationUseCase,
-    private val useDemoLocationUseCase: UseDemoLocationUseCase,
-    private val isUsingDemoLocationsUseCase: IsUsingDemoLocationsUseCase,
-    private val updateCustomLocationUseCase: UpdateCustomLocationUseCase
+    private val setCurrentLocationUseCase: SetCurrentLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         AppState(
             currentLocationName = "",
-            appConfigurationState = AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED,
-            isDemoLocationsMode = false
+            appConfigurationState = AppConfigurationState.LOCATION_NEEDED
         )
     )
     val uiState = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            // If a location is already stored, restore routing config and subscriptions
+            val state = appConfigurationStateUseCase()
+            if (state == AppConfigurationState.VALID) {
+                val location = getCurrentLocationUseCase()
+                if (location != null) {
+                    setCurrentLocationUseCase(locationId = location.id)
+                }
+            }
             updateAppState()
         }
     }
@@ -68,37 +69,10 @@ class CoreViewModel @Inject constructor(
         }
     }
 
-    fun shouldUseDemoLocations(shouldUseDemoLocations: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            useDemoLocationUseCase(shouldUseDemoLocations)
-            updateIsUsingDemoLocations(isUsingDemoLocations = shouldUseDemoLocations)
-        }
-    }
-
-    fun updateCustomLocation(companyName: String, locationName: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateCustomLocationUseCase(
-                companyName = companyName,
-                locationName = locationName
-            )
-            updateAppState()
-        }
-    }
-
     suspend fun updateAppState() {
         val isSetupValid = appConfigurationStateUseCase()
-        val isUsingDemoLocations = isUsingDemoLocationsUseCase()
         updateAppConfigurationState(appConfigurationState = isSetupValid)
         updateLocationName()
-        updateIsUsingDemoLocations(isUsingDemoLocations = isUsingDemoLocations)
-    }
-
-    private fun updateIsUsingDemoLocations(isUsingDemoLocations: Boolean) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                isDemoLocationsMode = isUsingDemoLocations
-            )
-        }
     }
 
     private suspend fun updateLocationName() {
@@ -121,6 +95,5 @@ class CoreViewModel @Inject constructor(
 
 data class AppState(
     val currentLocationName: String,
-    val appConfigurationState: AppConfigurationState,
-    val isDemoLocationsMode: Boolean
+    val appConfigurationState: AppConfigurationState
 )
