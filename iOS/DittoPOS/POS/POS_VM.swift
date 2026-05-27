@@ -19,8 +19,8 @@ import SwiftUI
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
-        // Sale items are now sourced from the synced sale_items collection,
-        // filtered to the current location.
+        // Sale items come from the synced `sale_items` collection, filtered
+        // to the current location.
         dittoService.$locationSaleItems
             .receive(on: DispatchQueue.main)
             .assign(to: \.saleItems, on: self)

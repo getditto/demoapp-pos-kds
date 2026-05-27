@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.CartLineItem
@@ -43,6 +44,12 @@ constructor(
     private var latestOrder: Order? = null
     private var latestSaleItems: List<SaleItem> = emptyList()
 
+    // The order this view model is currently building. Set by
+    // `ensureCurrentOrder` when entering a location, and by `payForOrder`
+    // when opening the next order. The observer pipeline reads it to bind
+    // the synced version of the same order.
+    private var currentOrderId: String = ""
+
     private val _uiState = MutableStateFlow(
         PosUiState(
             currentOrderId = "",
@@ -54,12 +61,21 @@ constructor(
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
     init {
-        // Track the active location and re-create the orders + sale_items
-        // observers when it changes. flatMapLatest cancels the previous
-        // observer for us, so the UI never mixes data from two locations.
+        // The order pipeline has two phases per location entry:
+        //   1. Resolve [currentOrderId] for the new location once.
+        //   2. Bind the synced version of that fixed id on every emission.
+        // Keeping creation out of the observer's map ensures Ditto observer
+        // emissions only ever read the order — never write a new one.
+        // flatMapLatest cancels the previous arm on location change so the UI
+        // never mixes data from two locations.
         coreRepository.locationIdFlow()
             .filter { it.isNotEmpty() }
-            .flatMapLatest { locationId -> currentOrderFlow(locationId) }
+            .flatMapLatest { locationId ->
+                ensureCurrentOrder(locationId)
+                dittoRepository.observeLocationOrders(locationId).mapNotNull { orders ->
+                    orders.firstOrNull { it.documentId.id == currentOrderId }
+                }
+            }
             .onEach(::renderOrder)
             .flowOn(dispatcherIO)
             .launchIn(viewModelScope)
@@ -94,9 +110,13 @@ constructor(
         viewModelScope.launch(dispatcherIO) {
             val payment = Payment(type = PaymentType.CASH, amount = current.total)
             dittoRepository.upsertOrder(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
-            // Clear the saved id so currentOrderFlow creates a fresh order on
-            // the next emission.
-            coreRepository.setCurrentOrderId("")
+
+            // Open the next order for this location and point [currentOrderId]
+            // at it. Creation lives here, not inside the observer pipeline.
+            val next = Order.new(locationId = current.documentId.locationId)
+            currentOrderId = next.documentId.id
+            coreRepository.setCurrentOrderId(currentOrderId)
+            dittoRepository.upsertOrder(next)
         }
     }
 
@@ -108,23 +128,27 @@ constructor(
     }
 
     /**
-     * Resolves the order the POS is currently building for [locationId].
-     * Reuses the saved `currentOrderId` if a matching open/in-process order
-     * exists at this location; otherwise creates a fresh one.
+     * Resolves [currentOrderId] for [locationId]. If the persisted id still
+     * points at an open/in-process order at this location, we keep using it;
+     * otherwise we create a fresh order. Called exactly once per location
+     * entry so that the observer pipeline never has to create.
      */
-    private fun currentOrderFlow(locationId: String) =
-        dittoRepository.observeLocationOrders(locationId).map { orders ->
-            val savedOrderId = coreRepository.currentOrderId()
-            orders.firstOrNull { it.documentId.id == savedOrderId }?.takeIf {
+    private suspend fun ensureCurrentOrder(locationId: String) {
+        val savedId = coreRepository.currentOrderId()
+        if (savedId.isNotEmpty()) {
+            val snapshot = dittoRepository.observeLocationOrders(locationId).first()
+            val valid = snapshot.firstOrNull { it.documentId.id == savedId }?.let {
                 it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
-            } ?: createNewOrder(locationId)
+            } == true
+            if (valid) {
+                currentOrderId = savedId
+                return
+            }
         }
-
-    private suspend fun createNewOrder(locationId: String): Order {
         val order = Order.new(locationId = locationId)
+        currentOrderId = order.documentId.id
+        coreRepository.setCurrentOrderId(currentOrderId)
         dittoRepository.upsertOrder(order)
-        coreRepository.setCurrentOrderId(order.documentId.id)
-        return order
     }
 
     private fun renderOrder(order: Order) {

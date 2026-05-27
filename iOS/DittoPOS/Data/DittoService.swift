@@ -304,7 +304,7 @@ final class DittoInstance: ObservableObject {
     }
 }
 
-// MARK: - Demo / Custom location toggle (carried over; removed in BP/sync-group-and-routing-hint)
+// MARK: - Demo / Custom location toggle
 
 extension DittoService {
     enum LocationsSetupOption { case demo, custom }
