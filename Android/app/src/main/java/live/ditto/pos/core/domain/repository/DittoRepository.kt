@@ -23,6 +23,7 @@ import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.toDittoIsoString
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,7 +33,7 @@ class DittoRepository
 constructor(
     @ApplicationContext private val context: Context,
     private val dittoManager: DittoManager,
-    private val coreRepository: CoreRepository
+    private val appSettings: AppSettings
 ) {
     private val ditto: Ditto get() = dittoManager.requireDitto()
     private val activeSubs = mutableMapOf<String, DittoSyncSubscription>()
@@ -45,7 +46,7 @@ constructor(
         // is already in DataStore — without this, observers would see only
         // the local store and miss orders other peers had pushed for the
         // saved location.
-        coreRepository.locationIdFlow()
+        appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .onEach { locationId -> setActiveLocation(locationId) }
             .launchIn(repoScope)

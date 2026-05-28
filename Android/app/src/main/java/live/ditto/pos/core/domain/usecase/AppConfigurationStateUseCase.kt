@@ -1,9 +1,9 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
-class AppConfigurationStateUseCase @Inject constructor(private val coreRepository: CoreRepository) {
+class AppConfigurationStateUseCase @Inject constructor(private val appSettings: AppSettings) {
 
     enum class AppConfigurationState {
         VALID,
@@ -12,8 +12,8 @@ class AppConfigurationStateUseCase @Inject constructor(private val coreRepositor
     }
 
     suspend operator fun invoke(): AppConfigurationState {
-        val isUsingDemoLocations = coreRepository.isUsingDemoLocations()
-        val locationId = coreRepository.locationId()
+        val isUsingDemoLocations = appSettings.isUsingDemoLocations()
+        val locationId = appSettings.locationId()
         return if (isUsingDemoLocations != null) {
             if (locationId.isEmpty()) {
                 AppConfigurationState.LOCATION_NEEDED

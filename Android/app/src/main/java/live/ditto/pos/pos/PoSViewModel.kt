@@ -23,10 +23,10 @@ import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.PaymentType
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -34,7 +34,7 @@ import javax.inject.Inject
 class PoSViewModel
 @Inject
 constructor(
-    private val coreRepository: CoreRepository,
+    private val appSettings: AppSettings,
     private val dittoRepository: DittoRepository,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
@@ -62,7 +62,7 @@ constructor(
         // Resolve the current order once per location, then just bind the
         // synced version on every emission. flatMapLatest cancels the
         // previous arm on location change.
-        coreRepository.locationIdFlow()
+        appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
                 ensureCurrentOrder(locationId)
@@ -74,7 +74,7 @@ constructor(
             .flowOn(dispatcherIO)
             .launchIn(viewModelScope)
 
-        coreRepository.locationIdFlow()
+        appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { dittoRepository.observeLocationSaleItems(it) }
             .onEach { items ->
@@ -108,7 +108,7 @@ constructor(
             // Open the next order explicitly; the observer never creates.
             val next = Order.new(locationId = current.documentId.locationId)
             currentOrderId = next.documentId.id
-            coreRepository.setCurrentOrderId(currentOrderId)
+            appSettings.setCurrentOrderId(currentOrderId)
             dittoRepository.upsertOrder(next)
         }
     }
@@ -122,7 +122,7 @@ constructor(
 
     /** Reuses the saved order if it's still open/in-process, otherwise creates a fresh one. */
     private suspend fun ensureCurrentOrder(locationId: String) {
-        val savedId = coreRepository.currentOrderId()
+        val savedId = appSettings.currentOrderId()
         if (savedId.isNotEmpty()) {
             val snapshot = dittoRepository.observeLocationOrders(locationId).first()
             val valid = snapshot.firstOrNull { it.documentId.id == savedId }?.let {
@@ -135,7 +135,7 @@ constructor(
         }
         val order = Order.new(locationId = locationId)
         currentOrderId = order.documentId.id
-        coreRepository.setCurrentOrderId(currentOrderId)
+        appSettings.setCurrentOrderId(currentOrderId)
         dittoRepository.upsertOrder(order)
     }
 

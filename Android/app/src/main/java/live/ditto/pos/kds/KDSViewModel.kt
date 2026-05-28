@@ -18,8 +18,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.pos.settings.AppSettings
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -30,7 +30,7 @@ import javax.inject.Inject
 class KDSViewModel
 @Inject
 constructor(
-    private val coreRepository: CoreRepository,
+    private val appSettings: AppSettings,
     private val dittoRepository: DittoRepository,
     private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
@@ -49,7 +49,7 @@ constructor(
     init {
         // Re-observe whenever locationId changes — flatMapLatest cancels the
         // old observer and starts a fresh one for the new location.
-        coreRepository.locationIdFlow()
+        appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
                 dittoRepository.observeLocationOrders(locationId).map { orders ->
@@ -77,8 +77,8 @@ constructor(
             }
             dittoRepository.upsertOrder(order.appendingStatus(nextStatus))
 
-            if (nextStatus == OrderStatus.PROCESSED && coreRepository.currentOrderId() == order.documentId.id) {
-                coreRepository.setCurrentOrderId("")
+            if (nextStatus == OrderStatus.PROCESSED && appSettings.currentOrderId() == order.documentId.id) {
+                appSettings.setCurrentOrderId("")
             }
         }
     }
