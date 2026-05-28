@@ -2,7 +2,13 @@ package live.ditto.pos.core.domain.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -25,10 +31,25 @@ class DittoRepository
 @Inject
 constructor(
     @ApplicationContext private val context: Context,
-    private val dittoManager: DittoManager
+    private val dittoManager: DittoManager,
+    private val coreRepository: CoreRepository
 ) {
     private val ditto: Ditto get() = dittoManager.requireDitto()
     private val activeSubs = mutableMapOf<String, DittoSyncSubscription>()
+    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        // Track the saved locationId and register orders + sale_items
+        // subscriptions whenever it's set. This covers both the user picking
+        // a location for the first time and app re-launch where the location
+        // is already in DataStore — without this, observers would see only
+        // the local store and miss orders other peers had pushed for the
+        // saved location.
+        coreRepository.locationIdFlow()
+            .filter { it.isNotEmpty() }
+            .onEach { locationId -> setActiveLocation(locationId) }
+            .launchIn(repoScope)
+    }
 
     fun requireDitto(): Ditto = ditto
 
