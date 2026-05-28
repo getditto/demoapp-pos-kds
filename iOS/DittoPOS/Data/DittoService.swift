@@ -99,7 +99,7 @@ final class DittoInstance: ObservableObject {
 
         $currentLocationId
             .combineLatest($allLocations)
-            .sink { [weak self] locationId, _ in
+            .sink { [weak self] locationId, locations in
                 guard let self, let locationId else { return }
 
                 if locationId != Settings.locationId {
@@ -112,7 +112,7 @@ final class DittoInstance: ObservableObject {
                     }
                 }
 
-                self.activate(locationId: locationId)
+                self.activate(locationId: locationId, locations: locations)
             }
             .store(in: &cancellables)
     }
@@ -221,7 +221,7 @@ final class DittoInstance: ObservableObject {
         )
     }
 
-    private func activate(locationId: String) {
+    private func activate(locationId: String, locations: [Location]) {
         registerSubscription(
             name: "orders",
             query: """
@@ -243,7 +243,7 @@ final class DittoInstance: ObservableObject {
 
         observeOrders(locationId: locationId)
         observeSaleItems(locationId: locationId)
-        currentLocation = allLocations.first { $0.id == locationId }
+        currentLocation = locations.first { $0.id == locationId }
     }
 
     private func registerSubscription(name: String, query: String, args: [String: Any?]? = nil) {
