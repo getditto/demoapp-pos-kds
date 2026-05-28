@@ -55,6 +55,6 @@ enum StatusLogDerivation {
     }
 
     static func entry(_ status: OrderStatus, at date: Date = Date()) -> (timestamp: String, status: String) {
-        (date.formatted(DittoDateFormatting.iso8601), status.rawValue)
+        (DittoWireDate.string(from: date), status.rawValue)
     }
 }

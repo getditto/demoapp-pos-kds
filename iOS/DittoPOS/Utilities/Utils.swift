@@ -105,25 +105,13 @@ extension DateFormatter {
         return f
     }
 
-    static var isoDate: ISO8601DateFormatter {
-        let f = ISO8601DateFormatter()
-        f.formatOptions.insert(.withFractionalSeconds)
-        return f
-    }
-    
-    static var isoDateFull: ISO8601DateFormatter {
-        let f = Self.isoDate
-        f.formatOptions = [.withFullDate]
-        return f
-    }
-    
-    /// Local midnight (start of today), formatted as ISO 8601.
-    /// Using a fixed daily boundary means every device at the same
-    /// location produces the same subscription query, which is
-    /// important for Ditto sync efficiency.
+    /// Local midnight (start of today) in the canonical Ditto wire format.
+    /// Using a fixed daily boundary means every device at the same location
+    /// produces the same subscription query, which is important for Ditto
+    /// sync efficiency.
     static var startOfTodayString: String {
         let startOfDay = Calendar.current.startOfDay(for: Date())
-        return isoDate.string(from: startOfDay)
+        return DittoWireDate.string(from: startOfDay)
     }
 }
 

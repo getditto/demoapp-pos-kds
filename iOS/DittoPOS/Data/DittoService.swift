@@ -149,7 +149,7 @@ final class DittoInstance: ObservableObject {
     }
 
     func reset(order: Order) {
-        let createdAtNow = Date().formatted(DittoDateFormatting.iso8601)
+        let createdAtNow = DittoWireDate.string(from: Date())
         var args: [String: Any?] = [
             "id": order.documentId.id,
             "locationId": order.documentId.locationId,

@@ -11,17 +11,27 @@ import Foundation
 
 // MARK: - JSON encoding / decoding
 
-enum DittoDateFormatting {
-    static let iso8601: Date.ISO8601FormatStyle = .ditto
-}
+/// Canonical ISO 8601 wire format used across iOS and Android:
+/// `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'` (UTC, millisecond precision, `Z` suffix).
+/// Ditto stores timestamps as opaque strings, so the format has to match
+/// across producers for lexicographic comparison to equal chronological order
+/// in DQL filters like `WHERE createdAt > :TTL`.
+enum DittoWireDate {
+    static let formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
 
-extension Date.ISO8601FormatStyle {
-    static var ditto: Date.ISO8601FormatStyle {
-        .iso8601
-            .year().month().day()
-            .timeZone(separator: .omitted)
-            .time(includingFractionalSeconds: true)
-            .timeSeparator(.colon)
+    static func string(from date: Date) -> String { formatter.string(from: date) }
+
+    static func date(from string: String) throws -> Date {
+        guard let date = formatter.date(from: string) else {
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: [], debugDescription: "invalid ISO 8601 date: \(string)")
+            )
+        }
+        return date
     }
 }
 
@@ -30,7 +40,7 @@ extension JSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
-            try container.encode(date.formatted(DittoDateFormatting.iso8601))
+            try container.encode(DittoWireDate.string(from: date))
         }
         return encoder
     }
@@ -41,7 +51,7 @@ extension JSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let raw = try decoder.singleValueContainer().decode(String.self)
-            return try DittoDateFormatting.iso8601.parse(raw)
+            return try DittoWireDate.date(from: raw)
         }
         return decoder
     }
