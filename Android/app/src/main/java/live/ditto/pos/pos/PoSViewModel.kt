@@ -39,15 +39,13 @@ constructor(
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
-    // Snapshots of the latest emissions, used by mutation handlers so they
-    // don't have to re-collect the flows on every tap.
+    // Latest snapshots, so mutation handlers don't re-collect the flows.
     private var latestOrder: Order? = null
     private var latestSaleItems: List<SaleItem> = emptyList()
 
-    // The order this view model is currently building. Set by
-    // `ensureCurrentOrder` when entering a location, and by `payForOrder`
-    // when opening the next order. The observer pipeline reads it to bind
-    // the synced version of the same order.
+    // The order this view model is building. The observer pipeline reads it
+    // to bind the synced version; only `ensureCurrentOrder` and
+    // `payForOrder` write to it.
     private var currentOrderId: String = ""
 
     private val _uiState = MutableStateFlow(
@@ -61,13 +59,9 @@ constructor(
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
     init {
-        // The order pipeline has two phases per location entry:
-        //   1. Resolve [currentOrderId] for the new location once.
-        //   2. Bind the synced version of that fixed id on every emission.
-        // Keeping creation out of the observer's map ensures Ditto observer
-        // emissions only ever read the order — never write a new one.
-        // flatMapLatest cancels the previous arm on location change so the UI
-        // never mixes data from two locations.
+        // Resolve the current order once per location, then just bind the
+        // synced version on every emission. flatMapLatest cancels the
+        // previous arm on location change.
         coreRepository.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
@@ -111,8 +105,7 @@ constructor(
             val payment = Payment(type = PaymentType.CASH, amount = current.total)
             dittoRepository.upsertOrder(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
 
-            // Open the next order for this location and point [currentOrderId]
-            // at it. Creation lives here, not inside the observer pipeline.
+            // Open the next order explicitly; the observer never creates.
             val next = Order.new(locationId = current.documentId.locationId)
             currentOrderId = next.documentId.id
             coreRepository.setCurrentOrderId(currentOrderId)
@@ -127,12 +120,7 @@ constructor(
         }
     }
 
-    /**
-     * Resolves [currentOrderId] for [locationId]. If the persisted id still
-     * points at an open/in-process order at this location, we keep using it;
-     * otherwise we create a fresh order. Called exactly once per location
-     * entry so that the observer pipeline never has to create.
-     */
+    /** Reuses the saved order if it's still open/in-process, otherwise creates a fresh one. */
     private suspend fun ensureCurrentOrder(locationId: String) {
         val savedId = coreRepository.currentOrderId()
         if (savedId.isNotEmpty()) {

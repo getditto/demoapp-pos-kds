@@ -81,7 +81,9 @@ private fun PosKdsNavigationDrawerItem(
             scope.launch {
                 drawerState.close()
             }
-            navController.navigate(navigationDrawerItem.route)
+            navController.navigate(navigationDrawerItem.route) {
+                launchSingleTop = true
+            }
         },
         icon = {
             Icon(

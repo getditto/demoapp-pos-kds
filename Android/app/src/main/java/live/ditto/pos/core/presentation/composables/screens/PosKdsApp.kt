@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
@@ -115,7 +116,15 @@ private fun PosKDSScaffold(
             PosKdsNavigationBar(
                 showDemoLocationsNavItem = state.isDemoLocationsMode,
                 onItemClick = {
-                    navHostController.navigate(route = it.route)
+                    // Single-top + restoreState so each tab reuses its
+                    // NavBackStackEntry (and its ViewModels' Ditto observers).
+                    navHostController.navigate(route = it.route) {
+                        popUpTo(navHostController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         },
