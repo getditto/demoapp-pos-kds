@@ -37,8 +37,6 @@ class DittoManager(
                     config.connect.websocketUrls.add(dittoWebsocketURL)
                 }
 
-                smallPeerInfo.isEnabled = true
-                // Launch the suspend query in a coroutine scope
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         store.execute(query = "ALTER SYSTEM SET DQL_STRICT_MODE = false")

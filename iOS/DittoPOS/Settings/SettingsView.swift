@@ -1,9 +1,9 @@
-///
+//
 //  SettingsView.swift
+//  DittoPOS
 //
-//  Created by Eric Turner on 1/31/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import DittoAllToolsMenu
 import DittoSwift

@@ -1,10 +1,9 @@
-///
+//
 //  SettingsModel.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 3/8/24.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import Foundation

@@ -9,9 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import live.ditto.ditto_wrapper.DittoManager
-import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.BuildConfig
-import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Singleton
 
 @Module
@@ -34,14 +33,6 @@ internal object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideDittoStoreManager(
-        dittoManager: DittoManager
-    ): DittoStoreManager {
-        return DittoStoreManager(dittoManager.requireDitto())
-    }
-
     @DittoOnlinePlaygroundAppId
     @Provides
     fun provideDittoOnlinePlaygroundAppId(): String {
@@ -61,8 +52,8 @@ internal object AppModule {
     }
 
     @Provides
-    fun provideCoreRepository(@ApplicationContext context: Context): CoreRepository {
-        return CoreRepository(context)
+    fun provideAppSettings(@ApplicationContext context: Context): AppSettings {
+        return AppSettings(context)
     }
 
     @Provides

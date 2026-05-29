@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import live.ditto.pos.R
-import live.ditto.pos.core.data.demoLocations
+import live.ditto.pos.core.data.demo.LocationSeed
 import live.ditto.pos.core.data.locations.Location
 
 @Composable
@@ -19,12 +19,12 @@ fun DemoLocationsList(
         modifier = modifier,
         title = stringResource(R.string.location_selection_title)
     ) {
-        demoLocations.forEach {
+        LocationSeed.demoLocations.forEach { location ->
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onDemoLocationSelected(it) }
+                onClick = { onDemoLocationSelected(location) }
             ) {
-                Text(text = it.name)
+                Text(text = location.name)
             }
         }
     }

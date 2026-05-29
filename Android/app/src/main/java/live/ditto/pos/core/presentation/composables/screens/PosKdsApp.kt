@@ -22,7 +22,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import live.ditto.pos.LocalActivity
@@ -30,6 +32,7 @@ import live.ditto.pos.R
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
+import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
@@ -77,13 +80,16 @@ private fun PosKdsApp(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val currentDestination by navHostController.currentBackStackEntryAsState()
+    val onDittoTools = currentDestination?.destination?.route == NavigationDrawerItem.DittoToolsDrawerItem.route
 
     DittoPoSKDSDemoTheme {
         Surface {
             PosKDSNavigationDrawer(
                 navController = navHostController,
                 drawerState = drawerState,
-                scope = scope
+                scope = scope,
+                gesturesEnabled = !onDittoTools
             ) {
                 PosKDSScaffold(
                     navHostController = navHostController,
@@ -115,7 +121,21 @@ private fun PosKDSScaffold(
             PosKdsNavigationBar(
                 showDemoLocationsNavItem = state.isDemoLocationsMode,
                 onItemClick = {
-                    navHostController.navigate(route = it.route)
+                    // Ditto Tools is a drawer destination, not a tab — pop it
+                    // explicitly so DittoToolsViewer is fully cleared before
+                    // the standard tab navigation runs.
+                    if (navHostController.currentDestination?.route == NavigationDrawerItem.DittoToolsDrawerItem.route) {
+                        navHostController.popBackStack()
+                    }
+                    // Single-top + restoreState so each tab reuses its
+                    // NavBackStackEntry (and its ViewModels' Ditto observers).
+                    navHostController.navigate(route = it.route) {
+                        popUpTo(navHostController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         },

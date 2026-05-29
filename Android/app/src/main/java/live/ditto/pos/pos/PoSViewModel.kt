@@ -5,119 +5,153 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import live.ditto.pos.core.data.demoMenuData
+import live.ditto.pos.core.data.CartLineItem
+import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.Payment
+import live.ditto.pos.core.data.PaymentType
+import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.pos.domain.usecase.AddSaleItemToOrderUseCase
-import live.ditto.pos.pos.domain.usecase.CalculateOrderTotalUseCase
-import live.ditto.pos.pos.domain.usecase.ClearCurrentOrderSaleItemsUseCase
-import live.ditto.pos.pos.domain.usecase.GetCurrentOrderUseCase
-import live.ditto.pos.pos.domain.usecase.PayForOrderUseCase
+import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class PoSViewModel @Inject constructor(
-    private val getCurrentOrderUseCase: GetCurrentOrderUseCase,
-    private val addSaleItemToOrderUseCase: AddSaleItemToOrderUseCase,
-    private val payForOrderUseCase: PayForOrderUseCase,
-    private val calculateOrderTotalUseCase: CalculateOrderTotalUseCase,
-    private val clearCurrentOrderSaleItemsUseCase: ClearCurrentOrderSaleItemsUseCase,
+class PoSViewModel
+@Inject
+constructor(
+    private val appSettings: AppSettings,
+    private val dittoRepository: DittoRepository,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
-    private var ordersJob: Job? = null
+    // Latest snapshots, so mutation handlers don't re-collect the flows.
+    private var latestOrder: Order? = null
+    private var latestSaleItems: List<SaleItem> = emptyList()
+
+    // The order this view model is building. The observer pipeline reads it
+    // to bind the synced version; only `ensureCurrentOrder` and
+    // `payForOrder` write to it.
+    private var currentOrderId: String = ""
 
     private val _uiState = MutableStateFlow(
         PosUiState(
             currentOrderId = "",
             orderItems = emptyList(),
-            orderTotal = "$0.00"
+            orderTotal = "$0.00",
+            saleItems = emptyList()
         )
     )
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            updateCurrentOrder()
-        }
-    }
+        // Resolve the current order once per location, then just bind the
+        // synced version on every emission. flatMapLatest cancels the
+        // previous arm on location change.
+        appSettings.locationIdFlow()
+            .filter { it.isNotEmpty() }
+            .flatMapLatest { locationId ->
+                ensureCurrentOrder(locationId)
+                dittoRepository.observeLocationOrders(locationId).mapNotNull { orders ->
+                    orders.firstOrNull { it.documentId.id == currentOrderId }
+                }
+            }
+            .onEach(::renderOrder)
+            .flowOn(dispatcherIO)
+            .launchIn(viewModelScope)
 
-    fun addItemToCart(saleItem: SaleItemUiModel) {
-        viewModelScope.launch(dispatcherIO) {
-            addSaleItemToOrderUseCase(saleItemId = saleItem.id)
-        }
-    }
-
-    fun payForOrder() {
-        ordersJob?.cancel()
-        viewModelScope.launch(dispatcherIO) {
-            payForOrderUseCase()
-            updateCurrentOrder()
-        }
-    }
-
-    fun clearItems() {
-        viewModelScope.launch(dispatcherIO) {
-            clearCurrentOrderSaleItemsUseCase()
-        }
-    }
-
-    private suspend fun updateCurrentOrder() {
-        ordersJob = getCurrentOrderUseCase()
-            .onEach { updateAppState(it) }
+        appSettings.locationIdFlow()
+            .filter { it.isNotEmpty() }
+            .flatMapLatest { dittoRepository.observeLocationSaleItems(it) }
+            .onEach { items ->
+                latestSaleItems = items
+                _uiState.value = _uiState.value.copy(
+                    saleItems = items.map(SaleItemUiModel::from)
+                )
+            }
             .flowOn(dispatcherIO)
             .launchIn(viewModelScope)
     }
 
-    private fun updateAppState(order: Order) {
-        val orderItems = createOrderItems(order)
-        val orderTotal = formattedOrderTotal(order)
-        _uiState.value = _uiState.value.copy(
-            currentOrderId = order.getOrderId(),
-            orderItems = orderItems,
-            orderTotal = orderTotal
-        )
+    fun addItemToCart(saleItem: SaleItemUiModel) {
+        val current = latestOrder ?: return
+        val match = latestSaleItems.firstOrNull { it.documentId.id == saleItem.id } ?: return
+        viewModelScope.launch(dispatcherIO) {
+            val updated = current.addingCartLineItem(
+                CartLineItem.from(match),
+                lineItemId = CartLineItem.newLineItemId()
+            )
+            dittoRepository.upsertOrder(updated)
+        }
     }
 
-    private fun formattedOrderTotal(order: Order): String {
-        val total = calculateOrderTotalUseCase(order = order)
-        return formatPrice(total)
+    fun payForOrder() {
+        val current = latestOrder ?: return
+        viewModelScope.launch(dispatcherIO) {
+            val payment = Payment(type = PaymentType.CASH, amount = current.total)
+            dittoRepository.upsertOrder(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
+
+            // Open the next order explicitly; the observer never creates.
+            val next = Order.new(locationId = current.documentId.locationId)
+            currentOrderId = next.documentId.id
+            appSettings.setCurrentOrderId(currentOrderId)
+            dittoRepository.upsertOrder(next)
+        }
     }
 
-    private fun formatPrice(price: Double): String {
-        return NumberFormat.getCurrencyInstance().format(price)
+    fun clearItems() {
+        val current = latestOrder ?: return
+        viewModelScope.launch(dispatcherIO) {
+            dittoRepository.clearCart(current)
+        }
     }
 
-    private fun createOrderItems(order: Order): List<OrderItemUiModel> {
-        val saleItemIds = order.sortedSaleItemIds()
-        return generateOrderItemUiModels(saleItemIds)
-    }
-
-    private fun generateOrderItemUiModels(saleItemIds: Collection<String>?): List<OrderItemUiModel> {
-        return saleItemIds.let { ids ->
-            ids?.map { id ->
-                val saleItem = demoMenuData.find { it.id == id }
-                OrderItemUiModel(
-                    name = saleItem?.label ?: "",
-                    price = formatPrice(saleItem?.price ?: 0.0),
-                    rawPrice = saleItem?.price ?: 0.0
-                )
+    /** Reuses the saved order if it's still open/in-process, otherwise creates a fresh one. */
+    private suspend fun ensureCurrentOrder(locationId: String) {
+        val savedId = appSettings.currentOrderId()
+        if (savedId.isNotEmpty()) {
+            val snapshot = dittoRepository.observeLocationOrders(locationId).first()
+            val valid = snapshot.firstOrNull { it.documentId.id == savedId }?.let {
+                it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
+            } == true
+            if (valid) {
+                currentOrderId = savedId
+                return
             }
-        } ?: emptyList()
+        }
+        val order = Order.new(locationId = locationId)
+        currentOrderId = order.documentId.id
+        appSettings.setCurrentOrderId(currentOrderId)
+        dittoRepository.upsertOrder(order)
+    }
+
+    private fun renderOrder(order: Order) {
+        latestOrder = order
+        _uiState.value = _uiState.value.copy(
+            currentOrderId = order.documentId.id,
+            orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
+            orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars)
+        )
     }
 }
 
 data class PosUiState(
     val currentOrderId: String,
     val orderItems: List<OrderItemUiModel>,
-    val orderTotal: String
+    val orderTotal: String,
+    val saleItems: List<SaleItemUiModel>
 )

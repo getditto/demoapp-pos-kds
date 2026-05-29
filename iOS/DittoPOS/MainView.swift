@@ -1,10 +1,9 @@
-///
+//
 //  MainView.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/6/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import SwiftUI
@@ -62,23 +61,17 @@ enum TabViews: Int, Identifiable {
         // Switch to POS view after location is selected
         dittoService.$currentLocationId
             .dropFirst()
-            .sink {[weak self] locId in
-                guard let self = self, locId != nil else { return }
+            .sink {[weak self] locationId in
+                guard let self = self, locationId != nil else { return }
                 selectedTab = .pos
             }
             .store(in: &cancellables)
         
-        // Update main navbar title with current location name
+        // Update main navbar title with current location name.
         dittoService.$currentLocation
-            .sink {[weak self] loc in
-                guard let self = self else { return }
-                if let loc = loc {
-                    mainTitle = loc.name
-                } else {
-                    mainTitle = "Please Select Location"
-                }
-            }
-            .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .map { $0?.name ?? "Please Select Location" }
+            .assign(to: &$mainTitle)
     }
 }
 
@@ -130,8 +123,8 @@ struct MainView: View {
                     }
                 }
             }
+            .navigationTitle(vm.mainTitle)
             #if !os(tvOS)
-            .navigationBarTitle(vm.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .navigationViewStyle(StackNavigationViewStyle())

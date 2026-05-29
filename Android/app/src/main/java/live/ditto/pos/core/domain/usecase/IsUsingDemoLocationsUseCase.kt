@@ -1,13 +1,13 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
 class IsUsingDemoLocationsUseCase @Inject constructor(
-    private val coreRepository: CoreRepository
+    private val appSettings: AppSettings
 ) {
 
     suspend operator fun invoke(): Boolean {
-        return coreRepository.isUsingDemoLocations() ?: false
+        return appSettings.isUsingDemoLocations() ?: false
     }
 }

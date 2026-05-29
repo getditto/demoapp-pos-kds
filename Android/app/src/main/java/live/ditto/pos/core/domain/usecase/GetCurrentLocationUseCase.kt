@@ -1,14 +1,15 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.data.demoLocations
+import kotlinx.coroutines.flow.first
+import live.ditto.pos.core.data.demo.LocationSeed
 import live.ditto.pos.core.data.locations.Location
-import live.ditto.pos.core.domain.repository.CoreRepository
 import live.ditto.pos.core.domain.repository.DittoRepository
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
 class GetCurrentLocationUseCase @Inject constructor(
-    private val coreRepository: CoreRepository,
+    private val appSettings: AppSettings,
     private val dittoRepository: DittoRepository,
     private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
     private val isUsingDemoLocationsUseCase: IsUsingDemoLocationsUseCase
@@ -18,13 +19,11 @@ class GetCurrentLocationUseCase @Inject constructor(
         val appConfigurationState = appConfigurationStateUseCase()
 
         return if (appConfigurationState == AppConfigurationState.VALID) {
-            val locationId = coreRepository.locationId()
+            val locationId = appSettings.locationId()
             if (isUsingDemoLocationsUseCase()) {
-                demoLocations.find {
-                    it.id == locationId
-                }
+                LocationSeed.demoLocations.find { it.id == locationId }
             } else {
-                dittoRepository.getLocationById(locationId = locationId)
+                dittoRepository.observeAllLocations().first().find { it.id == locationId }
             }
         } else {
             null

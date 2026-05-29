@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.jetbrains.kotlin.kapt)
     alias(libs.plugins.kotlin.plugin.compose)
+    alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 android {
@@ -19,8 +20,8 @@ android {
         applicationId = "live.ditto.pos"
         minSdk = 28
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.0.0"
+        versionCode = 8
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -129,6 +130,9 @@ dependencies {
 
     // KotlinX DateTime
     implementation(libs.kotlinx.datetime)
+
+    // KotlinX Serialization (JSON)
+    implementation(libs.kotlinx.serialization.json)
 }
 
 kapt {

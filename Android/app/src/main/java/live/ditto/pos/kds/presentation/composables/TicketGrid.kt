@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,9 +16,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,8 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
-import live.ditto.pos.core.data.demoTicketItems
-import live.ditto.pos.core.data.orders.OrderStatus
+import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.kds.TicketItemUi
 import live.ditto.pos.ui.theme.CanceledStatusTicketColor
 import live.ditto.pos.ui.theme.DeliveredStatusTicketColor
@@ -43,6 +45,10 @@ fun TicketGrid(
     ticketItems: List<TicketItemUi>,
     onTicketClicked: (orderId: String) -> Unit
 ) {
+    if (ticketItems.isEmpty()) {
+        EmptyTicketsState()
+        return
+    }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -53,6 +59,36 @@ fun TicketGrid(
             TicketItem(
                 ticketItemUi = ticketItem,
                 onTicketClicked = onTicketClicked
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyTicketsState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Inbox,
+                contentDescription = null,
+                modifier = Modifier.padding(bottom = 4.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.kds_empty_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = stringResource(R.string.kds_empty_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -153,10 +189,29 @@ private fun TicketHeader(
     }
 }
 
+private val previewTickets = listOf(
+    TicketItemUi(
+        time = "9:59 AM",
+        shortOrderId = "e893j3",
+        items = hashMapOf("Burger" to 1, "Coffee" to 1, "Milk" to 3),
+        isPaid = true,
+        orderStatus = OrderStatus.PROCESSED,
+        orderId = ""
+    ),
+    TicketItemUi(
+        time = "4:29 PM",
+        shortOrderId = "08n3iuo48",
+        items = hashMapOf("Fruit Salad" to 2, "Coffee" to 1, "Corn" to 1),
+        isPaid = false,
+        orderStatus = OrderStatus.IN_PROCESS,
+        orderId = ""
+    )
+)
+
 @Preview
 @Composable
 private fun TicketItemsPreview() {
-    TicketItems(itemsMap = demoTicketItems.first().items)
+    TicketItems(itemsMap = previewTickets.first().items)
 }
 
 @Preview
@@ -169,7 +224,7 @@ private fun TicketHeaderPreview() {
 @Composable
 private fun TicketItemPreview() {
     TicketItem(
-        ticketItemUi = demoTicketItems.first(),
+        ticketItemUi = previewTickets.first(),
         onTicketClicked = {}
     )
 }
@@ -178,7 +233,16 @@ private fun TicketItemPreview() {
 @Composable
 private fun TicketGridPreview() {
     TicketGrid(
-        ticketItems = demoTicketItems,
+        ticketItems = previewTickets,
+        onTicketClicked = {}
+    )
+}
+
+@Preview
+@Composable
+private fun EmptyTicketGridPreview() {
+    TicketGrid(
+        ticketItems = emptyList(),
         onTicketClicked = {}
     )
 }
