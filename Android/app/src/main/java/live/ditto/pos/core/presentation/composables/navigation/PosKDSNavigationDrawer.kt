@@ -26,10 +26,12 @@ fun PosKDSNavigationDrawer(
     navController: NavHostController,
     drawerState: DrawerState,
     scope: CoroutineScope,
+    gesturesEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = gesturesEnabled,
         drawerContent = {
             NavigationDrawerContent(
                 navController = navController,
