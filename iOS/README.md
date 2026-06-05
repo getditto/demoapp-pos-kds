@@ -24,6 +24,7 @@ playground token.
 DITTO_APP_ID=replace_with_your_app_id
 DITTO_PLAYGROUND_TOKEN=replace_with_your_playground_token
 DITTO_WEBSOCKET_URL=replace_with_your_websocket_url
+DITTO_AUTH_URL=replace_with_your_auth_url
 ```
 6. Clean (**Command + Shift + K**), then build (**Command + B**). This will generate `Env.swift`. 
 The project is now configured for the portal app.    
