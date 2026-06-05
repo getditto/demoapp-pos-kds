@@ -13,3 +13,7 @@ annotation class DittoOnlinePlaygroundAppToken
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class DittoWebsocketURL
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DittoAuthURL

@@ -46,6 +46,12 @@ android {
             "DITTO_WEBSOCKET_URL",
             getLocalProperty("dittoWebsocketURL")
         )
+
+        buildConfigField(
+            "String",
+            "DITTO_AUTH_URL",
+            getLocalProperty("dittoAuthUrl")
+        )
     }
 
     buildTypes {

@@ -18,7 +18,8 @@ class DittoManager(
     val context: Context,
     dittoOnlinePlaygroundAppId: String,
     dittoOnlinePlaygroundToken: String,
-    dittoWebsocketURL: String
+    dittoWebsocketURL: String,
+    dittoAuthURL: String
 ) {
     private val ditto: Ditto? by lazy {
         try {
@@ -27,7 +28,8 @@ class DittoManager(
                 dependencies = androidDependencies,
                 appId = dittoOnlinePlaygroundAppId,
                 token = dittoOnlinePlaygroundToken,
-                enableDittoCloudSync = false
+                enableDittoCloudSync = false,
+                customAuthUrl = dittoAuthURL
             )
             DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
             Ditto(androidDependencies, identity).apply {
