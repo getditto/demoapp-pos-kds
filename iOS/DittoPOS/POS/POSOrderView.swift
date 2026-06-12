@@ -30,11 +30,9 @@ struct POSOrderView: View {
                                 withAnimation { proxy.scrollTo(last, anchor: .top) }
                             }
                         }
-                        #if !os(tvOS)
                         .onRotate { _ in
                             withAnimation { scrollToBottom(proxy: proxy) }
                         }
-                        #endif
                     }
                 }
             }

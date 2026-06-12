@@ -17,11 +17,7 @@ import SwiftUI
 
     func updateWidths() {
         menuViewWidth = .screenWidth * 0.56
-        #if os(tvOS)
-        orderViewWidth = .screenWidth * 0.30
-        #else
         orderViewWidth = .screenWidth * 0.40
-        #endif
     }
 
     /// Sale-item tile side length, sized to the current horizontal size class.
@@ -65,13 +61,11 @@ struct POSView: View {
         }
         .environmentObject(viewModel)
         .environmentObject(layoutViewModel)
-        #if !os(tvOS)
         .onRotate { orient in
             guard orient.isLandscape || orient.isPortrait else { return }
             DispatchQueue.main.async {
                 layoutViewModel.updateWidths()
             }
         }
-        #endif
     }
 }

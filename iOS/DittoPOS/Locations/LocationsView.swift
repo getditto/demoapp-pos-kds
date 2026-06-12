@@ -31,8 +31,6 @@ struct LocationsView: View {
             Spacer()
         }
         .navigationBarTitle("Locations")
-        #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
-        #endif
     }
 }

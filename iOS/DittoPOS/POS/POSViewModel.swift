@@ -39,21 +39,15 @@ import SwiftUI
     /// when the device is in a transitional orientation — in that case the
     /// view should skip the scroll.
     func scrollToBottomConfig() -> (id: String, delay: TimeInterval)? {
-        #if !os(tvOS)
         let orientation = UIDevice.current.orientation
         guard orientation.isLandscape || orientation.isPortrait else { return nil }
-        #endif
 
         guard let last = orderItems.last?.id else { return nil }
 
-        #if os(tvOS)
-        return (last, 0.5)
-        #else
         let needsDelay = UIScreen.isPortrait
             && UIDevice.current.orientation.isLandscape
             && orderItems.count > 4
         return (last, needsDelay ? 0.5 : 0.0)
-        #endif
     }
 
     private let ordersRepository: OrdersRepository

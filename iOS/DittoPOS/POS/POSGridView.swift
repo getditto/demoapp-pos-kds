@@ -15,24 +15,6 @@ struct POSGridView: View {
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
-                #if os(tvOS)
-                LazyVGrid(columns: [GridItem(), GridItem(), GridItem()], spacing: 10) {
-                    ForEach(viewModel.saleItems, id: \.self) { item in
-                        Button(action: {
-                            viewModel.addOrderItem(item)
-                        }, label: {
-                            VStack {
-                                Image(ImageNameMapping.assetName(for: item.imageName))
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 200, height: 200)
-                                Text(item.name)
-                                    .font(.body)
-                            }
-                        })
-                    }
-                }
-                #else
                 LazyVGrid(columns: layoutViewModel.gridColumns(for: horizontalSizeClass)) {
                     ForEach(viewModel.saleItems, id: \.self) { item in
                         let side = layoutViewModel.itemSide(for: horizontalSizeClass)
@@ -44,7 +26,6 @@ struct POSGridView: View {
                     }
                 }
                 .padding(.vertical, 16)
-                #endif
             }
         }
     }

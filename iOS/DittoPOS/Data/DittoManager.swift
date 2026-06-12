@@ -17,11 +17,7 @@ final class DittoManager: ObservableObject {
     let ditto: Ditto
 
     private init() {
-        #if os(tvOS)
-        let directory: FileManager.SearchPathDirectory = .cachesDirectory
-        #else
         let directory: FileManager.SearchPathDirectory = .documentDirectory
-        #endif
 
         let persistenceDirURL = try? FileManager()
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)

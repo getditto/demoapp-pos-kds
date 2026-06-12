@@ -62,9 +62,7 @@ struct MainView: View {
                 }
             }
             .navigationTitle(viewModel.mainTitle)
-            #if !os(tvOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .navigationViewStyle(StackNavigationViewStyle())
             .onAppear { viewModel.ensureLocationSelected() }
         }

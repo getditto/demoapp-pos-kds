@@ -11,11 +11,7 @@ struct KDSOrdersGridView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel: KDSViewModel
     let ordersRepository: OrdersRepository
-    #if os(tvOS)
-    @State var columns = [GridItem(.adaptive(minimum: 300), alignment: .top)]
-    #else
     @State var columns = [GridItem(.adaptive(minimum: 172), alignment: .top)]
-    #endif
 
     init(ordersRepository: OrdersRepository) {
         self.ordersRepository = ordersRepository

@@ -73,16 +73,6 @@ struct KDSOrderView: View {
             .frame(height: 35)
             .frame(maxWidth: .infinity)
             .background(viewModel.statusColor)
-            #if os(tvOS)
-            Spacer()
-            Button(action: {
-                viewModel.incrementOrderStatus()
-            }, label: {
-                Text("clear \(viewModel.statusTitle)")
-                    .font(.caption)
-            })
-            .padding(.horizontal)
-            #endif
         }
         .padding(4)
         .onTapGesture {

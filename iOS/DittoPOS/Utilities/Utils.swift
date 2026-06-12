@@ -35,7 +35,6 @@ extension Color {
     static let gray5 = Color("systemGray5", bundle: .main)
 }
 
-#if !os(tvOS)
 extension View {
     func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
         self.modifier(DeviceRotationViewModifier(action: action))
@@ -83,7 +82,6 @@ extension UIDeviceOrientation: CustomStringConvertible {
         }
     }
 }
-#endif
 
 // https://www.swiftbysundell.com/articles/reducers-in-swift/
 extension Sequence {
