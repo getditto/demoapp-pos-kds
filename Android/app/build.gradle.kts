@@ -28,23 +28,24 @@ android {
             useSupportLibrary = true
         }
 
-        // Load Ditto API keys
+        // Load Ditto credentials from the shared repo-root .env. Values there
+        // are unquoted, so wrap each in quotes for the generated BuildConfig.
         buildConfigField(
             "String",
             "DITTO_DATABASE_ID",
-            getLocalProperty("dittoDatabaseId")
+            "\"${dittoEnv("DITTO_DATABASE_ID")}\""
         )
 
         buildConfigField(
             "String",
             "DITTO_DEVELOPMENT_TOKEN",
-            getLocalProperty("dittoDevelopmentToken")
+            "\"${dittoEnv("DITTO_DEVELOPMENT_TOKEN")}\""
         )
 
         buildConfigField(
             "String",
             "DITTO_SERVER_URL",
-            getLocalProperty("dittoServerUrl")
+            "\"${dittoEnv("DITTO_SERVER_URL")}\""
         )
     }
 
@@ -139,18 +140,25 @@ kapt {
     correctErrorTypes = true
 }
 
-fun getLocalProperty(key: String, file: String = "local.properties"): String {
-    val properties = Properties()
-    val localProperties = File(file)
-    require(localProperties.isFile) {
-        "$file not found — copy it and set the Ditto credentials ($key and the other ditto* keys). See Android/README.md."
+// Reads a value from the shared repo-root .env — the single source of truth
+// for Ditto credentials across the iOS and Android apps. Values are unquoted.
+fun dittoEnv(key: String): String {
+    val envFile = File(rootProject.projectDir.parentFile, ".env")
+    if (!envFile.isFile) {
+        error("Shared .env not found at ${envFile.absolutePath}. Copy .env.template to .env at the repo root.")
     }
-    InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
+    val properties = Properties()
+    InputStreamReader(FileInputStream(envFile), Charsets.UTF_8).use { reader ->
         properties.load(reader)
     }
-    val value = properties.getProperty(key)
-    require(!value.isNullOrBlank()) {
-        "$key is missing or blank in $file — set the Ditto credentials before building. See Android/README.md."
-    }
-    return value
+    return properties.getProperty(key)
+        ?: error("Missing \"$key\" in ${envFile.absolutePath}")
 }
+
+// Credentials are baked into BuildConfig from the repo-root .env at configuration
+// time (see dittoEnv). Declare that file as an input to the BuildConfig-generation
+// tasks so editing .env regenerates BuildConfig without needing a clean build.
+tasks.matching { it.name.startsWith("generate") && it.name.endsWith("BuildConfig") }
+    .configureEach {
+        inputs.file(rootProject.file("../.env")).optional().withPropertyName("dotEnv")
+    }

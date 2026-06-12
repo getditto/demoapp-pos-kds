@@ -14,14 +14,16 @@ If you'd like to just view the app, it is available in the [Play store](https://
 ### Building and Running the App in Android Studio
 1. In your [Ditto portal](https://portal.ditto.live), create an app to generate a Database ID,
 development token, and URL.  
-2. Clone this repo to a location on your machine, and open in Android Studio.    
-3. Create a `local.properties` file or if you already have one, open it. 
-4. In the `local.properties` file add the following entries (keep the quotes):
+2. Clone this repo to a location on your machine, and open the `Android` project in Android Studio.    
+3. From the **repository root**, run `cp .env.template .env`. This `.env` is shared by the iOS and
+Android apps.
+4. Edit `.env` to add the values from the portal (no quotes):
 ```
-dittoDatabaseId="replace-with-your-database-id"
-dittoDevelopmentToken="replace-with-your-development-token"
-dittoServerUrl="replace-with-your-server-url"
+DITTO_DATABASE_ID=replace-with-your-database-id
+DITTO_DEVELOPMENT_TOKEN=replace-with-your-development-token
+DITTO_SERVER_URL=replace-with-your-server-url
 ```
-5. Hit the green play button to run the app
+5. Hit the green play button to run the app. (Android Studio manages `local.properties` for the
+Android SDK location; credentials no longer go there.)
 
 Compatible with Android Automotive OS (AAOS)

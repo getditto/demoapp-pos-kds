@@ -24,14 +24,14 @@ class DittoManager(
 ) {
     private val ditto: Ditto? by lazy {
         // Defensive backstop only: build-time credential validation lives in
-        // build.gradle.kts (getLocalProperty), which fails the build with a
-        // clear message when a credential is missing or blank. These guards
-        // catch anything that slips through blank; runtime SDK errors below are
+        // build.gradle.kts (dittoEnv), which fails the build with a clear
+        // message when a credential is missing or blank. These guards catch
+        // anything that slips through blank; runtime SDK errors below are
         // caught and logged.
-        require(dittoDatabaseId.isNotBlank()) { "DITTO_DATABASE_ID is missing — set dittoDatabaseId in Android/local.properties before building." }
-        require(dittoDevelopmentToken.isNotBlank()) { "DITTO_DEVELOPMENT_TOKEN is missing — set dittoDevelopmentToken in Android/local.properties before building." }
+        require(dittoDatabaseId.isNotBlank()) { "DITTO_DATABASE_ID is missing — set it in the repo-root .env before building." }
+        require(dittoDevelopmentToken.isNotBlank()) { "DITTO_DEVELOPMENT_TOKEN is missing — set it in the repo-root .env before building." }
         require(dittoServerUrl.isNotBlank()) {
-            "DITTO_SERVER_URL is missing — set dittoServerUrl in Android/local.properties before building."
+            "DITTO_SERVER_URL is missing — set it in the repo-root .env before building."
         }
         try {
             DittoLogger.minimumLogLevel = DittoLogLevel.Debug
