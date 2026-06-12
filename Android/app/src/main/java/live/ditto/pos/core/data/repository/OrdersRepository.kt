@@ -2,6 +2,8 @@ package live.ditto.pos.core.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.ditto.kotlin.Ditto
+import com.ditto.kotlin.DittoSyncSubscription
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,8 +17,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import live.ditto.Ditto
-import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
@@ -75,7 +75,7 @@ class OrdersRepository @Inject constructor(
                 ON ID CONFLICT DO UPDATE_LOCAL_DIFF
             """.trimIndent(),
             mapOf("json" to order.dittoJsonString())
-        ).use { }
+        )
     }
 
     suspend fun clearCart(order: Order) {
@@ -88,7 +88,7 @@ class OrdersRepository @Inject constructor(
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf("id" to order.documentId.id, "locationId" to order.documentId.locationId)
-        ).use { }
+        )
     }
 
     suspend fun reset(order: Order) {
@@ -113,7 +113,7 @@ class OrdersRepository @Inject constructor(
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent()
         }
-        ditto.store.execute(query, baseArgs).use { }
+        ditto.store.execute(query, baseArgs)
     }
 
     suspend fun runEvictionIfDue() {
@@ -127,7 +127,7 @@ class OrdersRepository @Inject constructor(
             ditto.store.execute(
                 "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
                 mapOf("TTL" to ttl)
-            ).use { }
+            )
             prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
             Log.i("Eviction", "evicted orders with createdAt <= $ttl")
         } catch (error: Throwable) {

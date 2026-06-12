@@ -4,8 +4,8 @@ agp = "8.9.3"
 composeBom = "2025.06.00"
 coreKtx = "1.16.0"
 datastorePreferences = "1.1.7"
-ditto = "4.14.4"
-ditto-tools = "5.0.2"
+ditto = "5.0.1"
+ditto-tools = "6.0.1-rc.1"
 espressoCore = "3.6.1"
 hiltAndroid = "2.56.1"
 hiltNavigationCompose = "1.2.0"
@@ -40,7 +40,7 @@ androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtim
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-ditto = { module = "live.ditto:ditto", version.ref = "ditto" }
+ditto = { module = "com.ditto:ditto-kotlin", version.ref = "ditto" }
 ditto-tools = { module = "live.ditto:ditto-tools-android", version.ref = "ditto-tools" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }

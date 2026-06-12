@@ -7,6 +7,7 @@
 
 import Combine
 import DittoSwift
+import Foundation
 
 /// Owns the `Ditto` instance and starts sync. Holds the transport-level
 /// sync group driven by the currently active location. Mirrors Android's
@@ -26,33 +27,46 @@ final class DittoManager: ObservableObject {
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
-        ditto = Ditto(identity: .onlinePlayground(
-            appID: Env.DITTO_APP_ID,
-            token: Env.DITTO_PLAYGROUND_TOKEN,
-            enableDittoCloudSync: false,
-            customAuthURL: URL(string: Env.DITTO_AUTH_URL)
-        ), persistenceDirectory: persistenceDirURL)
-
-        ditto.updateTransportConfig { transportConfig in
-            transportConfig.connect.webSocketURLs.insert(Env.DITTO_WEBSOCKET_URL)
+        guard let serverURL = URL(string: Env.DITTO_URL) else {
+            fatalError("Invalid DITTO_URL: \"\(Env.DITTO_URL)\"")
         }
 
+        DittoLogger.minimumLogLevel = .debug
+
+        // Configure → Initialize → Authenticate → Sync. The server URL is the
+        // portal's "Connect via SDK" URL. Strict mode defaults to off, giving
+        // DQL map/object CRDT semantics.
+        // https://docs.ditto.live/sdk/latest/ditto-config
+        let config = DittoConfig(
+            databaseID: Env.DITTO_DATABASE_ID,
+            connect: .server(url: serverURL),
+            persistenceDirectory: persistenceDirURL
+        )
+
         do {
-            try ditto.disableSyncWithV3()
+            ditto = try Ditto.openSync(config: config)
         } catch {
-            print("ERROR: disableSyncWithV3() failed: \(error)")
+            fatalError("Failed to open Ditto: \(error)")
+        }
+
+        // Authenticate before sync starts: provide a fresh token whenever the
+        // current one is missing or near expiry.
+        ditto.auth?.expirationHandler = { ditto, _ in
+            ditto.auth?.login(token: Env.DITTO_DEVELOPMENT_TOKEN, provider: .development) { _, error in
+                if let error {
+                    print("ERROR: Ditto auth login failed: \(error)")
+                }
+            }
         }
 
         Task {
-            do {
-                // strict mode off lets DQL use map/object CRDT semantics
-                try await ditto.store.execute(query: "ALTER SYSTEM SET DQL_STRICT_MODE = false")
-                let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
-                if !isPreview {
+            let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+            if !isPreview {
+                do {
                     try ditto.sync.start()
+                } catch {
+                    print("ERROR: starting sync failed: \(error)")
                 }
-            } catch {
-                print("ERROR: starting sync failed: \(error)")
             }
         }
     }

@@ -7,6 +7,7 @@
 
 import Combine
 import DittoSwift
+import Foundation
 
 /// Owns the `pos_orders` collection: registers the per-location subscription,
 /// observes the synced documents, runs DQL mutations, and gates startup

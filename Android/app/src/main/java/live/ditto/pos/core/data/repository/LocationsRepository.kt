@@ -1,13 +1,13 @@
 package live.ditto.pos.core.data.repository
 
+import com.ditto.kotlin.Ditto
+import com.ditto.kotlin.DittoSyncSubscription
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import live.ditto.Ditto
-import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.demo.LocationSeed
 import live.ditto.pos.core.data.locations.Location

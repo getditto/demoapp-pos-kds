@@ -4,16 +4,12 @@ import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DittoOnlinePlaygroundAppId
+annotation class DittoDatabaseId
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DittoOnlinePlaygroundAppToken
+annotation class DittoDevelopmentToken
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DittoWebsocketURL
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class DittoAuthURL
+annotation class DittoUrl

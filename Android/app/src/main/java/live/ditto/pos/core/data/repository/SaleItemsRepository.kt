@@ -1,5 +1,7 @@
 package live.ditto.pos.core.data.repository
 
+import com.ditto.kotlin.Ditto
+import com.ditto.kotlin.DittoSyncSubscription
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -8,8 +10,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import live.ditto.Ditto
-import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.observeAsFlow

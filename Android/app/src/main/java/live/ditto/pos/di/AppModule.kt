@@ -21,36 +21,34 @@ internal object AppModule {
     @Singleton
     fun provideDittoManager(
         @ApplicationContext context: Context,
-        @DittoOnlinePlaygroundAppId onlinePlaygroundAppId: String,
-        @DittoOnlinePlaygroundAppToken dittoOnlinePlaygroundAppToken: String,
-        @DittoWebsocketURL dittoWebsocketURL: String,
-        @DittoAuthURL dittoAuthURL: String
+        @DittoDatabaseId databaseId: String,
+        @DittoDevelopmentToken developmentToken: String,
+        @DittoUrl url: String
     ): DittoManager {
         return DittoManager(
             context = context,
-            dittoOnlinePlaygroundAppId = onlinePlaygroundAppId,
-            dittoOnlinePlaygroundToken = dittoOnlinePlaygroundAppToken,
-            dittoWebsocketURL = dittoWebsocketURL,
-            dittoAuthURL = dittoAuthURL
+            dittoDatabaseId = databaseId,
+            dittoDevelopmentToken = developmentToken,
+            dittoUrl = url
         )
     }
 
-    @DittoOnlinePlaygroundAppId
+    @DittoDatabaseId
     @Provides
-    fun provideDittoOnlinePlaygroundAppId(): String {
-        return BuildConfig.DITTO_ONLINE_PLAYGROUND_APP_ID
+    fun provideDittoDatabaseId(): String {
+        return BuildConfig.DITTO_DATABASE_ID
     }
 
-    @DittoOnlinePlaygroundAppToken
+    @DittoDevelopmentToken
     @Provides
-    fun provideDittoOnlinePlaygroundAppToken(): String {
-        return BuildConfig.DITTO_ONLINE_PLAYGROUND_TOKEN
+    fun provideDittoDevelopmentToken(): String {
+        return BuildConfig.DITTO_DEVELOPMENT_TOKEN
     }
 
-    @DittoWebsocketURL
+    @DittoUrl
     @Provides
-    fun provideDittoWebsocketURL(): String {
-        return BuildConfig.DITTO_WEBSOCKET_URL
+    fun provideDittoUrl(): String {
+        return BuildConfig.DITTO_URL
     }
 
     @DittoAuthURL

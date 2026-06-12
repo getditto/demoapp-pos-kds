@@ -2,13 +2,13 @@ package live.ditto.pos.core.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ditto.kotlin.Ditto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import live.ditto.Ditto
 import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState

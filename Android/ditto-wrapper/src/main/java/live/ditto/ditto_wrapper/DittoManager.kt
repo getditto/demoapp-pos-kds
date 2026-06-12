@@ -2,53 +2,60 @@ package live.ditto.ditto_wrapper
 
 import android.content.Context
 import android.util.Log
+import com.ditto.kotlin.Ditto
+import com.ditto.kotlin.DittoAuthenticationProvider
+import com.ditto.kotlin.DittoConfig
+import com.ditto.kotlin.DittoFactory
+import com.ditto.kotlin.DittoLogLevel
+import com.ditto.kotlin.DittoLogger
+import com.ditto.kotlin.transports.DittoSyncPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import live.ditto.Ditto
-import live.ditto.DittoIdentity
-import live.ditto.DittoLogLevel
-import live.ditto.DittoLogger
-import live.ditto.android.DefaultAndroidDittoDependencies
-import live.ditto.transports.DittoSyncPermissions
 
 private val TAG = DittoManager::class.java.name
 
 class DittoManager(
     val context: Context,
-    dittoOnlinePlaygroundAppId: String,
-    dittoOnlinePlaygroundToken: String,
-    dittoWebsocketURL: String,
-    dittoAuthURL: String
+    private val dittoDatabaseId: String,
+    private val dittoDevelopmentToken: String,
+    private val dittoUrl: String
 ) {
     private val ditto: Ditto? by lazy {
         try {
-            val androidDependencies = DefaultAndroidDittoDependencies(context)
-            val identity = DittoIdentity.OnlinePlayground(
-                dependencies = androidDependencies,
-                appId = dittoOnlinePlaygroundAppId,
-                token = dittoOnlinePlaygroundToken,
-                enableDittoCloudSync = false,
-                customAuthUrl = dittoAuthURL
-            )
-            DittoLogger.minimumLogLevel = DittoLogLevel.DEBUG
-            Ditto(androidDependencies, identity).apply {
-                disableSyncWithV3()
+            DittoLogger.minimumLogLevel = DittoLogLevel.Debug
 
-                updateTransportConfig { config ->
-                    config.connect.websocketUrls.add(dittoWebsocketURL)
+            // Configure → Initialize → Authenticate → Sync. The server URL is
+            // the portal's "Connect via SDK" URL. Strict mode defaults to off,
+            // giving DQL map/object CRDT semantics.
+            // https://docs.ditto.live/sdk/latest/ditto-config
+            val config = DittoConfig(
+                databaseId = dittoDatabaseId,
+                connect = DittoConfig.Connect.Server(dittoUrl)
+            )
+
+            DittoFactory.create(config).apply {
+                // Authenticate before sync starts: provide a fresh token
+                // whenever the current one is missing or near expiry.
+                auth?.expirationHandler = { authDitto, _ ->
+                    try {
+                        authDitto.auth?.login(
+                            token = dittoDevelopmentToken,
+                            provider = DittoAuthenticationProvider.development()
+                        )
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Authentication failed: ${e.message}")
+                    }
                 }
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        store.execute(query = "ALTER SYSTEM SET DQL_STRICT_MODE = false")
-                        startSync()
+                        sync.start()
                     } catch (e: Throwable) {
-                        Log.e(TAG, "Failed to execute DQL mode query: ${e.message}")
+                        Log.e(TAG, "Failed to start sync: ${e.message}")
                     }
                 }
             }
-
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())
             null
@@ -61,13 +68,13 @@ class DittoManager(
         val value = locationId.toUIntOrNull() ?: return
         val ditto = requireDitto()
 
-        ditto.stopSync()
+        ditto.sync.stop()
         ditto.updateTransportConfig { config ->
             // Isolate the peer-to-peer mesh to devices at this location.
             // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
             config.global.syncGroup = value
         }
-        ditto.startSync()
+        ditto.sync.start()
     }
 
     fun requireDitto(): Ditto {

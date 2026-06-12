@@ -31,20 +31,20 @@ android {
         // Load Ditto API keys
         buildConfigField(
             "String",
-            "DITTO_ONLINE_PLAYGROUND_APP_ID",
-            getLocalProperty("dittoOnlinePlaygroundAppId")
+            "DITTO_DATABASE_ID",
+            getLocalProperty("dittoDatabaseId")
         )
 
         buildConfigField(
             "String",
-            "DITTO_ONLINE_PLAYGROUND_TOKEN",
-            getLocalProperty("dittoOnlinePlaygroundToken")
+            "DITTO_DEVELOPMENT_TOKEN",
+            getLocalProperty("dittoDevelopmentToken")
         )
 
         buildConfigField(
             "String",
-            "DITTO_WEBSOCKET_URL",
-            getLocalProperty("dittoWebsocketURL")
+            "DITTO_URL",
+            getLocalProperty("dittoUrl")
         )
 
         buildConfigField(

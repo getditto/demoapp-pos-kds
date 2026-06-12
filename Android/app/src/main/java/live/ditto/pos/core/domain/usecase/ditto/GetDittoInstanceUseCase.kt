@@ -1,6 +1,6 @@
 package live.ditto.pos.core.domain.usecase.ditto
 
-import live.ditto.Ditto
+import com.ditto.kotlin.Ditto
 import live.ditto.ditto_wrapper.DittoManager
 import javax.inject.Inject
 

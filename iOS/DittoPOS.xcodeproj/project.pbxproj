@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		07AE54C62C81812600E1FCBD /* DittoObjC in Frameworks */ = {isa = PBXBuildFile; productRef = 07AE54C52C81812600E1FCBD /* DittoObjC */; };
 		07AE54C82C81812600E1FCBD /* DittoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 07AE54C72C81812600E1FCBD /* DittoSwift */; };
 		07AE54CB2C81814400E1FCBD /* DittoAllToolsMenu in Frameworks */ = {isa = PBXBuildFile; productRef = 07AE54CA2C81814400E1FCBD /* DittoAllToolsMenu */; };
 
@@ -124,7 +123,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				07AE54C62C81812600E1FCBD /* DittoObjC in Frameworks */,
 				07AE54C82C81812600E1FCBD /* DittoSwift in Frameworks */,
 				07AE54CB2C81814400E1FCBD /* DittoAllToolsMenu in Frameworks */,
 			);
@@ -308,7 +306,6 @@
 			);
 			name = DittoPOS;
 			packageProductDependencies = (
-				07AE54C52C81812600E1FCBD /* DittoObjC */,
 				07AE54C72C81812600E1FCBD /* DittoSwift */,
 				07AE54CA2C81814400E1FCBD /* DittoAllToolsMenu */,
 			);
@@ -782,26 +779,21 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftPackage";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.14.4;
+				kind = upToNextMinorVersion;
+				minimumVersion = 5.0.1;
 			};
 		};
 		07AE54C92C81814400E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftTools" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 9.0.1;
+				kind = exactVersion;
+				version = "10.0.0-preview.3";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		07AE54C52C81812600E1FCBD /* DittoObjC */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 07AE54C42C81812600E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */;
-			productName = DittoObjC;
-		};
 		07AE54C72C81812600E1FCBD /* DittoSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 07AE54C42C81812600E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */;
