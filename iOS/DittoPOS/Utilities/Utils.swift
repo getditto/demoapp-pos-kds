@@ -85,10 +85,6 @@ extension UIDeviceOrientation: CustomStringConvertible {
 }
 #endif
 
-extension NSNotification.Name {
-    static let willUpdateToLocationId = Notification.Name("willUpdateToLocationId")
-}
-
 // https://www.swiftbysundell.com/articles/reducers-in-swift/
 extension Sequence {
     func sum<T: Numeric>(_ keyPath: KeyPath<Element, T>) -> T {
@@ -100,9 +96,9 @@ extension Sequence {
 
 extension DateFormatter {
     static var shortTime: DateFormatter {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
     }
 
     /// Local midnight (start of today) in the canonical Ditto wire format.

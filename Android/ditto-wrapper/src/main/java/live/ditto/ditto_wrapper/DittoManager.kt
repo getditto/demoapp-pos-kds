@@ -77,6 +77,10 @@ class DittoManager(
     fun missingPermissions(): Array<String> {
         return DittoSyncPermissions(context = context).missingPermissions()
     }
+
+    fun refreshPermissions() {
+        requireDitto().refreshPermissions()
+    }
 }
 
 class DittoNotCreatedException : Throwable("Ditto cannot be null")

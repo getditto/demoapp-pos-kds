@@ -9,22 +9,28 @@ import SwiftUI
 
 struct KDSOrdersGridView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @StateObject var vm = KDS_VM()
+    @StateObject private var viewModel: KDSViewModel
+    let ordersRepository: OrdersRepository
     #if os(tvOS)
     @State var columns = [GridItem(.adaptive(minimum: 300), alignment: .top)]
     #else
     @State var columns = [GridItem(.adaptive(minimum: 172), alignment: .top)]
     #endif
 
+    init(ordersRepository: OrdersRepository) {
+        self.ordersRepository = ordersRepository
+        _viewModel = StateObject(wrappedValue: KDSViewModel(ordersRepository: ordersRepository))
+    }
+
     var body: some View {
         Group {
-            if vm.orders.isEmpty {
+            if viewModel.orders.isEmpty {
                 emptyState
             } else {
                 ScrollView(showsIndicators: false) {
                     LazyVGrid(columns: columns) {
-                        ForEach(vm.orders, id: \.documentId.id) { order in
-                            KDSOrderView(order)
+                        ForEach(viewModel.orders, id: \.documentId.id) { order in
+                            KDSOrderView(order, ordersRepository: ordersRepository)
                         }
                     }
                     .padding(.vertical, 8)
@@ -47,11 +53,5 @@ struct KDSOrdersGridView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-struct KDSOrdersGridView_Previews: PreviewProvider {
-    static var previews: some View {
-        KDSOrdersGridView()
     }
 }

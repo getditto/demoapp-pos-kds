@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Ditto PoS KDS Demo</string>
+    <string name="app_name">Ditto POS KDS Demo</string>
 
     <string name="navigation_label_pos">POS</string>
     <string name="navigation_label_kds">KDS</string>

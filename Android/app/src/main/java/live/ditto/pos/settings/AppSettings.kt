@@ -18,9 +18,10 @@ private const val DATA_STORE_NAME = "settings"
 
 /**
  * Device-local app preferences backed by Android DataStore. Not synced via
- * Ditto — that's `DittoRepository`'s job. The two are kept in separate
- * packages so the boundary between "local-only" and "synced" is visible at
- * the import line. Mirrors iOS `Settings` (`iOS/DittoPOS/Settings/`).
+ * Ditto — the per-collection repositories in `core.data.repository` own
+ * synced data. The two are kept in separate packages so the boundary
+ * between "local-only" and "synced" is visible at the import line. Mirrors
+ * iOS `Settings` (`iOS/DittoPOS/Settings/`).
  */
 @Singleton
 class AppSettings @Inject constructor(

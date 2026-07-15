@@ -1,11 +1,13 @@
-package live.ditto.pos.core.domain.repository
+package live.ditto.pos.core.data.repository
 
 import android.content.Context
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -16,111 +18,56 @@ import kotlinx.datetime.toLocalDateTime
 import live.ditto.Ditto
 import live.ditto.DittoSyncSubscription
 import live.ditto.ditto_wrapper.DittoManager
-import live.ditto.pos.core.data.SaleItem
-import live.ditto.pos.core.data.demo.DemoSeeder
 import live.ditto.pos.core.data.dittoJsonString
-import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.toDittoIsoString
-import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DittoRepository
-@Inject
-constructor(
+class OrdersRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dittoManager: DittoManager,
-    private val appSettings: AppSettings
+    private val locationsRepository: LocationsRepository
 ) {
     private val ditto: Ditto get() = dittoManager.requireDitto()
-    private val activeSubs = mutableMapOf<String, DittoSyncSubscription>()
+    private var subscription: DittoSyncSubscription? = null
     private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // Track the saved locationId and (re-)configure the sync group + subscriptions
-        // whenever it's set. Covers both the user picking a location and app
-        // re-launch with a value restored from DataStore.
-        appSettings.locationIdFlow()
+        // Pull the active location from LocationsRepository and re-register
+        // the subscription on every change. Mirrors iOS.
+        locationsRepository.locationIdFlow()
             .filter { it.isNotEmpty() }
-            .onEach { setActiveLocation(it) }
+            .distinctUntilChanged()
+            .onEach { locationId -> setActiveLocation(locationId) }
             .launchIn(repoScope)
     }
 
-    fun requireDitto(): Ditto = ditto
-
-    fun refreshPermissions() {
-        ditto.refreshPermissions()
-    }
-
-    fun getMissingPermissions(): Array<String> = dittoManager.missingPermissions()
-
-    // ----- Subscriptions -----
-
-    fun startLocationsSubscription() {
-        registerSub(
-            key = "locations",
-            query = "SELECT * FROM ${Location.COLLECTION_NAME}"
-        )
-    }
-
-    fun setActiveLocation(locationId: String) {
-        dittoManager.setSyncGroup(locationId)
-        registerSub(
-            key = "orders",
-            query = """
-                    SELECT * FROM ${Order.COLLECTION_NAME}
-                    WHERE _id.locationId = :locationId
-                        AND createdAt > :TTL
+    private fun setActiveLocation(locationId: String) {
+        subscription?.close()
+        subscription = ditto.sync.registerSubscription(
+            """
+                SELECT * FROM ${Order.COLLECTION_NAME}
+                WHERE _id.locationId = :locationId
+                    AND createdAt > :TTL
             """.trimIndent(),
-            args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
-        )
-        registerSub(
-            key = "sale_items",
-            query = """
-                    SELECT * FROM ${SaleItem.COLLECTION_NAME}
-                    WHERE _id.locationId = :locationId
-                    ORDER BY name
-            """.trimIndent(),
-            args = mapOf("locationId" to locationId)
+            mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
         )
     }
-
-    private fun registerSub(key: String, query: String, args: Map<String, Any> = emptyMap()) {
-        activeSubs[key]?.close()
-        activeSubs[key] = ditto.sync.registerSubscription(query, args)
-    }
-
-    // ----- Observers -----
-
-    fun observeAllLocations(): Flow<List<Location>> =
-        ditto.store.observeAsFlow("SELECT * FROM ${Location.COLLECTION_NAME}")
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
         ditto.store.observeAsFlow(
             query = """
-                    SELECT * FROM ${Order.COLLECTION_NAME}
-                    WHERE _id.locationId = :locationId
-                        AND createdAt > :TTL
+                SELECT * FROM ${Order.COLLECTION_NAME}
+                WHERE _id.locationId = :locationId
+                    AND createdAt > :TTL
             """.trimIndent(),
             args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
         )
 
-    fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =
-        ditto.store.observeAsFlow(
-            query = """
-                    SELECT * FROM ${SaleItem.COLLECTION_NAME}
-                    WHERE _id.locationId = :locationId
-                    ORDER BY name
-            """.trimIndent(),
-            args = mapOf("locationId" to locationId)
-        )
-
-    // ----- Mutations -----
-
-    suspend fun upsertOrder(order: Order) {
+    suspend fun upsert(order: Order) {
         ditto.store.execute(
             """
                 INSERT INTO ${Order.COLLECTION_NAME}
@@ -144,7 +91,7 @@ constructor(
         ).use { }
     }
 
-    suspend fun resetOrder(order: Order) {
+    suspend fun reset(order: Order) {
         val createdAtNow = Clock.System.now().toDittoIsoString()
         val baseArgs = mapOf<String, Any>(
             "id" to order.documentId.id,
@@ -169,12 +116,6 @@ constructor(
         ditto.store.execute(query, baseArgs).use { }
     }
 
-    // ----- Lifecycle -----
-
-    suspend fun seedAll() {
-        DemoSeeder(ditto).seedAll()
-    }
-
     suspend fun runEvictionIfDue() {
         val prefs = context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE)
         val now = Clock.System.now().toEpochMilliseconds()
@@ -188,9 +129,9 @@ constructor(
                 mapOf("TTL" to ttl)
             ).use { }
             prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
-            android.util.Log.i("Eviction", "evicted orders with createdAt <= $ttl")
+            Log.i("Eviction", "evicted orders with createdAt <= $ttl")
         } catch (error: Throwable) {
-            android.util.Log.w("Eviction", error.message.orEmpty())
+            Log.w("Eviction", error.message.orEmpty())
         }
     }
 

@@ -18,9 +18,9 @@ import Foundation
 /// in DQL filters like `WHERE createdAt > :TTL`.
 enum DittoWireDate {
     static let formatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
     }()
 
     static func string(from date: Date) -> String { formatter.string(from: date) }

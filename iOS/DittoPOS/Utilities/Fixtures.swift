@@ -9,10 +9,9 @@ import Foundation
 
 // Preview-only fixtures. Seed data lives in Data/Demo/.
 enum Fixtures {
-    static let kdsVM = KDS_VM(previewOrders: [order1, order1])
+    static let kdsVM = KDSViewModel(ordersRepository: OrdersRepository(), previewOrders: [order1, order1])
 
     static let date = Date.now
-    static let createdAtStr = DittoWireDate.string(from: date)
     static let statusEntry = StatusLogDerivation.entry(.inProcess, at: date)
 
     static let salesItem1 = SaleItem.seed(id: "00001", locationId: "Test lab-Denver", name: "Burger", imageName: "burger", cents: 850)

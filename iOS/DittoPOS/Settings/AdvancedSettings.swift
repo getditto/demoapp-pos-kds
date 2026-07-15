@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct AdvancedSettings: View {
+    @EnvironmentObject var locationsRepository: LocationsRepository
+
     var body: some View {
         List {
             Section {
-                if let locName = Settings.locationId {
+                if let locName = locationsRepository.currentLocationId {
                     Text("Current location: \"\(locName)\"")
                 } else {
                     Text("No location selected")
@@ -20,7 +22,7 @@ struct AdvancedSettings: View {
 
             Section {
                 Button("Reset Location") {
-                    DittoService.shared.resetLocationSelection()
+                    locationsRepository.setActiveLocation(nil)
                 }
             }
         }

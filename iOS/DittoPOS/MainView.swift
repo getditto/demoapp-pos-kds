@@ -5,7 +5,6 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import Combine
 import SwiftUI
 
 enum TabViews: Int, Identifiable {
@@ -13,103 +12,61 @@ enum TabViews: Int, Identifiable {
     var id: Self { self }
 }
 
-@MainActor class MainVM: ObservableObject {
-    @Published var selectedTab: TabViews
-    @Published var presentSettingsView = false
-    @Published var mainTitle = DittoService.shared.currentLocation?.name ?? "Please Select Location"
-    private var cancellables = Set<AnyCancellable>()
-    private var dittoService = DittoService.shared
-
-    init() {
-        if Settings.locationId == nil {
-            selectedTab = .locations
-        } else {
-            selectedTab = Settings.selectedTabView ?? .pos
-        }
-
-        $selectedTab
-            .dropFirst()
-            .sink { tab in
-                Settings.selectedTabView = tab
-            }
-            .store(in: &cancellables)
-
-        // Switch to POS view after location is selected
-        dittoService.$currentLocationId
-            .dropFirst()
-            .sink {[weak self] locationId in
-                guard let self = self, locationId != nil else { return }
-                selectedTab = .pos
-            }
-            .store(in: &cancellables)
-        
-        // Update main navbar title with current location name.
-        dittoService.$currentLocation
-            .receive(on: DispatchQueue.main)
-            .map { $0?.name ?? "Please Select Location" }
-            .assign(to: &$mainTitle)
-    }
-}
-
 struct MainView: View {
-    @StateObject private var vm = MainVM()
-    @ObservedObject var dittoService = DittoService.shared
-    
+    @EnvironmentObject var ordersRepository: OrdersRepository
+    @EnvironmentObject var saleItemsRepository: SaleItemsRepository
+    @EnvironmentObject var locationsRepository: LocationsRepository
+
+    @StateObject private var viewModel: MainViewModel
+
+    init(locationsRepository: LocationsRepository) {
+        _viewModel = StateObject(wrappedValue: MainViewModel(locationsRepository: locationsRepository))
+    }
+
     var body: some View {
         NavigationStack {
-            TabView(selection: $vm.selectedTab) {
-                POSView()
-                    .tabItem {
-                        Label("POS", systemImage: "dot.squareshape")
-                    }
-                    .tag(TabViews.pos)
+            TabView(selection: $viewModel.selectedTab) {
+                POSView(
+                    ordersRepository: ordersRepository,
+                    saleItemsRepository: saleItemsRepository,
+                    locationsRepository: locationsRepository
+                )
+                .tabItem {
+                    Label("POS", systemImage: "dot.squareshape")
+                }
+                .tag(TabViews.pos)
 
-                KDSView()
+                KDSView(ordersRepository: ordersRepository)
                     .tabItem {
                         Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
                     }
                     .tag(TabViews.kds)
 
-                LocationsView()
+                LocationsView(locationsRepository: locationsRepository)
                     .tabItem {
                         Label("Locations", systemImage: "globe")
                     }
                     .tag(TabViews.locations)
             }
-            .sheet(isPresented: $vm.presentSettingsView) {
+            .sheet(isPresented: $viewModel.presentSettingsView) {
                 SettingsView()
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItemGroup(placement: .navigationBarLeading ) {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button {
-                            vm.presentSettingsView = true
+                        viewModel.presentSettingsView = true
                     } label: {
                         Image(systemName: "gearshape")
                     }
                 }
             }
-            .navigationTitle(vm.mainTitle)
+            .navigationTitle(viewModel.mainTitle)
             #if !os(tvOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .navigationViewStyle(StackNavigationViewStyle())
-            .onAppear {
-                if dittoService.locationSetupNotValid {
-                    dittoService.resetLocationSelection()
-                    vm.selectedTab = .locations
-                }
-            }
+            .onAppear { viewModel.ensureLocationSelected() }
         }
-    }
-    
-    var barTitle: String {
-        dittoService.currentLocation?.name ?? "Please Select Location"
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        MainView()
     }
 }

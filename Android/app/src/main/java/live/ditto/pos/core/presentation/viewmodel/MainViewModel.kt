@@ -9,23 +9,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import live.ditto.Ditto
+import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
-import live.ditto.pos.core.domain.usecase.SetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetMissingPermissionsUseCase
 import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-class CoreViewModel @Inject constructor(
+class MainViewModel @Inject constructor(
     private val refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
     private val getDittoInstanceUseCase: GetDittoInstanceUseCase,
     private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
-    private val setCurrentLocationUseCase: SetCurrentLocationUseCase
+    private val locationsRepository: LocationsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -38,14 +38,6 @@ class CoreViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            // If a location is already stored, restore its sync group and subscriptions
-            val state = appConfigurationStateUseCase()
-            if (state == AppConfigurationState.VALID) {
-                val location = getCurrentLocationUseCase()
-                if (location != null) {
-                    setCurrentLocationUseCase(locationId = location.id)
-                }
-            }
             updateAppState()
         }
     }
@@ -64,7 +56,7 @@ class CoreViewModel @Inject constructor(
 
     fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            setCurrentLocationUseCase(locationId = locationId)
+            locationsRepository.setActiveLocation(locationId = locationId)
             updateAppState()
         }
     }

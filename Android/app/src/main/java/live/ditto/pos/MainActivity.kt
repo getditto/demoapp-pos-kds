@@ -9,7 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import dagger.hilt.android.AndroidEntryPoint
 import live.ditto.pos.core.presentation.composables.screens.PosKdsApp
-import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 
 val LocalActivity = staticCompositionLocalOf<ComponentActivity> {
     error("LocalActivity is not present")
@@ -18,7 +18,7 @@ val LocalActivity = staticCompositionLocalOf<ComponentActivity> {
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: CoreViewModel by viewModels<CoreViewModel>()
+    private val viewModel: MainViewModel by viewModels<MainViewModel>()
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         viewModel.refreshDittoPermissions()

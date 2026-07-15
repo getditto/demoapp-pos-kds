@@ -23,7 +23,8 @@ import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.PaymentType
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.pos.core.data.repository.OrdersRepository
+import live.ditto.pos.core.data.repository.SaleItemsRepository
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
 import live.ditto.pos.settings.AppSettings
@@ -31,11 +32,12 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class PoSViewModel
+class POSViewModel
 @Inject
 constructor(
     private val appSettings: AppSettings,
-    private val dittoRepository: DittoRepository,
+    private val ordersRepository: OrdersRepository,
+    private val saleItemsRepository: SaleItemsRepository,
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -66,7 +68,7 @@ constructor(
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
                 ensureCurrentOrder(locationId)
-                dittoRepository.observeLocationOrders(locationId).mapNotNull { orders ->
+                ordersRepository.observeLocationOrders(locationId).mapNotNull { orders ->
                     orders.firstOrNull { it.documentId.id == currentOrderId }
                 }
             }
@@ -76,7 +78,7 @@ constructor(
 
         appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
-            .flatMapLatest { dittoRepository.observeLocationSaleItems(it) }
+            .flatMapLatest { saleItemsRepository.observeLocationSaleItems(it) }
             .onEach { items ->
                 latestSaleItems = items
                 _uiState.value = _uiState.value.copy(
@@ -95,7 +97,7 @@ constructor(
                 CartLineItem.from(match),
                 lineItemId = CartLineItem.newLineItemId()
             )
-            dittoRepository.upsertOrder(updated)
+            ordersRepository.upsert(updated)
         }
     }
 
@@ -103,20 +105,20 @@ constructor(
         val current = latestOrder ?: return
         viewModelScope.launch(dispatcherIO) {
             val payment = Payment(type = PaymentType.CASH, amount = current.total)
-            dittoRepository.upsertOrder(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
+            ordersRepository.upsert(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
 
             // Open the next order explicitly; the observer never creates.
             val next = Order.new(locationId = current.documentId.locationId)
             currentOrderId = next.documentId.id
             appSettings.setCurrentOrderId(currentOrderId)
-            dittoRepository.upsertOrder(next)
+            ordersRepository.upsert(next)
         }
     }
 
     fun clearItems() {
         val current = latestOrder ?: return
         viewModelScope.launch(dispatcherIO) {
-            dittoRepository.clearCart(current)
+            ordersRepository.clearCart(current)
         }
     }
 
@@ -124,7 +126,7 @@ constructor(
     private suspend fun ensureCurrentOrder(locationId: String) {
         val savedId = appSettings.currentOrderId()
         if (savedId.isNotEmpty()) {
-            val snapshot = dittoRepository.observeLocationOrders(locationId).first()
+            val snapshot = ordersRepository.observeLocationOrders(locationId).first()
             val valid = snapshot.firstOrNull { it.documentId.id == savedId }?.let {
                 it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
             } == true
@@ -136,7 +138,7 @@ constructor(
         val order = Order.new(locationId = locationId)
         currentOrderId = order.documentId.id
         appSettings.setCurrentOrderId(currentOrderId)
-        dittoRepository.upsertOrder(order)
+        ordersRepository.upsert(order)
     }
 
     private fun renderOrder(order: Order) {

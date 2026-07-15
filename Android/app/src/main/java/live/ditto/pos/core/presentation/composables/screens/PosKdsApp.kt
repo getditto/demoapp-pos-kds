@@ -35,12 +35,12 @@ import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationB
 import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
-import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 @Composable
 fun PosKdsApp(
-    viewModel: CoreViewModel = hiltViewModel(LocalActivity.current)
+    viewModel: MainViewModel = hiltViewModel(LocalActivity.current)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
