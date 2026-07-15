@@ -7,21 +7,14 @@ class AppConfigurationStateUseCase @Inject constructor(private val appSettings: 
 
     enum class AppConfigurationState {
         VALID,
-        LOCATION_NEEDED,
-        DEMO_OR_CUSTOM_LOCATION_NEEDED
+        LOCATION_NEEDED
     }
 
     suspend operator fun invoke(): AppConfigurationState {
-        val isUsingDemoLocations = appSettings.isUsingDemoLocations()
-        val locationId = appSettings.locationId()
-        return if (isUsingDemoLocations != null) {
-            if (locationId.isEmpty()) {
-                AppConfigurationState.LOCATION_NEEDED
-            } else {
-                AppConfigurationState.VALID
-            }
+        return if (appSettings.locationId().isEmpty()) {
+            AppConfigurationState.LOCATION_NEEDED
         } else {
-            AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED
+            AppConfigurationState.VALID
         }
     }
 }

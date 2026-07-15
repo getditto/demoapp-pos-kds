@@ -60,15 +60,8 @@ fun PosKdsApp(
         }
 
         AppConfigurationState.LOCATION_NEEDED -> {
-            val initialSetupScreen = if (state.isDemoLocationsMode) {
-                SetupScreens.DEMO_LOCATIONS
-            } else {
-                SetupScreens.CUSTOM_LOCATION
-            }
-            InitialSetupScreen(initialScreen = initialSetupScreen)
+            InitialSetupScreen()
         }
-
-        AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED -> InitialSetupScreen()
     }
 }
 
@@ -119,7 +112,6 @@ private fun PosKDSScaffold(
     Scaffold(
         bottomBar = {
             PosKdsNavigationBar(
-                showDemoLocationsNavItem = state.isDemoLocationsMode,
                 onItemClick = {
                     // Ditto Tools is a drawer destination, not a tab — pop it
                     // explicitly so DittoToolsViewer is fully cleared before

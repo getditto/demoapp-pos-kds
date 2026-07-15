@@ -8,7 +8,8 @@ class SetCurrentLocationUseCase @Inject constructor(
 ) {
 
     // Persist the chosen locationId; DittoRepository observes the same flow
-    // and registers the orders + sale_items subscriptions for the new value.
+    // and (re-)configures the sync group + orders/sale_items subscriptions for
+    // the new value.
     suspend operator fun invoke(locationId: String) {
         appSettings.setLocationId(locationId = locationId)
     }

@@ -40,15 +40,12 @@ constructor(
     private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // Track the saved locationId and register orders + sale_items
-        // subscriptions whenever it's set. This covers both the user picking
-        // a location for the first time and app re-launch where the location
-        // is already in DataStore — without this, observers would see only
-        // the local store and miss orders other peers had pushed for the
-        // saved location.
+        // Track the saved locationId and (re-)configure the sync group + subscriptions
+        // whenever it's set. Covers both the user picking a location and app
+        // re-launch with a value restored from DataStore.
         appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
-            .onEach { locationId -> setActiveLocation(locationId) }
+            .onEach { setActiveLocation(it) }
             .launchIn(repoScope)
     }
 
@@ -70,6 +67,7 @@ constructor(
     }
 
     fun setActiveLocation(locationId: String) {
+        dittoManager.setSyncGroup(locationId)
         registerSub(
             key = "orders",
             query = """
@@ -169,17 +167,6 @@ constructor(
             """.trimIndent()
         }
         ditto.store.execute(query, baseArgs).use { }
-    }
-
-    suspend fun insertCustomLocation(location: Location) {
-        ditto.store.execute(
-            """
-                INSERT INTO ${Location.COLLECTION_NAME}
-                DOCUMENTS (deserialize_json(:json))
-                ON ID CONFLICT DO UPDATE_LOCAL_DIFF
-            """.trimIndent(),
-            mapOf("json" to location.dittoJsonString())
-        ).use { }
     }
 
     // ----- Lifecycle -----

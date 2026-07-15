@@ -107,12 +107,6 @@ final class DittoInstance: ObservableObject {
                     Settings.locationId = locationId
                 }
 
-                if Settings.useDemoLocations {
-                    Task { @MainActor in
-                        await DemoSeeder(store: self.store).seedLocations()
-                    }
-                }
-
                 self.activate(locationId: locationId, locations: locations)
             }
             .store(in: &cancellables)
@@ -170,27 +164,6 @@ final class DittoInstance: ObservableObject {
         }
     }
 
-    /// Persist a user-defined location.
-    func saveCustomLocation(company: String, location: String) {
-        let customLocation = CustomLocation(companyName: company, locationName: location)
-        guard let jsonData = JSONEncoder.encodedObject(customLocation) else { return }
-        Settings.customLocation = jsonData
-
-        let asLocation = Location(id: customLocation.locationId, name: customLocation.locationName)
-        guard let json = try? asLocation.dittoJSONString() else { return }
-        execute(
-            """
-            INSERT INTO \(Location.collectionName)
-            DOCUMENTS (deserialize_json(:json))
-            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
-            """,
-            args: ["json": json]
-        )
-
-        currentLocationId = customLocation.locationId
-        try? ditto.smallPeerInfo.setMetadata(["locationId": customLocation.locationId])
-    }
-
     // MARK: Public — observers
 
     /// Observe a single order by composite id.
@@ -223,6 +196,7 @@ final class DittoInstance: ObservableObject {
     }
 
     private func activate(locationId: String, locations: [Location]) {
+        applySyncGroup(locationId: locationId)
         registerSubscription(
             name: "orders",
             query: """
@@ -256,17 +230,34 @@ final class DittoInstance: ObservableObject {
         }
     }
 
+    /// Restart sync with the location's sync group. Transport configuration
+    /// changes only take effect at sync start, so we bounce it.
+    private func applySyncGroup(locationId: String) {
+        ditto.sync.stop()
+        setSyncGroup(locationId: locationId)
+        do { try ditto.sync.start() } catch {
+            print("Failed to restart sync: \(error)")
+        }
+    }
+
+    /// Sets the sync group to the numeric location id so only devices at the
+    /// same location form a peer-to-peer mesh.
+    ///
+    /// https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
+    private func setSyncGroup(locationId: String) {
+        guard let value = UInt32(locationId) else { return }
+        ditto.updateTransportConfig { config in
+            config.global.syncGroup = value
+        }
+    }
+
     private func observeAllLocations() {
         locationsObserver = store.observePublisher(
             query: "SELECT * FROM \(Location.collectionName)",
             mapTo: Location.self
         )
         .map { locations in
-            // Demo mode hides custom locations from other peers.
-            if Settings.useDemoLocations {
-                return locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
-            }
-            return locations
+            locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
         }
         .replaceError(with: [])
         .assign(to: \.allLocations, on: self)
@@ -305,42 +296,14 @@ final class DittoInstance: ObservableObject {
     }
 }
 
-// MARK: - Demo / Custom location toggle
+// MARK: - Location reset
 
 extension DittoService {
-    enum LocationsSetupOption { case demo, custom }
-
     var locationSetupNotValid: Bool {
-        Settings.locationId == nil && Settings.useDemoLocations == false
+        Settings.locationId == nil
     }
 
-    func updateLocationsSetup(option: LocationsSetupOption) {
-        switch option {
-        case .demo: resetToDemoLocations()
-        case .custom: resetToCustomLocation()
-        }
-    }
-
-    func updateDemoLocationsSetting(enable: Bool) {
-        if enable { resetToDemoLocations() } else { resetToCustomLocation() }
-    }
-
-    func resetToDemoLocations() {
-        Settings.customLocation = nil
-        Settings.useDemoLocations = true
-        Task { @MainActor in
-            await DemoSeeder(store: store).seedLocations()
-        }
-        clearLocationSelection()
-    }
-
-    func resetToCustomLocation() {
-        Settings.useDemoLocations = false
-        clearLocationSelection()
-    }
-
-    private func clearLocationSelection() {
-        observeAllLocations()
+    func resetLocationSelection() {
         Settings.locationId = nil
         currentLocation = nil
         currentLocationId = nil

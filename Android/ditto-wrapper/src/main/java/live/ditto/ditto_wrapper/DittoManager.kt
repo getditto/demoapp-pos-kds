@@ -55,6 +55,21 @@ class DittoManager(
         }
     }
 
+    /// Sets the sync group from the numeric location ID so that only devices
+    /// at the same location form a peer-to-peer mesh.
+    fun setSyncGroup(locationId: String) {
+        val value = locationId.toUIntOrNull() ?: return
+        val ditto = requireDitto()
+
+        ditto.stopSync()
+        ditto.updateTransportConfig { config ->
+            // Isolate the peer-to-peer mesh to devices at this location.
+            // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
+            config.global.syncGroup = value
+        }
+        ditto.startSync()
+    }
+
     fun requireDitto(): Ditto {
         return ditto ?: throw DittoNotCreatedException()
     }
