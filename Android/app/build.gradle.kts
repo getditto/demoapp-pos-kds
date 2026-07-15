@@ -46,12 +46,6 @@ android {
             "DITTO_URL",
             getLocalProperty("dittoUrl")
         )
-
-        buildConfigField(
-            "String",
-            "DITTO_AUTH_URL",
-            getLocalProperty("dittoAuthUrl")
-        )
     }
 
     buildTypes {

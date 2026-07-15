@@ -51,12 +51,6 @@ internal object AppModule {
         return BuildConfig.DITTO_URL
     }
 
-    @DittoAuthURL
-    @Provides
-    fun provideDittoAuthURL(): String {
-        return BuildConfig.DITTO_AUTH_URL
-    }
-
     @Provides
     fun provideAppSettings(@ApplicationContext context: Context): AppSettings {
         return AppSettings(context)
