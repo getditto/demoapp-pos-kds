@@ -22,6 +22,13 @@ class DittoManager(
     private val dittoServerUrl: String
 ) {
     private val ditto: Ditto? by lazy {
+        // Fail fast on missing build-time credentials (baked into BuildConfig
+        // from .env). Runtime SDK errors below are caught and logged instead.
+        require(dittoDatabaseId.isNotBlank()) { "DITTO_DATABASE_ID is missing. Set it in .env before building." }
+        require(dittoDevelopmentToken.isNotBlank()) { "DITTO_DEVELOPMENT_TOKEN is missing. Set it in .env before building." }
+        require(dittoServerUrl.isNotBlank()) {
+            "DITTO_SERVER_URL is missing or invalid: \"$dittoServerUrl\". Set it in .env before building."
+        }
         try {
             DittoLogger.minimumLogLevel = DittoLogLevel.Debug
 

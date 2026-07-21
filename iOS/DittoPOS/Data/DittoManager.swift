@@ -23,8 +23,10 @@ final class DittoManager: ObservableObject {
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
+        precondition(!Env.DITTO_DATABASE_ID.isEmpty, "DITTO_DATABASE_ID is missing. Set it in .env before building.")
+        precondition(!Env.DITTO_DEVELOPMENT_TOKEN.isEmpty, "DITTO_DEVELOPMENT_TOKEN is missing. Set it in .env before building.")
         guard let serverURL = URL(string: Env.DITTO_SERVER_URL) else {
-            fatalError("Invalid DITTO_SERVER_URL: \"\(Env.DITTO_SERVER_URL)\"")
+            fatalError("DITTO_SERVER_URL is missing or invalid: \"\(Env.DITTO_SERVER_URL)\". Set it in .env before building.")
         }
 
         DittoLogger.minimumLogLevel = .debug
