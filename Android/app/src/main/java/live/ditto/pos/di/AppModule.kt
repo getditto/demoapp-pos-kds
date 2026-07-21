@@ -23,13 +23,13 @@ internal object AppModule {
         @ApplicationContext context: Context,
         @DittoDatabaseId databaseId: String,
         @DittoDevelopmentToken developmentToken: String,
-        @DittoUrl url: String
+        @DittoServerUrl serverUrl: String
     ): DittoManager {
         return DittoManager(
             context = context,
             dittoDatabaseId = databaseId,
             dittoDevelopmentToken = developmentToken,
-            dittoUrl = url
+            dittoServerUrl = serverUrl
         )
     }
 
@@ -45,10 +45,10 @@ internal object AppModule {
         return BuildConfig.DITTO_DEVELOPMENT_TOKEN
     }
 
-    @DittoUrl
+    @DittoServerUrl
     @Provides
-    fun provideDittoUrl(): String {
-        return BuildConfig.DITTO_URL
+    fun provideDittoServerUrl(): String {
+        return BuildConfig.DITTO_SERVER_URL
     }
 
     @Provides

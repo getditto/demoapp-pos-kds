@@ -23,7 +23,7 @@ development token, and URL.
 ``` bash
 DITTO_DATABASE_ID=replace_with_your_database_id
 DITTO_DEVELOPMENT_TOKEN=replace_with_your_development_token
-DITTO_URL=replace_with_your_url
+DITTO_SERVER_URL=replace_with_your_server_url
 ```
 6. Clean (**Command + Shift + K**), then build (**Command + B**). This will generate `Env.swift`. 
 The project is now configured for the portal app.    

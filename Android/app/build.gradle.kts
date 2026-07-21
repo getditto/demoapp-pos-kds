@@ -43,8 +43,8 @@ android {
 
         buildConfigField(
             "String",
-            "DITTO_URL",
-            getLocalProperty("dittoUrl")
+            "DITTO_SERVER_URL",
+            getLocalProperty("dittoServerUrl")
         )
     }
 

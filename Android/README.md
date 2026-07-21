@@ -20,7 +20,7 @@ development token, and URL.
 ```
 dittoDatabaseId="replace-with-your-database-id"
 dittoDevelopmentToken="replace-with-your-development-token"
-dittoUrl="replace-with-your-url"
+dittoServerUrl="replace-with-your-server-url"
 ```
 5. Hit the green play button to run the app
 

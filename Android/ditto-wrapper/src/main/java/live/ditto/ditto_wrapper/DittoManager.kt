@@ -19,7 +19,7 @@ class DittoManager(
     val context: Context,
     private val dittoDatabaseId: String,
     private val dittoDevelopmentToken: String,
-    private val dittoUrl: String
+    private val dittoServerUrl: String
 ) {
     private val ditto: Ditto? by lazy {
         try {
@@ -31,7 +31,7 @@ class DittoManager(
             // https://docs.ditto.live/sdk/latest/ditto-config
             val config = DittoConfig(
                 databaseId = dittoDatabaseId,
-                connect = DittoConfig.Connect.Server(dittoUrl)
+                connect = DittoConfig.Connect.Server(dittoServerUrl)
             )
 
             DittoFactory.create(config).apply {

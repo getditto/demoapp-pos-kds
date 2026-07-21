@@ -23,8 +23,8 @@ final class DittoManager: ObservableObject {
             .url(for: directory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("ditto-pos-demo")
 
-        guard let serverURL = URL(string: Env.DITTO_URL) else {
-            fatalError("Invalid DITTO_URL: \"\(Env.DITTO_URL)\"")
+        guard let serverURL = URL(string: Env.DITTO_SERVER_URL) else {
+            fatalError("Invalid DITTO_SERVER_URL: \"\(Env.DITTO_SERVER_URL)\"")
         }
 
         DittoLogger.minimumLogLevel = .debug

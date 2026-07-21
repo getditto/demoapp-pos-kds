@@ -12,4 +12,4 @@ annotation class DittoDevelopmentToken
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DittoUrl
+annotation class DittoServerUrl
