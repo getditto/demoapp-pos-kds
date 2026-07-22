@@ -14,12 +14,12 @@ plugins {
 
 android {
     namespace = "live.ditto.pos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "live.ditto.pos"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 8
         versionName = "2.0.0"
 
