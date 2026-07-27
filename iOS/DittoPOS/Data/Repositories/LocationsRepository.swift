@@ -58,7 +58,7 @@ import DittoSwift
                 query: "SELECT * FROM \(Location.collectionName)"
             )
         } catch {
-            assertionFailure("subscribe locations failed: \(error.localizedDescription)")
+            reportSubscriptionFailure("subscribe locations", error)
         }
     }
 

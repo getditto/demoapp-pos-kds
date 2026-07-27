@@ -87,6 +87,16 @@ extension DittoQueryResult {
 
 // MARK: - Combine wrappers
 
+// MARK: - Subscription error reporting
+
+/// Consistent handling for a failed sync-subscription registration: logs in
+/// every build (never silent) and traps in Debug. Mirrors Android's
+/// `reportSubscriptionFailure`.
+func reportSubscriptionFailure(_ context: String, _ error: Error) {
+    print("⚠️ \(context): \(error.localizedDescription)")
+    assertionFailure("\(context): \(error.localizedDescription)")
+}
+
 extension DittoStore {
     /// Uses Ditto's `handlerWithSignalNext` overload so we can apply
     /// backpressure: `signalNext()` is called only after `subject.send(...)`

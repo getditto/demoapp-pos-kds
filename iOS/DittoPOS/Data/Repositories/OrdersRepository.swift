@@ -69,7 +69,7 @@ import Foundation
             .replaceError(with: [])
             .assign(to: \.locationOrders, on: self)
         } catch {
-            assertionFailure("subscribe orders failed: \(error.localizedDescription)")
+            reportSubscriptionFailure("subscribe orders", error)
         }
     }
 
@@ -109,6 +109,8 @@ import Foundation
 
     func clearCart(of order: Order) {
         guard !order.cart.isEmpty else { return }
+        // UNSET target paths can't be parameterized in DQL, so the cart keys
+        // (app-generated line-item UUIDs) are interpolated; all values use :named args.
         let unsetList = order.cart.keys.map { "cart.\"\($0)\"" }.joined(separator: ", ")
         execute(
             """

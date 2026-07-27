@@ -62,7 +62,7 @@ import DittoSwift
             .replaceError(with: [])
             .assign(to: \.locationSaleItems, on: self)
         } catch {
-            assertionFailure("subscribe sale_items failed: \(error.localizedDescription)")
+            reportSubscriptionFailure("subscribe sale_items", error)
         }
     }
 }

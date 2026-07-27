@@ -47,14 +47,18 @@ class OrdersRepository @Inject constructor(
 
     private fun setActiveLocation(locationId: String) {
         subscription?.close()
-        subscription = ditto.sync.registerSubscription(
-            """
-                SELECT * FROM ${Order.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
-                    AND createdAt > :TTL
-            """.trimIndent(),
-            mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
-        )
+        subscription = try {
+            ditto.sync.registerSubscription(
+                """
+                    SELECT * FROM ${Order.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                        AND createdAt > :TTL
+                """.trimIndent(),
+                mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
+            )
+        } catch (error: Throwable) {
+            reportSubscriptionFailure("subscribe orders", error)
+        }
     }
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
@@ -80,6 +84,8 @@ class OrdersRepository @Inject constructor(
 
     suspend fun clearCart(order: Order) {
         if (order.cart.isEmpty()) return
+        // UNSET target paths can't be parameterized in DQL, so the cart keys
+        // (app-generated line-item UUIDs) are interpolated; all values use :named args.
         val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
         ditto.store.execute(
             """

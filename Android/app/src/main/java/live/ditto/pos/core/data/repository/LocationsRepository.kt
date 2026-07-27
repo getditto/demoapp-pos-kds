@@ -46,9 +46,13 @@ class LocationsRepository @Inject constructor(
 
     fun startSubscription() {
         if (subscription != null) return
-        subscription = ditto.sync.registerSubscription(
-            "SELECT * FROM ${Location.COLLECTION_NAME}"
-        )
+        subscription = try {
+            ditto.sync.registerSubscription(
+                "SELECT * FROM ${Location.COLLECTION_NAME}"
+            )
+        } catch (error: Throwable) {
+            reportSubscriptionFailure("subscribe locations", error)
+        }
     }
 
     /**

@@ -38,13 +38,17 @@ class SaleItemsRepository @Inject constructor(
         // Subscription = the sync set: every sale item for this location.
         // ORDER BY / LIMIT are illegal on a subscription in v5 — ordering is a
         // presentation concern and lives on the observer in observeLocationSaleItems.
-        subscription = ditto.sync.registerSubscription(
-            """
-                SELECT * FROM ${SaleItem.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
-            """.trimIndent(),
-            mapOf("locationId" to locationId)
-        )
+        subscription = try {
+            ditto.sync.registerSubscription(
+                """
+                    SELECT * FROM ${SaleItem.COLLECTION_NAME}
+                    WHERE _id.locationId = :locationId
+                """.trimIndent(),
+                mapOf("locationId" to locationId)
+            )
+        } catch (error: Throwable) {
+            reportSubscriptionFailure("subscribe sale_items", error)
+        }
     }
 
     fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =
