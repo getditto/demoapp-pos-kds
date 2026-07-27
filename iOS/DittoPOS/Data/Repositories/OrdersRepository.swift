@@ -42,20 +42,28 @@ import Foundation
 
     private func setActiveLocation(_ locationId: String) {
         subscription?.cancel()
+        let args: [String: Any?] = ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
         do {
-            let sub = try sync.registerSubscription(
+            // Subscription = the sync set: this location's orders since TTL.
+            subscription = try sync.registerSubscription(
                 query: """
                     SELECT * FROM \(Order.collectionName)
                     WHERE _id.locationId = :locationId
                         AND createdAt > :TTL
                     """,
-                arguments: ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
+                arguments: args
             )
-            subscription = sub
 
+            // Observer = the local read that drives the UI. Its own query string,
+            // independent of the subscription's, so presentation (ORDER BY / LIMIT)
+            // can diverge without touching the sync set.
             observer = store.observePublisher(
-                query: sub.queryString,
-                arguments: sub.queryArguments,
+                query: """
+                    SELECT * FROM \(Order.collectionName)
+                    WHERE _id.locationId = :locationId
+                        AND createdAt > :TTL
+                    """,
+                arguments: args,
                 mapTo: Order.self
             )
             .replaceError(with: [])

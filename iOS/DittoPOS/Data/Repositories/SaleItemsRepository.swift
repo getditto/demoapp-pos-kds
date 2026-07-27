@@ -37,19 +37,26 @@ import DittoSwift
     private func setActiveLocation(_ locationId: String) {
         subscription?.cancel()
         do {
-            let sub = try sync.registerSubscription(
+            // Subscription = the sync set: every sale item for this location.
+            // ORDER BY / LIMIT are illegal on a subscription in v5 — ordering is
+            // a presentation concern and lives on the observer below.
+            subscription = try sync.registerSubscription(
+                query: """
+                    SELECT * FROM \(SaleItem.collectionName)
+                    WHERE _id.locationId = :locationId
+                    """,
+                arguments: ["locationId": locationId]
+            )
+
+            // Observer = the local read that drives the UI, ordered for display.
+            // Its own query string, independent of the subscription's.
+            observer = store.observePublisher(
                 query: """
                     SELECT * FROM \(SaleItem.collectionName)
                     WHERE _id.locationId = :locationId
                     ORDER BY name
                     """,
-                arguments: ["locationId": locationId]
-            )
-            subscription = sub
-
-            observer = store.observePublisher(
-                query: sub.queryString,
-                arguments: sub.queryArguments,
+                arguments: ["locationId": locationId],
                 mapTo: SaleItem.self
             )
             .replaceError(with: [])

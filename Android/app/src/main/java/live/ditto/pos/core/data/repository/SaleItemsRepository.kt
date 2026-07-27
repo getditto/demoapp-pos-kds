@@ -35,11 +35,13 @@ class SaleItemsRepository @Inject constructor(
 
     private fun setActiveLocation(locationId: String) {
         subscription?.close()
+        // Subscription = the sync set: every sale item for this location.
+        // ORDER BY / LIMIT are illegal on a subscription in v5 — ordering is a
+        // presentation concern and lives on the observer in observeLocationSaleItems.
         subscription = ditto.sync.registerSubscription(
             """
                 SELECT * FROM ${SaleItem.COLLECTION_NAME}
                 WHERE _id.locationId = :locationId
-                ORDER BY name
             """.trimIndent(),
             mapOf("locationId" to locationId)
         )
