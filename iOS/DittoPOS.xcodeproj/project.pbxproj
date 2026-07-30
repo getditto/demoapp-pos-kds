@@ -786,7 +786,7 @@
 			repositoryURL = "https://github.com/getditto/DittoSwiftTools";
 			requirement = {
 				kind = exactVersion;
-				version = "10.0.0-rc.10";
+				version = "10.0.0-rc.11";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
