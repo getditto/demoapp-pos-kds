@@ -10,6 +10,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import dagger.hilt.android.AndroidEntryPoint
 import live.ditto.pos.core.presentation.composables.screens.PosKdsApp
 import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.ui.theme.DittoPoSKDSDemoTheme
 
 val LocalActivity = staticCompositionLocalOf<ComponentActivity> {
     error("LocalActivity is not present")
@@ -35,7 +36,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             CompositionLocalProvider(LocalActivity provides this@MainActivity) {
-                PosKdsApp()
+                DittoPoSKDSDemoTheme {
+                    PosKdsApp()
+                }
             }
         }
     }
