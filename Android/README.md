@@ -12,7 +12,7 @@ For support, please contact Ditto Support (<support@ditto.com>).
 If you'd like to just view the app, it is available in the [Play store](https://play.google.com/store/apps/details?id=live.ditto.pos). No setup is required for this. If you'd like to build and run the app, see the instructions below.
 
 ### Building and Running the App in Android Studio
-1. In your [Ditto portal](https://portal.ditto.live), create an app to generate a Database ID,
+1. In your [Ditto portal](https://portal.ditto.live), create a database to generate a Database ID,
 development token, and URL.  
 2. Clone this repo to a location on your machine, and open the `Android` project in Android Studio.    
 3. From the **repository root**, run `cp .env.template .env`. This `.env` is shared by the iOS and

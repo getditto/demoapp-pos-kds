@@ -16,7 +16,7 @@ If you'd like to just view the app, it is available in the [app store](https://a
 1. Clone this repo to a location on your machine, and open in Xcode.    
 2. Navigate to the project `Signing & Capabilities` tab and modify the `Team and Bundle Identifier` settings to your Apple developer account 
 credentials to provision building to your device.  
-3. In your [Ditto portal](https://portal.ditto.live), create an app to generate a Database ID,
+3. In your [Ditto portal](https://portal.ditto.live), create a database to generate a Database ID,
 development token, and URL.   
 4. In Terminal, from the **repository root** run `cp .env.template .env`. This `.env` is shared by the
 iOS and Android apps.   

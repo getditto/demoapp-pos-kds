@@ -27,26 +27,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        // Load Ditto credentials from the shared repo-root .env. Values there
-        // are unquoted, so wrap each in quotes for the generated BuildConfig.
-        buildConfigField(
-            "String",
-            "DITTO_DATABASE_ID",
-            "\"${dittoEnv("DITTO_DATABASE_ID")}\""
-        )
-
-        buildConfigField(
-            "String",
-            "DITTO_DEVELOPMENT_TOKEN",
-            "\"${dittoEnv("DITTO_DEVELOPMENT_TOKEN")}\""
-        )
-
-        buildConfigField(
-            "String",
-            "DITTO_SERVER_URL",
-            "\"${dittoEnv("DITTO_SERVER_URL")}\""
-        )
     }
 
     buildTypes {
@@ -77,6 +57,33 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+// Bake the Ditto credentials into BuildConfig from the shared repo-root .env
+// (see dittoEnv). Wired through androidComponents.onVariants with a lazy
+// provider so the file is read only when BuildConfig is actually generated — a
+// fresh clone can still run non-build tasks (./gradlew tasks, IDE sync) with no
+// .env present. Values in .env are unquoted, so wrap each in quotes for the
+// generated Java string literal.
+androidComponents {
+    onVariants { variant ->
+        listOf(
+            "DITTO_DATABASE_ID",
+            "DITTO_DEVELOPMENT_TOKEN",
+            "DITTO_SERVER_URL"
+        ).forEach { key ->
+            variant.buildConfigFields?.put(
+                key,
+                providers.provider {
+                    com.android.build.api.variant.BuildConfigField(
+                        "String",
+                        "\"${dittoEnv(key)}\"",
+                        null
+                    )
+                }
+            )
         }
     }
 }
@@ -151,14 +158,9 @@ fun dittoEnv(key: String): String {
     InputStreamReader(FileInputStream(envFile), Charsets.UTF_8).use { reader ->
         properties.load(reader)
     }
-    return properties.getProperty(key)
-        ?: error("Missing \"$key\" in ${envFile.absolutePath}")
+    return properties.getProperty(key)?.ifBlank { null }
+        ?: error(
+            "Missing or blank \"$key\" in ${envFile.absolutePath}. " +
+                "Fill in every value from .env.template before building."
+        )
 }
-
-// Credentials are baked into BuildConfig from the repo-root .env at configuration
-// time (see dittoEnv). Declare that file as an input to the BuildConfig-generation
-// tasks so editing .env regenerates BuildConfig without needing a clean build.
-tasks.matching { it.name.startsWith("generate") && it.name.endsWith("BuildConfig") }
-    .configureEach {
-        inputs.file(rootProject.file("../.env")).optional().withPropertyName("dotEnv")
-    }
