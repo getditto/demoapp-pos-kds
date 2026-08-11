@@ -6,7 +6,7 @@ package live.ditto.pos.core.data.demo
 // — idempotent and peer-safe, so every device can run this on launch and
 // the network converges on a single copy.
 
-import live.ditto.Ditto
+import com.ditto.kotlin.Ditto
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
@@ -59,7 +59,7 @@ class DemoSeeder(private val ditto: Ditto) {
                 INITIAL DOCUMENTS ${placeholders.joinToString(", ")}
                 """.trimIndent(),
                 args
-            ).use { }
+            )
         } catch (error: Throwable) {
             android.util.Log.w("DemoSeeder", "$label: ${error.message}")
         }

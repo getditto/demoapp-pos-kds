@@ -73,8 +73,13 @@ operate independently.
 
 ### Location selection
 
-The app starts in demo-locations mode with seven hand-curated restaurants.
-You can also switch to a single user-defined location via Settings → Advanced.
+The app ships with seven hand-curated demo restaurant locations. Pick one on
+first launch; reset later via Settings → Advanced.
+
+The selected location's numeric id is used as Ditto's `syncGroup`, so only
+devices at the same location form a peer-to-peer mesh. See the
+[sync groups](https://docs.ditto.live/sdk/latest/sync/creating-sync-groups)
+docs.
 
 ### Order workflow
 

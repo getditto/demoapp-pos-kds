@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct KDSView: View {
-    var body: some View {
-        KDSOrdersGridView()
-    }
-}
+    let ordersRepository: OrdersRepository
 
-struct KDSView_Previews: PreviewProvider {
-    static var previews: some View {
-        KDSView()
+    init(ordersRepository: OrdersRepository) {
+        self.ordersRepository = ordersRepository
+    }
+
+    var body: some View {
+        KDSOrdersGridView(ordersRepository: ordersRepository)
     }
 }

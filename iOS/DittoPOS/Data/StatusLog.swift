@@ -38,9 +38,9 @@ enum StatusLogDerivation {
     static func currentStatus(from log: [String: String], default defaultStatus: OrderStatus = .open) -> OrderStatus {
         guard !log.isEmpty else { return defaultStatus }
 
-        let entries: [(timestamp: String, status: OrderStatus)] = log.compactMap { ts, raw in
-            guard let s = OrderStatus(rawValue: raw) else { return nil }
-            return (ts, s)
+        let entries: [(timestamp: String, status: OrderStatus)] = log.compactMap { timestamp, raw in
+            guard let status = OrderStatus(rawValue: raw) else { return nil }
+            return (timestamp, status)
         }
         guard !entries.isEmpty else { return defaultStatus }
 

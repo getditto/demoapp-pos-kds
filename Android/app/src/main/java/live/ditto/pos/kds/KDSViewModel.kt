@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.settings.AppSettings
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,7 +31,7 @@ class KDSViewModel
 @Inject
 constructor(
     private val appSettings: AppSettings,
-    private val dittoRepository: DittoRepository,
+    private val ordersRepository: OrdersRepository,
     private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -52,7 +52,7 @@ constructor(
         appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
-                dittoRepository.observeLocationOrders(locationId).map { orders ->
+                ordersRepository.observeLocationOrders(locationId).map { orders ->
                     orders.filter { order ->
                         (order.status == OrderStatus.IN_PROCESS || order.status == OrderStatus.PROCESSED) &&
                             order.cart.isNotEmpty()
@@ -75,7 +75,7 @@ constructor(
                 OrderStatus.PROCESSED -> OrderStatus.DELIVERED
                 else -> return@launch
             }
-            dittoRepository.upsertOrder(order.appendingStatus(nextStatus))
+            ordersRepository.upsert(order.appendingStatus(nextStatus))
 
             if (nextStatus == OrderStatus.PROCESSED && appSettings.currentOrderId() == order.documentId.id) {
                 appSettings.setCurrentOrderId("")

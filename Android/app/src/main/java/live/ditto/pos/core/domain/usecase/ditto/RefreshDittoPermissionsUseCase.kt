@@ -1,11 +1,11 @@
 package live.ditto.pos.core.domain.usecase.ditto
 
-import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.ditto_wrapper.DittoManager
 import javax.inject.Inject
 
-class RefreshDittoPermissionsUseCase @Inject constructor(private val dittoRepository: DittoRepository) {
+class RefreshDittoPermissionsUseCase @Inject constructor(private val dittoManager: DittoManager) {
 
     operator fun invoke() {
-        dittoRepository.refreshPermissions()
+        dittoManager.refreshPermissions()
     }
 }

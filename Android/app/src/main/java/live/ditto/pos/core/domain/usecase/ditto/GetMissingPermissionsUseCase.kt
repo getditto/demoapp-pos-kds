@@ -1,13 +1,13 @@
 package live.ditto.pos.core.domain.usecase.ditto
 
-import live.ditto.pos.core.domain.repository.DittoRepository
+import live.ditto.ditto_wrapper.DittoManager
 import javax.inject.Inject
 
 class GetMissingPermissionsUseCase @Inject constructor(
-    private val dittoRepository: DittoRepository
+    private val dittoManager: DittoManager
 ) {
 
     operator fun invoke(): Array<String> {
-        return dittoRepository.getMissingPermissions()
+        return dittoManager.missingPermissions()
     }
 }

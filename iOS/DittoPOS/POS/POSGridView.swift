@@ -8,58 +8,25 @@
 import SwiftUI
 
 struct POSGridView: View {
-    @Environment(\.horizontalSizeClass) private var HsizeClass
-    @ObservedObject var dataVM = POS_VM.shared
-    @State var columns = [GridItem]()
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @EnvironmentObject var viewModel: POSViewModel
+    @EnvironmentObject var layoutViewModel: POSLayoutViewModel
 
     var body: some View {
         NavigationView {
             ScrollView(showsIndicators: false) {
-                #if os(tvOS)
-                LazyVGrid(columns: [GridItem(), GridItem(), GridItem()], spacing: 10) {
-                    ForEach(dataVM.saleItems, id: \.self) { item in
-                        Button(action: {
-                            dataVM.addOrderItem(item)
-                        }, label: {
-                            VStack {
-                                Image(ImageNameMapping.assetName(for: item.imageName))
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 200, height: 200)
-                                Text(item.name)
-                                    .font(.body)
-                            }
-                        })
-                    }
-                }
-                #else
-                LazyVGrid(columns: columns) {
-                    ForEach(dataVM.saleItems, id: \.self) { item in
-                        SaleItemView(item, length: itemSide)
-                            .frame(width: itemSide, height: itemSide + 8)
+                LazyVGrid(columns: layoutViewModel.gridColumns(for: horizontalSizeClass)) {
+                    ForEach(viewModel.saleItems, id: \.self) { item in
+                        let side = layoutViewModel.itemSide(for: horizontalSizeClass)
+                        SaleItemView(item, length: side)
+                            .frame(width: side, height: side + 8)
                             .onTapGesture {
-                                dataVM.addOrderItem(item)
+                                viewModel.addOrderItem(item)
                             }
                     }
                 }
                 .padding(.vertical, 16)
-                #endif
             }
         }
-        .onAppear { columns = cols() }
-    }
-
-    func cols() -> [GridItem] {
-        [GridItem(.adaptive(minimum: HsizeClass == .compact ? 100 : 160), alignment: .top)]
-    }
-
-    var itemSide: CGFloat {
-        HsizeClass == .compact ? 100 : 160
-    }
-}
-
-struct POSGridView_Previews: PreviewProvider {
-    static var previews: some View {
-        POSGridView()
     }
 }
