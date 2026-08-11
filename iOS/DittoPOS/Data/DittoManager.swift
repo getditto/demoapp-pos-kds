@@ -25,8 +25,8 @@ final class DittoManager: ObservableObject {
 
         precondition(!Env.DITTO_DATABASE_ID.isEmpty, "DITTO_DATABASE_ID is missing. Set it in .env before building.")
         precondition(!Env.DITTO_DEVELOPMENT_TOKEN.isEmpty, "DITTO_DEVELOPMENT_TOKEN is missing. Set it in .env before building.")
-        guard let serverURL = URL(string: Env.DITTO_SERVER_URL) else {
-            fatalError("DITTO_SERVER_URL is missing or invalid: \"\(Env.DITTO_SERVER_URL)\". Set it in .env before building.")
+        guard let serverURL = URL(string: Env.DITTO_SERVER_URL), serverURL.scheme == "https" else {
+            fatalError("DITTO_SERVER_URL must be an https:// URL (the v5 portal \"Connect via SDK\" URL): \"\(Env.DITTO_SERVER_URL)\"")
         }
 
         DittoLogger.minimumLogLevel = .debug

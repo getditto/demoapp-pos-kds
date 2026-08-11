@@ -33,6 +33,9 @@ class DittoManager(
         require(dittoServerUrl.isNotBlank()) {
             "DITTO_SERVER_URL is missing — set it in the repo-root .env before building."
         }
+        require(dittoServerUrl.startsWith("https://")) {
+            "DITTO_SERVER_URL must be an https:// URL (the v5 portal \"Connect via SDK\" URL): \"$dittoServerUrl\""
+        }
         try {
             DittoLogger.minimumLogLevel = DittoLogLevel.Debug
 
