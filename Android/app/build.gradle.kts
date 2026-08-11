@@ -14,12 +14,12 @@ plugins {
 
 android {
     namespace = "live.ditto.pos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "live.ditto.pos"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 8
         versionName = "2.0.0"
 
@@ -27,25 +27,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        // Load Ditto API keys
-        buildConfigField(
-            "String",
-            "DITTO_ONLINE_PLAYGROUND_APP_ID",
-            getLocalProperty("dittoOnlinePlaygroundAppId")
-        )
-
-        buildConfigField(
-            "String",
-            "DITTO_ONLINE_PLAYGROUND_TOKEN",
-            getLocalProperty("dittoOnlinePlaygroundToken")
-        )
-
-        buildConfigField(
-            "String",
-            "DITTO_WEBSOCKET_URL",
-            getLocalProperty("dittoWebsocketURL")
-        )
     }
 
     buildTypes {
@@ -76,6 +57,33 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+// Bake the Ditto credentials into BuildConfig from the shared repo-root .env
+// (see dittoEnv). Wired through androidComponents.onVariants with a lazy
+// provider so the file is read only when BuildConfig is actually generated — a
+// fresh clone can still run non-build tasks (./gradlew tasks, IDE sync) with no
+// .env present. Values in .env are unquoted, so wrap each in quotes for the
+// generated Java string literal.
+androidComponents {
+    onVariants { variant ->
+        listOf(
+            "DITTO_DATABASE_ID",
+            "DITTO_DEVELOPMENT_TOKEN",
+            "DITTO_SERVER_URL"
+        ).forEach { key ->
+            variant.buildConfigFields?.put(
+                key,
+                providers.provider {
+                    com.android.build.api.variant.BuildConfigField(
+                        "String",
+                        "\"${dittoEnv(key)}\"",
+                        null
+                    )
+                }
+            )
         }
     }
 }
@@ -139,16 +147,20 @@ kapt {
     correctErrorTypes = true
 }
 
-fun getLocalProperty(key: String, file: String = "local.properties"): String {
-    val properties = Properties()
-    val localProperties = File(file)
-    if (localProperties.isFile) {
-        InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
-            properties.load(reader)
-        }
-    } else {
-        error("File not found")
+// Reads a value from the shared repo-root .env — the single source of truth
+// for Ditto credentials across the iOS and Android apps. Values are unquoted.
+fun dittoEnv(key: String): String {
+    val envFile = File(rootProject.projectDir.parentFile, ".env")
+    if (!envFile.isFile) {
+        error("Shared .env not found at ${envFile.absolutePath}. Copy .env.template to .env at the repo root.")
     }
-
-    return properties.getProperty(key)
+    val properties = Properties()
+    InputStreamReader(FileInputStream(envFile), Charsets.UTF_8).use { reader ->
+        properties.load(reader)
+    }
+    return properties.getProperty(key)?.ifBlank { null }
+        ?: error(
+            "Missing or blank \"$key\" in ${envFile.absolutePath}. " +
+                "Fill in every value from .env.template before building."
+        )
 }

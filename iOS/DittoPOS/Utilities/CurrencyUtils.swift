@@ -36,10 +36,10 @@ extension Price {
 
 extension Price: CustomStringConvertible {
     static var formatter: NumberFormatter {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.maximumFractionDigits = 2
-        return f
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 2
+        return formatter
     }
 
     var description: String {

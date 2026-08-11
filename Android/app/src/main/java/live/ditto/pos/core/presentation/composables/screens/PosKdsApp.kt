@@ -35,47 +35,32 @@ import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationB
 import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
-import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 
 @Composable
 fun PosKdsApp(
-    viewModel: CoreViewModel = hiltViewModel(LocalActivity.current)
+    viewModel: MainViewModel = hiltViewModel(LocalActivity.current)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val scope = rememberCoroutineScope()
 
     when (state.appConfigurationState) {
         AppConfigurationState.VALID -> {
             PosKdsApp(
                 navHostController = rememberNavController(),
-                state = state,
-                onSettingsUpdated = {
-                    scope.launch {
-                        viewModel.updateAppState()
-                    }
-                }
+                state = state
             )
         }
 
         AppConfigurationState.LOCATION_NEEDED -> {
-            val initialSetupScreen = if (state.isDemoLocationsMode) {
-                SetupScreens.DEMO_LOCATIONS
-            } else {
-                SetupScreens.CUSTOM_LOCATION
-            }
-            InitialSetupScreen(initialScreen = initialSetupScreen)
+            InitialSetupScreen()
         }
-
-        AppConfigurationState.DEMO_OR_CUSTOM_LOCATION_NEEDED -> InitialSetupScreen()
     }
 }
 
 @Composable
 private fun PosKdsApp(
     navHostController: NavHostController,
-    state: AppState,
-    onSettingsUpdated: () -> Unit
+    state: AppState
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -98,8 +83,7 @@ private fun PosKdsApp(
                             if (isClosed) open() else close()
                         }
                     }
-                },
-                onSettingsUpdated = onSettingsUpdated
+                }
             )
         }
     }
@@ -110,13 +94,11 @@ private fun PosKdsApp(
 private fun PosKDSScaffold(
     navHostController: NavHostController,
     state: AppState,
-    onNavigationClicked: () -> Unit,
-    onSettingsUpdated: () -> Unit
+    onNavigationClicked: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
             PosKdsNavigationBar(
-                showDemoLocationsNavItem = state.isDemoLocationsMode,
                 onItemClick = {
                     // Ditto Tools is a drawer destination, not a tab — pop it
                     // explicitly so DittoToolsViewer is fully cleared before
@@ -159,8 +141,7 @@ private fun PosKDSScaffold(
         content = {
             Surface(modifier = Modifier.padding(it)) {
                 PosKdsNavHost(
-                    navHostController = navHostController,
-                    onSettingsUpdated = onSettingsUpdated
+                    navHostController = navHostController
                 )
             }
         }

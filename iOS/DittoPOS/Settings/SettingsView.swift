@@ -10,7 +10,7 @@ import DittoSwift
 import SwiftUI
 
 struct SettingsView: View {
-    private let ditto = DittoService.shared.ditto
+    private let ditto = DittoManager.shared.ditto
 
     var body: some View {
         NavigationView {
