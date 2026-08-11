@@ -9,6 +9,7 @@ import com.ditto.kotlin.DittoFactory
 import com.ditto.kotlin.DittoLogLevel
 import com.ditto.kotlin.DittoLogger
 import com.ditto.kotlin.transports.DittoSyncPermissions
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,12 +23,15 @@ class DittoManager(
     private val dittoServerUrl: String
 ) {
     private val ditto: Ditto? by lazy {
-        // Fail fast on missing build-time credentials (baked into BuildConfig
-        // from .env). Runtime SDK errors below are caught and logged instead.
-        require(dittoDatabaseId.isNotBlank()) { "DITTO_DATABASE_ID is missing. Set it in .env before building." }
-        require(dittoDevelopmentToken.isNotBlank()) { "DITTO_DEVELOPMENT_TOKEN is missing. Set it in .env before building." }
+        // Defensive backstop only: build-time credential validation lives in
+        // build.gradle.kts (getLocalProperty), which fails the build with a
+        // clear message when a credential is missing or blank. These guards
+        // catch anything that slips through blank; runtime SDK errors below are
+        // caught and logged.
+        require(dittoDatabaseId.isNotBlank()) { "DITTO_DATABASE_ID is missing — set dittoDatabaseId in Android/local.properties before building." }
+        require(dittoDevelopmentToken.isNotBlank()) { "DITTO_DEVELOPMENT_TOKEN is missing — set dittoDevelopmentToken in Android/local.properties before building." }
         require(dittoServerUrl.isNotBlank()) {
-            "DITTO_SERVER_URL is missing or invalid: \"$dittoServerUrl\". Set it in .env before building."
+            "DITTO_SERVER_URL is missing — set dittoServerUrl in Android/local.properties before building."
         }
         try {
             DittoLogger.minimumLogLevel = DittoLogLevel.Debug
@@ -50,6 +54,8 @@ class DittoManager(
                             token = dittoDevelopmentToken,
                             provider = DittoAuthenticationProvider.development()
                         )
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Throwable) {
                         Log.e(TAG, "Authentication failed: ${e.message}")
                     }
@@ -72,16 +78,29 @@ class DittoManager(
     /// Sets the sync group from the numeric location ID so that only devices
     /// at the same location form a peer-to-peer mesh.
     fun setSyncGroup(locationId: String) {
-        val value = locationId.toUIntOrNull() ?: return
+        val value = locationId.toUIntOrNull() ?: run {
+            // Non-numeric ids (e.g. legacy custom-location "$company-$location"
+            // installs) can't map to a sync group. Log so this isn't silent —
+            // callers should force a location re-pick for stale ids.
+            Log.w(TAG, "Ignoring non-numeric location id for sync group: \"$locationId\"")
+            return
+        }
         val ditto = requireDitto()
 
-        ditto.sync.stop()
-        ditto.updateTransportConfig { config ->
-            // Isolate the peer-to-peer mesh to devices at this location.
-            // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
-            config.global.syncGroup = value
+        // Best-effort: sync.stop()/start() are @Throws and this runs from
+        // setActiveLocation on a coroutine scope, so a failure here must not
+        // take the app down in release.
+        try {
+            ditto.sync.stop()
+            ditto.updateTransportConfig { config ->
+                // Isolate the peer-to-peer mesh to devices at this location.
+                // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
+                config.global.syncGroup = value
+            }
+            ditto.sync.start()
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to apply sync group $value: ${e.message}")
         }
-        ditto.sync.start()
     }
 
     fun requireDitto(): Ditto {

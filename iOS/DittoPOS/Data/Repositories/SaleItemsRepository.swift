@@ -36,10 +36,12 @@ import DittoSwift
 
     private func setActiveLocation(_ locationId: String) {
         subscription?.cancel()
+
+        // Subscription = the sync set: every sale item for this location. ORDER BY
+        // / LIMIT are illegal on a subscription in v5. A failed registration must
+        // NOT skip the observer below — it's a local read over the store,
+        // independent of the sync set (matches Android's separation).
         do {
-            // Subscription = the sync set: every sale item for this location.
-            // ORDER BY / LIMIT are illegal on a subscription in v5 — ordering is
-            // a presentation concern and lives on the observer below.
             subscription = try sync.registerSubscription(
                 query: """
                     SELECT * FROM \(SaleItem.collectionName)
@@ -47,22 +49,22 @@ import DittoSwift
                     """,
                 arguments: ["locationId": locationId]
             )
-
-            // Observer = the local read that drives the UI, ordered for display.
-            // Its own query string, independent of the subscription's.
-            observer = store.observePublisher(
-                query: """
-                    SELECT * FROM \(SaleItem.collectionName)
-                    WHERE _id.locationId = :locationId
-                    ORDER BY name
-                    """,
-                arguments: ["locationId": locationId],
-                mapTo: SaleItem.self
-            )
-            .replaceError(with: [])
-            .assign(to: \.locationSaleItems, on: self)
         } catch {
             reportSubscriptionFailure("subscribe sale_items", error)
         }
+
+        // Observer = the local read that drives the UI, ordered for display.
+        // Its own query string, independent of the subscription's success.
+        observer = store.observePublisher(
+            query: """
+                SELECT * FROM \(SaleItem.collectionName)
+                WHERE _id.locationId = :locationId
+                ORDER BY name
+                """,
+            arguments: ["locationId": locationId],
+            mapTo: SaleItem.self
+        )
+        .replaceError(with: [])
+        .assign(to: \.locationSaleItems, on: self)
     }
 }

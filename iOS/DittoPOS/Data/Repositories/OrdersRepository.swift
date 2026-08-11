@@ -43,8 +43,12 @@ import Foundation
     private func setActiveLocation(_ locationId: String) {
         subscription?.cancel()
         let args: [String: Any?] = ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
+
+        // Subscription = the sync set: this location's orders since TTL. A failed
+        // registration must NOT skip the observer below — the observer is a local
+        // read over the store, independent of the sync set, so the UI still shows
+        // documents already present locally (matches Android's separation).
         do {
-            // Subscription = the sync set: this location's orders since TTL.
             subscription = try sync.registerSubscription(
                 query: """
                     SELECT * FROM \(Order.collectionName)
@@ -53,24 +57,23 @@ import Foundation
                     """,
                 arguments: args
             )
-
-            // Observer = the local read that drives the UI. Its own query string,
-            // independent of the subscription's, so presentation (ORDER BY / LIMIT)
-            // can diverge without touching the sync set.
-            observer = store.observePublisher(
-                query: """
-                    SELECT * FROM \(Order.collectionName)
-                    WHERE _id.locationId = :locationId
-                        AND createdAt > :TTL
-                    """,
-                arguments: args,
-                mapTo: Order.self
-            )
-            .replaceError(with: [])
-            .assign(to: \.locationOrders, on: self)
         } catch {
             reportSubscriptionFailure("subscribe orders", error)
         }
+
+        // Observer = the local read that drives the UI. Its own query string,
+        // independent of the subscription's success.
+        observer = store.observePublisher(
+            query: """
+                SELECT * FROM \(Order.collectionName)
+                WHERE _id.locationId = :locationId
+                    AND createdAt > :TTL
+                """,
+            arguments: args,
+            mapTo: Order.self
+        )
+        .replaceError(with: [])
+        .assign(to: \.locationOrders, on: self)
     }
 
     // MARK: Single-order observation (used by KDS tile views)

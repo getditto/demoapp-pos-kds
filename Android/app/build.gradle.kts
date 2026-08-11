@@ -142,13 +142,15 @@ kapt {
 fun getLocalProperty(key: String, file: String = "local.properties"): String {
     val properties = Properties()
     val localProperties = File(file)
-    if (localProperties.isFile) {
-        InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
-            properties.load(reader)
-        }
-    } else {
-        error("File not found")
+    require(localProperties.isFile) {
+        "$file not found — copy it and set the Ditto credentials ($key and the other ditto* keys). See Android/README.md."
     }
-
-    return properties.getProperty(key)
+    InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
+        properties.load(reader)
+    }
+    val value = properties.getProperty(key)
+    require(!value.isNullOrBlank()) {
+        "$key is missing or blank in $file — set the Ditto credentials before building. See Android/README.md."
+    }
+    return value
 }
