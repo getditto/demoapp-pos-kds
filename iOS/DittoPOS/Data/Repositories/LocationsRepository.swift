@@ -35,20 +35,31 @@ import DittoSwift
         startSubscription()
         observeAllLocations()
         deriveCurrentLocation()
-        // Restore the persisted active location on launch. Passes through
-        // the same setter the UI uses, so the sync group is applied here too.
+        // Restore the persisted active location on launch — but only if it's
+        // still one of the seven demo locations. Passes through the same setter
+        // the UI uses, so the sync group is applied here too.
         if let saved = Settings.locationId {
-            setActiveLocation(saved)
+            if LocationSeed.demoLocationIds.contains(saved) {
+                setActiveLocation(saved)
+            } else {
+                // Stale id (e.g. a legacy custom location that no longer
+                // exists). Clear it so the user is forced to re-pick, and reset
+                // the sync group to default.
+                setActiveLocation(nil)
+            }
         }
     }
 
     /// Switch the active location. Persists, publishes, and applies Ditto's
-    /// sync group. Pass `nil` to clear the selection.
+    /// sync group. Pass `nil` to clear the selection and reset the sync group
+    /// back to default.
     func setActiveLocation(_ locationId: String?) {
         Settings.locationId = locationId
         currentLocationId = locationId
         if let locationId {
             dittoManager.applySyncGroup(locationId: locationId)
+        } else {
+            dittoManager.resetSyncGroup()
         }
     }
 

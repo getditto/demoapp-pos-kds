@@ -18,8 +18,7 @@ import live.ditto.pos.core.presentation.viewmodel.SettingsViewModel
 @Composable
 fun AdvancedSettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel(),
-    onSettingsUpdated: () -> Unit = {}
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settingsState by viewModel.uiState.collectAsStateWithLifecycle()
 

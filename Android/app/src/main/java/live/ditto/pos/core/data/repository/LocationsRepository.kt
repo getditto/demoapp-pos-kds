@@ -34,12 +34,18 @@ class LocationsRepository @Inject constructor(
 
     init {
         // Restore the persisted active location on first injection (mirrors
-        // iOS, where this happens synchronously in init). The sync group
-        // applies as part of `setActiveLocation`.
+        // iOS) — but only if it's still one of the seven demo locations. A
+        // stale id (e.g. a legacy custom location that no longer exists) is
+        // cleared so the user is forced to re-pick, and the sync group is reset
+        // to default. The sync group applies as part of `setActiveLocation`.
         repoScope.launch {
             val saved = appSettings.locationId()
             if (saved.isNotEmpty()) {
-                setActiveLocation(saved)
+                if (saved in LocationSeed.demoLocationIds) {
+                    setActiveLocation(saved)
+                } else {
+                    setActiveLocation("")
+                }
             }
         }
     }
@@ -57,13 +63,15 @@ class LocationsRepository @Inject constructor(
 
     /**
      * Switch the active location. Persists, applies the sync group, and downstream
-     * repositories react via `locationIdFlow()`. Pass an empty string to
-     * clear the selection.
+     * repositories react via `locationIdFlow()`. Pass an empty string to clear
+     * the selection and reset the sync group back to default.
      */
     suspend fun setActiveLocation(locationId: String) {
         appSettings.setLocationId(locationId = locationId)
         if (locationId.isNotEmpty()) {
             dittoManager.setSyncGroup(locationId)
+        } else {
+            dittoManager.resetSyncGroup()
         }
     }
 

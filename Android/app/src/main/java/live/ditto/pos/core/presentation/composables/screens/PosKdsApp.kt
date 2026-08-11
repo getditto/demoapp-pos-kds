@@ -44,18 +44,11 @@ fun PosKdsApp(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val scope = rememberCoroutineScope()
-
     when (state.appConfigurationState) {
         AppConfigurationState.VALID -> {
             PosKdsApp(
                 navHostController = rememberNavController(),
-                state = state,
-                onSettingsUpdated = {
-                    scope.launch {
-                        viewModel.updateAppState()
-                    }
-                }
+                state = state
             )
         }
 
@@ -68,8 +61,7 @@ fun PosKdsApp(
 @Composable
 private fun PosKdsApp(
     navHostController: NavHostController,
-    state: AppState,
-    onSettingsUpdated: () -> Unit
+    state: AppState
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -93,8 +85,7 @@ private fun PosKdsApp(
                                 if (isClosed) open() else close()
                             }
                         }
-                    },
-                    onSettingsUpdated = onSettingsUpdated
+                    }
                 )
             }
         }
@@ -106,8 +97,7 @@ private fun PosKdsApp(
 private fun PosKDSScaffold(
     navHostController: NavHostController,
     state: AppState,
-    onNavigationClicked: () -> Unit,
-    onSettingsUpdated: () -> Unit
+    onNavigationClicked: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -151,8 +141,7 @@ private fun PosKDSScaffold(
         content = {
             Surface(modifier = Modifier.padding(it)) {
                 PosKdsNavHost(
-                    navHostController = navHostController,
-                    onSettingsUpdated = onSettingsUpdated
+                    navHostController = navHostController
                 )
             }
         }

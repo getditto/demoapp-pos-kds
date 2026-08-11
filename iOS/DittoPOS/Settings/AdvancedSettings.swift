@@ -19,12 +19,6 @@ struct AdvancedSettings: View {
                     Text("No location selected")
                 }
             }
-
-            Section {
-                Button("Reset Location") {
-                    locationsRepository.setActiveLocation(nil)
-                }
-            }
         }
     }
 }

@@ -103,6 +103,23 @@ class DittoManager(
         }
     }
 
+    /// Resets the sync group back to the default (0) when no location is
+    /// active, so the device leaves its per-location mesh.
+    fun resetSyncGroup() {
+        val ditto = requireDitto()
+
+        // Best-effort for the same reason as setSyncGroup above.
+        try {
+            ditto.sync.stop()
+            ditto.updateTransportConfig { config ->
+                config.global.syncGroup = 0u
+            }
+            ditto.sync.start()
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to reset sync group: ${e.message}")
+        }
+    }
+
     fun requireDitto(): Ditto {
         return ditto ?: throw DittoNotCreatedException()
     }

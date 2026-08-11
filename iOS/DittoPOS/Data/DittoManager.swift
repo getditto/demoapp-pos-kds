@@ -89,4 +89,17 @@ final class DittoManager: ObservableObject {
             config.global.syncGroup = value
         }
     }
+
+    /// Reset the sync group back to the default (0) when no location is active,
+    /// so the device leaves its per-location mesh. Bounces sync like
+    /// `applySyncGroup`, since transport changes only take effect at sync start.
+    func resetSyncGroup() {
+        ditto.sync.stop()
+        ditto.updateTransportConfig { config in
+            config.global.syncGroup = 0
+        }
+        do { try ditto.sync.start() } catch {
+            print("Failed to restart sync: \(error)")
+        }
+    }
 }
