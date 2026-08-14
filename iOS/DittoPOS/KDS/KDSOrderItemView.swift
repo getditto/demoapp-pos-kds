@@ -1,10 +1,9 @@
-///
+//
 //  KDSOrderItemView.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 8/31/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import SwiftUI
 
@@ -21,9 +20,8 @@ struct KDSOrderItemView: View {
     }
 }
 
-
 struct KDSOrderItemView_Previews: PreviewProvider {
     static var previews: some View {
-        KDSOrderItemView(title: SaleItem.demoItems[0].title, count: 3)
+        KDSOrderItemView(title: "Burger", count: 3)
     }
 }

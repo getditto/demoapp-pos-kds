@@ -1,59 +1,70 @@
-///
+//
 //  KDSOrderView.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 8/21/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Combine
 import SwiftUI
 
-@MainActor class KDSOrderVM: ObservableObject {
+@MainActor class KDSOrderViewModel: ObservableObject {
     @Published var order: Order
-    private var cancelleables = Set<AnyCancellable>()
-        
-    init(_ order: Order) {
+    private let ordersRepository: OrdersRepository
+    private var cancellables = Set<AnyCancellable>()
+
+    init(_ order: Order, ordersRepository: OrdersRepository) {
         self.order = order
-        
-        DittoService.shared.orderPublisher(order)
-            .filter( {$0.status == .inProcess || $0.status == .processed} )
-            .sink {[weak self] updatedOrder in
+        self.ordersRepository = ordersRepository
+
+        ordersRepository.orderPublisher(order)
+            .filter { $0.status == .inProcess || $0.status == .processed }
+            .sink { [weak self] updatedOrder in
                 self?.order = updatedOrder
             }
-            .store(in: &cancelleables)
+            .store(in: &cancellables)
     }
-    
+
+    // MARK: Derived UI state
+
+    var titleText: String { order.title }
+    var timestampText: String { DateFormatter.shortTime.string(from: order.createdAt) }
+    var headerText: String { "\(timestampText) #\(titleText)" }
+    var statusColor: Color { order.status.color }
+    var statusTitle: String { order.status.title }
+    var summaryEntries: [(key: String, value: Int)] { order.summary.sorted(by: <) }
+    var isPaid: Bool { order.isPaid }
+
     func incrementOrderStatus() {
-        let newStatus = OrderStatus(rawValue: order.status.rawValue + 1)!
-        DittoService.shared.updateStatus(of: order, with: newStatus)
+        guard let next = order.status.next else { return }
+        ordersRepository.updateStatus(of: order, with: next)
     }
 }
 
 struct KDSOrderView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @StateObject var vm: KDSOrderVM
-    
-    init(_ order: Order) {
-        self._vm = StateObject(wrappedValue: KDSOrderVM(order))
+    @StateObject var viewModel: KDSOrderViewModel
+
+    init(_ order: Order, ordersRepository: OrdersRepository) {
+        self._viewModel = StateObject(wrappedValue: KDSOrderViewModel(order, ordersRepository: ordersRepository))
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(timestampText) #\(titleText)")
+            Text(viewModel.headerText)
                 .padding(4)
                 .fixedSize(horizontal: true, vertical: false)
-                .frame(maxWidth: .infinity)                
-                .border(vm.order.status.color, width: 2)
+                .frame(maxWidth: .infinity)
+                .border(viewModel.statusColor, width: 2)
 
-            ForEach(vm.order.summary.sorted(by: <), id: \.key) { key, value in
+            ForEach(viewModel.summaryEntries, id: \.key) { key, value in
                 divider()
                 KDSOrderItemView(title: key, count: value)
             }
 
             HStack(spacing: 0) {
                 Spacer()
-                if vm.order.isPaid {
+                if viewModel.isPaid {
                     Image(systemName: "checkmark.circle")
                         .foregroundColor(.black)
                         .padding(2)
@@ -61,34 +72,11 @@ struct KDSOrderView: View {
             }
             .frame(height: 35)
             .frame(maxWidth: .infinity)
-            .background(vm.order.status.color)
-            #if os(tvOS)
-            Spacer()
-            Button(action: {
-                vm.incrementOrderStatus()
-            }, label: {
-                Text("clear \(vm.order.status.title)")
-                    .font(.caption)
-            })
-            .padding(.horizontal)
-            #endif
+            .background(viewModel.statusColor)
         }
         .padding(4)
         .onTapGesture {
-            vm.incrementOrderStatus()
+            viewModel.incrementOrderStatus()
         }
-    }
-
-    var titleText: String {
-        "\(vm.order.title)"
-    }
-    var timestampText: String {
-        "\(DateFormatter.shortTime.string(from: vm.order.createdOn))"
-    }
-}
-
-struct KDSOrderView_Previews: PreviewProvider {
-    static var previews: some View {
-        KDSOrderView(Order.preview())
     }
 }

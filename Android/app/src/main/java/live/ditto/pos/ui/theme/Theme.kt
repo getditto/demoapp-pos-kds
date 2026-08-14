@@ -40,8 +40,9 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun DittoPoSKDSDemoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic (Material You) color is disabled so the app keeps a consistent
+    // brand palette across devices, including in dark mode.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

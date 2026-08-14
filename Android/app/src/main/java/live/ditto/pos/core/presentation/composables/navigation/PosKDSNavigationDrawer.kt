@@ -26,10 +26,12 @@ fun PosKDSNavigationDrawer(
     navController: NavHostController,
     drawerState: DrawerState,
     scope: CoroutineScope,
+    gesturesEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = gesturesEnabled,
         drawerContent = {
             NavigationDrawerContent(
                 navController = navController,
@@ -81,7 +83,9 @@ private fun PosKdsNavigationDrawerItem(
             scope.launch {
                 drawerState.close()
             }
-            navController.navigate(navigationDrawerItem.route)
+            navController.navigate(navigationDrawerItem.route) {
+                launchSingleTop = true
+            }
         },
         icon = {
             Icon(

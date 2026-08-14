@@ -11,16 +11,13 @@ import live.ditto.pos.core.presentation.navigation.BottomNavItem
 
 @Composable
 fun PosKdsNavigationBar(
-    showDemoLocationsNavItem: Boolean,
     onItemClick: (bottomNavItem: BottomNavItem) -> Unit
 ) {
-    val bottomNavItems = buildList {
-        add(BottomNavItem.PointOfSale)
-        add(BottomNavItem.KitchenDisplay)
-        if (showDemoLocationsNavItem) {
-            add(BottomNavItem.DemoLocationSelection)
-        }
-    }
+    val bottomNavItems = listOf(
+        BottomNavItem.PointOfSale,
+        BottomNavItem.KitchenDisplay,
+        BottomNavItem.DemoLocationSelection
+    )
 
     NavigationBar {
         bottomNavItems.forEach { item ->
@@ -47,7 +44,6 @@ fun PosKdsNavigationBar(
 @Composable
 private fun PosKdsNavigationBarPreview() {
     PosKdsNavigationBar(
-        showDemoLocationsNavItem = true,
         onItemClick = { }
     )
 }

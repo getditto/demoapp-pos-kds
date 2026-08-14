@@ -7,17 +7,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import live.ditto.pos.LocalActivity
 import live.ditto.pos.core.presentation.composables.DemoLocationsList
-import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 
 @Composable
 fun DemoLocationSelectionScreen(
-    coreViewModel: CoreViewModel = hiltViewModel(LocalActivity.current),
+    mainViewModel: MainViewModel = hiltViewModel(LocalActivity.current),
     navHostController: NavHostController
 ) {
     DemoLocationsList(
         modifier = Modifier.fillMaxSize(),
         onDemoLocationSelected = {
-            coreViewModel.updateCurrentLocation(locationId = it.id)
+            mainViewModel.updateCurrentLocation(locationId = it.id)
             navHostController.popBackStack()
         }
     )

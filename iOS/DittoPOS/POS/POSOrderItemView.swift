@@ -1,27 +1,25 @@
-///
+//
 //  POSOrderItemView.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/21/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import SwiftUI
 
-extension POSOrderItemView: Identifiable {
-    var id: String { item.id }
-}
+struct POSOrderItemView: View, Identifiable {
+    let lineItemId: String
+    let item: CartLineItem
+    var id: String { lineItemId }
 
-struct POSOrderItemView: View {
-    let item: OrderItem
-
-    init(_ item: OrderItem) {
-        self.item = item        
+    init(lineItemId: String, _ item: CartLineItem) {
+        self.lineItemId = lineItemId
+        self.item = item
     }
-    
+
     var body: some View {
         HStack {
-            Text(item.title)
+            Text(item.name)
             Spacer()
             Text(item.price.description)
         }
@@ -32,7 +30,13 @@ struct POSOrderItemView: View {
 struct POSOrderItemView_Previews: PreviewProvider {
     static var previews: some View {
         POSOrderItemView(
-            OrderItem(saleItem: SaleItem.demoItems[0])
+            lineItemId: "preview",
+            CartLineItem(
+                saleItemId: "00001",
+                name: "Burger",
+                imageName: "burger",
+                price: Price(cents: 850)
+            )
         )
     }
 }

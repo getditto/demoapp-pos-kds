@@ -9,9 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import live.ditto.ditto_wrapper.DittoManager
-import live.ditto.ditto_wrapper.DittoStoreManager
 import live.ditto.pos.BuildConfig
-import live.ditto.pos.core.domain.repository.CoreRepository
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Singleton
 
 @Module
@@ -22,47 +21,39 @@ internal object AppModule {
     @Singleton
     fun provideDittoManager(
         @ApplicationContext context: Context,
-        @DittoOnlinePlaygroundAppId onlinePlaygroundAppId: String,
-        @DittoOnlinePlaygroundAppToken dittoOnlinePlaygroundAppToken: String,
-        @DittoWebsocketURL dittoWebsocketURL: String
+        @DittoDatabaseId databaseId: String,
+        @DittoDevelopmentToken developmentToken: String,
+        @DittoServerUrl serverUrl: String
     ): DittoManager {
         return DittoManager(
             context = context,
-            dittoOnlinePlaygroundAppId = onlinePlaygroundAppId,
-            dittoOnlinePlaygroundToken = dittoOnlinePlaygroundAppToken,
-            dittoWebsocketURL = dittoWebsocketURL
+            dittoDatabaseId = databaseId,
+            dittoDevelopmentToken = developmentToken,
+            dittoServerUrl = serverUrl
         )
     }
 
+    @DittoDatabaseId
     @Provides
-    @Singleton
-    fun provideDittoStoreManager(
-        dittoManager: DittoManager
-    ): DittoStoreManager {
-        return DittoStoreManager(dittoManager.requireDitto())
+    fun provideDittoDatabaseId(): String {
+        return BuildConfig.DITTO_DATABASE_ID
     }
 
-    @DittoOnlinePlaygroundAppId
+    @DittoDevelopmentToken
     @Provides
-    fun provideDittoOnlinePlaygroundAppId(): String {
-        return BuildConfig.DITTO_ONLINE_PLAYGROUND_APP_ID
+    fun provideDittoDevelopmentToken(): String {
+        return BuildConfig.DITTO_DEVELOPMENT_TOKEN
     }
 
-    @DittoOnlinePlaygroundAppToken
+    @DittoServerUrl
     @Provides
-    fun provideDittoOnlinePlaygroundAppToken(): String {
-        return BuildConfig.DITTO_ONLINE_PLAYGROUND_TOKEN
-    }
-
-    @DittoWebsocketURL
-    @Provides
-    fun provideDittoWebsocketURL(): String {
-        return BuildConfig.DITTO_WEBSOCKET_URL
+    fun provideDittoServerUrl(): String {
+        return BuildConfig.DITTO_SERVER_URL
     }
 
     @Provides
-    fun provideCoreRepository(@ApplicationContext context: Context): CoreRepository {
-        return CoreRepository(context)
+    fun provideAppSettings(@ApplicationContext context: Context): AppSettings {
+        return AppSettings(context)
     }
 
     @Provides

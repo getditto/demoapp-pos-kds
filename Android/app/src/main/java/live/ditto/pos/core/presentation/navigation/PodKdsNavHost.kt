@@ -5,18 +5,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.ditto.tools.toolsviewer.DittoToolsViewer
 import live.ditto.pos.core.presentation.composables.screens.AdvancedSettingsScreen
 import live.ditto.pos.core.presentation.composables.screens.DemoLocationSelectionScreen
-import live.ditto.pos.core.presentation.viewmodel.CoreViewModel
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
-import live.ditto.tools.toolsviewer.DittoToolsViewer
 
 @Composable
 fun PosKdsNavHost(
     navHostController: NavHostController,
-    viewModel: CoreViewModel = hiltViewModel(),
-    onSettingsUpdated: () -> Unit
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     NavHost(
         navController = navHostController,
@@ -40,12 +39,7 @@ fun PosKdsNavHost(
             )
         }
         composable(NavigationDrawerItem.AdvancedSettingsDrawerItem.route) {
-            AdvancedSettingsScreen(
-                onSettingsUpdated = {
-                    navHostController.popBackStack()
-                    onSettingsUpdated()
-                }
-            )
+            AdvancedSettingsScreen()
         }
     }
 }

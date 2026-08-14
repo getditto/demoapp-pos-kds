@@ -1,10 +1,9 @@
-///
+//
 //  Utils.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/16/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import SwiftUI
 
@@ -36,7 +35,6 @@ extension Color {
     static let gray5 = Color("systemGray5", bundle: .main)
 }
 
-#if !os(tvOS)
 extension View {
     func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
         self.modifier(DeviceRotationViewModifier(action: action))
@@ -84,11 +82,6 @@ extension UIDeviceOrientation: CustomStringConvertible {
         }
     }
 }
-#endif
-
-extension NSNotification.Name {
-    static let willUpdateToLocationId = Notification.Name("willUpdateToLocationId")
-}
 
 // https://www.swiftbysundell.com/articles/reducers-in-swift/
 extension Sequence {
@@ -101,25 +94,18 @@ extension Sequence {
 
 extension DateFormatter {
     static var shortTime: DateFormatter {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
     }
 
-    static var isoDate: ISO8601DateFormatter {
-        let f = ISO8601DateFormatter()
-        f.formatOptions.insert(.withFractionalSeconds)
-        return f
-    }
-    
-    static var isoDateFull: ISO8601DateFormatter {
-        let f = Self.isoDate
-        f.formatOptions = [.withFullDate]
-        return f
-    }
-    
-    static func isoTimeFromNowString(_ seconds: TimeInterval) -> String {
-        isoDate.string(from: Date().addingTimeInterval(seconds))
+    /// Local midnight (start of today) in the canonical Ditto wire format.
+    /// Using a fixed daily boundary means every device at the same location
+    /// produces the same subscription query, which is important for Ditto
+    /// sync efficiency.
+    static var startOfTodayString: String {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        return DittoWireDate.string(from: startOfDay)
     }
 }
 

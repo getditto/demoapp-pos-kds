@@ -1,20 +1,24 @@
-///
+//
 //  CurrencyUtils.swift
 //  DittoPOS
 //
-//  Created by Eric Turner on 6/24/23.
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
 import Foundation
 
-// https://swiftbysundell.com/articles/formatting-numbers-in-swift/
-
-struct Price: Codable {
-    var amount: Double
+// Whole-number minor units (cents for USD) avoids floating-point drift.
+struct Price: Codable, Hashable, Equatable {
+    var amount: Int
     var currency: Currency
-    init(_ amt: Double, currency: Currency = .usd) {
-        self.amount = amt
+
+    init(cents: Int, currency: Currency = .usd) {
+        self.amount = cents
+        self.currency = currency
+    }
+
+    init(dollars: Double, currency: Currency = .usd) {
+        self.amount = Int((dollars * 100).rounded())
         self.currency = currency
     }
 }
@@ -26,24 +30,27 @@ enum Currency: String, Codable {
     case usd
 }
 
+extension Price {
+    var dollars: Double { Double(amount) / 100.0 }
+}
+
 extension Price: CustomStringConvertible {
     static var formatter: NumberFormatter {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.maximumFractionDigits = 2
-        return f
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 2
+        return formatter
     }
 
     var description: String {
         let formatter = Self.formatter
         formatter.currencyCode = currency.rawValue
-        let number = NSNumber(value: amount)
-        return formatter.string(from: number)!
+        return formatter.string(from: NSNumber(value: dollars))!
     }
 }
 
 extension Double {
     func currencyFormatted() -> String {
-        Price(self).description
+        Price(dollars: self).description
     }
 }
