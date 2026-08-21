@@ -18,19 +18,32 @@ struct LocationRowView: View {
 
 struct LocationsView: View {
     @StateObject private var viewModel: LocationsViewModel
+    private let title: String
 
-    init(locationsRepository: LocationsRepository) {
+    init(locationsRepository: LocationsRepository, title: String = "Locations") {
         _viewModel = StateObject(wrappedValue: LocationsViewModel(locationsRepository: locationsRepository))
+        self.title = title
     }
 
     var body: some View {
         VStack {
-            List(viewModel.locations, id: \.self, selection: viewModel.selectionBinding) { item in
-                LocationRowView(location: item)
+            if viewModel.locations.isEmpty {
+                // This is the blocking setup screen until a location is picked,
+                // so an empty list would be indistinguishable from a hang.
+                // Locations are seeded into the local store on launch, so this
+                // shows only until that lands. Deliberately not a fallback to
+                // LocationSeed — that would mask a seed that never lands.
+                Spacer()
+                ProgressView("Loading locations…")
+                Spacer()
+            } else {
+                List(viewModel.locations, id: \.self, selection: viewModel.selectionBinding) { item in
+                    LocationRowView(location: item)
+                }
+                Spacer()
             }
-            Spacer()
         }
-        .navigationBarTitle("Locations")
+        .navigationBarTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
