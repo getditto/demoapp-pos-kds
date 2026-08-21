@@ -1,19 +1,17 @@
 package live.ditto.pos.core.domain.usecase
 
-import live.ditto.pos.core.data.demo.LocationSeed
+import kotlinx.coroutines.flow.Flow
 import live.ditto.pos.core.data.locations.Location
-import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
-import live.ditto.pos.settings.AppSettings
+import live.ditto.pos.core.data.repository.LocationsRepository
 import javax.inject.Inject
 
+/**
+ * The active location, resolved against the synced `locations` collection and
+ * emitted on every change. Mirrors iOS `LocationsRepository.currentLocation`.
+ */
 class GetCurrentLocationUseCase @Inject constructor(
-    private val appSettings: AppSettings,
-    private val appConfigurationStateUseCase: AppConfigurationStateUseCase
+    private val locationsRepository: LocationsRepository
 ) {
 
-    suspend operator fun invoke(): Location? {
-        if (appConfigurationStateUseCase() != AppConfigurationState.VALID) return null
-        val locationId = appSettings.locationId()
-        return LocationSeed.demoLocations.find { it.id == locationId }
-    }
+    operator fun invoke(): Flow<Location?> = locationsRepository.currentLocationFlow()
 }

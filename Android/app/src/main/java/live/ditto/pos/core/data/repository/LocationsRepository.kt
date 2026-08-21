@@ -6,7 +6,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.demo.LocationSeed
@@ -31,6 +34,19 @@ class LocationsRepository @Inject constructor(
     private val ditto: Ditto get() = dittoManager.requireDitto()
     private var subscription: DittoSyncSubscription? = null
     private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /**
+     * One shared observer on `locations`, mirroring iOS's single `allLocations`
+     * publisher. `by lazy` so `requireDitto()` isn't touched at injection time,
+     * and `stateIn` so every consumer replays the latest list off one observer
+     * instead of opening its own.
+     */
+    private val allLocations by lazy {
+        ditto.store
+            .observeAsFlow<Location>("SELECT * FROM ${Location.COLLECTION_NAME}")
+            .map { locations -> locations.filter { it.id in LocationSeed.demoLocationIds } }
+            .stateIn(repoScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+    }
 
     init {
         // Restore the persisted active location on first injection (mirrors
@@ -78,8 +94,20 @@ class LocationsRepository @Inject constructor(
     /** Reactive stream of the active location id. Empty string when not set. */
     fun locationIdFlow(): Flow<String> = appSettings.locationIdFlow()
 
-    fun observeAllLocations(): Flow<List<Location>> =
-        ditto.store
-            .observeAsFlow<Location>("SELECT * FROM ${Location.COLLECTION_NAME}")
-            .map { locations -> locations.filter { it.id in LocationSeed.demoLocationIds } }
+    fun observeAllLocations(): Flow<List<Location>> = allLocations
+
+    /**
+     * The active location resolved against the synced `locations` collection.
+     * Null when nothing is selected, or when the saved id isn't one of the demo
+     * locations — [observeAllLocations] already filters to those, so no separate
+     * validity check is needed. Mirrors iOS `LocationsRepository.currentLocation`.
+     */
+    fun currentLocationFlow(): Flow<Location?> =
+        combine(locationIdFlow(), observeAllLocations()) { locationId, locations ->
+            if (locationId.isEmpty()) null else locations.firstOrNull { it.id == locationId }
+        }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
 }
