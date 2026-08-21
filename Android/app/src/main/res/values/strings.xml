@@ -13,6 +13,7 @@
     <string name="kds_ticket_header">%1$s #%2$s</string>
     <string name="ticket_paid_description">Check Mark</string>
     <string name="location_selection_title">Please Select Location</string>
+    <string name="location_selection_loading">Loading locations…</string>
     <string name="hamburger_menu">Menu</string>
     <string name="navigation_drawer_label_advanced_settings">Advanced Settings</string>
     <string name="settings_location_section_header">Location</string>
