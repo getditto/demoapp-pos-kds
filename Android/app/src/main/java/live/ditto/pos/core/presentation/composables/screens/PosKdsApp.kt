@@ -52,7 +52,7 @@ fun PosKdsApp(
         }
 
         AppConfigurationState.LOCATION_NEEDED -> {
-            InitialSetupScreen()
+            InitialSetupScreen(locations = state.locations)
         }
     }
 }

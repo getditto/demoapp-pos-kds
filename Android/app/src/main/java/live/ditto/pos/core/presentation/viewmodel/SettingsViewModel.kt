@@ -6,8 +6,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import javax.inject.Inject
@@ -25,18 +27,16 @@ class SettingsViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateUiState()
-        }
-    }
-
-    private suspend fun updateUiState() {
-        val currentLocation = currentLocationUseCase()
-        _uiState.update {
-            it.copy(
-                currentLocation = currentLocation
-            )
-        }
+        currentLocationUseCase()
+            .onEach { currentLocation ->
+                _uiState.update {
+                    it.copy(
+                        currentLocation = currentLocation
+                    )
+                }
+            }
+            .flowOn(Dispatchers.IO)
+            .launchIn(viewModelScope)
     }
 }
 
