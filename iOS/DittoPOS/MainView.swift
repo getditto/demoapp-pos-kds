@@ -25,28 +25,40 @@ struct MainView: View {
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $viewModel.selectedTab) {
-                POSView(
-                    ordersRepository: ordersRepository,
-                    saleItemsRepository: saleItemsRepository,
-                    locationsRepository: locationsRepository
-                )
-                .tabItem {
-                    Label("POS", systemImage: "dot.squareshape")
+            Group {
+                if viewModel.needsLocation {
+                    // Blocks the app until a location is picked, rather than
+                    // letting the user reach an inert POS/KDS. Mirrors Android
+                    // showing `InitialSetupScreen` in place of the app.
+                    LocationsView(
+                        locationsRepository: locationsRepository,
+                        title: viewModel.mainTitle
+                    )
+                } else {
+                    TabView(selection: $viewModel.selectedTab) {
+                        POSView(
+                            ordersRepository: ordersRepository,
+                            saleItemsRepository: saleItemsRepository,
+                            locationsRepository: locationsRepository
+                        )
+                        .tabItem {
+                            Label("POS", systemImage: "dot.squareshape")
+                        }
+                        .tag(TabViews.pos)
+
+                        KDSView(ordersRepository: ordersRepository)
+                            .tabItem {
+                                Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
+                            }
+                            .tag(TabViews.kds)
+
+                        LocationsView(locationsRepository: locationsRepository)
+                            .tabItem {
+                                Label("Locations", systemImage: "globe")
+                            }
+                            .tag(TabViews.locations)
+                    }
                 }
-                .tag(TabViews.pos)
-
-                KDSView(ordersRepository: ordersRepository)
-                    .tabItem {
-                        Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
-                    }
-                    .tag(TabViews.kds)
-
-                LocationsView(locationsRepository: locationsRepository)
-                    .tabItem {
-                        Label("Locations", systemImage: "globe")
-                    }
-                    .tag(TabViews.locations)
             }
             .sheet(isPresented: $viewModel.presentSettingsView) {
                 SettingsView()
@@ -64,7 +76,6 @@ struct MainView: View {
             .navigationTitle(viewModel.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(StackNavigationViewStyle())
-            .onAppear { viewModel.ensureLocationSelected() }
         }
     }
 }
