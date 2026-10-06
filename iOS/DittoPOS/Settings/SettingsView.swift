@@ -17,11 +17,6 @@ struct SettingsView: View {
             VStack {
                 AllToolsMenu(ditto: ditto)
 
-                NavigationLink(destination: AdvancedSettings()) {
-                    Label("Advanced Settings", systemImage: "gear")
-                        .padding()
-                }
-
                 Text("SDK Version: \(Ditto.version)")
                     .padding()
             }

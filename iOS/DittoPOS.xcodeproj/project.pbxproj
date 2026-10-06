@@ -13,7 +13,6 @@
 		112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */; };
 		14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BED2A465F37001903ED /* POSOrderTotalView.swift */; };
 		14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
-		140421CF2B9AB6B800778C1B /* AdvancedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */; };
 		1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */; };
 		1460E33B2A93DA5D007A2A6D /* KDSOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */; };
 		1460E33D2A93DCC8007A2A6D /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
@@ -69,7 +68,6 @@
 		114542C92C52866300DED6A7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		14039BED2A465F37001903ED /* POSOrderTotalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSOrderTotalView.swift; sourceTree = "<group>"; };
 		14039BEF2A4789AE001903ED /* CurrencyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyUtils.swift; sourceTree = "<group>"; };
-		140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettings.swift; sourceTree = "<group>"; };
 		1414DEC12AA0F8D600D9CE87 /* KDSOrderItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderItemView.swift; sourceTree = "<group>"; };
 		1460E33A2A93DA5D007A2A6D /* KDSOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSOrderView.swift; sourceTree = "<group>"; };
 		1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSViewModel.swift; sourceTree = "<group>"; };
@@ -258,7 +256,6 @@
 		14DECF0B2A3BDC0A005BC2AE /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				140421CE2B9AB6B700778C1B /* AdvancedSettings.swift */,
 				148071152A8C2E930091EC03 /* SettingsView.swift */,
 				07F1B1FC2C2B690A007AB5A2 /* SettingsModel.swift */,
 			);
@@ -445,7 +442,6 @@
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
-				140421CF2B9AB6B800778C1B /* AdvancedSettings.swift in Sources */,
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
 				1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,

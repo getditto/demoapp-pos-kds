@@ -6,7 +6,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ditto.tools.toolsviewer.DittoToolsViewer
-import live.ditto.pos.core.presentation.composables.screens.AdvancedSettingsScreen
 import live.ditto.pos.core.presentation.composables.screens.DemoLocationSelectionScreen
 import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
@@ -37,9 +36,6 @@ fun PosKdsNavHost(
                 ditto = viewModel.requireDitto(),
                 onExitTools = { navHostController.popBackStack() }
             )
-        }
-        composable(NavigationDrawerItem.AdvancedSettingsDrawerItem.route) {
-            AdvancedSettingsScreen()
         }
     }
 }

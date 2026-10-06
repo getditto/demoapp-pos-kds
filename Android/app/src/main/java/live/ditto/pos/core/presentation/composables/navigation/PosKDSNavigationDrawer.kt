@@ -18,7 +18,6 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
-import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem.AdvancedSettingsDrawerItem
 import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem.DittoToolsDrawerItem
 
 @Composable
@@ -54,13 +53,6 @@ private fun NavigationDrawerContent(
         Spacer(modifier = Modifier.height(16.dp))
         PosKdsNavigationDrawerItem(
             navigationDrawerItem = DittoToolsDrawerItem,
-            scope = scope,
-            drawerState = drawerState,
-            navController = navController
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        PosKdsNavigationDrawerItem(
-            navigationDrawerItem = AdvancedSettingsDrawerItem,
             scope = scope,
             drawerState = drawerState,
             navController = navController
