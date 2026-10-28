@@ -123,7 +123,7 @@ private fun PosKDSScaffold(
                 title = {
                     Text(text = state.currentLocationName)
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
