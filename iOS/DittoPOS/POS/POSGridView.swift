@@ -13,20 +13,18 @@ struct POSGridView: View {
     @EnvironmentObject var layoutViewModel: POSLayoutViewModel
 
     var body: some View {
-        NavigationStack {
-            ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: layoutViewModel.gridColumns(for: horizontalSizeClass)) {
-                    ForEach(viewModel.saleItems, id: \.self) { item in
-                        let side = layoutViewModel.itemSide(for: horizontalSizeClass)
-                        SaleItemView(item, length: side)
-                            .frame(width: side, height: side + 8)
-                            .onTapGesture {
-                                viewModel.addOrderItem(item)
-                            }
-                    }
+        ScrollView(showsIndicators: false) {
+            LazyVGrid(columns: layoutViewModel.gridColumns(for: horizontalSizeClass)) {
+                ForEach(viewModel.saleItems, id: \.self) { item in
+                    let side = layoutViewModel.itemSide(for: horizontalSizeClass)
+                    SaleItemView(item, length: side)
+                        .frame(width: side, height: side + 8)
+                        .onTapGesture {
+                            viewModel.addOrderItem(item)
+                        }
                 }
-                .padding(.vertical, 16)
             }
+            .padding(.vertical, 16)
         }
     }
 }
