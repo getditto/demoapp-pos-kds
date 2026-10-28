@@ -24,40 +24,28 @@ internal object AppModule {
         @DittoDatabaseId databaseId: String,
         @DittoDevelopmentToken developmentToken: String,
         @DittoServerUrl serverUrl: String
-    ): DittoManager {
-        return DittoManager(
-            context = context,
-            dittoDatabaseId = databaseId,
-            dittoDevelopmentToken = developmentToken,
-            dittoServerUrl = serverUrl
-        )
-    }
+    ): DittoManager = DittoManager(
+        context = context,
+        dittoDatabaseId = databaseId,
+        dittoDevelopmentToken = developmentToken,
+        dittoServerUrl = serverUrl
+    )
 
     @DittoDatabaseId
     @Provides
-    fun provideDittoDatabaseId(): String {
-        return BuildConfig.DITTO_DATABASE_ID
-    }
+    fun provideDittoDatabaseId(): String = BuildConfig.DITTO_DATABASE_ID
 
     @DittoDevelopmentToken
     @Provides
-    fun provideDittoDevelopmentToken(): String {
-        return BuildConfig.DITTO_DEVELOPMENT_TOKEN
-    }
+    fun provideDittoDevelopmentToken(): String = BuildConfig.DITTO_DEVELOPMENT_TOKEN
 
     @DittoServerUrl
     @Provides
-    fun provideDittoServerUrl(): String {
-        return BuildConfig.DITTO_SERVER_URL
-    }
+    fun provideDittoServerUrl(): String = BuildConfig.DITTO_SERVER_URL
 
     @Provides
-    fun provideAppSettings(@ApplicationContext context: Context): AppSettings {
-        return AppSettings(context)
-    }
+    fun provideAppSettings(@ApplicationContext context: Context): AppSettings = AppSettings(context)
 
     @Provides
-    fun provideDispatcherIO(): CoroutineDispatcher {
-        return Dispatchers.IO
-    }
+    fun provideDispatcherIO(): CoroutineDispatcher = Dispatchers.IO
 }

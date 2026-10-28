@@ -1,9 +1,9 @@
 package live.ditto.pos.core.data
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import java.util.UUID
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 // Snapshot of a SaleItem at add-time — the receipt records the price the
 // customer paid, not the current SaleItem price.

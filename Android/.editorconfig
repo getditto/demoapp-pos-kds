@@ -1,0 +1,11 @@
+root = true
+
+[*.{kt,kts}]
+# Kotlin coding conventions, matching kotlin.code.style=official in gradle.properties.
+ktlint_code_style = intellij_idea
+ij_kotlin_allow_trailing_comma = false
+ij_kotlin_allow_trailing_comma_on_call_site = false
+# Composable functions are PascalCase by convention.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+# Without max_line_length this rule joins signatures and bodies regardless of length.
+ktlint_standard_function-signature = disabled

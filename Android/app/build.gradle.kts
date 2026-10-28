@@ -4,17 +4,16 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.dagger.hilt.android)
     alias(libs.plugins.ktlint)
-    alias(libs.plugins.jetbrains.kotlin.kapt)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.plugin.compose)
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 android {
     namespace = "live.ditto.pos"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "live.ditto.pos"
@@ -50,9 +49,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -110,16 +106,16 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestAnnotationProcessor(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
 
     // Hilt For local unit tests
     testImplementation(libs.hilt.android.testing)
-    testAnnotationProcessor(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
 
     // Ditto
     implementation(libs.ditto)
@@ -141,10 +137,6 @@ dependencies {
 
     // KotlinX Serialization (JSON)
     implementation(libs.kotlinx.serialization.json)
-}
-
-kapt {
-    correctErrorTypes = true
 }
 
 // Reads a value from the shared repo-root .env — the single source of truth

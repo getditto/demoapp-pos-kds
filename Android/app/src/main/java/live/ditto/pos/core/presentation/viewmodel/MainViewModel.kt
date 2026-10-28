@@ -91,9 +91,7 @@ class MainViewModel @Inject constructor(
         refreshDittoPermissionsUseCase()
     }
 
-    fun requireDitto(): Ditto {
-        return getDittoInstanceUseCase()
-    }
+    fun requireDitto(): Ditto = getDittoInstanceUseCase()
 
     /**
      * The only writer. Persisting the id is what advances the gate, the title,

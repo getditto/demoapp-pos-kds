@@ -34,9 +34,7 @@ class AppSettings @Inject constructor(
         private val currentOrderId = stringPreferencesKey("current_order_id")
     }
 
-    suspend fun locationId(): String {
-        return getStringPreference(locationIdKey)
-    }
+    suspend fun locationId(): String = getStringPreference(locationIdKey)
 
     /**
      * Reactive stream of the current location id. Empty string when not set.
@@ -52,9 +50,7 @@ class AppSettings @Inject constructor(
         setPreferences(locationIdKey, locationId)
     }
 
-    suspend fun currentOrderId(): String {
-        return getStringPreference(currentOrderId)
-    }
+    suspend fun currentOrderId(): String = getStringPreference(currentOrderId)
 
     suspend fun setCurrentOrderId(orderId: String) {
         setPreferences(currentOrderId, orderId)
@@ -63,12 +59,10 @@ class AppSettings @Inject constructor(
     private suspend fun getStringPreference(
         preferencesKey: Preferences.Key<String>,
         defaultValue: String = ""
-    ): String {
-        return context.dataStore.data
-            .map { preferences ->
-                preferences[preferencesKey]
-            }.first() ?: defaultValue
-    }
+    ): String = context.dataStore.data
+        .map { preferences ->
+            preferences[preferencesKey]
+        }.first() ?: defaultValue
 
     private suspend fun <T> setPreferences(
         preferencesKey: Preferences.Key<T>,

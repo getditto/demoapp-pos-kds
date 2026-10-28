@@ -32,7 +32,7 @@ extension View {
 }
 
 extension Color {
-    static let gray5 = Color("systemGray5", bundle: .main)
+    static let gray5 = Color("AppGray5", bundle: .main)
 }
 
 extension View {
@@ -50,36 +50,6 @@ struct DeviceRotationViewModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
                 action(UIDevice.current.orientation)
             }
-    }
-}
-
-extension UIDeviceOrientation: CustomStringConvertible {
-    public var isLandscape: Bool {
-        self == .landscapeLeft || self == .landscapeRight
-    }
-    public var isPortrait: Bool {
-        self == .portrait || self == .portraitUpsideDown
-    }
-    
-    public var description: String {
-        switch self {
-        case .unknown:
-            return "unknown"
-        case .portrait:
-            return "portrait"
-        case .portraitUpsideDown:
-            return "portraitUpsideDown"
-        case .landscapeLeft:
-            return "landscapeLeft"
-        case .landscapeRight:
-            return "landscapeRight"
-        case .faceUp:
-            return "faceUp"
-        case .faceDown:
-            return "faceDown"
-        default:
-            return "unknown case"
-        }
     }
 }
 

@@ -1,13 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.dagger.hilt.android)
-    alias(libs.plugins.jetbrains.kotlin.kapt)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "live.ditto.ditto_wrapper"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 28
@@ -49,16 +48,15 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestAnnotationProcessor(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
 
     // Hilt For local unit tests
     testImplementation(libs.hilt.android.testing)
-    testAnnotationProcessor(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
 
     // Ditto
     implementation(libs.ditto)

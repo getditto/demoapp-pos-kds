@@ -3,6 +3,7 @@ package live.ditto.pos
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -18,5 +19,13 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("live.ditto.pos", appContext.packageName)
+    }
+
+    @Test
+    fun applicationDependenciesAreInjected() {
+        val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as DittoPOSApplication
+        assertNotNull(app.dittoManager)
+        assertNotNull(app.locationsRepository)
+        assertNotNull(app.ordersRepository)
     }
 }

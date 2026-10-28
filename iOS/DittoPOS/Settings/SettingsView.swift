@@ -13,7 +13,7 @@ struct SettingsView: View {
     private let ditto = DittoManager.shared.ditto
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 AllToolsMenu(ditto: ditto)
 
