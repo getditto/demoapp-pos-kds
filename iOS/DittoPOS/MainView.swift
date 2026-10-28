@@ -75,7 +75,6 @@ struct MainView: View {
             }
             .navigationTitle(viewModel.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 }

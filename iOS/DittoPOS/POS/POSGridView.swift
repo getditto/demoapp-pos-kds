@@ -13,7 +13,7 @@ struct POSGridView: View {
     @EnvironmentObject var layoutViewModel: POSLayoutViewModel
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: layoutViewModel.gridColumns(for: horizontalSizeClass)) {
                     ForEach(viewModel.saleItems, id: \.self) { item in
