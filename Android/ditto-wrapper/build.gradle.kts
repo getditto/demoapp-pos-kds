@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.google.dagger.hilt.android)
-    alias(libs.plugins.android.legacy.kapt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -48,16 +48,16 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     // Hilt For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
-    androidTestAnnotationProcessor(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
 
     // Hilt For local unit tests
     testImplementation(libs.hilt.android.testing)
-    testAnnotationProcessor(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
 
     // Ditto
     implementation(libs.ditto)
