@@ -23,6 +23,14 @@ final class DittoWireDateTests: XCTestCase {
         }
     }
 
+    func testSubMillisecondDigitsAreTruncatedNotRounded() throws {
+        let data = Data("{\"createdAt\":\"2026-04-01T23:59:59.9999Z\"}".utf8)
+        let payload = try JSONDecoder.ditto.decode(Payload.self, from: data)
+        let encoded = try JSONEncoder.ditto.encode(payload)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: String])
+        XCTAssertEqual(json["createdAt"], "2026-04-01T23:59:59.999Z")
+    }
+
     func testInvalidTimestampIsRejected() {
         let data = Data("{\"createdAt\":\"invalid\"}".utf8)
         XCTAssertThrowsError(try JSONDecoder.ditto.decode(Payload.self, from: data))

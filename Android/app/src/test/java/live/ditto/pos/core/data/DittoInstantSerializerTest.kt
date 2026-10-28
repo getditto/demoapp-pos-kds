@@ -23,6 +23,17 @@ class DittoInstantSerializerTest {
     }
 
     @Test
+    fun `sub-millisecond digits are truncated, not rounded`() {
+        val instant = Instant.parse("2026-04-01T23:59:59.9999Z")
+        assertEquals("\"2026-04-01T23:59:59.999Z\"", dittoJson.encodeToString(DittoInstantSerializer, instant))
+    }
+
+    @Test
+    fun `descriptor names the custom serializer`() {
+        assertEquals("live.ditto.pos.DittoInstant", DittoInstantSerializer.descriptor.serialName)
+    }
+
+    @Test
     fun `invalid timestamp is rejected`() {
         assertThrows(IllegalArgumentException::class.java) {
             dittoJson.decodeFromString(DittoInstantSerializer, "\"invalid\"")
