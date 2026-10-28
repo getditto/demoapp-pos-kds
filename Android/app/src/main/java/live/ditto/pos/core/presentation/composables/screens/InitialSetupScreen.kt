@@ -2,7 +2,7 @@ package live.ditto.pos.core.presentation.composables.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import live.ditto.pos.LocalActivity
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.presentation.composables.DemoLocationsList

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository

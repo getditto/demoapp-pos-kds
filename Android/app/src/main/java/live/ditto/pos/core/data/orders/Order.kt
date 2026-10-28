@@ -1,7 +1,7 @@
 package live.ditto.pos.core.data.orders
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import live.ditto.pos.core.data.CartLineItem

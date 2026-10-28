@@ -43,7 +43,7 @@ struct LocationsView: View {
                 Spacer()
             }
         }
-        .navigationBarTitle(title)
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
