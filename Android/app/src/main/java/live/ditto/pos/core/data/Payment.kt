@@ -1,10 +1,10 @@
 package live.ditto.pos.core.data
 
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Serializable
 enum class PaymentType {

@@ -153,6 +153,6 @@ fun dittoEnv(key: String): String {
     return properties.getProperty(key)?.ifBlank { null }
         ?: error(
             "Missing or blank \"$key\" in ${envFile.absolutePath}. " +
-                "Fill in every value from .env.template before building.",
+                "Fill in every value from .env.template before building."
         )
 }

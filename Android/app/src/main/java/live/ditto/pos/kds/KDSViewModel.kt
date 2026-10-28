@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlin.time.Instant
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository
@@ -24,6 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel

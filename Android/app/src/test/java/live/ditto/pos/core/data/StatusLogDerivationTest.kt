@@ -1,8 +1,8 @@
 package live.ditto.pos.core.data
 
-import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.time.Instant
 
 class StatusLogDerivationTest {
 

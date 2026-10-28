@@ -7,7 +7,5 @@ class GetMissingPermissionsUseCase @Inject constructor(
     private val dittoManager: DittoManager
 ) {
 
-    operator fun invoke(): Array<String> {
-        return dittoManager.missingPermissions()
-    }
+    operator fun invoke(): Array<String> = dittoManager.missingPermissions()
 }

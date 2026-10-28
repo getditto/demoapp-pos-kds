@@ -1,9 +1,9 @@
 package live.ditto.pos.core.data
 
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 // Order status modeled as a timestamp-keyed audit log instead of a single
 // LWW field. Every transition is preserved (Ditto's add-wins map merge);

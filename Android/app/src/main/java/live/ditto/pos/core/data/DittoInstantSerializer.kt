@@ -1,7 +1,5 @@
 package live.ditto.pos.core.data
 
-import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -10,6 +8,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 // Wire-compatible with iOS `Date.ISO8601FormatStyle.ditto`: always
 // millisecond precision with trailing `Z` (UTC). Important because DQL

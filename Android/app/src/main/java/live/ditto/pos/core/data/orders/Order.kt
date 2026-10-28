@@ -1,7 +1,5 @@
 package live.ditto.pos.core.data.orders
 
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import live.ditto.pos.core.data.CartLineItem
@@ -12,6 +10,8 @@ import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.StatusLogDerivation
 import java.util.UUID
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Serializable
 data class Order(

@@ -12,7 +12,7 @@ class DittoInstantSerializerTest {
             listOf(
                 "2026-04-01T12:00:00Z" to "2026-04-01T12:00:00.000Z",
                 "2026-04-01T12:00:00.123Z" to "2026-04-01T12:00:00.123Z",
-                "2026-04-01T14:00:00.123+02:00" to "2026-04-01T12:00:00.123Z",
+                "2026-04-01T14:00:00.123+02:00" to "2026-04-01T12:00:00.123Z"
             )
         for ((input, expected) in examples) {
             val instant = Instant.parse(input)
