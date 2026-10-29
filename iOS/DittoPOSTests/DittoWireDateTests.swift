@@ -58,6 +58,8 @@ final class DittoWireDateTests: XCTestCase {
         XCTAssertThrowsError(try JSONDecoder.ditto.decode(Payload.self, from: data))
     }
 
+    // DittoWireDate shares one DateFormatter across threads. Races only show up
+    // intermittently, so the same conversion runs many times in parallel.
     func testDateConversionWorksConcurrently() {
         let expected = "2026-04-01T12:00:00.123Z"
         let date = Date(timeIntervalSince1970: 1_775_044_800.123)
