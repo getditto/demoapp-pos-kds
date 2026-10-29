@@ -17,9 +17,13 @@ import Foundation
 /// across producers for lexicographic comparison to equal chronological order
 /// in DQL filters like `WHERE createdAt > :TTL`.
 enum DittoWireDate {
-    static let formatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    // DateFormatter is Sendable and safe to share across threads, unlike
+    // ISO8601DateFormatter. en_US_POSIX + UTC pins the exact wire format.
+    private static let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
         return formatter
     }()
 
@@ -87,6 +91,12 @@ extension DittoQueryResult {
 
 // MARK: - Combine wrappers
 
+// Ditto calls the @Sendable handler on the delivery queue (serial; main by
+// default), so sends never overlap. Combine does not declare the subject Sendable.
+private final class ObserverSubject<Output>: @unchecked Sendable {
+    let subject = PassthroughSubject<Output, Error>()
+}
+
 // MARK: - Subscription error reporting
 
 /// Consistent handling for a failed sync-subscription registration: logs in
@@ -103,13 +113,13 @@ extension DittoStore {
     /// completes. With a non-buffered downstream this gates Ditto's next
     /// delivery on consumer readiness; with `PassthroughSubject` the
     /// difference is small but the pattern is the canonical one.
-    func observePublisher<T: Decodable>(
+    func observePublisher<T: Decodable & Sendable>(
         query: String,
         arguments: [String: Any?]? = nil,
         deliverOn queue: DispatchQueue = .main,
         mapTo: T.Type
     ) -> AnyPublisher<[T], Error> {
-        let subject = PassthroughSubject<[T], Error>()
+        let subject = ObserverSubject<[T]>()
         do {
             try self.registerObserver(
                 query: query,
@@ -120,13 +130,13 @@ extension DittoStore {
                     // decoded payload so Ditto's next delivery is gated on us
                     // having actually finished this one.
                     let items: [T] = result.decodeOrSkip()
-                    subject.send(items)
+                    subject.subject.send(items)
                     signalNext()
                 }
             )
         } catch {
-            subject.send(completion: .failure(error))
+            subject.subject.send(completion: .failure(error))
         }
-        return subject.eraseToAnyPublisher()
+        return subject.subject.eraseToAnyPublisher()
     }
 }

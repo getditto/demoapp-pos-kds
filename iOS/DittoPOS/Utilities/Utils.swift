@@ -8,10 +8,10 @@
 import SwiftUI
 
 extension CGFloat {
-    static var screenWidth: CGFloat {
+    @MainActor static var screenWidth: CGFloat {
         UIScreen.main.bounds.width
     }
-    static var screenHeight: CGFloat {
+    @MainActor static var screenHeight: CGFloat {
         UIScreen.main.bounds.height
     }
 }

@@ -9,7 +9,7 @@ import Foundation
 
 // Snapshot of a SaleItem at add-time — the receipt records the price the
 // customer paid, not the current SaleItem price.
-struct CartLineItem: Codable, Hashable, Equatable {
+struct CartLineItem: Codable, Hashable, Equatable, Sendable {
     let saleItemId: String
     let name: String
     let imageName: String

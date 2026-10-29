@@ -8,7 +8,7 @@
 import Foundation
 
 // Whole-number minor units (cents for USD) avoids floating-point drift.
-struct Price: Codable, Hashable, Equatable {
+struct Price: Codable, Hashable, Equatable, Sendable {
     var amount: Int
     var currency: Currency
 
@@ -23,7 +23,7 @@ struct Price: Codable, Hashable, Equatable {
     }
 }
 
-enum Currency: String, Codable {
+enum Currency: String, Codable, Sendable {
     case chf
     case eur
     case gbp

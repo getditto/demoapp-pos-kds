@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Order: Hashable, Codable {
+struct Order: Hashable, Codable, Sendable {
     let documentId: DocumentID
     var cart: [String: CartLineItem]
     var payments: [String: Payment]

@@ -15,7 +15,7 @@ import Foundation
 // `_id` lets Ditto use it as the document's natural key for sync grouping
 // and routing, and lets DQL filter by `_id.locationId` without a secondary
 // index. The inner `id` keeps documents unique within their location.
-struct DocumentID: Codable, Hashable {
+struct DocumentID: Codable, Hashable, Sendable {
     let id: String
     let locationId: String
 }
