@@ -8,7 +8,7 @@
 import Combine
 import Foundation
 
-struct Settings {
+@MainActor struct Settings {
     static var defaults = UserDefaults.standard
 
     static var locationId: String? {
@@ -46,7 +46,7 @@ extension UserDefaults {
 
 extension UserDefaults {
 
-    var selectedTabView: TabViews? {
+    @MainActor var selectedTabView: TabViews? {
         get {
             let tabInt = Self.standard.integer(forKey: UserDefaultsKeys.selectedTab)
             return tabInt == 0 ? nil : TabViews(rawValue: tabInt)
@@ -62,9 +62,9 @@ extension UserDefaults {
 
     // Workaround for UserDefaults does not support publishing optional Int natively, so to implement
     // selectedTabViewPublisher, we have to be notified when selectedTabView is updated (above).
-    private static var selectedTabSubject = PassthroughSubject<TabViews?, Never>()
+    @MainActor private static let selectedTabSubject = PassthroughSubject<TabViews?, Never>()
 
-    var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> {
+    @MainActor var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> {
         Self.selectedTabSubject
             .eraseToAnyPublisher()
     }

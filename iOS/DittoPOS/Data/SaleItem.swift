@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SaleItem: Codable, Hashable {
+struct SaleItem: Codable, Hashable, Sendable {
     let documentId: DocumentID
     let name: String
     let imageName: String  // canonical wire key; resolve via ImageNameMapping

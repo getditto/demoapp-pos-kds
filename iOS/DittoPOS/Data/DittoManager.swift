@@ -12,8 +12,8 @@ import Foundation
 /// Owns the `Ditto` instance and starts sync. Holds the transport-level
 /// sync group driven by the currently active location. Mirrors Android's
 /// `DittoManager` (in the `ditto-wrapper` module).
-final class DittoManager: ObservableObject {
-    static var shared = DittoManager()
+@MainActor final class DittoManager: ObservableObject {
+    static let shared = DittoManager()
     let ditto: Ditto
 
     private init() {

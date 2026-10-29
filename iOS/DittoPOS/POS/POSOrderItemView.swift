@@ -10,7 +10,7 @@ import SwiftUI
 struct POSOrderItemView: View, Identifiable {
     let lineItemId: String
     let item: CartLineItem
-    var id: String { lineItemId }
+    nonisolated var id: String { lineItemId }
 
     init(lineItemId: String, _ item: CartLineItem) {
         self.lineItemId = lineItemId

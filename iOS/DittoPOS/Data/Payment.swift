@@ -7,15 +7,15 @@
 
 import Foundation
 
-enum PaymentType: String, Codable, CaseIterable {
+enum PaymentType: String, Codable, CaseIterable, Sendable {
     case cash, credit, debit, refund
 }
 
-enum PaymentStatus: String, Codable, CaseIterable {
+enum PaymentStatus: String, Codable, CaseIterable, Sendable {
     case incomplete, inProcess, complete, failed
 }
 
-struct Payment: Codable, Hashable, Equatable {
+struct Payment: Codable, Hashable, Equatable, Sendable {
     let type: PaymentType
     let amount: Price
     let status: PaymentStatus

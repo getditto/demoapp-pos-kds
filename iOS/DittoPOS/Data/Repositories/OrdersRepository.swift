@@ -16,8 +16,7 @@ import Foundation
 
     @Published private(set) var locationOrders: [Order] = []
 
-    private let dittoManager: DittoManager
-    private var ditto: Ditto { dittoManager.ditto }
+    private let ditto: Ditto
     private var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
@@ -25,12 +24,16 @@ import Foundation
     private var observer = AnyCancellable({})
     private var locationSubscription = AnyCancellable({})
 
-    init(dittoManager: DittoManager = .shared, locationsRepository: LocationsRepository) {
-        self.dittoManager = dittoManager
+    convenience init(dittoManager: DittoManager = .shared, locationsRepository: LocationsRepository) {
+        self.init(ditto: dittoManager.ditto, locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher())
+    }
+
+    init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>) {
+        self.ditto = ditto
         // Pull the active location from LocationsRepository and re-register
         // the subscription on every change. @Published replays the current
         // value on subscribe, so cold-start activation comes through here.
-        locationSubscription = locationsRepository.$currentLocationId
+        locationSubscription = locationPublisher
             .compactMap { $0 }
             .removeDuplicates()
             .sink { [weak self] locationId in
@@ -127,7 +130,7 @@ import Foundation
 
     func reset(order: Order) {
         let createdAtNow = DittoWireDate.string(from: Date())
-        let args: [String: Any?] = [
+        let args: [String: String] = [
             "id": order.documentId.id,
             "locationId": order.documentId.locationId,
             "createdAt": createdAtNow
@@ -189,13 +192,22 @@ import Foundation
         )
     }
 
-    private func execute(_ query: String, args: [String: Any?] = [:], function: String = #function) {
+    private func execute(_ query: String, args: [String: String] = [:], function: String = #function) {
+        let store = store
         Task {
             do {
-                _ = try await store.execute(query: query, arguments: args)
+                try await Self.execute(store: store, query: query, args: args)
             } catch {
                 assertionFailure("DQL \(function) failed: \(error.localizedDescription)\n\(query)")
             }
         }
+    }
+
+    // DittoStore.execute runs off the main actor and takes a non-Sendable
+    // [String: Any?]. Building the dictionary here, outside the main actor,
+    // lets Swift 6 prove nothing else holds it when it is sent.
+    private nonisolated static func execute(store: DittoStore, query: String, args: [String: String]) async throws {
+        let arguments: [String: Any?] = args.mapValues { $0 }
+        _ = try await store.execute(query: query, arguments: arguments)
     }
 }
