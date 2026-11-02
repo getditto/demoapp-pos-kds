@@ -1,7 +1,7 @@
 {
   "source_archive": "food.zip",
   "source_archive_sha256": "b99be3ac3311654240725c2471a4bfc2f043cd25c81c4822ee436bda89a2b332",
-  "provenance": "Original artwork supplied by Brian Plattenburg for the existing demo menu.",
+  "provenance": "Original artwork created by DittoLive Inc. for the existing demo menu.",
   "packaging": "Aspect-preserving downsampling to 384 x 384 PNG with sips; no upscaling or alpha flattening.",
   "items": [
     {
