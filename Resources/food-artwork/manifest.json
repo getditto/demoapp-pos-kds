@@ -1,0 +1,388 @@
+{
+  "source_archive": "food.zip",
+  "source_archive_sha256": "b99be3ac3311654240725c2471a4bfc2f043cd25c81c4822ee436bda89a2b332",
+  "provenance": "Original artwork supplied by Brian Plattenburg for the existing demo menu.",
+  "packaging": "Aspect-preserving downsampling to 384 x 384 PNG with sips; no upscaling or alpha flattening.",
+  "items": [
+    {
+      "item_id": "00001",
+      "name": "Burger",
+      "source_filename": "chicken-sandwich.png",
+      "source_sha256": "89ace22bba68c19c22fc9ad133a35979025a3669796ca3ccfd2a2518c62c223d",
+      "ios_resource": "burger",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/burger.imageset/burger.png",
+      "android_resource": "burger",
+      "android_file": "Android/app/src/main/res/drawable/burger.png",
+      "packaged_sha256": "faa824517cd96ed4e6236cdbedc71c5453c8ffbefbed413297ce1adcda9aaf51",
+      "width": 384,
+      "height": 384,
+      "bytes": 179008,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00002",
+      "name": "Burrito",
+      "source_filename": "wrap.png",
+      "source_sha256": "52c46337043080705ac03e7ff39173fd47855bc4d0549d28caa64995eb5fc52c",
+      "ios_resource": "burrito",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/burrito.imageset/burrito.png",
+      "android_resource": "burrito",
+      "android_file": "Android/app/src/main/res/drawable/burrito.png",
+      "packaged_sha256": "7b23df6f7f1e19aa4ad2ec143b32d2a0ceb579c7cb668d8da5c3f38826b3a463",
+      "width": 384,
+      "height": 384,
+      "bytes": 178834,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00003",
+      "name": "Fried Chicken",
+      "source_filename": "fried-chicken.png",
+      "source_sha256": "ba4bab3a7f8e798ad5e123c4b20f883d781621b9178cd651ac62382083bf055a",
+      "ios_resource": "chicken",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/chicken.imageset/chicken.png",
+      "android_resource": "chicken",
+      "android_file": "Android/app/src/main/res/drawable/chicken.png",
+      "packaged_sha256": "7460b95f3fc1fc42a12d0cb95dd14a2e9dd9044e74e61032b4e0af833dcfb1cb",
+      "width": 384,
+      "height": 384,
+      "bytes": 154490,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00004",
+      "name": "Potato Chips",
+      "source_filename": "chips.png",
+      "source_sha256": "41a61f3e34a6c73960c6e04b7d06c1da4e8b75e9008073abbda1e8e0200ddf23",
+      "ios_resource": "chips",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/chips.imageset/chips.png",
+      "android_resource": "chips",
+      "android_file": "Android/app/src/main/res/drawable/chips.png",
+      "packaged_sha256": "3558fa6425d50f14e77ebefa219c97b8ca75d945afd096d84ae23ce9f41d6fd5",
+      "width": 384,
+      "height": 384,
+      "bytes": 160603,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00005",
+      "name": "Coffee",
+      "source_filename": "coffee.png",
+      "source_sha256": "856ae52e9527753a1c8b89e44f805a2b7b99ce43dd5df62dcd89658de589409b",
+      "ios_resource": "coffee",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/coffee.imageset/coffee.png",
+      "android_resource": "coffee",
+      "android_file": "Android/app/src/main/res/drawable/coffee.png",
+      "packaged_sha256": "d6780ae8cf18a62be633dbd8cb9a99bf347fbe4516c8b298f6ae30551bf29311",
+      "width": 384,
+      "height": 384,
+      "bytes": 116685,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00006",
+      "name": "Cookies",
+      "source_filename": "cookie.png",
+      "source_sha256": "616bbde0ef78a223749fcbb0a2a605b501598afbe229e8e9a85b8690f1f87ea9",
+      "ios_resource": "cookies",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/cookies.imageset/cookies.png",
+      "android_resource": "cookies",
+      "android_file": "Android/app/src/main/res/drawable/cookies.png",
+      "packaged_sha256": "2645c06886f59f6b25abfe2e661ea78098460aae72b90f7f2ef404dfe8085f3c",
+      "width": 384,
+      "height": 384,
+      "bytes": 135726,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00007",
+      "name": "Corn",
+      "source_filename": "corn.png",
+      "source_sha256": "60fa6bcb7f6278a52cb94dcbdd0d6ca38e52684ac0e672030de241cdf886c54e",
+      "ios_resource": "corn",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/corn.imageset/corn-on-cob.png",
+      "android_resource": "corn_on_cob",
+      "android_file": "Android/app/src/main/res/drawable/corn_on_cob.png",
+      "packaged_sha256": "30cf88f3d24409feedd9749b3cd5529b10367637b818f9641b934b8a3c1f476a",
+      "width": 384,
+      "height": 384,
+      "bytes": 133005,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00008",
+      "name": "French Fries",
+      "source_filename": "fries.png",
+      "source_sha256": "1962024fd008658a9124b7f3b15e1eff00f00904b761c81fbfd16d9bc2b427d8",
+      "ios_resource": "fries",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/fries.imageset/fries.png",
+      "android_resource": "fries",
+      "android_file": "Android/app/src/main/res/drawable/fries.png",
+      "packaged_sha256": "944b0c5d2ed65dda96b10adaf57977ee8588273977721106d5ec64833f3ca247",
+      "width": 384,
+      "height": 384,
+      "bytes": 134310,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00009",
+      "name": "Fruit Salad",
+      "source_filename": "fruit.png",
+      "source_sha256": "da8ee582350e94c61fa04003b2317cf80014f170e119aacc4c9358f346cc2733",
+      "ios_resource": "fruit-salad",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/fruit-salad.imageset/fruit-salad.png",
+      "android_resource": "fruit_salad",
+      "android_file": "Android/app/src/main/res/drawable/fruit_salad.png",
+      "packaged_sha256": "1e7fa30f5e7f58a0d1258ff20bfffa5629198fe154ed9468e88a54ae105e78be",
+      "width": 384,
+      "height": 384,
+      "bytes": 156329,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00010",
+      "name": "Gumbo",
+      "source_filename": "gumbo.png",
+      "source_sha256": "3d950619a771471af32ef4ac40b99875ce4df9c0605e53f6b1b0146ca6635d0f",
+      "ios_resource": "gumbo",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/gumbo.imageset/gumbo.png",
+      "android_resource": "gumbo",
+      "android_file": "Android/app/src/main/res/drawable/gumbo.png",
+      "packaged_sha256": "a54a3eba8ac9f10bcfb4ab2a95ec8f248387f5f02a6e3193e3dc5480d65bb7dd",
+      "width": 384,
+      "height": 384,
+      "bytes": 150069,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00011",
+      "name": "Ice Cream",
+      "source_filename": "ice-cream.png",
+      "source_sha256": "e52fb87234ef65bb6fc9aeeeead8492bcfb9f501e45d342e4cd7e968b611dcf7",
+      "ios_resource": "ice-cream",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/ice-cream.imageset/ice-cream.png",
+      "android_resource": "ice_cream",
+      "android_file": "Android/app/src/main/res/drawable/ice_cream.png",
+      "packaged_sha256": "a2e9a242c1b45d8d001c1eb932b85f8ce360f7c9b9e5c4460cbd3bfab5f0efa5",
+      "width": 384,
+      "height": 384,
+      "bytes": 129242,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00012",
+      "name": "Milk",
+      "source_filename": "milk.png",
+      "source_sha256": "e63ff2cc2dd010c1a6ceb7a1332745d0c49ae5f663394ca0a36f940db01b3fda",
+      "ios_resource": "milk",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/milk.imageset/milk.png",
+      "android_resource": "milk",
+      "android_file": "Android/app/src/main/res/drawable/milk.png",
+      "packaged_sha256": "4e629b4666f99094f43c68d819fa146fe9aa9f2df7fa803a09fa5d5fe44eb911",
+      "width": 384,
+      "height": 384,
+      "bytes": 88843,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00013",
+      "name": "Onion Rings",
+      "source_filename": "onion-rings.png",
+      "source_sha256": "6b0785d1d24e0164680df281d5f894cda79dfc23676672c6aee4a8cd4d89b10b",
+      "ios_resource": "onion-rings",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/onion-rings.imageset/onion-rings.png",
+      "android_resource": "onion_rings",
+      "android_file": "Android/app/src/main/res/drawable/onion_rings.png",
+      "packaged_sha256": "659b2b9e343d0df96f4471d1e7ee8751ce83ad7dd32c79d85566debd971bba7b",
+      "width": 384,
+      "height": 384,
+      "bytes": 122916,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00014",
+      "name": "Pancakes",
+      "source_filename": "pancakes.png",
+      "source_sha256": "8ccbf0e9c60e27e4fe3c6497792d0ad6fe96fa474de9f4929356ad4746de59d2",
+      "ios_resource": "pancakes",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/pancakes.imageset/pancakes.png",
+      "android_resource": "pancakes",
+      "android_file": "Android/app/src/main/res/drawable/pancakes.png",
+      "packaged_sha256": "3ac316e6740dc0b0672671045e6a6d984958fab7c03bb15a7226d5f417660d6b",
+      "width": 384,
+      "height": 384,
+      "bytes": 143173,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00015",
+      "name": "Pie",
+      "source_filename": "pie.png",
+      "source_sha256": "92ad4180121d8dc7dd526d9434582ca65066e9c2598c617aecb5a63861b167be",
+      "ios_resource": "pie",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/pie.imageset/pie.png",
+      "android_resource": "pie",
+      "android_file": "Android/app/src/main/res/drawable/pie.png",
+      "packaged_sha256": "89ec5e624aefcbfd555fd5e1dc5d1d4fd0f3e160010124b0e2ecd50151e2587b",
+      "width": 384,
+      "height": 384,
+      "bytes": 123818,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00016",
+      "name": "Salad",
+      "source_filename": "salad.png",
+      "source_sha256": "400c7e8941575a37bc3d9baa24e12b0d8016eef53194320eec2638ae068f545b",
+      "ios_resource": "salad",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/salad.imageset/salad.png",
+      "android_resource": "salad",
+      "android_file": "Android/app/src/main/res/drawable/salad.png",
+      "packaged_sha256": "d12b4c7e15f0f7a5ed60365d91403d60a0893e96c4668fe925080959d896e5f2",
+      "width": 384,
+      "height": 384,
+      "bytes": 143190,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00017",
+      "name": "Sandwich",
+      "source_filename": "sandwich.png",
+      "source_sha256": "6eb9f0e94be8acba51f6de7ad6ae3a0e6367337249e95ccf04c95a6a6dadca58",
+      "ios_resource": "sandwich",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/sandwich.imageset/sandwich.png",
+      "android_resource": "sandwich",
+      "android_file": "Android/app/src/main/res/drawable/sandwich.png",
+      "packaged_sha256": "6e96f7846711e93216834142e1201842ecd550bf5c2f7a9cb7f4319ce67ef900",
+      "width": 384,
+      "height": 384,
+      "bytes": 153407,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00018",
+      "name": "Soft Drink",
+      "source_filename": "cola.png",
+      "source_sha256": "ad34fbd0f53e34c04b2529ef0bb462221692758f4c0974c8d51a1ff1fdaf2186",
+      "ios_resource": "soft-drink",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/soft-drink.imageset/soft-drink.png",
+      "android_resource": "soft_drink",
+      "android_file": "Android/app/src/main/res/drawable/soft_drink.png",
+      "packaged_sha256": "7bbccb645dd0857f903185f9808fede19fa395b577b9428911254d7aaed1b321",
+      "width": 384,
+      "height": 384,
+      "bytes": 122953,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00019",
+      "name": "Tacos",
+      "source_filename": "taco.png",
+      "source_sha256": "2e88e57792cbd7aa60ce05b83b627de59d74c7e53b073164eec35c3d4ab045f4",
+      "ios_resource": "tacos",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/tacos.imageset/tacos.png",
+      "android_resource": "tacos",
+      "android_file": "Android/app/src/main/res/drawable/tacos.png",
+      "packaged_sha256": "e0d28041281c096d2275586c701b57984e73a74ea6e6ae0b4a1b7f5669bbec0d",
+      "width": 384,
+      "height": 384,
+      "bytes": 161866,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "item_id": "00020",
+      "name": "Veggie Plate",
+      "source_filename": "veggies.png",
+      "source_sha256": "2f22ac50bc582c001116d6d36bfeeae278ff068fd0001a5ec4967c1b7414c55d",
+      "ios_resource": "veggies",
+      "ios_file": "iOS/DittoPOS/Assets.xcassets/veggies.imageset/veggies.png",
+      "android_resource": "veggies",
+      "android_file": "Android/app/src/main/res/drawable/veggies.png",
+      "packaged_sha256": "07e624f3b72f39c8dbd8ce3b689d13b551a384542166718dab8adb5d783cfe9f",
+      "width": 384,
+      "height": 384,
+      "bytes": 159232,
+      "format": "PNG",
+      "alpha_range": [
+        0,
+        255
+      ]
+    }
+  ]
+}
