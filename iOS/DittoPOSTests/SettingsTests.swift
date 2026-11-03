@@ -1,6 +1,5 @@
 import Combine
 import XCTest
-@testable import DittoPOS
 
 @MainActor final class SettingsTests: XCTestCase {
     func testLocationSelectionCanBeSavedAndCleared() throws {

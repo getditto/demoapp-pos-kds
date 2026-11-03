@@ -1,9 +1,9 @@
 import DittoSwift
 import Foundation
+import XCTest
 
 enum TestDitto {
-    /// Runs `body` with a Ditto instance backed by a throwaway local store,
-    /// and deletes the store afterwards.
+    /// Uses local storage without credentials or sync, then removes it.
     @MainActor static func withInstance<T>(_ body: (Ditto) async throws -> T) async throws -> T {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -12,6 +12,12 @@ enum TestDitto {
             connect: .smallPeersOnly(),
             persistenceDirectory: directory
         )
-        return try await body(Ditto.openSync(config: config))
+        let ditto = try Ditto.openSync(config: config)
+        XCTAssertNil(ditto.config.encryptionKey)
+        XCTAssertFalse(ditto.isEncrypted)
+        XCTAssertFalse(ditto.isActivated)
+        XCTAssertFalse(ditto.sync.isActive)
+        defer { XCTAssertFalse(ditto.sync.isActive, "Local-store tests must never start sync") }
+        return try await body(ditto)
     }
 }

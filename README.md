@@ -28,25 +28,30 @@ App Store builds:
 
 ## Local build and test checks
 
-Run from the repository root with Python 3 and the platform toolchain installed:
+Run the native commands from the repository root:
 
 ```sh
-bash Scripts/ci/test-ios.sh
-bash Scripts/ci/test-android.sh
+xcodebuild test -project iOS/DittoPOS.xcodeproj -scheme DittoPOS \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  -derivedDataPath build/tests CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+
+DITTO_ENV_FILE="$PWD/.ci/test.env" Android/gradlew -p Android \
+  :app:testDebugUnitTest :ditto-wrapper:testDebugUnitTest :app:assembleDebug
 ```
 
-iOS needs Xcode with an arm64 iOS Simulator. The default destination is
-`platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5`; set `IOS_DESTINATION`
-to an installed compatible simulator if needed. Simulator signing is ad hoc
-and requires no developer credentials. Android needs JDK 17, Android SDK
-Platform 37 and the checked-in Gradle wrapper.
+iOS needs Xcode with an installed arm64 iOS Simulator; adjust the destination
+to match your machine. Android needs JDK 17 and Android SDK Platform 37.
 
-The checks select `.ci/test.env` without changing your `.env`. Hosted XCTest
-startup skips the demo's shared database, seeders and sync; store tests create
-isolated databases. The fixture is deliberately unusable for running the demo.
-Build logs and iOS results are retained under `build/ci`; Android JUnit results
-remain under each module's `build/test-results/testDebugUnitTest` directory.
-Missing, empty, skipped or failing required test suites fail the check.
+The iOS test bundle compiles the existing production source files directly,
+with no demo app host or `.env` dependency. Android uses local JVM tests;
+`.ci/test.env` supplies only placeholder constants for compiling the app.
+Neither command launches the demo app or needs Ditto, license or store credentials.
+
+SDK-backed tests use disposable local stores with no encryption/private key,
+license token or sync startup. Simulate observed changes with sequenced DQL
+writes to those stores. Real peer convergence and file transfer are separate
+manual acceptance checks. Add shared production files to the standalone test
+target's Sources phase when extending its coverage; do not copy their logic.
 
 Local and CI check builds use build number **9999**. Actual release builds
 can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or
