@@ -403,7 +403,7 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/buildEnv.sh",
-				"$(SRCROOT)/../.env",
+				"$(DITTO_ENV_FILE)",
 			);
 			name = "Generate Env.swift";
 			outputFileListPaths = (
@@ -413,7 +413,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/buildEnv.sh\" \"${SRCROOT}/../.env\" \"${SRCROOT}/${PROJECT}\"\n";
+			shellScript = "\"${SRCROOT}/buildEnv.sh\" \"${DITTO_ENV_FILE}\" \"${SRCROOT}/${PROJECT}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -606,7 +606,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 9999;
+				DITTO_ENV_FILE = "$(SRCROOT)/../.env";
 				DEVELOPMENT_ASSET_PATHS = "\"DittoPOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T2VMFZPPQ;
 				ENABLE_PREVIEWS = YES;
@@ -645,7 +646,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 9999;
+				DITTO_ENV_FILE = "$(SRCROOT)/../.env";
 				DEVELOPMENT_ASSET_PATHS = "\"DittoPOS/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T2VMFZPPQ;
 				ENABLE_PREVIEWS = YES;

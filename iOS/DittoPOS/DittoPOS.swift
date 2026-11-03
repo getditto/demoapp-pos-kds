@@ -10,6 +10,20 @@ import SwiftUI
 
 @main
 struct DittoPOS: App {
+    var body: some Scene {
+        WindowGroup {
+            // Hosted unit tests create their own isolated stores. Do not start
+            // the demo's singleton, seeders or sync in the test host.
+            if ProcessInfo.processInfo.environment["DITTO_UNIT_TESTS"] == "1" {
+                EmptyView()
+            } else {
+                DemoRootView()
+            }
+        }
+    }
+}
+
+private struct DemoRootView: View {
     @StateObject private var locationsRepository: LocationsRepository
     @StateObject private var ordersRepository: OrdersRepository
     @StateObject private var saleItemsRepository: SaleItemsRepository
@@ -30,16 +44,14 @@ struct DittoPOS: App {
         _saleItemsRepository = StateObject(wrappedValue: saleItemsRepository)
     }
 
-    var body: some Scene {
-        WindowGroup {
-            MainView(locationsRepository: locationsRepository)
-                .environmentObject(locationsRepository)
-                .environmentObject(ordersRepository)
-                .environmentObject(saleItemsRepository)
-                .task {
-                    await DemoSeeder(store: DittoManager.shared.ditto.store).seedAll()
-                    await ordersRepository.runEvictionIfDue()
-                }
-        }
+    var body: some View {
+        MainView(locationsRepository: locationsRepository)
+            .environmentObject(locationsRepository)
+            .environmentObject(ordersRepository)
+            .environmentObject(saleItemsRepository)
+            .task {
+                await DemoSeeder(store: DittoManager.shared.ditto.store).seedAll()
+                await ordersRepository.runEvictionIfDue()
+            }
     }
 }

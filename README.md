@@ -26,6 +26,33 @@ App Store builds:
 [iOS](https://apps.apple.com/us/app/ditto-pos/id6449074700) ·
 [Google Play](https://play.google.com/store/apps/details?id=live.ditto.pos)
 
+## Local build and test checks
+
+Run from the repository root with Python 3 and the platform toolchain installed:
+
+```sh
+bash Scripts/ci/test-ios.sh
+bash Scripts/ci/test-android.sh
+```
+
+iOS needs Xcode with an arm64 iOS Simulator. The default destination is
+`platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5`; set `IOS_DESTINATION`
+to an installed compatible simulator if needed. Simulator signing is ad hoc
+and requires no developer credentials. Android needs JDK 17, Android SDK
+Platform 37 and the checked-in Gradle wrapper.
+
+The checks select `.ci/test.env` without changing your `.env`. Hosted XCTest
+startup skips the demo's shared database, seeders and sync; store tests create
+isolated databases. The fixture is deliberately unusable for running the demo.
+Build logs and iOS results are retained under `build/ci`; Android JUnit results
+remain under each module's `build/test-results/testDebugUnitTest` directory.
+Missing, empty, skipped or failing required test suites fail the check.
+
+Local and CI check builds use build number **9999**. Actual release builds
+can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or
+`-PdittoBuildNumber=<number>` to Gradle. These inputs do not change the
+marketing version or allocate a shipping number.
+
 ## Data model
 
 The demo follows current Ditto guidance for denormalized documents and
