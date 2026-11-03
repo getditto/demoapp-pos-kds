@@ -35,7 +35,7 @@ xcodebuild test -project iOS/DittoPOS.xcodeproj -scheme DittoPOS \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
   -derivedDataPath build/tests CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
 
-DITTO_ENV_FILE="$PWD/.ci/test.env" Android/gradlew -p Android \
+DITTO_ENV_FILE="$PWD/.ci/build.env" Android/gradlew -p Android \
   :app:testDebugUnitTest :ditto-wrapper:testDebugUnitTest :app:assembleDebug
 ```
 
@@ -44,7 +44,7 @@ to match your machine. Android needs JDK 17 and Android SDK Platform 37.
 
 The iOS test bundle compiles the existing production source files directly,
 with no demo app host or `.env` dependency. Android uses local JVM tests;
-`.ci/test.env` supplies only placeholder constants for compiling the app.
+`.ci/build.env` supplies only placeholder constants for compiling the app.
 Neither command launches the demo app or needs Ditto, license or store credentials.
 
 SDK-backed tests use disposable local stores with no encryption/private key,
