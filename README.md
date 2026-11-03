@@ -42,16 +42,18 @@ DITTO_ENV_FILE="$PWD/.ci/build.env" Android/gradlew -p Android \
 iOS needs Xcode with an installed arm64 iOS Simulator; adjust the destination
 to match your machine. Android needs JDK 17 and Android SDK Platform 37.
 
-The iOS test bundle compiles the existing production source files directly,
-with no demo app host or `.env` dependency. Android uses local JVM tests;
-`.ci/build.env` supplies only placeholder constants for compiling the app.
-Neither command launches the demo app or needs Ditto, license or store credentials.
+Tests that exercise storage and observers use the real Ditto SDK with isolated,
+disposable offline stores, following [Ditto's testing guidance](https://docs.ditto.live/sdk/latest/deployment/testing).
+These stores use no encryption/private key or license token and never start sync.
+Simulate peer-originated changes with sequenced DQL writes to the local test store.
+Real peer convergence and file transfer have separate manual acceptance checks.
 
-SDK-backed tests use disposable local stores with no encryption/private key,
-license token or sync startup. Simulate observed changes with sequenced DQL
-writes to those stores. Real peer convergence and file transfer are separate
-manual acceptance checks. Add shared production files to the standalone test
-target's Sources phase when extending its coverage; do not copy their logic.
+The iOS test bundle compiles the production source files directly and runs without
+the demo app or its `.env`. Android uses local JVM tests; `.ci/build.env` supplies
+placeholder constants for app compilation only. Neither command launches the demo
+app or requires Ditto authentication or app-store signing credentials. Add shared
+production files to the standalone test target's Sources phase when extending
+coverage; do not copy their logic.
 
 Local and CI check builds use build number **9999**. Actual release builds
 can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or
