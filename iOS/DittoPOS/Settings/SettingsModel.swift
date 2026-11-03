@@ -53,7 +53,7 @@ extension UserDefaults {
 
     @MainActor var selectedTabView: TabViews? {
         get {
-            let tabInt = Self.standard.integer(forKey: UserDefaultsKeys.selectedTab)
+            let tabInt = integer(forKey: UserDefaultsKeys.selectedTab)
             return tabInt == 0 ? nil : TabViews(rawValue: tabInt)
         }
         set(newValue) {

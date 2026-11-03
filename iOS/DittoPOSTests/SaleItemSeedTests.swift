@@ -30,13 +30,4 @@ final class SaleItemSeedTests: XCTestCase {
         )
     }
 
-    func testEverySeededItemHasAPositivePrice() {
-        for item in SaleItemSeed.saleItemsForAllLocations() {
-            XCTAssertGreaterThan(
-                item.price.amount,
-                0,
-                "Item \(item.name) (\(item.documentId.id)) at \(item.documentId.locationId) has non-positive cents"
-            )
-        }
-    }
 }

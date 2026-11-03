@@ -17,6 +17,7 @@ val dittoBuildNumber = providers.gradleProperty("dittoBuildNumber").orElse("9999
 }
 
 android {
+    sourceSets.getByName("test").resources.srcDir(rootProject.file("../Tests/Fixtures"))
     namespace = "live.ditto.pos"
     compileSdk = 37
 

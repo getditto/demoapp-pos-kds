@@ -1,0 +1,12 @@
+{
+  "_id": { "id": "order-'\"☕", "locationId": "42" },
+  "cart": {
+    "line-2": { "saleItemId": "coffee-冰", "name": "Coffee \"冰\"", "imageName": "coffee", "price": { "amount": 250, "currency": "usd" }, "qty": 2, "createdAt": "2026-04-01T12:00:02.123Z" },
+    "line-1": { "saleItemId": "coffee-冰", "name": "Coffee \"冰\"", "imageName": "coffee", "price": { "amount": 199, "currency": "usd" }, "qty": 3, "createdAt": "2026-04-01T12:00:01.123Z" }
+  },
+  "payments": {
+    "cash-1": { "type": "cash", "amount": { "amount": 250, "currency": "usd" }, "status": "complete", "createdAt": "2026-04-01T12:00:03.123Z" }
+  },
+  "status_log": { "2026-04-01T12:00:00.123Z": "open", "2026-04-01T12:00:01.123Z": "inProcess" },
+  "createdAt": "2026-04-01T12:00:00.123Z"
+}

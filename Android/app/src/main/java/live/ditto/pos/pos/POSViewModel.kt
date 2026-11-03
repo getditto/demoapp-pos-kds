@@ -18,11 +18,11 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.CartLineItem
-import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.PaymentType
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderSelection
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.core.data.repository.SaleItemsRepository
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
@@ -127,11 +127,9 @@ constructor(
         val savedId = appSettings.currentOrderId()
         if (savedId.isNotEmpty()) {
             val snapshot = ordersRepository.observeLocationOrders(locationId).first()
-            val valid = snapshot.firstOrNull { it.documentId.id == savedId }?.let {
-                it.status == OrderStatus.OPEN || it.status == OrderStatus.IN_PROCESS
-            } == true
-            if (valid) {
-                currentOrderId = savedId
+            val reusableId = OrderSelection.reusableOrderId(savedId, snapshot)
+            if (reusableId != null) {
+                currentOrderId = reusableId
                 return
             }
         }

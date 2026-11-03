@@ -20,6 +20,8 @@ import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderEviction
+import live.ditto.pos.core.data.orders.cartPathsForUnset
 import live.ditto.pos.core.data.toDittoIsoString
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -86,7 +88,7 @@ class OrdersRepository @Inject constructor(
         if (order.cart.isEmpty()) return
         // UNSET target paths can't be parameterized in DQL, so the cart keys
         // (app-generated line-item UUIDs) are interpolated; all values use :named args.
-        val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
+        val unsetList = order.cartPathsForUnset()
         ditto.store.execute(
             """
                 UPDATE ${Order.COLLECTION_NAME}
@@ -111,7 +113,7 @@ class OrdersRepository @Inject constructor(
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent()
         } else {
-            val unsetList = order.cart.keys.joinToString(", ") { "cart.\"$it\"" }
+            val unsetList = order.cartPathsForUnset()
             """
                 UPDATE ${Order.COLLECTION_NAME}
                 SET createdAt = :createdAt
@@ -124,25 +126,26 @@ class OrdersRepository @Inject constructor(
 
     suspend fun runEvictionIfDue() {
         val prefs = context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE)
-        val now = Clock.System.now().toEpochMilliseconds()
-        val last = prefs.getLong(LAST_EVICTION_KEY, 0L)
-        if (now - last < TWENTY_FOUR_HOURS_MILLIS) return
-
-        val ttl = startOfTodayIso()
+        val eviction = OrderEviction(
+            now = { Clock.System.now() },
+            timeZone = TimeZone.currentSystemDefault(),
+            lastRun = { prefs.getLong(LAST_EVICTION_KEY, 0L) },
+            recordRun = { prefs.edit().putLong(LAST_EVICTION_KEY, it).apply() },
+            evict = { cutoff ->
+                ditto.store.execute(
+                    "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
+                    mapOf("TTL" to cutoff)
+                )
+            }
+        )
         try {
-            ditto.store.execute(
-                "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
-                mapOf("TTL" to ttl)
-            )
-            prefs.edit().putLong(LAST_EVICTION_KEY, now).apply()
-            Log.i("Eviction", "evicted orders with createdAt <= $ttl")
+            eviction.runIfDue()?.let { Log.i("Eviction", "evicted orders with createdAt <= $it") }
         } catch (error: Throwable) {
             Log.w("Eviction", error.message.orEmpty())
         }
     }
 
     companion object {
-        private const val TWENTY_FOUR_HOURS_MILLIS = 24L * 60 * 60 * 1000
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }

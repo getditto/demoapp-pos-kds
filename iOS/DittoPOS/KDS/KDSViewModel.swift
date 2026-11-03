@@ -24,17 +24,7 @@ import Foundation
             .sink { [weak self] orders in
                 guard let self else { return }
 
-                let filtered = orders.filter {
-                    $0.status == .inProcess || $0.status == .processed
-                }
-                let sorted = filtered.sorted { lhs, rhs in
-                    if lhs.status == rhs.status {
-                        return lhs.createdAt > rhs.createdAt
-                    }
-                    return lhs.status.rank < rhs.status.rank
-                }
-
-                self.orders = sorted
+                self.orders = KitchenOrders.select(from: orders)
             }
             .store(in: &cancellables)
     }
