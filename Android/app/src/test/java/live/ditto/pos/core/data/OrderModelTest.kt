@@ -2,7 +2,6 @@ package live.ditto.pos.core.data
 
 import kotlinx.serialization.json.Json
 import live.ditto.pos.core.data.orders.Order
-import live.ditto.pos.core.data.orders.cartPathsForUnset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,12 +14,6 @@ internal object OrderFixture {
 }
 
 class OrderModelTest {
-    @Test
-    fun `clear and reset quote each observed cart key as an identifier`() {
-        val order = OrderFixture.load()
-        assertEquals(setOf("cart.`line-1`", "cart.`line-2`"), order.cartPathsForUnset().split(", ").toSet())
-    }
-
     @Test
     fun `known fixture preserves composite identity maps quotes and unicode on the wire`() {
         val order = OrderFixture.load()

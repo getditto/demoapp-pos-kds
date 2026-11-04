@@ -1,6 +1,7 @@
 package live.ditto.pos.core.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.ditto.kotlin.Ditto
 import com.ditto.kotlin.DittoSyncSubscription
@@ -26,21 +27,37 @@ import live.ditto.pos.core.data.toDittoIsoString
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Singleton
-class OrdersRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val dittoManager: DittoManager,
-    private val locationsRepository: LocationsRepository
+class OrdersRepository internal constructor(
+    private val dittoProvider: () -> Ditto,
+    locationIds: Flow<String>,
+    private val preferences: () -> SharedPreferences,
+    private val now: () -> Instant,
+    private val timeZone: () -> TimeZone,
+    repoScope: CoroutineScope
 ) {
-    private val ditto: Ditto get() = dittoManager.requireDitto()
+    @Inject constructor(
+        @ApplicationContext context: Context,
+        dittoManager: DittoManager,
+        locationsRepository: LocationsRepository
+    ) : this(
+        dittoProvider = dittoManager::requireDitto,
+        locationIds = locationsRepository.locationIdFlow(),
+        preferences = { context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE) },
+        now = { Clock.System.now() },
+        timeZone = TimeZone::currentSystemDefault,
+        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    )
+
+    private val ditto: Ditto get() = dittoProvider()
     private var subscription: DittoSyncSubscription? = null
-    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
         // Pull the active location from LocationsRepository and re-register
         // the subscription on every change. Mirrors iOS.
-        locationsRepository.locationIdFlow()
+        locationIds
             .filter { it.isNotEmpty() }
             .distinctUntilChanged()
             .onEach { locationId -> setActiveLocation(locationId) }
@@ -100,7 +117,7 @@ class OrdersRepository @Inject constructor(
     }
 
     suspend fun reset(order: Order) {
-        val createdAtNow = Clock.System.now().toDittoIsoString()
+        val createdAtNow = now().toDittoIsoString()
         val baseArgs = mapOf<String, Any>(
             "id" to order.documentId.id,
             "locationId" to order.documentId.locationId,
@@ -125,10 +142,10 @@ class OrdersRepository @Inject constructor(
     }
 
     suspend fun runEvictionIfDue() {
-        val prefs = context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE)
+        val prefs = preferences()
         val eviction = OrderEviction(
-            now = { Clock.System.now() },
-            timeZone = TimeZone.currentSystemDefault(),
+            now = now,
+            timeZone = timeZone(),
             lastRun = { prefs.getLong(LAST_EVICTION_KEY, 0L) },
             recordRun = { prefs.edit().putLong(LAST_EVICTION_KEY, it).apply() },
             evict = { cutoff ->
@@ -145,13 +162,11 @@ class OrdersRepository @Inject constructor(
         }
     }
 
+    private fun startOfTodayIso(): String =
+        timeZone().let { zone -> now().toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
+
     companion object {
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }
-}
-
-private fun startOfTodayIso(): String {
-    val tz = TimeZone.currentSystemDefault()
-    return Clock.System.now().toLocalDateTime(tz).date.atStartOfDayIn(tz).toDittoIsoString()
 }

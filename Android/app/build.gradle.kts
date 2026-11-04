@@ -18,6 +18,7 @@ val dittoBuildNumber = providers.gradleProperty("dittoBuildNumber").orElse("9999
 
 android {
     sourceSets.getByName("test").resources.srcDir(rootProject.file("../Tests/Fixtures"))
+    sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("../Tests/Fixtures"))
     namespace = "live.ditto.pos"
     compileSdk = 37
 
@@ -28,7 +29,7 @@ android {
         versionCode = dittoBuildNumber
         versionName = "1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "live.ditto.pos.OfflineTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
