@@ -31,8 +31,13 @@ import XCTest
             try await TestDitto.withInstance { ditto in
                 var original = try OrderFixture.load()
                 if empty { original.cart = [:] }
+                let other = Order(
+                    documentId: DocumentID(id: original.documentId.id, locationId: "other"),
+                    cart: original.cart, payments: original.payments, statusLog: original.statusLog,
+                    createdAt: original.createdAt)
                 let resetAt = try DittoWireDate.date(from: "2026-05-01T10:20:30.123Z")
                 try await insert(original, into: ditto)
+                try await insert(other, into: ditto)
                 let repository = OrdersRepository(
                     ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { resetAt })
                 try await observeChange(ditto, original, satisfying: { $0.cart.isEmpty && $0.createdAt == resetAt }) {
@@ -43,6 +48,8 @@ import XCTest
                 XCTAssertTrue(reset.cart.isEmpty)
                 XCTAssertEqual(reset.payments, original.payments)
                 XCTAssertEqual(reset.statusLog, original.statusLog)
+                let unchanged = try await read(other.documentId, from: ditto)
+                XCTAssertEqual(unchanged, other)
             }
         }
     }
