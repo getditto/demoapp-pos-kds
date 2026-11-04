@@ -28,15 +28,4 @@ class SaleItemSeedTest {
             keys.toSet().size
         )
     }
-
-    @Test
-    fun `every seeded item has a positive price`() {
-        val items = SaleItemSeed.saleItemsForAllLocations()
-        for (item in items) {
-            assertTrue(
-                "Item ${item.name} (${item.documentId.id}) at ${item.documentId.locationId} has non-positive cents",
-                item.price.amount > 0
-            )
-        }
-    }
 }

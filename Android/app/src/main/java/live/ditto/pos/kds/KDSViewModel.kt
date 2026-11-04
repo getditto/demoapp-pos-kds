@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.settings.AppSettings
@@ -52,12 +53,7 @@ constructor(
         appSettings.locationIdFlow()
             .filter { it.isNotEmpty() }
             .flatMapLatest { locationId ->
-                ordersRepository.observeLocationOrders(locationId).map { orders ->
-                    orders.filter { order ->
-                        (order.status == OrderStatus.IN_PROCESS || order.status == OrderStatus.PROCESSED) &&
-                            order.cart.isNotEmpty()
-                    }
-                }
+                ordersRepository.observeLocationOrders(locationId).map(KitchenOrders::select)
             }
             .onEach { orders ->
                 latestOrders = orders
@@ -70,11 +66,7 @@ constructor(
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
             val order = latestOrders.firstOrNull { it.documentId.id == orderId } ?: return@launch
-            val nextStatus = when (order.status) {
-                OrderStatus.IN_PROCESS -> OrderStatus.PROCESSED
-                OrderStatus.PROCESSED -> OrderStatus.DELIVERED
-                else -> return@launch
-            }
+            val nextStatus = KitchenOrders.nextStatus(order.status) ?: return@launch
             ordersRepository.upsert(order.appendingStatus(nextStatus))
 
             if (nextStatus == OrderStatus.PROCESSED && appSettings.currentOrderId() == order.documentId.id) {
@@ -84,14 +76,7 @@ constructor(
     }
 
     private fun updateTickets(orders: List<Order>) {
-        val inProcess = orders.filter { it.status == OrderStatus.IN_PROCESS }
-            .sortedByDescending { it.createdAt }
-        val processed = orders.filter { it.status == OrderStatus.PROCESSED }
-            .sortedByDescending { it.createdAt }
-
-        _uiState.value = _uiState.value.copy(
-            tickets = (inProcess + processed).map(::toTicketUi)
-        )
+        _uiState.value = _uiState.value.copy(tickets = orders.map(::toTicketUi))
     }
 
     private fun toTicketUi(order: Order): TicketItemUi = TicketItemUi(

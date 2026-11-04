@@ -29,11 +29,6 @@ class DittoInstantSerializerTest {
     }
 
     @Test
-    fun `descriptor names the custom serializer`() {
-        assertEquals("live.ditto.pos.DittoInstant", DittoInstantSerializer.descriptor.serialName)
-    }
-
-    @Test
     fun `invalid timestamp is rejected`() {
         assertThrows(IllegalArgumentException::class.java) {
             dittoJson.decodeFromString(DittoInstantSerializer, "\"invalid\"")

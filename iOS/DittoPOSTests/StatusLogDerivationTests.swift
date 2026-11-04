@@ -9,20 +9,11 @@ import XCTest
 
 final class StatusLogDerivationTests: XCTestCase {
 
-    func testEmptyLogReturnsDefault() {
-        XCTAssertEqual(StatusLogDerivation.currentStatus(from: [:]), .open)
-    }
-
-    func testDefaultOverrideHonoredWhenLogIsEmpty() {
-        XCTAssertEqual(
-            StatusLogDerivation.currentStatus(from: [:], default: .inProcess),
-            .inProcess
-        )
-    }
-
-    func testUnparseableEntriesAreIgnored() {
-        let log = ["2026-04-01T00:00:00.000Z": "garbage"]
-        XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .open)
+    func testEmptyOrUnknownLegacyLogUsesRequestedFallback() {
+        for log in [[:], ["2026-04-01T00:00:00.000Z": "unknown-legacy-state"]] {
+            XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .open)
+            XCTAssertEqual(StatusLogDerivation.currentStatus(from: log, default: .inProcess), .inProcess)
+        }
     }
 
     func testMostAdvancedRankWins() {
@@ -34,12 +25,10 @@ final class StatusLogDerivationTests: XCTestCase {
         XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .processed)
     }
 
-    func testOlderWriteCannotRegress() {
-        // Stale device coming online late writes an older OPEN entry —
-        // older entry stays in the log for audit but does not regress.
+    func testNewerLowerStatusCannotRegress() {
         let log = [
-            "2026-04-01T00:00:02.000Z": "delivered",
-            "2026-04-01T00:00:00.500Z": "open"
+            "2026-04-01T00:00:00.500Z": "delivered",
+            "2026-04-01T00:00:02.000Z": "open"
         ]
         XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .delivered)
     }
@@ -52,18 +41,10 @@ final class StatusLogDerivationTests: XCTestCase {
         XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .canceled)
     }
 
-    func testTieAtTopRankBreaksByLatestTimestamp() {
-        let log = [
-            "2026-04-01T00:00:01.000Z": "processed",
-            "2026-04-01T00:00:02.000Z": "processed"
-        ]
-        XCTAssertEqual(StatusLogDerivation.currentStatus(from: log), .processed)
-    }
-
     func testEntryReturnsWireValueAndTimestamp() {
         let date = ISO8601DateFormatter().date(from: "2026-04-01T12:00:00Z")!
         let entry = StatusLogDerivation.entry(.processed, at: date)
         XCTAssertEqual(entry.status, "processed")
-        XCTAssertFalse(entry.timestamp.isEmpty)
+        XCTAssertEqual(entry.timestamp, "2026-04-01T12:00:00.000Z")
     }
 }

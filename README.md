@@ -37,6 +37,10 @@ xcodebuild test -project iOS/DittoPOS.xcodeproj -scheme DittoPOS \
 
 DITTO_ENV_FILE="$PWD/.ci/build.env" Android/gradlew -p Android \
   :app:testDebugUnitTest :ditto-wrapper:testDebugUnitTest :app:assembleDebug
+
+# With an Android emulator already running; replace the serial with yours.
+ANDROID_SERIAL=emulator-5554 DITTO_ENV_FILE="$PWD/.ci/build.env" \
+  Android/gradlew -p Android :app:connectedDebugAndroidTest
 ```
 
 iOS needs Xcode with an installed arm64 iOS Simulator; adjust the destination
@@ -49,11 +53,14 @@ Simulate peer-originated changes with sequenced DQL writes to the local test sto
 Real peer convergence and file transfer have separate manual acceptance checks.
 
 The iOS test bundle compiles the production source files directly and runs without
-the demo app or its `.env`. Android uses local JVM tests; `.ci/build.env` supplies
-placeholder constants for app compilation only. Neither command launches the demo
-app or requires Ditto authentication or app-store signing credentials. Add shared
-production files to the standalone test target's Sources phase when extending
-coverage; do not copy their logic.
+the demo app or its `.env`. Android uses JVM logic tests and emulator-based
+repository/observer tests whose runner substitutes a plain `Application`, bypassing
+the demo's Hilt startup, seeding and sync. Both platforms load the same independently
+authored order JSON from `Tests/Fixtures`. `.ci/build.env` supplies placeholder
+constants for Android app compilation only. These commands never launch the demo
+UI or initialize its application startup, and need no Ditto authentication or
+app-store signing credentials. When extending iOS coverage, add shared production
+files to the standalone test target's Sources phase; do not copy their logic.
 
 Local and CI check builds use build number **9999**. Actual release builds
 can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or

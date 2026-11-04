@@ -17,6 +17,7 @@ import Foundation
     @Published private(set) var locationOrders: [Order] = []
 
     private let ditto: Ditto
+    private let now: () -> Date
     private var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
@@ -24,8 +25,9 @@ import Foundation
     private var observer = AnyCancellable({})
     private var locationSubscription = AnyCancellable({})
 
-    init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>) {
+    init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>, now: @escaping () -> Date = Date.init) {
         self.ditto = ditto
+        self.now = now
         // Pull the active location from LocationsRepository and re-register
         // the subscription on every change. @Published replays the current
         // value on subscribe, so cold-start activation comes through here.
@@ -113,7 +115,7 @@ import Foundation
         guard !order.cart.isEmpty else { return }
         // UNSET target paths can't be parameterized in DQL, so the cart keys
         // (app-generated line-item UUIDs) are interpolated; all values use :named args.
-        let unsetList = order.cart.keys.map { "cart.\"\($0)\"" }.joined(separator: ", ")
+        let unsetList = order.cart.keys.map { "cart.`\($0)`" }.joined(separator: ", ")
         execute(
             """
             UPDATE \(Order.collectionName)
@@ -125,7 +127,7 @@ import Foundation
     }
 
     func reset(order: Order) {
-        let createdAtNow = DittoWireDate.string(from: Date())
+        let createdAtNow = DittoWireDate.string(from: now())
         let args: [String: String] = [
             "id": order.documentId.id,
             "locationId": order.documentId.locationId,
@@ -137,7 +139,7 @@ import Foundation
         if order.cart.isEmpty {
             execute("UPDATE \(Order.collectionName) \(setClause) \(whereClause)", args: args)
         } else {
-            let unsetList = order.cart.keys.map { "cart.\"\($0)\"" }.joined(separator: ", ")
+            let unsetList = order.cart.keys.map { "cart.`\($0)`" }.joined(separator: ", ")
             execute(
                 "UPDATE \(Order.collectionName) \(setClause) UNSET \(unsetList) \(whereClause)",
                 args: args
@@ -151,27 +153,26 @@ import Foundation
     // queries filter by location/TTL, so this is purely about preventing the
     // local store from accumulating expired orders.
 
-    func runEvictionIfDue() async {
-        let now = Date().timeIntervalSince1970
-        let last = UserDefaults.standard.double(forKey: Eviction.lastRunKey)
-        guard now - last >= Eviction.interval else { return }
-
-        let ttl = DateFormatter.startOfTodayString
+    func runEvictionIfDue(defaults: UserDefaults = .standard, calendar: Calendar = .current) async {
+        let eviction = OrderEviction(
+            now: now,
+            calendar: calendar,
+            lastRun: { defaults.double(forKey: OrderEviction.lastRunKey) },
+            recordRun: { defaults.set($0, forKey: OrderEviction.lastRunKey) },
+            evict: { [store] cutoff in
+                _ = try await store.execute(
+                    query: "EVICT FROM \(Order.collectionName) WHERE createdAt <= :TTL",
+                    arguments: ["TTL": cutoff]
+                )
+            }
+        )
         do {
-            _ = try await store.execute(
-                query: "EVICT FROM \(Order.collectionName) WHERE createdAt <= :TTL",
-                arguments: ["TTL": ttl]
-            )
-            UserDefaults.standard.set(now, forKey: Eviction.lastRunKey)
-            print("Eviction: evicted orders with createdAt <= \(ttl)")
+            if let cutoff = try await eviction.runIfDue() {
+                print("Eviction: evicted orders with createdAt <= \(cutoff)")
+            }
         } catch {
             print("Eviction: ERROR \(error.localizedDescription)")
         }
-    }
-
-    private enum Eviction {
-        static let lastRunKey = "v2.lastEvictionAt"
-        static let interval: TimeInterval = 60 * 60 * 24
     }
 
     // MARK: Helpers

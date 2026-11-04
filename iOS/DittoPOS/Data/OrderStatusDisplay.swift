@@ -28,13 +28,4 @@ extension OrderStatus {
         }
     }
 
-    var next: OrderStatus? {
-        switch self {
-        case .open: return .inProcess
-        case .inProcess: return .processed
-        case .processed: return .delivered
-        case .delivered: return nil
-        case .canceled: return nil
-        }
-    }
 }

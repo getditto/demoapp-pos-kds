@@ -2,31 +2,30 @@ import Combine
 import XCTest
 
 @MainActor final class SettingsTests: XCTestCase {
-    func testLocationSelectionCanBeSavedAndCleared() throws {
-        let previousDefaults = Settings.defaults
-        let suiteName = "SettingsTests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    func testPersistedDestinationDecodesLegacyIdsAndPublishesSelectionChanges() throws {
+        let previous = Settings.defaults
+        let suite = "SettingsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         Settings.defaults = defaults
         defer {
-            Settings.defaults = previousDefaults
-            defaults.removePersistentDomain(forName: suiteName)
+            Settings.defaults = previous
+            defaults.removePersistentDomain(forName: suite)
         }
-
-        Settings.locationId = "42"
-        XCTAssertEqual(Settings.locationId, "42")
-        Settings.clearLocationsSetup()
-        XCTAssertNil(Settings.locationId)
-    }
-
-    func testTabSelectionIsSavedAndPublished() {
-        let previousValue = Settings.selectedTabView
-        defer { Settings.selectedTabView = previousValue }
+        let key = "live.ditto.DittoPOS.selectedTab"
+        defaults.set(2, forKey: key)
+        XCTAssertEqual(Settings.selectedTabView, .kds)
+        defaults.set(999, forKey: key)
+        XCTAssertNil(Settings.selectedTabView)
         var received: [TabViews?] = []
         let subscription = Settings.selectedTabViewPublisher.sink { received.append($0) }
-
-        Settings.selectedTabView = .kds
-        XCTAssertEqual(Settings.selectedTabView, .kds)
-        XCTAssertEqual(received, [.kds])
-        withExtendedLifetime(subscription) {}
+        defer { subscription.cancel() }
+        Settings.selectedTabView = .pos
+        Settings.selectedTabView = nil
+        XCTAssertEqual(defaults.integer(forKey: key), 0)
+        Settings.selectedTabView = .locations
+        XCTAssertEqual(received, [.pos, nil, .locations])
+        XCTAssertEqual(defaults.integer(forKey: key), 3)
+        Settings.defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        XCTAssertEqual(Settings.selectedTabView, .locations)
     }
 }

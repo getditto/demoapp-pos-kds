@@ -67,7 +67,13 @@
 		C1560000000000000000000F /* DemoSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A009 /* DemoSeeder.swift */; };
 		C15600000000000000000010 /* OrdersRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A001 /* OrdersRepository.swift */; };
 		C15600000000000000000100 /* DittoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 07AE54C72C81812600E1FCBD /* DittoSwift */; };
-		C15600000000000000000101 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14CD51B42A2FE2D60018DE87 /* Assets.xcassets */; };
+		C1460000000000000000B001 /* OrderEviction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A001 /* OrderEviction.swift */; };
+		C1460000000000000000C001 /* OrderEviction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A001 /* OrderEviction.swift */; };
+		C1460000000000000000B002 /* KitchenOrders.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A002 /* KitchenOrders.swift */; };
+		C1460000000000000000C002 /* KitchenOrders.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A002 /* KitchenOrders.swift */; };
+		C1460000000000000000B003 /* OrderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A003 /* OrderSelection.swift */; };
+		C1460000000000000000C003 /* OrderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A003 /* OrderSelection.swift */; };
+		C1460000000000000000B100 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A100 /* Fixtures */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -116,6 +122,10 @@
 		DAFEED01000000000000A008 /* SaleItemSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemSeed.swift; sourceTree = "<group>"; };
 		DAFEED01000000000000A009 /* DemoSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSeeder.swift; sourceTree = "<group>"; };
 		DAFEED01000000000000A00A /* DocumentID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentID.swift; sourceTree = "<group>"; };
+		C1460000000000000000A001 /* OrderEviction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderEviction.swift; sourceTree = "<group>"; };
+		C1460000000000000000A002 /* KitchenOrders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitchenOrders.swift; sourceTree = "<group>"; };
+		C1460000000000000000A003 /* OrderSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderSelection.swift; sourceTree = "<group>"; };
+		C1460000000000000000A100 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../Tests/Fixtures; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -190,6 +200,7 @@
 			children = (
 				14CD51AF2A2FE2D50018DE87 /* DittoPOS */,
 				A48472EA2FA4DF71004A821E /* DittoPOSTests */,
+				C1460000000000000000A100 /* Fixtures */,
 				14CD51AE2A2FE2D50018DE87 /* Products */,
 				147F43562A37F13300294403 /* Frameworks */,
 			);
@@ -256,6 +267,9 @@
 				DAFEED01000000000000A004 /* ImageNameMapping.swift */,
 				DAFEED01000000000000A005 /* OrderStatusDisplay.swift */,
 				DAFEED01000000000000A00A /* DocumentID.swift */,
+				C1460000000000000000A003 /* OrderSelection.swift */,
+				C1460000000000000000A002 /* KitchenOrders.swift */,
+				C1460000000000000000A001 /* OrderEviction.swift */,
 				DAFACE01000000000000A005 /* Repositories */,
 				DAFEED01000000000000A006 /* Demo */,
 			);
@@ -395,7 +409,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C15600000000000000000101 /* Assets.xcassets in Resources */,
+				C1460000000000000000B100 /* Fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +445,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
+				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
+				C1460000000000000000B003 /* OrderSelection.swift in Sources */,
 				14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */,
 				DAFACE01000000000000B005 /* MainViewModel.swift in Sources */,
 				1460E33D2A93DCC8007A2A6D /* KDSViewModel.swift in Sources */,
@@ -477,6 +494,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1460000000000000000C001 /* OrderEviction.swift in Sources */,
+				C1460000000000000000C002 /* KitchenOrders.swift in Sources */,
+				C1460000000000000000C003 /* OrderSelection.swift in Sources */,
 				C15600000000000000000001 /* CurrencyUtils.swift in Sources */,
 				C15600000000000000000002 /* SettingsModel.swift in Sources */,
 				C15600000000000000000003 /* Utils.swift in Sources */,

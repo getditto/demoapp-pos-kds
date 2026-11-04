@@ -110,11 +110,11 @@ import SwiftUI
             .receive(on: DispatchQueue.main)
             .sink { [weak self] orders in
                 guard let self,
-                      let orderId = currentOrder?.documentId.id,
-                      let locationId = locationsRepository.currentLocationId,
-                      let match = orders.first(where: {
-                          $0.documentId.id == orderId && $0.documentId.locationId == locationId
-                      })
+                      let match = OrderSelection.observedOrder(
+                          id: currentOrder?.documentId.id,
+                          locationId: locationsRepository.currentLocationId,
+                          in: orders
+                      )
                 else { return }
                 currentOrder = match
             }
