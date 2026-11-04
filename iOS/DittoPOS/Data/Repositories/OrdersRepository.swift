@@ -24,10 +24,6 @@ import Foundation
     private var observer = AnyCancellable({})
     private var locationSubscription = AnyCancellable({})
 
-    convenience init(dittoManager: DittoManager = .shared, locationsRepository: LocationsRepository) {
-        self.init(ditto: dittoManager.ditto, locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher())
-    }
-
     init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>) {
         self.ditto = ditto
         // Pull the active location from LocationsRepository and re-register

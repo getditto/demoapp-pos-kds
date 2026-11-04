@@ -11,6 +11,11 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
+val dittoBuildNumber = providers.gradleProperty("dittoBuildNumber").orElse("9999").get().let { value ->
+    value.toIntOrNull()?.takeIf { it in 1..2_100_000_000 }
+        ?: error("dittoBuildNumber must be a positive integer no greater than 2100000000")
+}
+
 android {
     namespace = "live.ditto.pos"
     compileSdk = 37
@@ -19,7 +24,7 @@ android {
         applicationId = "live.ditto.pos"
         minSdk = 28
         targetSdk = 36
-        versionCode = 9
+        versionCode = dittoBuildNumber
         versionName = "1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -142,7 +147,8 @@ dependencies {
 // Reads a value from the shared repo-root .env — the single source of truth
 // for Ditto credentials across the iOS and Android apps. Values are unquoted.
 fun dittoEnv(key: String): String {
-    val envFile = File(rootProject.projectDir.parentFile, ".env")
+    val envFile = providers.environmentVariable("DITTO_ENV_FILE").orNull?.let(::File)
+        ?: File(rootProject.projectDir.parentFile, ".env")
     if (!envFile.isFile) {
         error("Shared .env not found at ${envFile.absolutePath}. Copy .env.template to .env at the repo root.")
     }

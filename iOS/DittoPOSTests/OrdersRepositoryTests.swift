@@ -1,7 +1,6 @@
 import Combine
 import DittoSwift
 import XCTest
-@testable import DittoPOS
 
 @MainActor final class OrdersRepositoryTests: XCTestCase {
     func testAddOrderWritesToLocalStore() async throws {

@@ -6,7 +6,6 @@
 //
 
 import XCTest
-@testable import DittoPOS
 
 final class SaleItemSeedTests: XCTestCase {
 

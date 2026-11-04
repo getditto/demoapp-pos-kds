@@ -6,6 +6,7 @@
 //
 //  Copyright © 2023 DittoLive Incorporated. All rights reserved.
 
+import Combine
 import SwiftUI
 
 @main
@@ -18,8 +19,8 @@ struct DittoPOS: App {
         let manager = DittoManager.shared
         let locationsRepository = LocationsRepository(dittoManager: manager)
         let ordersRepository = OrdersRepository(
-            dittoManager: manager,
-            locationsRepository: locationsRepository
+            ditto: manager.ditto,
+            locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()
         )
         let saleItemsRepository = SaleItemsRepository(
             dittoManager: manager,

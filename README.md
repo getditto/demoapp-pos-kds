@@ -26,6 +26,40 @@ App Store builds:
 [iOS](https://apps.apple.com/us/app/ditto-pos/id6449074700) ·
 [Google Play](https://play.google.com/store/apps/details?id=live.ditto.pos)
 
+## Local build and test checks
+
+Run the native commands from the repository root:
+
+```sh
+xcodebuild test -project iOS/DittoPOS.xcodeproj -scheme DittoPOS \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  -derivedDataPath build/tests CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+
+DITTO_ENV_FILE="$PWD/.ci/build.env" Android/gradlew -p Android \
+  :app:testDebugUnitTest :ditto-wrapper:testDebugUnitTest :app:assembleDebug
+```
+
+iOS needs Xcode with an installed arm64 iOS Simulator; adjust the destination
+to match your machine. Android needs JDK 17 and Android SDK Platform 37.
+
+Tests that exercise storage and observers use the real Ditto SDK with isolated,
+disposable offline stores, following [Ditto's testing guidance](https://docs.ditto.live/sdk/latest/deployment/testing).
+These stores use no encryption/private key or license token and never start sync.
+Simulate peer-originated changes with sequenced DQL writes to the local test store.
+Real peer convergence and file transfer have separate manual acceptance checks.
+
+The iOS test bundle compiles the production source files directly and runs without
+the demo app or its `.env`. Android uses local JVM tests; `.ci/build.env` supplies
+placeholder constants for app compilation only. Neither command launches the demo
+app or requires Ditto authentication or app-store signing credentials. Add shared
+production files to the standalone test target's Sources phase when extending
+coverage; do not copy their logic.
+
+Local and CI check builds use build number **9999**. Actual release builds
+can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or
+`-PdittoBuildNumber=<number>` to Gradle. These inputs do not change the
+marketing version or allocate a shipping number.
+
 ## Data model
 
 The demo follows current Ditto guidance for denormalized documents and

@@ -1,7 +1,6 @@
 import Combine
 import DittoSwift
 import XCTest
-@testable import DittoPOS
 
 // Main-actor isolated like the repositories: the observer delivers on the main
 // queue, so registering and subscribing in one main-actor turn guarantees the

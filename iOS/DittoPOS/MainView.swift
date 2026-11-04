@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-enum TabViews: Int, Identifiable {
-    case pos=1, kds, locations
-    var id: Self { self }
-}
-
 struct MainView: View {
     @EnvironmentObject var ordersRepository: OrdersRepository
     @EnvironmentObject var saleItemsRepository: SaleItemsRepository

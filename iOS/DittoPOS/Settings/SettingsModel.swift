@@ -8,6 +8,11 @@
 import Combine
 import Foundation
 
+enum TabViews: Int, Identifiable {
+    case pos=1, kds, locations
+    var id: Self { self }
+}
+
 @MainActor struct Settings {
     static var defaults = UserDefaults.standard
 

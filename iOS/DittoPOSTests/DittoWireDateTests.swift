@@ -1,6 +1,5 @@
 import Foundation
 import XCTest
-@testable import DittoPOS
 
 final class DittoWireDateTests: XCTestCase {
     private final class FailureCounter: @unchecked Sendable {

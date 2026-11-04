@@ -1,10 +1,9 @@
 import UIKit
 import XCTest
-@testable import DittoPOS
 
 final class AppearanceUtilitiesTests: XCTestCase {
     func testGrayAssetPreservesLightAndDarkColors() throws {
-        let color = try XCTUnwrap(UIColor(named: "AppGray5", in: .main, compatibleWith: nil))
+        let color = try XCTUnwrap(UIColor(named: "AppGray5", in: Bundle(for: Self.self), compatibleWith: nil))
         for (style, expected) in [(UIUserInterfaceStyle.light, [229, 229, 234]), (.dark, [44, 44, 46])] {
             let resolved = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
             var red: CGFloat = 0
