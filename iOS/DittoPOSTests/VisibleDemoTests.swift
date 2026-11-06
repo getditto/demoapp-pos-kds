@@ -120,7 +120,7 @@ import XCTest
             let firstID = try XCTUnwrap(pos.currentOrder?.documentId)
             XCTAssertEqual(ditto.store.observers.count, baseline + 2)
             let item = try XCTUnwrap(pos.saleItems.first)
-            // Stock-aware sales arrive in137; zero must not disable today's POS.
+            // Adding quantity metadata must preserve existing checkout behavior.
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
             pos.setVisible(false)
             XCTAssertEqual(ditto.store.observers.count, baseline)
