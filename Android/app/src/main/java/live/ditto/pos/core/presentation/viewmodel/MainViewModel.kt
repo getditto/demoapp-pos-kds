@@ -21,14 +21,29 @@ import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
-    private val refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
-    private val getDittoInstanceUseCase: GetDittoInstanceUseCase,
-    private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
-    private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
+class MainViewModel internal constructor(
+    private val refreshPermissions: () -> Unit,
+    private val getDittoInstance: () -> Ditto,
+    appConfigurationStateUseCase: AppConfigurationStateUseCase,
+    getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val getMissingPermissions: () -> Array<String>,
     private val locationsRepository: LocationsRepository
 ) : ViewModel() {
+    @Inject constructor(
+        refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
+        getDittoInstanceUseCase: GetDittoInstanceUseCase,
+        appConfigurationStateUseCase: AppConfigurationStateUseCase,
+        getCurrentLocationUseCase: GetCurrentLocationUseCase,
+        getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
+        locationsRepository: LocationsRepository
+    ) : this(
+        refreshDittoPermissionsUseCase::invoke,
+        getDittoInstanceUseCase::invoke,
+        appConfigurationStateUseCase,
+        getCurrentLocationUseCase,
+        getMissingPermissionsUseCase::invoke,
+        locationsRepository
+    )
 
     val configuration = appConfigurationStateUseCase().stateIn(
         viewModelScope,
@@ -48,14 +63,14 @@ class MainViewModel @Inject constructor(
     )
 
     fun checkDittoPermissions(onPermissionsChecked: (missingPermissions: Array<String>) -> Unit) {
-        onPermissionsChecked(getMissingPermissionsUseCase())
+        onPermissionsChecked(getMissingPermissions())
     }
 
     fun refreshDittoPermissions() {
-        refreshDittoPermissionsUseCase()
+        refreshPermissions()
     }
 
-    fun requireDitto(): Ditto = getDittoInstanceUseCase()
+    fun requireDitto(): Ditto = getDittoInstance()
 
     fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch(Dispatchers.IO) {

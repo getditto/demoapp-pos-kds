@@ -28,11 +28,11 @@ class CatalogStoreTest {
             repository.create(SaleItemCreation(metadata, 2))
             repository.create(SaleItemCreation(metadata.copy(documentId = other, name = "Other", price = Price(250)), 7))
             repository.increment(-3, id)
-            repository.updateMetadata(metadata.copy(name = "Renamed \"冰\"", imageName = "milk", price = Price(0)))
+            val replacement = metadata.copy(name = "Renamed \"冰\"", imageName = "milk", price = Price(0))
+            repository.updateMetadata(replacement)
             val edited = readItem(id)
             assertEquals(-1L, edited.quantity)
-            assertEquals("Renamed \"冰\"", edited.name)
-            assertEquals(0, edited.price.amount)
+            assertEquals(replacement, edited.metadata)
             assertEquals(7L, readItem(other).quantity)
             assertEquals("Other", readItem(other).name)
 
@@ -40,6 +40,7 @@ class CatalogStoreTest {
             repository.increment(4, id)
             val replenished = readItem(id)
             assertEquals(4L, replenished.quantity)
+            assertEquals(replacement, replenished.metadata)
             try {
                 repository.restart(-1, id)
                 fail("Negative absolute quantity was accepted")
@@ -67,9 +68,16 @@ class CatalogStoreTest {
                         assertEquals(if (oldFirst) null else 20L, readItem(id).quantity)
                         val rows = ditto.store.execute("SELECT * FROM sale_items") { it.decode<SaleItem>() }
                         assertEquals(LegacySaleItemSeed.saleItemsForAllLocations().map { it.documentId }.toSet(), rows.map { it.documentId }.toSet())
+                        for (legacy in LegacySaleItemSeed.saleItemsForAllLocations()) {
+                            assertEquals(SaleItemMetadata(legacy.documentId, legacy.name, legacy.imageName, legacy.price), rows.single { it.documentId == legacy.documentId }.metadata)
+                        }
                         val expectedIDs = LegacySaleItemSeed.saleItemsForAllLocations().filter { it.documentId.locationId == "00001" }.map { it.documentId }.toSet()
                         val visible = snapshots.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
                         assertEquals(if (oldFirst) null else 20L, visible.single { it.documentId == id }.quantity)
+                        val zero = DocumentID("00013", "00001")
+                        val positive = DocumentID("00018", "00001")
+                        repository.restart(0, zero)
+                        repository.restart(11, positive)
                         repository.restart(0, id)
                         repository.increment(-2, id)
                         repository.updateMetadata(SaleItemMetadata(id, "Edited", "milk", Price(0)))
@@ -88,6 +96,8 @@ class CatalogStoreTest {
                         assertEquals(-2L, edited.quantity)
                         assertEquals("Edited", edited.name)
                         assertEquals(0, edited.price.amount)
+                        assertEquals(0L, readItem(zero).quantity)
+                        assertEquals(11L, readItem(positive).quantity)
                         assertEquals(custom, readItem(custom.documentId).metadata)
                         assertEquals(3L, readItem(custom.documentId).quantity)
                         val deletedVisibleItems = ditto.store.execute(

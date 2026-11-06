@@ -15,12 +15,17 @@ import XCTest
         try await TestDitto.withInstance { ditto in
             var groups: [String?] = []
             let locations = LocationsRepository(ditto: ditto, updateSyncGroup: { groups.append($0) })
+            let root = MainViewModel(locationsRepository: locations)
+            XCTAssertTrue(root.needsLocation)
             await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
             XCTAssertTrue(locations.allLocations.isEmpty)
             await DemoSeeder(store: ditto.store).seedLocations()
             await expect(locations.$allLocations, matching: { $0.count == 7 }) { }
             let id = "00001"
             locations.setActiveLocation(id)
+            root.selectedTab = .kds
+            XCTAssertFalse(root.needsLocation)
+            XCTAssertEqual(root.mainTitle, "Ham's Burgers")
             let ids = locations.$currentLocationId.eraseToAnyPublisher()
             let orders = OrdersRepository(ditto: ditto, locationPublisher: ids)
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
@@ -37,11 +42,16 @@ import XCTest
             XCTAssertTrue(locations.allLocations.isEmpty)
             XCTAssertNil(locations.currentLocation)
             XCTAssertEqual(locations.currentLocationId, id)
+            XCTAssertFalse(root.needsLocation)
+            XCTAssertEqual(root.selectedTab, .kds)
+            XCTAssertEqual(root.mainTitle, "Location")
             XCTAssertTrue(ditto.store.observers.isEmpty)
 
             _ = try await ditto.store.execute(query: "UPDATE locations SET name = :name WHERE _id = :id", arguments: ["name": "Renamed location", "id": id])
             await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
             XCTAssertEqual(locations.currentLocation?.name, "Renamed location")
+            XCTAssertEqual(root.mainTitle, "Renamed location")
+            XCTAssertEqual(root.selectedTab, .kds)
             await expect(pos.$currentOrder, matching: { $0?.documentId == order.documentId }) { pos.setVisible(true) }
             XCTAssertEqual(pos.currentOrder, order)
             let stored = try await readOrder(order.documentId, from: ditto)
@@ -54,6 +64,9 @@ import XCTest
             await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
             XCTAssertTrue(locations.allLocations.isEmpty)
             XCTAssertEqual(locations.currentLocationId, id)
+            XCTAssertFalse(root.needsLocation)
+            XCTAssertEqual(root.selectedTab, .kds)
+            XCTAssertEqual(root.mainTitle, "Location")
         }
     }
 
@@ -182,6 +195,12 @@ import XCTest
             let item = try XCTUnwrap(pos.saleItems.first)
             // Adding quantity metadata must preserve existing checkout behavior.
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
+            let originalCart = pos.currentOrder
+            let liveMetadata = SaleItemMetadata(documentId: metadata.documentId, name: "Live update", imageName: "milk", price: Price(cents: 250))
+            try await catalog.updateMetadata(liveMetadata)
+            await expect(pos.$saleItems, matching: { $0.first?.metadata == liveMetadata }) { }
+            XCTAssertEqual(pos.saleItems.first?.metadata, liveMetadata)
+            XCTAssertEqual(pos.currentOrder, originalCart)
             pos.setVisible(false)
             XCTAssertNil(pos.currentOrder)
             XCTAssertTrue(pos.saleItems.isEmpty)

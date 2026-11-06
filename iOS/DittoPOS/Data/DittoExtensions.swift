@@ -13,18 +13,24 @@ import Foundation
 
 // Shared UTC precision keeps stored dates chronologically sortable across platforms.
 enum DittoWireDate {
-    private static let formatter: DateFormatter = {
+    private static let readers: [DateFormatter] = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX",
+        "yyyy-MM-dd'T'HH:mm:ssXXXXX"
+    ].map { format in
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "UTC")
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
+        formatter.dateFormat = format
         return formatter
-    }()
+    }
 
-    static func string(from date: Date) -> String { formatter.string(from: date) }
+    static func string(from date: Date) -> String {
+        let milliseconds = (date.timeIntervalSince1970 * 1000).rounded(.down)
+        return readers[0].string(from: Date(timeIntervalSince1970: milliseconds / 1000))
+    }
 
     static func date(from string: String) throws -> Date {
-        guard let date = formatter.date(from: string) else {
+        guard let date = readers.lazy.compactMap({ $0.date(from: string) }).first else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: [], debugDescription: "invalid ISO 8601 date: \(string)")
             )

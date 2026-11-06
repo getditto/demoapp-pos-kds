@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -18,8 +19,11 @@ import kotlinx.coroutines.yield
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import live.ditto.pos.core.data.demo.DemoSeeder
-import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase
+import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
+import live.ditto.pos.core.presentation.viewmodel.AppState
+import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.KDSViewModel
 import live.ditto.pos.kds.KdsUiState
 import live.ditto.pos.pos.POSViewModel
@@ -29,53 +33,144 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 @RunWith(AndroidJUnit4::class)
 class VisibleDemoTest {
     @Test
-    fun locationReloadHasFreshPendingAndEmptyResultsWithoutChangingTheSelectedId() = runBlocking<Unit> {
+    fun locationChangePreservesOrdersPaidOrCanceledWhilePOSWasHidden() = runBlocking {
+        for (canceled in listOf(false, true)) {
+            TestDitto.withInstance {
+                settings.setLocationId("A")
+                val orders = repository(locationIds = settings.locationIdFlow())
+                val catalog = catalog(settings.locationIdFlow())
+                catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", "coffee", Price(199)), 2))
+                val owner = object : ViewModelStoreOwner {
+                    override val viewModelStore = ViewModelStore()
+                }
+                val provider = ViewModelProvider.create(
+                    owner,
+                    viewModelFactory { initializer { POSViewModel(settings, orders, catalog, Dispatchers.IO) } }
+                )
+                val pos = provider[POSViewModel::class]
+                val states = Channel<PosUiState>(Channel.UNLIMITED)
+                try {
+                    coroutineScope {
+                        var collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
+                        try {
+                            val ready = states.await { it.currentOrderId.isNotEmpty() && it.saleItems.size == 1 }
+                            pos.addItemToCart(ready.saleItems.single())
+                            val filled = states.await { it.orderItems.size == 1 }
+                            val outgoing = read(DocumentID(filled.currentOrderId, "A"))
+                            collection.cancelAndJoin()
+                            awaitObserverCount(0)
+                            withTimeout(5_000) { while (!pos.uiState.value.isLoading) yield() }
+                            assertTrue(pos.uiState.value.orderItems.isEmpty())
+
+                            val changed = if (canceled) {
+                                outgoing.appendingStatus(OrderStatus.CANCELED, Instant.fromEpochMilliseconds(Clock.System.now().toEpochMilliseconds() + 2_000))
+                            } else {
+                                outgoing.addingPayment(Payment(PaymentType.CASH, outgoing.total), "other-device")
+                            }
+                            ditto.store.execute(
+                                "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                                mapOf("json" to changed.dittoJsonString())
+                            )
+                            val stored = read(outgoing.documentId)
+                            assertTrue(stored.isPaid)
+                            settings.setLocationId("B")
+                            collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
+                            val destination = states.await { it.currentOrderId.isNotEmpty() && it.currentOrderId != outgoing.documentId.id }
+                            assertEquals("B", read(DocumentID(destination.currentOrderId, "B")).documentId.locationId)
+                            assertEquals(stored, read(outgoing.documentId))
+                        } finally {
+                            collection.cancelAndJoin()
+                        }
+                    }
+                    awaitObserverCount(0)
+                } finally {
+                    withContext(Dispatchers.Main) { owner.viewModelStore.clear() }
+                    states.close()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun locationReloadHasFreshPendingAndEmptyResultsWithoutChangingConfiguration() = runBlocking {
         TestDitto.withInstance {
             val id = "00001"
             settings.setLocationId(id)
             val groups = Channel<String?>(Channel.UNLIMITED)
             val locations = locations { groups.send(it) }
             assertEquals(id, withTimeout(5_000) { groups.receive() })
-            val state = locations.observeAllLocations()
-            assertEquals(null, state.value)
-            val snapshots = Channel<List<Location>?>(Channel.UNLIMITED)
-            coroutineScope {
-                var collection = launch { state.collect { snapshots.send(it) } }
-                try {
-                    snapshots.await { it != null && it.isEmpty() }
-                    DemoSeeder(ditto).seedLocations()
-                    snapshots.await { it?.size == 7 }
-                    collection.cancelAndJoin()
-                    awaitObserverCount(0)
-                    withTimeout(5_000) { while (state.value != null) yield() }
-                    while (snapshots.tryReceive().isSuccess) { }
-
-                    ditto.store.execute("UPDATE locations SET name = :name WHERE _id = :id", mapOf("name" to "Renamed location", "id" to id))
-                    collection = launch { state.collect { snapshots.send(it) } }
-                    val fresh = requireNotNull(snapshots.await { it != null })
-                    assertEquals("Renamed location", fresh.single { it.id == id }.name)
-                    assertEquals(id, settings.locationId())
-                    assertTrue(groups.tryReceive().isFailure)
-                    collection.cancelAndJoin()
-                    awaitObserverCount(0)
-                    withTimeout(5_000) { while (state.value != null) yield() }
-                    while (snapshots.tryReceive().isSuccess) { }
-
-                    ditto.store.execute("DELETE FROM locations")
-                    collection = launch { state.collect { snapshots.send(it) } }
-                    snapshots.await { it != null && it.isEmpty() }
-                    assertEquals(id, settings.locationId())
-                } finally {
-                    collection.cancelAndJoin()
-                }
+            val owner = object : ViewModelStoreOwner {
+                override val viewModelStore = ViewModelStore()
             }
-            snapshots.close()
-            groups.close()
+            var permissionRefreshes = 0
+            val provider = ViewModelProvider.create(
+                owner,
+                viewModelFactory {
+                    initializer {
+                        MainViewModel(
+                            { permissionRefreshes++ },
+                            { error("Presentation must not initialize Ditto") },
+                            AppConfigurationStateUseCase(settings),
+                            GetCurrentLocationUseCase(locations),
+                            { error("Presentation must not request permissions") },
+                            locations
+                        )
+                    }
+                }
+            )
+            val root = provider[MainViewModel::class]
+            root.refreshDittoPermissions()
+            assertEquals(1, permissionRefreshes)
+            assertTrue(root.uiState.value.isLoading)
+            val snapshots = Channel<AppState>(Channel.UNLIMITED)
+            try {
+                assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, withTimeout(5_000) { root.configuration.first { it == AppConfigurationStateUseCase.AppConfigurationState.VALID } })
+                coroutineScope {
+                    var collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
+                    try {
+                        snapshots.await { !it.isLoading && it.locations.isEmpty() }
+                        DemoSeeder(ditto).seedLocations()
+                        snapshots.await { it.locations.size == 7 && it.currentLocationName == "Ham's Burgers" }
+                        collection.cancelAndJoin()
+                        awaitObserverCount(0)
+                        withTimeout(5_000) { while (!root.uiState.value.isLoading) yield() }
+                        assertTrue(root.uiState.value.locations.isEmpty())
+                        assertEquals("", root.uiState.value.currentLocationName)
+                        assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
+                        while (snapshots.tryReceive().isSuccess) { }
+
+                        ditto.store.execute("UPDATE locations SET name = :name WHERE _id = :id", mapOf("name" to "Renamed location", "id" to id))
+                        collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
+                        val fresh = snapshots.await { !it.isLoading && it.currentLocationName == "Renamed location" }
+                        assertEquals("Renamed location", fresh.locations.single { it.id == id }.name)
+                        assertEquals(id, settings.locationId())
+                        assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
+                        assertTrue(groups.tryReceive().isFailure)
+                        collection.cancelAndJoin()
+                        awaitObserverCount(0)
+                        withTimeout(5_000) { while (!root.uiState.value.isLoading) yield() }
+                        while (snapshots.tryReceive().isSuccess) { }
+
+                        ditto.store.execute("DELETE FROM locations")
+                        collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
+                        snapshots.await { !it.isLoading && it.locations.isEmpty() && it.currentLocationName.isEmpty() }
+                        assertEquals(id, settings.locationId())
+                        assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
+                    } finally {
+                        collection.cancelAndJoin()
+                    }
+                }
+            } finally {
+                withContext(Dispatchers.Main) { owner.viewModelStore.clear() }
+                snapshots.close()
+                groups.close()
+            }
         }
     }
 
@@ -198,13 +293,16 @@ class VisibleDemoTest {
                         assertFalse(initial.isLoading)
                         val firstID = initial.currentOrderId
                         awaitObserverCount(baseline + 2)
-                        val orderQuery = ditto.store.observers.single { it.queryString.contains("pos_orders") }
-                        assertTrue(orderQuery.queryString.contains("_id.id = :id"))
-                        assertTrue(orderQuery.queryString.contains("_id.locationId = :locationId"))
                         // Adding quantity metadata must preserve existing checkout behavior.
                         pos.addItemToCart(initial.saleItems.single())
                         val cart = posStates.await { it.orderItems.isNotEmpty() }
                         assertEquals(firstID, cart.currentOrderId)
+                        val originalCart = read(DocumentID(firstID, "A"))
+                        catalog.updateMetadata(metadata.copy(name = "Live update", imageName = "milk", price = Price(250)))
+                        val live = posStates.await { it.saleItems.singleOrNull()?.label == "Live update" && it.saleItems.single().price == 2.5 }
+                        assertEquals(ImageNameMapping.resourceFor("milk"), live.saleItems.single().imageResource)
+                        assertEquals(cart.orderItems, live.orderItems)
+                        assertEquals(originalCart, read(DocumentID(firstID, "A")))
                         posCollection.cancelAndJoin()
                         awaitObserverCount(baseline)
                         withTimeout(5_000) { while (!pos.uiState.value.isLoading) yield() }

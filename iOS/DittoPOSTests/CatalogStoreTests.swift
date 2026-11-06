@@ -14,11 +14,11 @@ import XCTest
                 metadata: SaleItemMetadata(documentId: other, name: "Other", imageName: "coffee", price: Price(cents: 250)),
                 initialQuantity: 7))
             try await repository.increment(-3, id: id)
-            try await repository.updateMetadata(SaleItemMetadata(documentId: id, name: "Renamed \"冰\"", imageName: "milk", price: Price(cents: 0)))
+            let replacement = SaleItemMetadata(documentId: id, name: "Renamed \"冰\"", imageName: "milk", price: Price(cents: 0))
+            try await repository.updateMetadata(replacement)
             let edited = try await read(id, from: ditto)
             XCTAssertEqual(edited.quantity, -1)
-            XCTAssertEqual(edited.name, "Renamed \"冰\"")
-            XCTAssertEqual(edited.price.amount, 0)
+            XCTAssertEqual(edited.metadata, replacement)
             let unchanged = try await read(other, from: ditto)
             XCTAssertEqual(unchanged.quantity, 7)
             XCTAssertEqual(unchanged.name, "Other")
@@ -27,6 +27,7 @@ import XCTest
             try await repository.increment(4, id: id)
             let replenished = try await read(id, from: ditto)
             XCTAssertEqual(replenished.quantity, 4)
+            XCTAssertEqual(replenished.metadata, replacement)
             do {
                 try await repository.restart(-1, id: id)
                 XCTFail("Negative absolute quantity was accepted")
@@ -56,9 +57,18 @@ import XCTest
                 let all = try await ditto.store.execute(query: "SELECT * FROM sale_items")
                 let rows: [SaleItem] = try all.decode()
                 XCTAssertEqual(Set(rows.map(\.documentId)), Set(LegacySaleItemSeed.saleItemsForAllLocations().map(\.documentId)))
+                for legacy in LegacySaleItemSeed.saleItemsForAllLocations() {
+                    XCTAssertEqual(rows.first { $0.documentId == legacy.documentId }?.metadata,
+                                   SaleItemMetadata(documentId: legacy.documentId, name: legacy.name, imageName: legacy.imageName, price: legacy.price))
+                }
                 let expectedIDs = Set(LegacySaleItemSeed.saleItemsForAllLocations().filter { $0.documentId.locationId == "00001" }.map(\.documentId))
                 let visible = try await snapshot(from: snapshots, matching: { Set($0.map(\.documentId)) == expectedIDs })
                 XCTAssertEqual(visible.first { $0.documentId == first }?.quantity, oldFirst ? nil : 20)
+
+                let zero = DocumentID(id: "00013", locationId: "00001")
+                let positive = DocumentID(id: "00018", locationId: "00001")
+                try await repository.restart(0, id: zero)
+                try await repository.restart(11, id: positive)
 
                 try await repository.restart(0, id: first)
                 try await repository.increment(-2, id: first)
@@ -76,6 +86,10 @@ import XCTest
                 XCTAssertEqual(edited.quantity, -2)
                 XCTAssertEqual(edited.name, "Edited")
                 XCTAssertEqual(edited.price.amount, 0)
+                let retainedZero = try await read(zero, from: ditto)
+                let retainedPositive = try await read(positive, from: ditto)
+                XCTAssertEqual(retainedZero.quantity, 0)
+                XCTAssertEqual(retainedPositive.quantity, 11)
                 let retained = try await read(custom.documentId, from: ditto)
                 XCTAssertEqual(retained.metadata, custom)
                 XCTAssertEqual(retained.quantity, 3)

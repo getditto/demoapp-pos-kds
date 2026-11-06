@@ -82,6 +82,7 @@
 		C1340000000000000000D002 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF142A3CCAB6005BC2AE /* POSViewModel.swift */; };
 		C1340000000000000000D003 /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
 		C1340000000000000000D004 /* LocationsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A003 /* LocationsRepository.swift */; };
+		C1340000000000000000D005 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A006 /* MainViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -514,6 +515,7 @@
 				C15600000000000000000001 /* CurrencyUtils.swift in Sources */,
 				C1340000000000000000D003 /* KDSViewModel.swift in Sources */,
 				C1340000000000000000D004 /* LocationsRepository.swift in Sources */,
+				C1340000000000000000D005 /* MainViewModel.swift in Sources */,
 				C1340000000000000000D002 /* POSViewModel.swift in Sources */,
 				C1340000000000000000D001 /* SaleItemsRepository.swift in Sources */,
 				C15600000000000000000002 /* SettingsModel.swift in Sources */,

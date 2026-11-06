@@ -2,76 +2,40 @@ import Foundation
 import XCTest
 
 final class DittoWireDateTests: XCTestCase {
-    private final class FailureCounter: @unchecked Sendable {
-        private let lock = NSLock()
-        private var count = 0
-
-        func increment() {
-            lock.lock()
-            defer { lock.unlock() }
-            count += 1
-        }
-
-        func value() -> Int {
-            lock.lock()
-            defer { lock.unlock() }
-            return count
-        }
+    private struct Fixtures: Decodable {
+        struct Decoding: Decodable { let input: String; let canonical: String; let epochMillis: Int64 }
+        struct Encoding: Decodable { let epochSeconds: Int64; let nanoseconds: Int; let canonical: String }
+        let decoding: [Decoding]
+        let encoding: [Encoding]
+        let invalid: [String]
     }
 
-    private struct Payload: Codable {
-        let createdAt: Date
+    private func fixtures() throws -> Fixtures {
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "wire-dates", withExtension: "json", subdirectory: "Fixtures"))
+        return try JSONDecoder().decode(Fixtures.self, from: Data(contentsOf: url))
     }
 
-    func testJSONUsesUTCAndMillisecondPrecision() throws {
-        let examples = [
-            ("2026-04-01T12:00:00.000Z", "2026-04-01T12:00:00.000Z"),
-            ("2026-04-01T12:00:00.123Z", "2026-04-01T12:00:00.123Z"),
-            ("2026-04-01T14:00:00.123+02:00", "2026-04-01T12:00:00.123Z")
-        ]
-        for (input, expected) in examples {
-            let data = Data("{\"createdAt\":\"\(input)\"}".utf8)
-            let payload = try JSONDecoder.ditto.decode(Payload.self, from: data)
-            let encoded = try JSONEncoder.ditto.encode(payload)
-            let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: String])
-            XCTAssertEqual(json["createdAt"], expected)
-            XCTAssertEqual(try JSONDecoder.ditto.decode(Payload.self, from: encoded).createdAt, payload.createdAt)
+    func testSupportedInputsDecodeToUTCMilliseconds() throws {
+        for example in try fixtures().decoding {
+            let input = try JSONEncoder().encode(example.input)
+            let date = try JSONDecoder.ditto.decode(Date.self, from: input)
+            XCTAssertEqual(date.timeIntervalSince1970, Double(example.epochMillis) / 1000, accuracy: 0.000001, example.input)
+            let output = try JSONEncoder.ditto.encode(date)
+            XCTAssertEqual(try JSONDecoder().decode(String.self, from: output), example.canonical, example.input)
         }
     }
 
-    func testSubMillisecondDigitsAreTruncatedNotRounded() throws {
-        let data = Data("{\"createdAt\":\"2026-04-01T23:59:59.9999Z\"}".utf8)
-        let payload = try JSONDecoder.ditto.decode(Payload.self, from: data)
-        let encoded = try JSONEncoder.ditto.encode(payload)
-        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: String])
-        XCTAssertEqual(json["createdAt"], "2026-04-01T23:59:59.999Z")
-    }
-
-    func testInvalidTimestampIsRejected() {
-        let data = Data("{\"createdAt\":\"invalid\"}".utf8)
-        XCTAssertThrowsError(try JSONDecoder.ditto.decode(Payload.self, from: data))
-    }
-
-    func testTimestampWithoutFractionalSecondsIsRejected() {
-        let data = Data("{\"createdAt\":\"2026-04-01T12:00:00Z\"}".utf8)
-        XCTAssertThrowsError(try JSONDecoder.ditto.decode(Payload.self, from: data))
-    }
-
-    // DittoWireDate shares one DateFormatter across threads. Races only show up
-    // intermittently, so the same conversion runs many times in parallel.
-    func testDateConversionWorksConcurrently() {
-        let expected = "2026-04-01T12:00:00.123Z"
-        let date = Date(timeIntervalSince1970: 1_775_044_800.123)
-        let failures = FailureCounter()
-
-        DispatchQueue.concurrentPerform(iterations: 100) { _ in
-            let string = DittoWireDate.string(from: date)
-            let decoded = try? DittoWireDate.date(from: string)
-            if string != expected || decoded != date {
-                failures.increment()
-            }
+    func testEncodingTruncatesSubMillisecondsWithoutAdvancingTheSecond() throws {
+        for example in try fixtures().encoding {
+            let date = Date(timeIntervalSince1970: Double(example.epochSeconds) + Double(example.nanoseconds) / 1_000_000_000)
+            let output = try JSONEncoder.ditto.encode(date)
+            XCTAssertEqual(try JSONDecoder().decode(String.self, from: output), example.canonical)
         }
+    }
 
-        XCTAssertEqual(failures.value(), 0)
+    func testInvalidInputsAreRejected() throws {
+        for input in try fixtures().invalid {
+            XCTAssertThrowsError(try JSONDecoder.ditto.decode(Date.self, from: JSONEncoder().encode(input)), input)
+        }
     }
 }

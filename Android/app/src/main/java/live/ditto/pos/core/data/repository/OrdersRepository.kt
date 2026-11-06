@@ -133,31 +133,6 @@ class OrdersRepository internal constructor(
         )
     }
 
-    suspend fun reset(order: Order) {
-        val createdAtNow = now().toDittoIsoString()
-        val baseArgs = mapOf<String, Any>(
-            "id" to order.documentId.id,
-            "locationId" to order.documentId.locationId,
-            "createdAt" to createdAtNow
-        )
-        val query = if (order.cart.isEmpty()) {
-            """
-                UPDATE ${Order.COLLECTION_NAME}
-                SET createdAt = :createdAt
-                WHERE _id.id = :id AND _id.locationId = :locationId
-            """.trimIndent()
-        } else {
-            val unsetList = order.cartPathsForUnset()
-            """
-                UPDATE ${Order.COLLECTION_NAME}
-                SET createdAt = :createdAt
-                UNSET $unsetList
-                WHERE _id.id = :id AND _id.locationId = :locationId
-            """.trimIndent()
-        }
-        ditto.store.execute(query, baseArgs)
-    }
-
     suspend fun runEvictionIfDue() {
         val prefs = preferences()
         val eviction = OrderEviction(
