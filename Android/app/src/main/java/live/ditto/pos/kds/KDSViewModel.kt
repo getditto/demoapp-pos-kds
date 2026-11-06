@@ -46,15 +46,15 @@ constructor(
     val uiState: StateFlow<KdsUiState> = appSettings.locationIdFlow()
         .flatMapLatest { locationId ->
             if (locationId.isEmpty()) return@flatMapLatest flowOf(emptyList<Order>())
-            ordersRepository.observeLocationOrders(locationId).map(KitchenOrders::select)
-                .onStart { emit(emptyList()) }
+            ordersRepository.observeLocationOrders(locationId).map { KitchenOrders.select(it) as List<Order>? }
+                .onStart { emit(null) }
         }
         .onEach { orders ->
-            latestOrders = orders
+            latestOrders = orders.orEmpty()
         }
         .flowOn(dispatcherIo)
-        .map { orders -> KdsUiState(tickets = orders.map(::toTicketUi)) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), KdsUiState(emptyList()))
+        .map { orders -> KdsUiState(tickets = orders.orEmpty().map(::toTicketUi), isLoading = orders == null) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), KdsUiState(emptyList(), isLoading = true))
 
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
@@ -84,7 +84,8 @@ constructor(
 }
 
 data class KdsUiState(
-    val tickets: List<TicketItemUi>
+    val tickets: List<TicketItemUi>,
+    val isLoading: Boolean = false
 )
 
 data class TicketItemUi(

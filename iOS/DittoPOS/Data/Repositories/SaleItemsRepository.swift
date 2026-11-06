@@ -33,21 +33,16 @@ import DittoSwift
 
         // Sync stays active across tabs; local query lifetimes belong to the visible UI.
         // https://docs.ditto.live/sdk/latest/crud/observing-data-changes
-        do {
-            subscription = try sync.registerSubscription(
-                query: """
-                    SELECT * FROM \(SaleItem.collectionName)
-                    WHERE _id.locationId = :locationId
-                    """,
-                arguments: ["locationId": locationId]
-            )
-        } catch {
-            reportSubscriptionFailure("subscribe sale_items", error)
-        }
-
+        subscription = try! sync.registerSubscription(
+            query: """
+                SELECT * FROM \(SaleItem.collectionName)
+                WHERE _id.locationId = :locationId
+                """,
+            arguments: ["locationId": locationId]
+        )
     }
 
-    func observeLocationSaleItems(_ locationId: String) -> AnyPublisher<[SaleItem], Error> {
+    func observeLocationSaleItems(_ locationId: String) -> AnyPublisher<[SaleItem], Never> {
         store.observePublisher(
             query: """
                 SELECT * FROM \(SaleItem.collectionName)

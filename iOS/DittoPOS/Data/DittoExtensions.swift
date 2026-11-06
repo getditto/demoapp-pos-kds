@@ -58,7 +58,7 @@ extension JSONDecoder {
 extension Encodable {
     func dittoJSONString() throws -> String {
         let data = try JSONEncoder.ditto.encode(self)
-        return String(data: data, encoding: .utf8) ?? "{}"
+        return String(decoding: data, as: UTF8.self)
     }
 }
 
@@ -84,43 +84,31 @@ extension DittoQueryResult {
 
 // Combine subjects lack Sendable; callbacks here are confined to the main queue.
 private final class ObserverSubject<Output: Sendable>: @unchecked Sendable {
-    let subject = CurrentValueSubject<Output?, Error>(nil)
-}
-
-// MARK: - Subscription error reporting
-
-// A sync-registration failure must not disable independent local UI queries.
-func reportSubscriptionFailure(_ context: String, _ error: Error) {
-    print("⚠️ \(context): \(error.localizedDescription)")
+    let subject = CurrentValueSubject<Output?, Never>(nil)
 }
 
 extension DittoStore {
-    // Hidden UI must release its native query; cache the first result to avoid losing it.
     // https://docs.ditto.live/sdk/latest/crud/observing-data-changes
     func observePublisher<T: Decodable & Sendable>(
         query: String,
         arguments: [String: Any?]? = nil,
         mapTo: T.Type
-    ) -> AnyPublisher<[T], Error> {
-        Deferred { () -> AnyPublisher<[T], Error> in
+    ) -> AnyPublisher<[T], Never> {
+        Deferred { () -> AnyPublisher<[T], Never> in
             let subject = ObserverSubject<[T]>()
-            do {
-                let observer = try self.registerObserver(
-                    query: query,
-                    arguments: arguments,
-                    deliverOn: .main,
-                    handlerWithSignalNext: { result, signalNext in
-                        let items: [T] = result.decodeOrSkip()
-                        subject.subject.send(items)
-                        signalNext()
-                    }
-                )
-                return subject.subject.compactMap { $0 }
-                    .handleEvents(receiveCancel: { observer.cancel() })
-                    .eraseToAnyPublisher()
-            } catch {
-                return Fail(error: error).eraseToAnyPublisher()
-            }
+            let observer = try! self.registerObserver(
+                query: query,
+                arguments: arguments,
+                deliverOn: .main,
+                handlerWithSignalNext: { result, signalNext in
+                    let items: [T] = result.decodeOrSkip()
+                    subject.subject.send(items)
+                    signalNext()
+                }
+            )
+            return subject.subject.compactMap { $0 }
+                .handleEvents(receiveCancel: { observer.cancel() })
+                .eraseToAnyPublisher()
         }
         .eraseToAnyPublisher()
     }

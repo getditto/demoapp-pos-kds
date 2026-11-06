@@ -147,6 +147,7 @@ class VisibleDemoTest {
                     var kitchenCollection: kotlinx.coroutines.Job? = null
                     try {
                         val initial = posStates.await { it.saleItems.map { item -> item.label } == listOf("Original") }
+                        assertFalse(initial.isLoading)
                         val firstID = initial.currentOrderId
                         awaitObserverCount(baseline + 2)
                         val orderQuery = ditto.store.observers.single { it.queryString.contains("pos_orders") }
@@ -158,19 +159,26 @@ class VisibleDemoTest {
                         assertEquals(firstID, cart.currentOrderId)
                         posCollection.cancelAndJoin()
                         awaitObserverCount(baseline)
+                        withTimeout(5_000) { while (!pos.uiState.value.isLoading) yield() }
+                        assertTrue(pos.uiState.value.orderItems.isEmpty())
+                        assertTrue(pos.uiState.value.saleItems.isEmpty())
 
                         catalog.updateMetadata(metadata.copy(name = "Renamed", imageName = "milk", price = Price(0)))
                         kitchenCollection = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
                         val preparing = kitchenStates.await { it.tickets.size == 1 }
+                        assertFalse(preparing.isLoading)
                         awaitObserverCount(baseline + 1)
                         assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items") })
                         kitchen.updateTicketStatus(preparing.tickets.single().orderId)
                         kitchenStates.await { it.tickets.singleOrNull()?.orderStatus == OrderStatus.PROCESSED }
                         kitchenCollection.cancelAndJoin()
                         awaitObserverCount(baseline)
+                        withTimeout(5_000) { while (!kitchen.uiState.value.isLoading) yield() }
+                        assertTrue(kitchen.uiState.value.tickets.isEmpty())
 
                         posCollection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
                         val returned = posStates.await { it.saleItems.map { item -> item.label } == listOf("Renamed") && it.orderItems.isNotEmpty() }
+                        assertFalse(returned.isLoading)
                         assertEquals(firstID, returned.currentOrderId)
                         val saved = read(DocumentID(firstID, "A"))
                         assertEquals("Original", saved.cart.values.single().name)
@@ -210,7 +218,7 @@ class VisibleDemoTest {
                         awaitObserverCount(baseline + 1)
                         settings.setLocationId("")
                         awaitObserverCount(baseline)
-                        kitchenStates.await { it.tickets.isEmpty() }
+                        kitchenStates.await { !it.isLoading && it.tickets.isEmpty() }
                     } finally {
                         collection.cancelAndJoin()
                     }

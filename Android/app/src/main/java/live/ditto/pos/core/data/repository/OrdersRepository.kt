@@ -2,7 +2,6 @@ package live.ditto.pos.core.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.ditto.kotlin.Ditto
 import com.ditto.kotlin.DittoSyncSubscription
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -79,18 +78,14 @@ class OrdersRepository internal constructor(
         subscription?.close()
         subscription = null
         val locationId = activeLocationId ?: return
-        subscription = try {
-            ditto.sync.registerSubscription(
-                """
+        subscription = ditto.sync.registerSubscription(
+            """
                     SELECT * FROM ${Order.COLLECTION_NAME}
                     WHERE _id.locationId = :locationId
                         AND createdAt > :TTL
-                """.trimIndent(),
-                mapOf("locationId" to locationId, "TTL" to subscriptionCutoff)
-            )
-        } catch (error: Throwable) {
-            reportSubscriptionFailure("subscribe orders", error)
-        }
+            """.trimIndent(),
+            mapOf("locationId" to locationId, "TTL" to subscriptionCutoff)
+        )
     }
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
@@ -188,11 +183,7 @@ class OrdersRepository internal constructor(
                 }
             }
         )
-        try {
-            eviction.runIfDue()?.let { Log.i("Eviction", "evicted orders with createdAt <= $it") }
-        } catch (error: Throwable) {
-            Log.w("Eviction", error.message.orEmpty())
-        }
+        eviction.runIfDue()
     }
 
     private fun startOfDayIso(instant: Instant): String =

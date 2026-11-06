@@ -74,7 +74,7 @@ import XCTest
             let now = midnight.addingTimeInterval(12 * 60 * 60)
             let repository = OrdersRepository(
                 ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now }, defaults: defaults, calendar: calendar)
-            await repository.runEvictionIfDue()
+            try await repository.runEvictionIfDue()
             let result = try await ditto.store.execute(
                 query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "42"])
             let remaining: [Order] = try result.decode()

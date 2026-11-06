@@ -11,6 +11,7 @@ import Foundation
 
 @MainActor class KDSViewModel: ObservableObject {
     @Published private(set) var orders = [Order]()
+    @Published private(set) var isLoading = true
     private var cancellables = Set<AnyCancellable>()
     private let observation = VisibleObservation<String, [Order]>()
     private let ordersRepository: OrdersRepository
@@ -21,13 +22,17 @@ import Foundation
         self.ordersRepository = ordersRepository
         if let previewOrders = previewOrders {
             self.orders = previewOrders
+            isLoading = false
             return
         }
 
         ordersRepository.locationPublisher
             .removeDuplicates()
             .sink { [weak self] location in
-                if self?.locationId != location { self?.orders = [] }
+                if self?.locationId != location {
+                    self?.orders = []
+                    self?.isLoading = true
+                }
                 self?.locationId = location
                 self?.updateObservation()
             }
@@ -35,13 +40,17 @@ import Foundation
     }
 
     func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
         isVisible = visible
+        orders = []
+        isLoading = true
         updateObservation()
     }
 
     private func updateObservation() {
         observation.set(isVisible ? locationId : nil, observe: ordersRepository.observeLocationOrders) { [weak self] orders in
             self?.orders = KitchenOrders.select(from: orders)
+            self?.isLoading = false
         }
     }
 }

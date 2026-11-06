@@ -39,7 +39,7 @@ struct DittoPOS: App {
                 .environmentObject(saleItemsRepository)
                 .task {
                     await DemoSeeder(store: DittoManager.shared.ditto.store).seedAll()
-                    await ordersRepository.runEvictionIfDue()
+                    try! await ordersRepository.runEvictionIfDue()
                 }
         }
     }

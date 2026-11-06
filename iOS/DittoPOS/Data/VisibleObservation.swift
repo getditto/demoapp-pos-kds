@@ -8,9 +8,8 @@ import Combine
 
     func set(
         _ key: Key?,
-        observe: (Key) -> AnyPublisher<Value, Error>,
-        receive: @escaping (Value) -> Void,
-        failure: @escaping (Error) -> Void = { print("Observation: \($0)") }
+        observe: (Key) -> AnyPublisher<Value, Never>,
+        receive: @escaping (Value) -> Void
     ) {
         guard self.key != key else { return }
         generation += 1
@@ -19,16 +18,10 @@ import Combine
         observation?.cancel()
         observation = nil
         guard let key else { return }
-        let started = observe(key).sink(
-            receiveCompletion: { [weak self] result in
-                guard let self, generation == current else { return }
-                if case .failure(let error) = result { failure(error) }
-            },
-            receiveValue: { [weak self] value in
-                guard let self, generation == current else { return }
-                receive(value)
-            }
-        )
+        let started = observe(key).sink { [weak self] value in
+            guard let self, generation == current else { return }
+            receive(value)
+        }
         if generation == current {
             observation = started
         } else {

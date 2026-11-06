@@ -47,17 +47,13 @@ class SaleItemsRepository internal constructor(
         if (locationId == null) return
         // Sync stays active across tabs; local query lifetimes belong to the visible UI.
         // https://docs.ditto.live/sdk/latest/crud/observing-data-changes
-        subscription = try {
-            ditto.sync.registerSubscription(
-                """
+        subscription = ditto.sync.registerSubscription(
+            """
                     SELECT * FROM ${SaleItem.COLLECTION_NAME}
                     WHERE _id.locationId = :locationId
-                """.trimIndent(),
-                mapOf("locationId" to locationId)
-            )
-        } catch (error: Throwable) {
-            reportSubscriptionFailure("subscribe sale_items", error)
-        }
+            """.trimIndent(),
+            mapOf("locationId" to locationId)
+        )
     }
 
     fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =

@@ -74,21 +74,21 @@ constructor(
 
     private val catalog = appSettings.locationIdFlow()
         .flatMapLatest { locationId ->
-            if (locationId.isEmpty()) return@flatMapLatest flowOf(locationId to emptyList<SaleItem>())
-            saleItemsRepository.observeLocationSaleItems(locationId).map { locationId to it }
-                .onStart { emit(locationId to emptyList()) }
+            if (locationId.isEmpty()) return@flatMapLatest flowOf(locationId to null)
+            saleItemsRepository.observeLocationSaleItems(locationId).map { locationId to it as List<SaleItem>? }
+                .onStart { emit(locationId to null) }
         }
         .onEach { (locationId, items) ->
             latestCatalogLocation = locationId
-            latestSaleItems = items
+            latestSaleItems = items.orEmpty()
         }
         .flowOn(dispatcherIO)
 
     private var latestCatalogLocation: String? = null
 
     val uiState: StateFlow<PosUiState> = combine(currentOrder, catalog) { order, (locationId, items) ->
-        if (order == null || order.documentId.locationId != locationId) {
-            return@combine PosUiState("", emptyList(), "$0.00", emptyList())
+        if (order == null || items == null || order.documentId.locationId != locationId) {
+            return@combine PosUiState("", emptyList(), "$0.00", emptyList(), isLoading = true)
         }
         PosUiState(
             currentOrderId = order.documentId.id,
@@ -99,7 +99,7 @@ constructor(
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
-        PosUiState("", emptyList(), "$0.00", emptyList())
+        PosUiState("", emptyList(), "$0.00", emptyList(), isLoading = true)
     )
 
     fun addItemToCart(saleItem: SaleItemUiModel) {
@@ -162,5 +162,6 @@ data class PosUiState(
     val currentOrderId: String,
     val orderItems: List<OrderItemUiModel>,
     val orderTotal: String,
-    val saleItems: List<SaleItemUiModel>
+    val saleItems: List<SaleItemUiModel>,
+    val isLoading: Boolean = false
 )

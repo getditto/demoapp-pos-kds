@@ -22,6 +22,7 @@ import XCTest
             let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
             let kitchen = KDSViewModel(ordersRepository: orders)
             await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
+            await expect(pos.$currentOrder, matching: { $0 != nil }) { }
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(pos.saleItems[0]) }
             let id = try XCTUnwrap(pos.currentOrder?.documentId)
             _ = try await ditto.store.execute(
@@ -32,7 +33,7 @@ import XCTest
             pos.setVisible(false)
             XCTAssertTrue(ditto.store.observers.isEmpty)
 
-            await orders.runEvictionIfDue()
+            try await orders.runEvictionIfDue()
             let retained = try await readOrder(id, from: ditto)
             XCTAssertEqual(retained, stored)
             now = try DittoWireDate.date(from: "2026-04-03T09:00:00.000Z")
@@ -44,7 +45,7 @@ import XCTest
             let subscription = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
             XCTAssertEqual(subscription.queryArguments?["TTL"] as? String, "2026-04-01T00:00:00.000Z")
 
-            await orders.runEvictionIfDue()
+            try await orders.runEvictionIfDue()
             XCTAssertTrue(subscription.isCancelled)
             let replacement = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
             XCTAssertEqual(replacement.queryArguments?["TTL"] as? String, "2026-04-03T00:00:00.000Z")
@@ -67,6 +68,7 @@ import XCTest
                 try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
                 let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
                 await expect(pos.$saleItems, matching: { !$0.isEmpty }) { pos.setVisible(true) }
+                await expect(pos.$currentOrder, matching: { $0 != nil }) { }
                 let item = try XCTUnwrap(pos.saleItems.first)
                 await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
                 let outgoing = try XCTUnwrap(pos.currentOrder)
@@ -81,11 +83,13 @@ import XCTest
                     arguments: ["json": try changed.dittoJSONString()])
                 let stored = try await readOrder(outgoing.documentId, from: ditto)
                 XCTAssertTrue(stored.isPaid)
-                XCTAssertFalse(try XCTUnwrap(pos.currentOrder).isPaid)
+                XCTAssertNil(pos.currentOrder)
 
                 await expect(pos.$currentOrder, matching: { $0?.documentId.locationId == "B" }) {
                     location.send(Location(id: "B", name: "B"))
+                    pos.setVisible(true)
                 }
+                pos.setVisible(false)
                 let saved = try await readOrder(outgoing.documentId, from: ditto)
                 XCTAssertEqual(saved, stored)
                 XCTAssertTrue(ditto.store.observers.isEmpty)
@@ -117,25 +121,34 @@ import XCTest
             XCTAssertEqual(ditto.store.observers.count, baseline)
 
             await expect(pos.$saleItems, matching: { $0.map(\.name) == ["Original"] }) { pos.setVisible(true) }
+            await expect(pos.$currentOrder, matching: { $0 != nil }) { }
+            XCTAssertFalse(pos.isLoading)
             let firstID = try XCTUnwrap(pos.currentOrder?.documentId)
             XCTAssertEqual(ditto.store.observers.count, baseline + 2)
             let item = try XCTUnwrap(pos.saleItems.first)
             // Adding quantity metadata must preserve existing checkout behavior.
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
             pos.setVisible(false)
+            XCTAssertNil(pos.currentOrder)
+            XCTAssertTrue(pos.saleItems.isEmpty)
+            XCTAssertTrue(pos.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline)
 
             try await catalog.updateMetadata(SaleItemMetadata(documentId: metadata.documentId, name: "Renamed", imageName: "milk", price: Price(cents: 0)))
             await expect(kitchen.$orders, matching: { $0.count == 1 }) { kitchen.setVisible(true) }
+            XCTAssertFalse(kitchen.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline + 1)
             XCTAssertFalse(ditto.store.observers.contains { $0.queryString.contains("sale_items") })
             let ticket = try XCTUnwrap(kitchen.orders.first)
             await expect(kitchen.$orders, matching: { $0.first?.status == .processed }) { orders.updateStatus(of: ticket, with: .processed) }
             kitchen.setVisible(false)
+            XCTAssertTrue(kitchen.orders.isEmpty)
+            XCTAssertTrue(kitchen.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline)
 
             await expect(pos.$saleItems, matching: { $0.map(\.name) == ["Renamed"] }) { pos.setVisible(true) }
             await expect(pos.$currentOrder, matching: { $0?.status == .processed }) { }
+            XCTAssertFalse(pos.isLoading)
             XCTAssertEqual(pos.currentOrder?.documentId, firstID)
             XCTAssertEqual(pos.currentOrder?.cart.values.first?.name, "Original")
             XCTAssertEqual(pos.currentOrder?.cart.values.first?.price.amount, 199)
@@ -152,6 +165,7 @@ import XCTest
             await expect(pos.$saleItems, matching: { $0.map(\.name) == ["Other location"] }) {
                 location.send(Location(id: "B", name: "B"))
             }
+            await expect(pos.$currentOrder, matching: { $0?.documentId.locationId == "B" }) { }
             XCTAssertEqual(pos.currentOrder?.documentId.locationId, "B")
             XCTAssertTrue(pos.saleItems.allSatisfy { $0.documentId.locationId == "B" })
             await expect(pos.$currentOrder, matching: { $0 == nil }) { location.send(nil) }

@@ -22,7 +22,10 @@ struct KDSOrdersGridView: View {
 
     var body: some View {
         Group {
-            if viewModel.orders.isEmpty {
+            if viewModel.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.orders.isEmpty {
                 emptyState
             } else {
                 ScrollView(showsIndicators: false) {

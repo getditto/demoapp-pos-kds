@@ -55,22 +55,17 @@ import Foundation
         let args: [String: Any?] = ["locationId": locationId, "TTL": subscriptionCutoff]
 
         // Sync registration is independent of visible consumers' local queries.
-        do {
-            subscription = try sync.registerSubscription(
-                query: """
-                    SELECT * FROM \(Order.collectionName)
-                    WHERE _id.locationId = :locationId
-                        AND createdAt > :TTL
-                    """,
-                arguments: args
-            )
-        } catch {
-            reportSubscriptionFailure("subscribe orders", error)
-        }
-
+        subscription = try! sync.registerSubscription(
+            query: """
+                SELECT * FROM \(Order.collectionName)
+                WHERE _id.locationId = :locationId
+                    AND createdAt > :TTL
+                """,
+            arguments: args
+        )
     }
 
-    func observeLocationOrders(_ locationId: String) -> AnyPublisher<[Order], Error> {
+    func observeLocationOrders(_ locationId: String) -> AnyPublisher<[Order], Never> {
         store.observePublisher(
             query: """
                 SELECT * FROM \(Order.collectionName)
@@ -83,7 +78,7 @@ import Foundation
 
     // MARK: Selected POS order observation
 
-    func observeOrder(_ id: DocumentID) -> AnyPublisher<Order?, Error> {
+    func observeOrder(_ id: DocumentID) -> AnyPublisher<Order?, Never> {
         store.observePublisher(
             query: """
                 SELECT * FROM \(Order.collectionName)
@@ -155,7 +150,7 @@ import Foundation
 
     // MARK: Eviction
 
-    func runEvictionIfDue() async {
+    func runEvictionIfDue() async throws {
         let eviction = OrderEviction(
             now: now,
             calendar: calendar,
@@ -178,19 +173,13 @@ import Foundation
                 subscriptionCutoff = cutoff
             }
         )
-        do {
-            if let cutoff = try await eviction.runIfDue() {
-                print("Eviction: evicted orders with createdAt <= \(cutoff)")
-            }
-        } catch {
-            print("Eviction: ERROR \(error.localizedDescription)")
-        }
+        _ = try await eviction.runIfDue()
     }
 
     // MARK: Helpers
 
     private func upsert(order: Order) {
-        guard let json = try? order.dittoJSONString() else { return }
+        let json = try! order.dittoJSONString()
         execute(
             """
             INSERT INTO \(Order.collectionName)
@@ -201,14 +190,10 @@ import Foundation
         )
     }
 
-    private func execute(_ query: String, args: [String: String] = [:], function: String = #function) {
+    private func execute(_ query: String, args: [String: String] = [:]) {
         let store = store
         Task {
-            do {
-                try await Self.execute(store: store, query: query, args: args)
-            } catch {
-                assertionFailure("DQL \(function) failed: \(error.localizedDescription)\n\(query)")
-            }
+            try! await Self.execute(store: store, query: query, args: args)
         }
     }
 

@@ -13,6 +13,8 @@ import SwiftUI
 
     @Published private(set) var currentOrder: Order?
     @Published private(set) var saleItems: [SaleItem] = []
+    @Published private(set) var isCatalogLoading = true
+    var isLoading: Bool { isCatalogLoading || currentOrder == nil }
 
     // MARK: Derived UI state
 
@@ -53,6 +55,7 @@ import SwiftUI
     private let orderObservation = VisibleObservation<DocumentID, Order?>()
     private var isVisible = false
     private var observedLocation: String?
+    private var selectedOrderId: DocumentID?
     private var newOrderTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
 
@@ -75,22 +78,18 @@ import SwiftUI
             .receive(on: DispatchQueue.main)
             .sink { [weak self] previous, current in
                 guard let self else { return }
-                let outgoing = currentOrder
+                let outgoing = selectedOrderId
                 if previous?.id != current?.id {
+                    selectedOrderId = nil
                     currentOrder = nil
                     updateObservations()
                 }
                 Task {
                     if let previous,
                        let outgoing,
-                       outgoing.documentId.locationId == previous.id,
+                       outgoing.locationId == previous.id,
                        previous.id != current?.id {
-                        do {
-                            try await ordersRepository.resetUnpaidOrder(outgoing.documentId)
-                        } catch {
-                            assertionFailure("Location cart reset failed: \(error)")
-                            return
-                        }
+                        try! await ordersRepository.resetUnpaidOrder(outgoing)
                     }
                     guard current?.id == locationId() else { return }
                     guard let current else {
@@ -98,9 +97,7 @@ import SwiftUI
                         updateObservations()
                         return
                     }
-                    if let order = currentOrder, order.documentId.locationId == current.id, !order.isPaid {
-                        return
-                    }
+                    if selectedOrderId?.locationId == current.id { return }
                     startNewOrder(for: current.id)
                 }
             }
@@ -109,28 +106,32 @@ import SwiftUI
     }
 
     func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
         isVisible = visible
+        currentOrder = nil
         updateObservations()
     }
 
     private func updateObservations() {
         let selectedLocation = locationId()
-        let activeLocation = isVisible && currentOrder?.documentId.locationId == selectedLocation ? selectedLocation : nil
+        let activeLocation = isVisible ? selectedLocation : nil
         if observedLocation != activeLocation {
             saleItems = []
+            isCatalogLoading = true
             observedLocation = activeLocation
         }
         catalogObservation.set(activeLocation, observe: saleItemsRepository.observeLocationSaleItems) { [weak self] items in
             self?.saleItems = items
+            self?.isCatalogLoading = false
         }
-        let id = currentOrder?.documentId
+        let id = selectedOrderId
         orderObservation.set(activeLocation == id?.locationId ? id : nil, observe: ordersRepository.observeOrder) { [weak self] order in
             guard let self else { return }
             guard let order else {
                 if let locationId = locationId() { startNewOrder(for: locationId) }
                 return
             }
-            guard let matched = OrderSelection.observedOrder(id: currentOrder?.documentId.id, locationId: locationId(), in: [order])
+            guard let matched = OrderSelection.observedOrder(id: selectedOrderId?.id, locationId: locationId(), in: [order])
             else { return }
             currentOrder = matched
         }
@@ -167,19 +168,16 @@ import SwiftUI
 
     private func startNewOrder(for locationId: String) {
         newOrderTask?.cancel()
+        selectedOrderId = nil
         currentOrder = nil
         updateObservations()
         let order = Order.new(locationId: locationId)
         newOrderTask = Task { [weak self] in
             guard let self else { return }
-            do {
-                try await ordersRepository.add(order: order)
-                guard !Task.isCancelled, locationId == self.locationId() else { return }
-                currentOrder = order
-                updateObservations()
-            } catch {
-                assertionFailure("Order creation failed: \(error)")
-            }
+            try! await ordersRepository.add(order: order)
+            guard !Task.isCancelled, locationId == self.locationId() else { return }
+            selectedOrderId = order.documentId
+            updateObservations()
         }
     }
 }

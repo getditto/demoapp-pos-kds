@@ -23,8 +23,7 @@ struct DemoSeeder {
     func seedLocations() async {
         await bulkInitialInsert(
             into: Location.collectionName,
-            documents: LocationSeed.demoLocations,
-            label: "seedLocations"
+            documents: LocationSeed.demoLocations
         )
     }
 
@@ -33,15 +32,13 @@ struct DemoSeeder {
             into: SaleItemCommands.creationCollection,
             documents: SaleItemSeed.saleItemsForAllLocations().map {
                 SaleItemCreation(metadata: $0.metadata, initialQuantity: 20)
-            },
-            label: "seedSaleItems"
+            }
         )
     }
 
     private func bulkInitialInsert<T: Encodable>(
         into collectionName: String,
-        documents: [T],
-        label: String
+        documents: [T]
     ) async {
         guard !documents.isEmpty else { return }
 
@@ -49,20 +46,16 @@ struct DemoSeeder {
         var placeholders: [String] = []
         for (index, document) in documents.enumerated() {
             let key = "d\(index)"
-            args[key] = (try? document.dittoJSONString()) ?? "{}"
+            args[key] = try! document.dittoJSONString()
             placeholders.append("(deserialize_json(:\(key)))")
         }
 
-        do {
-            _ = try await store.execute(
-                query: """
-                    INSERT INTO \(collectionName)
-                    INITIAL DOCUMENTS \(placeholders.joined(separator: ", "))
-                    """,
-                arguments: args
-            )
-        } catch {
-            print("DemoSeeder.\(label): ERROR \(error.localizedDescription)")
-        }
+        _ = try! await store.execute(
+            query: """
+                INSERT INTO \(collectionName)
+                INITIAL DOCUMENTS \(placeholders.joined(separator: ", "))
+                """,
+            arguments: args
+        )
     }
 }

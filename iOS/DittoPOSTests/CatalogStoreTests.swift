@@ -42,7 +42,6 @@ import XCTest
                 let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
                 let snapshots = CurrentValueSubject<[SaleItem]?, Never>(nil)
                 let observation = repository.observeLocationSaleItems("00001").sink(
-                    receiveCompletion: { if case .failure(let error) = $0 { XCTFail("Catalog observation failed: \(error)") } },
                     receiveValue: { snapshots.send($0) })
                 defer { observation.cancel() }
                 _ = try await snapshot(from: snapshots, matching: { $0.isEmpty })

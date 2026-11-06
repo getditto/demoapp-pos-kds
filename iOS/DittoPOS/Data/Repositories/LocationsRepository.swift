@@ -54,13 +54,7 @@ import DittoSwift
     }
 
     private func startSubscription() {
-        do {
-            subscription = try sync.registerSubscription(
-                query: "SELECT * FROM \(Location.collectionName)"
-            )
-        } catch {
-            reportSubscriptionFailure("subscribe locations", error)
-        }
+        subscription = try! sync.registerSubscription(query: "SELECT * FROM \(Location.collectionName)")
     }
 
     private func observeAllLocations() {
@@ -71,7 +65,6 @@ import DittoSwift
         .map { locations in
             locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
         }
-        .replaceError(with: [])
         .assign(to: \.allLocations, on: self)
     }
 

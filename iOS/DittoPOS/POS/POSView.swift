@@ -50,16 +50,23 @@ struct POSView: View {
     }
 
     var body: some View {
-        HStack {
-            POSGridView()
-                .frame(width: layoutViewModel.menuViewWidth)
+        Group {
+            if viewModel.isLoading {
+                ProgressView()
+            } else {
+                HStack {
+                    POSGridView()
+                        .frame(width: layoutViewModel.menuViewWidth)
 
-            Divider()
+                    Divider()
 
-            POSOrderView()
-                .padding(8)
-                .frame(width: layoutViewModel.orderViewWidth)
+                    POSOrderView()
+                        .padding(8)
+                        .frame(width: layoutViewModel.orderViewWidth)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environmentObject(viewModel)
         .environmentObject(layoutViewModel)
         .onAppear { viewModel.setVisible(isActive) }

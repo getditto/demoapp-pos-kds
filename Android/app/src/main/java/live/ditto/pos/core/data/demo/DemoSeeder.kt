@@ -19,23 +19,20 @@ class DemoSeeder(private val ditto: Ditto) {
     suspend fun seedLocations() {
         bulkInitialInsert(
             collectionName = Location.COLLECTION_NAME,
-            documents = LocationSeed.demoLocations.map { it.dittoJsonString() },
-            label = "seedLocations"
+            documents = LocationSeed.demoLocations.map { it.dittoJsonString() }
         )
     }
 
     suspend fun seedSaleItems() {
         bulkInitialInsert(
             collectionName = SaleItemCommands.CREATION_COLLECTION,
-            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, 20L).json() },
-            label = "seedSaleItems"
+            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, 20L).json() }
         )
     }
 
     private suspend fun bulkInitialInsert(
         collectionName: String,
-        documents: List<String>,
-        label: String
+        documents: List<String>
     ) {
         if (documents.isEmpty()) return
 
@@ -46,16 +43,12 @@ class DemoSeeder(private val ditto: Ditto) {
             "(deserialize_json(:$key))"
         }
 
-        try {
-            ditto.store.execute(
-                """
+        ditto.store.execute(
+            """
                 INSERT INTO $collectionName
                 INITIAL DOCUMENTS ${placeholders.joinToString(", ")}
-                """.trimIndent(),
-                args
-            )
-        } catch (error: Throwable) {
-            android.util.Log.w("DemoSeeder", "$label: ${error.message}")
-        }
+            """.trimIndent(),
+            args
+        )
     }
 }
