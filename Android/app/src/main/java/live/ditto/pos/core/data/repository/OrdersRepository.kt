@@ -12,11 +12,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import live.ditto.ditto_wrapper.DittoManager
+import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.decodeOrSkip
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
@@ -99,6 +102,16 @@ class OrdersRepository internal constructor(
         )
     }
 
+    suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
+        CURRENT_ORDER_QUERY,
+        mapOf("id" to id.id, "locationId" to id.locationId)
+    ) { it.decodeOrSkip<Order>().firstOrNull() }
+
+    fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(
+        CURRENT_ORDER_QUERY,
+        mapOf("id" to id.id, "locationId" to id.locationId)
+    ).map { it.firstOrNull() }
+
     suspend fun clearCart(order: Order) {
         if (order.cart.isEmpty()) return
         // App-generated UUID paths need quoted identifiers, not DQL value arguments.
@@ -164,6 +177,7 @@ class OrdersRepository internal constructor(
         timeZone().let { zone -> now().toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
 
     companion object {
+        private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId"
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }

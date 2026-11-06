@@ -26,10 +26,11 @@ import XCTest
         }
     }
 
-    func testResetClearsLinesAndChangesDateWithoutLosingPaymentOrStatus() async throws {
+    func testResetUnpaidOrderClearsLinesAndChangesOnlyItsDateAndCart() async throws {
         for empty in [false, true] {
             try await TestDitto.withInstance { ditto in
                 var original = try OrderFixture.load()
+                original.payments = [:]
                 if empty { original.cart = [:] }
                 let other = Order(
                     documentId: DocumentID(id: original.documentId.id, locationId: "other"),
@@ -40,9 +41,7 @@ import XCTest
                 try await insert(other, into: ditto)
                 let repository = OrdersRepository(
                     ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { resetAt })
-                try await observeChange(ditto, original, satisfying: { $0.cart.isEmpty && $0.createdAt == resetAt }) {
-                    repository.reset(order: original)
-                }
+                try await repository.resetUnpaidOrder(original.documentId)
                 let reset = try await read(original.documentId, from: ditto)
                 XCTAssertEqual(reset.createdAt, resetAt)
                 XCTAssertTrue(reset.cart.isEmpty)

@@ -74,26 +74,34 @@ import SwiftUI
             .receive(on: DispatchQueue.main)
             .sink { [weak self] previous, current in
                 guard let self else { return }
-
-                if let previous,
-                   let outgoing = currentOrder,
-                   !outgoing.isPaid,
-                   outgoing.documentId.locationId == previous.id,
-                   previous.id != current?.id {
-                    ordersRepository.reset(order: outgoing)
-                }
-
-                guard let current else {
+                let outgoing = currentOrder
+                if previous?.id != current?.id {
                     currentOrder = nil
                     updateObservations()
-                    return
                 }
-
-                if let order = currentOrder, order.documentId.locationId == current.id, !order.isPaid {
-                    return
+                Task {
+                    if let previous,
+                       let outgoing,
+                       outgoing.documentId.locationId == previous.id,
+                       previous.id != current?.id {
+                        do {
+                            try await ordersRepository.resetUnpaidOrder(outgoing.documentId)
+                        } catch {
+                            assertionFailure("Location cart reset failed: \(error)")
+                            return
+                        }
+                    }
+                    guard current?.id == locationId() else { return }
+                    guard let current else {
+                        currentOrder = nil
+                        updateObservations()
+                        return
+                    }
+                    if let order = currentOrder, order.documentId.locationId == current.id, !order.isPaid {
+                        return
+                    }
+                    startNewOrder(for: current.id)
                 }
-
-                startNewOrder(for: current.id)
             }
             .store(in: &cancellables)
 
@@ -105,7 +113,8 @@ import SwiftUI
     }
 
     private func updateObservations() {
-        let activeLocation = isVisible ? locationId() : nil
+        let selectedLocation = locationId()
+        let activeLocation = isVisible && currentOrder?.documentId.locationId == selectedLocation ? selectedLocation : nil
         if observedLocation != activeLocation {
             saleItems = []
             observedLocation = activeLocation

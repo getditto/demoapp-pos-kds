@@ -3,6 +3,51 @@ import DittoSwift
 import XCTest
 
 @MainActor final class VisibleDemoTests: XCTestCase {
+    func testLocationChangePreservesOrdersPaidOrCanceledWhilePOSWasHidden() async throws {
+        for canceled in [false, true] {
+            try await TestDitto.withInstance { ditto in
+                let location = CurrentValueSubject<Location?, Never>(Location(id: "A", name: "A"))
+                let ids = location.map { $0?.id }.eraseToAnyPublisher()
+                let orders = OrdersRepository(ditto: ditto, locationPublisher: ids)
+                let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
+                let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199))
+                try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
+                let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
+                await expect(pos.$saleItems, matching: { !$0.isEmpty }) { pos.setVisible(true) }
+                let item = try XCTUnwrap(pos.saleItems.first)
+                await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
+                let outgoing = try XCTUnwrap(pos.currentOrder)
+                pos.setVisible(false)
+                XCTAssertTrue(ditto.store.observers.isEmpty)
+
+                let changed = canceled
+                    ? outgoing.appendingStatus(.canceled, at: Date().addingTimeInterval(2))
+                    : outgoing.addingPayment(Payment(type: .cash, amount: outgoing.total, status: .complete), paymentId: "other-device")
+                _ = try await ditto.store.execute(
+                    query: "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                    arguments: ["json": try changed.dittoJSONString()])
+                let stored = try await readOrder(outgoing.documentId, from: ditto)
+                XCTAssertTrue(stored.isPaid)
+                XCTAssertFalse(try XCTUnwrap(pos.currentOrder).isPaid)
+
+                await expect(pos.$currentOrder, matching: { $0?.documentId.locationId == "B" }) {
+                    location.send(Location(id: "B", name: "B"))
+                }
+                let saved = try await readOrder(outgoing.documentId, from: ditto)
+                XCTAssertEqual(saved, stored)
+                XCTAssertTrue(ditto.store.observers.isEmpty)
+            }
+        }
+    }
+
+    private func readOrder(_ id: DocumentID, from ditto: Ditto) async throws -> Order {
+        let result = try await ditto.store.execute(
+            query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+            arguments: ["id": id.id, "locationId": id.locationId])
+        let orders: [Order] = try result.decode()
+        return try XCTUnwrap(orders.first)
+    }
+
     func testTabsOwnOnlyTheirQueriesAndReturnToTheSameCartWithFreshCatalogAndOrderData() async throws {
         try await TestDitto.withInstance { ditto in
             let baseline = ditto.store.observers.count

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.OrderStatus
@@ -46,6 +47,7 @@ constructor(
         .flatMapLatest { locationId ->
             if (locationId.isEmpty()) return@flatMapLatest flowOf(emptyList<Order>())
             ordersRepository.observeLocationOrders(locationId).map(KitchenOrders::select)
+                .onStart { emit(emptyList()) }
         }
         .onEach { orders ->
             latestOrders = orders

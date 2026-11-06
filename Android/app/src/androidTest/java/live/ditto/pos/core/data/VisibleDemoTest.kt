@@ -60,6 +60,9 @@ class VisibleDemoTest {
                         val initial = posStates.await { it.saleItems.map { item -> item.label } == listOf("Original") }
                         val firstID = initial.currentOrderId
                         awaitObserverCount(baseline + 2)
+                        val orderQuery = ditto.store.observers.single { it.queryString.contains("pos_orders") }
+                        assertTrue(orderQuery.queryString.contains("_id.id = :id"))
+                        assertTrue(orderQuery.queryString.contains("_id.locationId = :locationId"))
                         // Until137, stock zero must not disable the existing POS.
                         pos.addItemToCart(initial.saleItems.single())
                         val cart = posStates.await { it.orderItems.isNotEmpty() }
