@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
@@ -55,6 +57,11 @@ class OrdersRepository internal constructor(
 
     private val ditto: Ditto get() = dittoProvider()
     private var subscription: DittoSyncSubscription? = null
+    private val subscriptionMutex = Mutex()
+    private var activeLocationId: String? = null
+    private var subscriptionCutoff = preferences().getLong(LAST_EVICTION_KEY, 0L).let { lastRun ->
+        startOfDayIso(if (lastRun > 0) Instant.fromEpochMilliseconds(lastRun) else now())
+    }
 
     init {
         locationIds
@@ -63,10 +70,15 @@ class OrdersRepository internal constructor(
             .launchIn(repoScope)
     }
 
-    private fun setActiveLocation(locationId: String?) {
+    private suspend fun setActiveLocation(locationId: String?) = subscriptionMutex.withLock {
+        activeLocationId = locationId
+        refreshSubscription()
+    }
+
+    private fun refreshSubscription() {
         subscription?.close()
         subscription = null
-        if (locationId == null) return
+        val locationId = activeLocationId ?: return
         subscription = try {
             ditto.sync.registerSubscription(
                 """
@@ -74,7 +86,7 @@ class OrdersRepository internal constructor(
                     WHERE _id.locationId = :locationId
                         AND createdAt > :TTL
                 """.trimIndent(),
-                mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
+                mapOf("locationId" to locationId, "TTL" to subscriptionCutoff)
             )
         } catch (error: Throwable) {
             reportSubscriptionFailure("subscribe orders", error)
@@ -86,9 +98,8 @@ class OrdersRepository internal constructor(
             query = """
                 SELECT * FROM ${Order.COLLECTION_NAME}
                 WHERE _id.locationId = :locationId
-                    AND createdAt > :TTL
             """.trimIndent(),
-            args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
+            args = mapOf("locationId" to locationId)
         )
 
     suspend fun upsert(order: Order) {
@@ -102,10 +113,9 @@ class OrdersRepository internal constructor(
         )
     }
 
-    // Restored carts must remain in the same date window as KDS and sync.
-    suspend fun findRecentOrder(id: DocumentID): Order? = ditto.store.execute(
-        "$CURRENT_ORDER_QUERY AND createdAt > :TTL",
-        mapOf("id" to id.id, "locationId" to id.locationId, "TTL" to startOfTodayIso())
+    suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
+        CURRENT_ORDER_QUERY,
+        mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decodeOrSkip<Order>().firstOrNull() }
 
     fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(
@@ -161,10 +171,21 @@ class OrdersRepository internal constructor(
             lastRun = { prefs.getLong(LAST_EVICTION_KEY, 0L) },
             recordRun = { prefs.edit().putLong(LAST_EVICTION_KEY, it).apply() },
             evict = { cutoff ->
-                ditto.store.execute(
-                    "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
-                    mapOf("TTL" to cutoff)
-                )
+                subscriptionMutex.withLock {
+                    // An active subscription can fetch evicted documents again.
+                    // https://docs.ditto.live/sdk/latest/crud/delete#evicting-data
+                    subscription?.close()
+                    subscription = null
+                    try {
+                        ditto.store.execute(
+                            "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
+                            mapOf("TTL" to cutoff)
+                        )
+                        subscriptionCutoff = cutoff
+                    } finally {
+                        refreshSubscription()
+                    }
+                }
             }
         )
         try {
@@ -174,8 +195,8 @@ class OrdersRepository internal constructor(
         }
     }
 
-    private fun startOfTodayIso(): String =
-        timeZone().let { zone -> now().toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
+    private fun startOfDayIso(instant: Instant): String =
+        timeZone().let { zone -> instant.toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
 
     companion object {
         private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId"

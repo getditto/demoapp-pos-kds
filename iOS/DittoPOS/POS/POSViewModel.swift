@@ -53,6 +53,7 @@ import SwiftUI
     private let orderObservation = VisibleObservation<DocumentID, Order?>()
     private var isVisible = false
     private var observedLocation: String?
+    private var newOrderTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -124,9 +125,12 @@ import SwiftUI
         }
         let id = currentOrder?.documentId
         orderObservation.set(activeLocation == id?.locationId ? id : nil, observe: ordersRepository.observeOrder) { [weak self] order in
-            // A newly inserted document may not be in the first callback yet.
-            guard let self, let order,
-                  let matched = OrderSelection.observedOrder(id: currentOrder?.documentId.id, locationId: locationId(), in: [order])
+            guard let self else { return }
+            guard let order else {
+                if let locationId = locationId() { startNewOrder(for: locationId) }
+                return
+            }
+            guard let matched = OrderSelection.observedOrder(id: currentOrder?.documentId.id, locationId: locationId(), in: [order])
             else { return }
             currentOrder = matched
         }
@@ -162,9 +166,20 @@ import SwiftUI
     }
 
     private func startNewOrder(for locationId: String) {
-        let order = Order.new(locationId: locationId)
-        currentOrder = order
-        ordersRepository.add(order: order)
+        newOrderTask?.cancel()
+        currentOrder = nil
         updateObservations()
+        let order = Order.new(locationId: locationId)
+        newOrderTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await ordersRepository.add(order: order)
+                guard !Task.isCancelled, locationId == self.locationId() else { return }
+                currentOrder = order
+                updateObservations()
+            } catch {
+                assertionFailure("Order creation failed: \(error)")
+            }
+        }
     }
 }

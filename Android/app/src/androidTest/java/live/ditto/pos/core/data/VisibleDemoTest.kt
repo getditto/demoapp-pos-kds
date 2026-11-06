@@ -15,6 +15,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.kds.KDSViewModel
 import live.ditto.pos.kds.KdsUiState
@@ -22,7 +24,6 @@ import live.ditto.pos.pos.POSViewModel
 import live.ditto.pos.pos.PosUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,19 +32,19 @@ import kotlin.time.Instant
 @RunWith(AndroidJUnit4::class)
 class VisibleDemoTest {
     @Test
-    fun savedPriorDayCartDoesNotHideNewSalesFromKitchenWhenEvictionIsNotDue() = runBlocking {
+    fun storedCartSurvivesRelaunchAndMidnightTabReentryUntilEviction() = runBlocking {
         TestDitto.withInstance {
             settings.setLocationId("A")
-            val now = Instant.parse("2026-04-01T09:00:00.000Z")
-            val orders = repository(now, settings.locationIdFlow())
-            val catalog = catalog(settings.locationIdFlow())
-            val old = Order.new("A", createdAt = Instant.parse("2026-03-31T18:00:00.000Z"))
-                .addingCartLineItem(TestDitto.fixture().cart.values.first(), lineItemId = "retained-line")
-            insert(old)
-            settings.setCurrentOrderId(old.documentId.id)
+            var now = Instant.parse("2026-04-01T09:00:00.000Z")
             preferences.edit().putLong("v2.lastEvictionAt", Instant.parse("2026-03-31T12:00:00.000Z").toEpochMilliseconds()).commit()
+            val orders = repository(locationIds = settings.locationIdFlow(), clock = { now })
+            val catalog = catalog(settings.locationIdFlow())
+            val stored = Order.new("A", createdAt = Instant.parse("2026-03-31T18:00:00.000Z"))
+                .addingCartLineItem(TestDitto.fixture().cart.values.first(), lineItemId = "retained-line")
+            insert(stored)
+            settings.setCurrentOrderId(stored.documentId.id)
             orders.runEvictionIfDue()
-            assertEquals(old, read(old.documentId))
+            assertEquals(stored, read(stored.documentId))
             catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", "coffee", Price(199)), 2))
             val owner = object : ViewModelStoreOwner {
                 override val viewModelStore = ViewModelStore()
@@ -61,24 +62,51 @@ class VisibleDemoTest {
             val kitchenStates = Channel<KdsUiState>(Channel.UNLIMITED)
             try {
                 coroutineScope {
-                    val collection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
-                    val freshID = try {
+                    var collection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
+                    try {
                         val initial = posStates.await { it.currentOrderId.isNotEmpty() && it.saleItems.size == 1 }
-                        assertNotEquals(old.documentId.id, initial.currentOrderId)
+                        assertEquals(stored.documentId.id, initial.currentOrderId)
                         pos.addItemToCart(initial.saleItems.single())
-                        posStates.await { it.orderItems.isNotEmpty() }.currentOrderId
+                        posStates.await { it.orderItems.size == 2 }
                     } finally {
                         collection.cancelAndJoin()
                     }
                     awaitObserverCount(0)
-                    val tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
+                    now = Instant.parse("2026-04-02T09:00:00.000Z")
+                    var tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
                     try {
                         val ready = kitchenStates.await { it.tickets.size == 1 }
-                        assertEquals(freshID, ready.tickets.single().orderId)
-                        assertEquals(mapOf("Coffee" to 1), ready.tickets.single().items)
-                        assertEquals(old, read(old.documentId))
+                        assertEquals(stored.documentId.id, ready.tickets.single().orderId)
+                        assertEquals(1, ready.tickets.single().items["Coffee"])
                     } finally {
                         tickets.cancelAndJoin()
+                    }
+                    collection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
+                    try {
+                        posStates.await { it.currentOrderId == stored.documentId.id && it.orderItems.size == 2 }
+                    } finally {
+                        collection.cancelAndJoin()
+                    }
+                    awaitObserverCount(0)
+                    val subscription = ditto.sync.subscriptions.single { it.queryString.contains("pos_orders") }
+                    val args = dittoJson.parseToJsonElement(requireNotNull(subscription.queryArgumentsJsonString)).jsonObject
+                    assertEquals("2026-03-31T00:00:00.000Z", args.getValue("TTL").jsonPrimitive.content)
+                    tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
+                    try {
+                        kitchenStates.await { it.tickets.size == 1 }
+                        orders.runEvictionIfDue()
+                        kitchenStates.await { it.tickets.isEmpty() }
+                        assertTrue(subscription.isClosed)
+                    } finally {
+                        tickets.cancelAndJoin()
+                    }
+                    collection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
+                    try {
+                        val fresh = posStates.await { it.currentOrderId.isNotEmpty() && it.currentOrderId != stored.documentId.id }
+                        assertTrue(fresh.orderItems.isEmpty())
+                        assertEquals(now.toEpochMilliseconds(), preferences.getLong("v2.lastEvictionAt", 0L))
+                    } finally {
+                        collection.cancelAndJoin()
                     }
                 }
             } finally {

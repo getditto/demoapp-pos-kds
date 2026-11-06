@@ -3,6 +3,59 @@ import DittoSwift
 import XCTest
 
 @MainActor final class VisibleDemoTests: XCTestCase {
+    func testMidnightTabReentryKeepsTheStoredCartUntilEvictionThenStartsANewOne() async throws {
+        try await TestDitto.withInstance { ditto in
+            var now = try DittoWireDate.date(from: "2026-04-02T09:00:00.000Z")
+            let createdAt = try DittoWireDate.date(from: "2026-04-01T23:50:00.000Z")
+            let suite = "VisibleDemoTests.\(UUID().uuidString)"
+            let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+            defer { defaults.removePersistentDomain(forName: suite) }
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+            defaults.set(try DittoWireDate.date(from: "2026-04-01T12:00:00.000Z").timeIntervalSince1970, forKey: OrderEviction.lastRunKey)
+            let location = CurrentValueSubject<Location?, Never>(Location(id: "A", name: "A"))
+            let ids = location.map { $0?.id }.eraseToAnyPublisher()
+            let orders = OrdersRepository(ditto: ditto, locationPublisher: ids, now: { now }, defaults: defaults, calendar: calendar)
+            let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
+            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
+                documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
+            let kitchen = KDSViewModel(ordersRepository: orders)
+            await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
+            await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(pos.saleItems[0]) }
+            let id = try XCTUnwrap(pos.currentOrder?.documentId)
+            _ = try await ditto.store.execute(
+                query: "UPDATE pos_orders SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
+                arguments: ["date": DittoWireDate.string(from: createdAt), "id": id.id, "locationId": "A"])
+            await expect(pos.$currentOrder, matching: { $0?.createdAt == createdAt }) { }
+            let stored = try await readOrder(id, from: ditto)
+            pos.setVisible(false)
+            XCTAssertTrue(ditto.store.observers.isEmpty)
+
+            await orders.runEvictionIfDue()
+            let retained = try await readOrder(id, from: ditto)
+            XCTAssertEqual(retained, stored)
+            now = try DittoWireDate.date(from: "2026-04-03T09:00:00.000Z")
+            await expect(kitchen.$orders, matching: { $0.map(\.documentId) == [id] }) { kitchen.setVisible(true) }
+            kitchen.setVisible(false)
+            await expect(pos.$currentOrder, matching: { $0 == stored }) { pos.setVisible(true) }
+            pos.setVisible(false)
+            XCTAssertTrue(ditto.store.observers.isEmpty)
+            let subscription = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
+            XCTAssertEqual(subscription.queryArguments?["TTL"] as? String, "2026-04-01T00:00:00.000Z")
+
+            await orders.runEvictionIfDue()
+            XCTAssertTrue(subscription.isCancelled)
+            let replacement = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
+            XCTAssertEqual(replacement.queryArguments?["TTL"] as? String, "2026-04-03T00:00:00.000Z")
+            let remaining = try await ditto.store.execute(query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+            XCTAssertTrue(remaining.items.isEmpty)
+            await expect(pos.$currentOrder, matching: { $0 != nil && $0?.documentId != id && $0?.cart.isEmpty == true }) { pos.setVisible(true) }
+            let fresh = try await readOrder(XCTUnwrap(pos.currentOrder).documentId, from: ditto)
+            XCTAssertTrue(fresh.cart.isEmpty)
+        }
+    }
+
     func testLocationChangePreservesOrdersPaidOrCanceledWhilePOSWasHidden() async throws {
         for canceled in [false, true] {
             try await TestDitto.withInstance { ditto in

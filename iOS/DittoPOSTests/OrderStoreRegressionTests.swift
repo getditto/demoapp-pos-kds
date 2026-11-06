@@ -73,8 +73,8 @@ import XCTest
             defer { defaults.removePersistentDomain(forName: suite) }
             let now = midnight.addingTimeInterval(12 * 60 * 60)
             let repository = OrdersRepository(
-                ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now })
-            await repository.runEvictionIfDue(defaults: defaults, calendar: calendar)
+                ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now }, defaults: defaults, calendar: calendar)
+            await repository.runEvictionIfDue()
             let result = try await ditto.store.execute(
                 query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "42"])
             let remaining: [Order] = try result.decode()

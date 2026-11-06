@@ -27,7 +27,7 @@ import XCTest
             )
             defer { observer.cancel() }
 
-            repository.add(order: order)
+            try await repository.add(order: order)
             await fulfillment(of: [delivered], timeout: 5)
         }
     }

@@ -39,11 +39,11 @@ internal class TestDitto(
 
     fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope)
 
-    fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow()): OrdersRepository = OrdersRepository(
+    fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow(), clock: () -> Instant = { now }): OrdersRepository = OrdersRepository(
         dittoProvider = { ditto },
         locationIds = locationIds,
         preferences = { preferences },
-        now = { now },
+        now = clock,
         timeZone = { TimeZone.UTC },
         repoScope = scope
     )

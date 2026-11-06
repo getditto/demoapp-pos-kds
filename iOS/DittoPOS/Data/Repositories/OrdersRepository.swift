@@ -15,15 +15,28 @@ import Foundation
 
     private let ditto: Ditto
     private let now: () -> Date
+    private let defaults: UserDefaults
+    private let calendar: Calendar
     private var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
     private var subscription: DittoSyncSubscription?
+    private var subscriptionCutoff: String
+    private var activeLocationId: String?
+    private var isEvicting = false
     private var locationSubscription = AnyCancellable({})
 
-    init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>, now: @escaping () -> Date = Date.init) {
+    init(
+        ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>, now: @escaping () -> Date = Date.init,
+        defaults: UserDefaults = .standard, calendar: Calendar = .current
+    ) {
         self.ditto = ditto
         self.now = now
+        self.defaults = defaults
+        self.calendar = calendar
+        let lastRun = defaults.double(forKey: OrderEviction.lastRunKey)
+        let retainedSince = lastRun > 0 ? Date(timeIntervalSince1970: lastRun) : now()
+        subscriptionCutoff = DittoWireDate.string(from: calendar.startOfDay(for: retainedSince))
         self.locationPublisher = locationPublisher
         locationSubscription = locationPublisher
             .removeDuplicates()
@@ -35,10 +48,11 @@ import Foundation
     // MARK: Subscription
 
     private func setActiveLocation(_ locationId: String?) {
+        activeLocationId = locationId
         subscription?.cancel()
         subscription = nil
-        guard let locationId else { return }
-        let args: [String: Any?] = ["locationId": locationId, "TTL": startOfToday()]
+        guard let locationId, !isEvicting else { return }
+        let args: [String: Any?] = ["locationId": locationId, "TTL": subscriptionCutoff]
 
         // Sync registration is independent of visible consumers' local queries.
         do {
@@ -61,9 +75,8 @@ import Foundation
             query: """
                 SELECT * FROM \(Order.collectionName)
                 WHERE _id.locationId = :locationId
-                    AND createdAt > :TTL
                 """,
-            arguments: ["locationId": locationId, "TTL": startOfToday()],
+            arguments: ["locationId": locationId],
             mapTo: Order.self
         )
     }
@@ -85,8 +98,11 @@ import Foundation
 
     // MARK: Mutations
 
-    func add(order: Order) {
-        upsert(order: order)
+    func add(order: Order) async throws {
+        try await Self.execute(
+            store: store,
+            query: "INSERT INTO \(Order.collectionName) DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+            args: ["json": try order.dittoJSONString()])
     }
 
     func add(item: CartLineItem, lineItemId: String, to order: Order) {
@@ -139,17 +155,27 @@ import Foundation
 
     // MARK: Eviction
 
-    func runEvictionIfDue(defaults: UserDefaults = .standard, calendar: Calendar = .current) async {
+    func runEvictionIfDue() async {
         let eviction = OrderEviction(
             now: now,
             calendar: calendar,
-            lastRun: { defaults.double(forKey: OrderEviction.lastRunKey) },
-            recordRun: { defaults.set($0, forKey: OrderEviction.lastRunKey) },
-            evict: { [store] cutoff in
+            lastRun: { self.defaults.double(forKey: OrderEviction.lastRunKey) },
+            recordRun: { self.defaults.set($0, forKey: OrderEviction.lastRunKey) },
+            evict: { [self] cutoff in
+                // An active subscription can fetch evicted documents again.
+                // https://docs.ditto.live/sdk/latest/crud/delete#evicting-data
+                isEvicting = true
+                subscription?.cancel()
+                subscription = nil
+                defer {
+                    isEvicting = false
+                    setActiveLocation(activeLocationId)
+                }
                 _ = try await store.execute(
                     query: "EVICT FROM \(Order.collectionName) WHERE createdAt <= :TTL",
                     arguments: ["TTL": cutoff]
                 )
+                subscriptionCutoff = cutoff
             }
         )
         do {
@@ -162,10 +188,6 @@ import Foundation
     }
 
     // MARK: Helpers
-
-    private func startOfToday() -> String {
-        DittoWireDate.string(from: Calendar.current.startOfDay(for: now()))
-    }
 
     private func upsert(order: Order) {
         guard let json = try? order.dittoJSONString() else { return }

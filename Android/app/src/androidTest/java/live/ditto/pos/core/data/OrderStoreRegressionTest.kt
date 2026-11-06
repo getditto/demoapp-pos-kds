@@ -91,7 +91,7 @@ class OrderStoreRegressionTest {
     }
 
     @Test
-    fun observerAdapterBindsLocationAndCutoffAndDecodesInitialAndSubsequentOrders() = runBlocking {
+    fun observerAdapterIncludesLocallyPresentDatesAndBindsLocationForInitialAndSubsequentOrders() = runBlocking {
         TestDitto.withInstance {
             val original = TestDitto.fixture()
             insert(original)
@@ -105,14 +105,18 @@ class OrderStoreRegressionTest {
                     repository.observeLocationOrders("42").collect { snapshots.send(it) }
                 }
                 try {
-                    assertEquals(listOf(original), withTimeout(5_000) { snapshots.receive() })
+                    val initial = withTimeout(5_000) { snapshots.receive() }
+                    assertEquals(setOf(original.documentId.id, "midnight", "older"), initial.map { it.documentId.id }.toSet())
+                    assertEquals(setOf("42"), initial.map { it.documentId.locationId }.toSet())
                     val updatedAt = Instant.parse("2026-04-01T13:00:00.123Z")
                     // Simulate a peer update locally, retaining the same live collection.
                     ditto.store.execute(
                         "UPDATE pos_orders SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
                         mapOf("date" to updatedAt.toDittoIsoString(), "id" to original.documentId.id, "locationId" to "42")
                     )
-                    assertEquals(listOf(original.copy(createdAt = updatedAt)), withTimeout(5_000) { snapshots.receive() })
+                    val updated = withTimeout(5_000) { snapshots.receive() }
+                    assertEquals(original.copy(createdAt = updatedAt), updated.single { it.documentId == original.documentId })
+                    assertEquals(initial.filter { it.documentId != original.documentId }.toSet(), updated.filter { it.documentId != original.documentId }.toSet())
                 } finally {
                     collection.cancelAndJoin()
                     snapshots.close()
