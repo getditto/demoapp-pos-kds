@@ -102,9 +102,10 @@ class OrdersRepository internal constructor(
         )
     }
 
-    suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
-        CURRENT_ORDER_QUERY,
-        mapOf("id" to id.id, "locationId" to id.locationId)
+    // Restored carts must remain in the same date window as KDS and sync.
+    suspend fun findRecentOrder(id: DocumentID): Order? = ditto.store.execute(
+        "$CURRENT_ORDER_QUERY AND createdAt > :TTL",
+        mapOf("id" to id.id, "locationId" to id.locationId, "TTL" to startOfTodayIso())
     ) { it.decodeOrSkip<Order>().firstOrNull() }
 
     fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(

@@ -15,12 +15,14 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.kds.KDSViewModel
 import live.ditto.pos.kds.KdsUiState
 import live.ditto.pos.pos.POSViewModel
 import live.ditto.pos.pos.PosUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +30,65 @@ import kotlin.time.Instant
 
 @RunWith(AndroidJUnit4::class)
 class VisibleDemoTest {
+    @Test
+    fun savedPriorDayCartDoesNotHideNewSalesFromKitchenWhenEvictionIsNotDue() = runBlocking {
+        TestDitto.withInstance {
+            settings.setLocationId("A")
+            val now = Instant.parse("2026-04-01T09:00:00.000Z")
+            val orders = repository(now, settings.locationIdFlow())
+            val catalog = catalog(settings.locationIdFlow())
+            val old = Order.new("A", createdAt = Instant.parse("2026-03-31T18:00:00.000Z"))
+                .addingCartLineItem(TestDitto.fixture().cart.values.first(), lineItemId = "retained-line")
+            insert(old)
+            settings.setCurrentOrderId(old.documentId.id)
+            preferences.edit().putLong("v2.lastEvictionAt", Instant.parse("2026-03-31T12:00:00.000Z").toEpochMilliseconds()).commit()
+            orders.runEvictionIfDue()
+            assertEquals(old, read(old.documentId))
+            catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", "coffee", Price(199)), 2))
+            val owner = object : ViewModelStoreOwner {
+                override val viewModelStore = ViewModelStore()
+            }
+            val provider = ViewModelProvider.create(
+                owner,
+                viewModelFactory {
+                    initializer { POSViewModel(settings, orders, catalog, Dispatchers.IO) }
+                    initializer { KDSViewModel(settings, orders, Dispatchers.IO) }
+                }
+            )
+            val pos = provider[POSViewModel::class]
+            val kitchen = provider[KDSViewModel::class]
+            val posStates = Channel<PosUiState>(Channel.UNLIMITED)
+            val kitchenStates = Channel<KdsUiState>(Channel.UNLIMITED)
+            try {
+                coroutineScope {
+                    val collection = launch(Dispatchers.Main) { pos.uiState.collect { posStates.send(it) } }
+                    val freshID = try {
+                        val initial = posStates.await { it.currentOrderId.isNotEmpty() && it.saleItems.size == 1 }
+                        assertNotEquals(old.documentId.id, initial.currentOrderId)
+                        pos.addItemToCart(initial.saleItems.single())
+                        posStates.await { it.orderItems.isNotEmpty() }.currentOrderId
+                    } finally {
+                        collection.cancelAndJoin()
+                    }
+                    awaitObserverCount(0)
+                    val tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
+                    try {
+                        val ready = kitchenStates.await { it.tickets.size == 1 }
+                        assertEquals(freshID, ready.tickets.single().orderId)
+                        assertEquals(mapOf("Coffee" to 1), ready.tickets.single().items)
+                        assertEquals(old, read(old.documentId))
+                    } finally {
+                        tickets.cancelAndJoin()
+                    }
+                }
+            } finally {
+                withContext(Dispatchers.Main) { owner.viewModelStore.clear() }
+                posStates.close()
+                kitchenStates.close()
+            }
+        }
+    }
+
     @Test
     fun tabsOwnOnlyTheirQueriesAndReturnToTheSameCartWithFreshCatalogAndOrderData() = runBlocking {
         TestDitto.withInstance {

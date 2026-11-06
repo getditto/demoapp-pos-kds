@@ -138,7 +138,7 @@ constructor(
     private suspend fun ensureCurrentOrder(locationId: String) {
         val savedId = appSettings.currentOrderId()
         if (savedId.isNotEmpty()) {
-            val saved = ordersRepository.findOrder(DocumentID(savedId, locationId))
+            val saved = ordersRepository.findRecentOrder(DocumentID(savedId, locationId))
             val reusableId = OrderSelection.reusableOrderId(savedId, listOfNotNull(saved))
             if (reusableId != null) {
                 activeLocation = locationId
