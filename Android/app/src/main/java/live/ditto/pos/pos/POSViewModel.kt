@@ -6,16 +6,16 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.CartLineItem
 import live.ditto.pos.core.data.Payment
@@ -45,52 +45,57 @@ constructor(
     private var latestOrder: Order? = null
     private var latestSaleItems: List<SaleItem> = emptyList()
 
-    // The order this view model is building. The observer pipeline reads it
-    // to bind the synced version; only `ensureCurrentOrder` and
-    // `payForOrder` write to it.
     private var currentOrderId: String = ""
 
-    private val _uiState = MutableStateFlow(
-        PosUiState(
-            currentOrderId = "",
-            orderItems = emptyList(),
-            orderTotal = "$0.00",
-            saleItems = emptyList()
-        )
-    )
-    val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
+    private var activeLocation: String? = null
 
-    init {
-        // Resolve the current order once per location, then just bind the
-        // synced version on every emission. flatMapLatest cancels the
-        // previous arm on location change.
-        appSettings.locationIdFlow()
-            .filter { it.isNotEmpty() }
-            .flatMapLatest { locationId ->
-                ensureCurrentOrder(locationId)
-                ordersRepository.observeLocationOrders(locationId).mapNotNull { orders ->
-                    orders.firstOrNull { it.documentId.id == currentOrderId }
+    private val currentOrder = appSettings.locationIdFlow()
+        .flatMapLatest { locationId ->
+            if (locationId.isEmpty()) return@flatMapLatest flowOf<Order?>(null)
+            var firstResult = true
+            ordersRepository.observeLocationOrders(locationId).mapNotNull { orders ->
+                if (firstResult && (activeLocation != locationId || orders.none { it.documentId.id == currentOrderId })) {
+                    ensureCurrentOrder(locationId, orders)
                 }
+                firstResult = false
+                orders.firstOrNull { it.documentId.id == currentOrderId }
             }
-            .onEach(::renderOrder)
-            .flowOn(dispatcherIO)
-            .launchIn(viewModelScope)
+        }
+        .onEach { latestOrder = it }
+        .flowOn(dispatcherIO)
 
-        appSettings.locationIdFlow()
-            .filter { it.isNotEmpty() }
-            .flatMapLatest { saleItemsRepository.observeLocationSaleItems(it) }
-            .onEach { items ->
-                latestSaleItems = items
-                _uiState.value = _uiState.value.copy(
-                    saleItems = items.map(SaleItemUiModel::from)
-                )
-            }
-            .flowOn(dispatcherIO)
-            .launchIn(viewModelScope)
-    }
+    private val catalog = appSettings.locationIdFlow()
+        .flatMapLatest { locationId ->
+            if (locationId.isEmpty()) return@flatMapLatest flowOf(locationId to emptyList<SaleItem>())
+            saleItemsRepository.observeLocationSaleItems(locationId).map { locationId to it }
+        }
+        .onEach { (locationId, items) ->
+            latestCatalogLocation = locationId
+            latestSaleItems = items
+        }
+        .flowOn(dispatcherIO)
+
+    private var latestCatalogLocation: String? = null
+
+    val uiState: StateFlow<PosUiState> = combine(currentOrder, catalog) { order, (locationId, items) ->
+        if (order == null || order.documentId.locationId != locationId) {
+            return@combine PosUiState("", emptyList(), "$0.00", emptyList())
+        }
+        PosUiState(
+            currentOrderId = order.documentId.id,
+            orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
+            orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars),
+            saleItems = items.map(SaleItemUiModel::from)
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
+        PosUiState("", emptyList(), "$0.00", emptyList())
+    )
 
     fun addItemToCart(saleItem: SaleItemUiModel) {
         val current = latestOrder ?: return
+        if (current.documentId.locationId != latestCatalogLocation || saleItem.locationId != current.documentId.locationId) return
         val match = latestSaleItems.firstOrNull { it.documentId.id == saleItem.id } ?: return
         viewModelScope.launch(dispatcherIO) {
             val updated = current.addingCartLineItem(
@@ -103,11 +108,12 @@ constructor(
 
     fun payForOrder() {
         val current = latestOrder ?: return
+        if (current.documentId.locationId != latestCatalogLocation) return
         viewModelScope.launch(dispatcherIO) {
             val payment = Payment(type = PaymentType.CASH, amount = current.total)
             ordersRepository.upsert(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
 
-            // Open the next order explicitly; the observer never creates.
+            // Repeated observer emissions must not create extra carts.
             val next = Order.new(locationId = current.documentId.locationId)
             currentOrderId = next.documentId.id
             appSettings.setCurrentOrderId(currentOrderId)
@@ -117,16 +123,16 @@ constructor(
 
     fun clearItems() {
         val current = latestOrder ?: return
+        if (current.documentId.locationId != latestCatalogLocation) return
         viewModelScope.launch(dispatcherIO) {
             ordersRepository.clearCart(current)
         }
     }
 
-    /** Reuses the saved order if it's still open/in-process, otherwise creates a fresh one. */
-    private suspend fun ensureCurrentOrder(locationId: String) {
+    private suspend fun ensureCurrentOrder(locationId: String, snapshot: List<Order>) {
+        activeLocation = locationId
         val savedId = appSettings.currentOrderId()
         if (savedId.isNotEmpty()) {
-            val snapshot = ordersRepository.observeLocationOrders(locationId).first()
             val reusableId = OrderSelection.reusableOrderId(savedId, snapshot)
             if (reusableId != null) {
                 currentOrderId = reusableId
@@ -137,15 +143,6 @@ constructor(
         currentOrderId = order.documentId.id
         appSettings.setCurrentOrderId(currentOrderId)
         ordersRepository.upsert(order)
-    }
-
-    private fun renderOrder(order: Order) {
-        latestOrder = order
-        _uiState.value = _uiState.value.copy(
-            currentOrderId = order.documentId.id,
-            orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
-            orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars)
-        )
     }
 }
 

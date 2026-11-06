@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -41,7 +42,7 @@ import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 fun PosKdsApp(
     viewModel: MainViewModel = hiltViewModel(LocalActivity.current)
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED)
 
     when (state.appConfigurationState) {
         AppConfigurationState.VALID -> {
@@ -100,14 +101,11 @@ private fun PosKDSScaffold(
         bottomBar = {
             PosKdsNavigationBar(
                 onItemClick = {
-                    // Ditto Tools is a drawer destination, not a tab — pop it
-                    // explicitly so DittoToolsViewer is fully cleared before
-                    // the standard tab navigation runs.
+                    // Tools must release its viewer when returning to a tab.
                     if (navHostController.currentDestination?.route == NavigationDrawerItem.DittoToolsDrawerItem.route) {
                         navHostController.popBackStack()
                     }
-                    // Single-top + restoreState so each tab reuses its
-                    // NavBackStackEntry (and its ViewModels' Ditto observers).
+                    // Preserve each tab's cart state while its queries are stopped.
                     navHostController.navigate(route = it.route) {
                         popUpTo(navHostController.graph.findStartDestination().id) {
                             saveState = true

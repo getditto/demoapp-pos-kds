@@ -11,14 +11,8 @@ import Foundation
 
 // MARK: - JSON encoding / decoding
 
-/// Canonical ISO 8601 wire format used across iOS and Android:
-/// `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'` (UTC, millisecond precision, `Z` suffix).
-/// Ditto stores timestamps as opaque strings, so the format has to match
-/// across producers for lexicographic comparison to equal chronological order
-/// in DQL filters like `WHERE createdAt > :TTL`.
+// Shared UTC precision keeps stored dates chronologically sortable across platforms.
 enum DittoWireDate {
-    // DateFormatter is Sendable and safe to share across threads, unlike
-    // ISO8601DateFormatter. en_US_POSIX + UTC pins the exact wire format.
     private static let formatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -62,7 +56,6 @@ extension JSONDecoder {
 }
 
 extension Encodable {
-    /// Encode to a JSON string for passing to DQL `deserialize_json(:arg)`.
     func dittoJSONString() throws -> String {
         let data = try JSONEncoder.ditto.encode(self)
         return String(data: data, encoding: .utf8) ?? "{}"
@@ -77,13 +70,11 @@ extension DittoQueryResultItem {
 }
 
 extension DittoQueryResult {
-    /// Decodes every item; throws on any failure. Use when you need all-or-nothing.
     func decode<T: Decodable>(decoder: JSONDecoder = .ditto) throws -> [T] {
         try items.map { try $0.decode(decoder: decoder) }
     }
 
-    /// Decodes every item, silently dropping any that fail. Use for observers
-    /// where one bad document shouldn't blank the rest.
+    // One incomplete document must not hide the rest of the observed catalog/orders.
     func decodeOrSkip<T: Decodable>(decoder: JSONDecoder = .ditto) -> [T] {
         items.compactMap { try? $0.decode(decoder: decoder) }
     }
@@ -91,52 +82,46 @@ extension DittoQueryResult {
 
 // MARK: - Combine wrappers
 
-// Ditto calls the @Sendable handler on the delivery queue (serial; main by
-// default), so sends never overlap. Combine does not declare the subject Sendable.
-private final class ObserverSubject<Output>: @unchecked Sendable {
-    let subject = PassthroughSubject<Output, Error>()
+// Combine subjects lack Sendable; callbacks here are confined to the main queue.
+private final class ObserverSubject<Output: Sendable>: @unchecked Sendable {
+    let subject = CurrentValueSubject<Output?, Error>(nil)
 }
 
 // MARK: - Subscription error reporting
 
-/// Consistent handling for a failed sync-subscription registration: logs in
-/// every build (never silent) and traps in Debug. Mirrors Android's
-/// `reportSubscriptionFailure`.
+// A sync-registration failure must not disable independent local UI queries.
 func reportSubscriptionFailure(_ context: String, _ error: Error) {
     print("⚠️ \(context): \(error.localizedDescription)")
-    assertionFailure("\(context): \(error.localizedDescription)")
 }
 
 extension DittoStore {
-    /// Uses Ditto's `handlerWithSignalNext` overload so we can apply
-    /// backpressure: `signalNext()` is called only after `subject.send(...)`
-    /// completes. With a non-buffered downstream this gates Ditto's next
-    /// delivery on consumer readiness; with `PassthroughSubject` the
-    /// difference is small but the pattern is the canonical one.
+    // Hidden UI must release its native query; cache the first result to avoid losing it.
+    // https://docs.ditto.live/sdk/latest/crud/observing-data-changes
     func observePublisher<T: Decodable & Sendable>(
         query: String,
         arguments: [String: Any?]? = nil,
-        deliverOn queue: DispatchQueue = .main,
         mapTo: T.Type
     ) -> AnyPublisher<[T], Error> {
-        let subject = ObserverSubject<[T]>()
-        do {
-            try self.registerObserver(
-                query: query,
-                arguments: arguments,
-                deliverOn: queue,
-                handlerWithSignalNext: { result, signalNext in
-                    // Decode first; signalNext only after the consumer has the
-                    // decoded payload so Ditto's next delivery is gated on us
-                    // having actually finished this one.
-                    let items: [T] = result.decodeOrSkip()
-                    subject.subject.send(items)
-                    signalNext()
-                }
-            )
-        } catch {
-            subject.subject.send(completion: .failure(error))
+        Deferred { () -> AnyPublisher<[T], Error> in
+            let subject = ObserverSubject<[T]>()
+            do {
+                let observer = try self.registerObserver(
+                    query: query,
+                    arguments: arguments,
+                    deliverOn: .main,
+                    handlerWithSignalNext: { result, signalNext in
+                        let items: [T] = result.decodeOrSkip()
+                        subject.subject.send(items)
+                        signalNext()
+                    }
+                )
+                return subject.subject.compactMap { $0 }
+                    .handleEvents(receiveCancel: { observer.cancel() })
+                    .eraseToAnyPublisher()
+            } catch {
+                return Fail(error: error).eraseToAnyPublisher()
+            }
         }
-        return subject.subject.eraseToAnyPublisher()
+        .eraseToAnyPublisher()
     }
 }

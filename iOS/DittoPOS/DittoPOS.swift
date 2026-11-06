@@ -23,8 +23,8 @@ struct DittoPOS: App {
             locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()
         )
         let saleItemsRepository = SaleItemsRepository(
-            dittoManager: manager,
-            locationsRepository: locationsRepository
+            ditto: manager.ditto,
+            locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()
         )
         _locationsRepository = StateObject(wrappedValue: locationsRepository)
         _ordersRepository = StateObject(wrappedValue: ordersRepository)

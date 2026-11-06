@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.TimeZone
@@ -55,17 +54,16 @@ class OrdersRepository internal constructor(
     private var subscription: DittoSyncSubscription? = null
 
     init {
-        // Pull the active location from LocationsRepository and re-register
-        // the subscription on every change. Mirrors iOS.
         locationIds
-            .filter { it.isNotEmpty() }
             .distinctUntilChanged()
-            .onEach { locationId -> setActiveLocation(locationId) }
+            .onEach { locationId -> setActiveLocation(locationId.takeIf { it.isNotEmpty() }) }
             .launchIn(repoScope)
     }
 
-    private fun setActiveLocation(locationId: String) {
+    private fun setActiveLocation(locationId: String?) {
         subscription?.close()
+        subscription = null
+        if (locationId == null) return
         subscription = try {
             ditto.sync.registerSubscription(
                 """
@@ -103,8 +101,8 @@ class OrdersRepository internal constructor(
 
     suspend fun clearCart(order: Order) {
         if (order.cart.isEmpty()) return
-        // UNSET target paths can't be parameterized in DQL, so the cart keys
-        // (app-generated line-item UUIDs) are interpolated; all values use :named args.
+        // App-generated UUID paths need quoted identifiers, not DQL value arguments.
+        // https://docs.ditto.live/dql/update
         val unsetList = order.cartPathsForUnset()
         ditto.store.execute(
             """

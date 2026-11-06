@@ -9,12 +9,9 @@ import Combine
 import DittoSwift
 import Foundation
 
-/// Owns the `pos_orders` collection: registers the per-location subscription,
-/// observes the synced documents, runs DQL mutations, and gates startup
-/// eviction. Mirrors Android's `OrdersRepository`.
 @MainActor final class OrdersRepository: ObservableObject {
 
-    @Published private(set) var locationOrders: [Order] = []
+    let locationPublisher: AnyPublisher<String?, Never>
 
     private let ditto: Ditto
     private let now: () -> Date
@@ -22,17 +19,13 @@ import Foundation
     private var sync: DittoSync { ditto.sync }
 
     private var subscription: DittoSyncSubscription?
-    private var observer = AnyCancellable({})
     private var locationSubscription = AnyCancellable({})
 
     init(ditto: Ditto, locationPublisher: AnyPublisher<String?, Never>, now: @escaping () -> Date = Date.init) {
         self.ditto = ditto
         self.now = now
-        // Pull the active location from LocationsRepository and re-register
-        // the subscription on every change. @Published replays the current
-        // value on subscribe, so cold-start activation comes through here.
+        self.locationPublisher = locationPublisher
         locationSubscription = locationPublisher
-            .compactMap { $0 }
             .removeDuplicates()
             .sink { [weak self] locationId in
                 self?.setActiveLocation(locationId)
@@ -41,14 +34,13 @@ import Foundation
 
     // MARK: Subscription
 
-    private func setActiveLocation(_ locationId: String) {
+    private func setActiveLocation(_ locationId: String?) {
         subscription?.cancel()
-        let args: [String: Any?] = ["locationId": locationId, "TTL": DateFormatter.startOfTodayString]
+        subscription = nil
+        guard let locationId else { return }
+        let args: [String: Any?] = ["locationId": locationId, "TTL": startOfToday()]
 
-        // Subscription = the sync set: this location's orders since TTL. A failed
-        // registration must NOT skip the observer below — the observer is a local
-        // read over the store, independent of the sync set, so the UI still shows
-        // documents already present locally (matches Android's separation).
+        // Sync registration is independent of visible consumers' local queries.
         do {
             subscription = try sync.registerSubscription(
                 query: """
@@ -62,34 +54,32 @@ import Foundation
             reportSubscriptionFailure("subscribe orders", error)
         }
 
-        // Observer = the local read that drives the UI. Its own query string,
-        // independent of the subscription's success.
-        observer = store.observePublisher(
+    }
+
+    func observeLocationOrders(_ locationId: String) -> AnyPublisher<[Order], Error> {
+        store.observePublisher(
             query: """
                 SELECT * FROM \(Order.collectionName)
                 WHERE _id.locationId = :locationId
                     AND createdAt > :TTL
                 """,
-            arguments: args,
+            arguments: ["locationId": locationId, "TTL": startOfToday()],
             mapTo: Order.self
         )
-        .replaceError(with: [])
-        .assign(to: \.locationOrders, on: self)
     }
 
-    // MARK: Single-order observation (used by KDS tile views)
+    // MARK: Selected POS order observation
 
-    func orderPublisher(_ order: Order) -> AnyPublisher<Order, Never> {
+    func observeOrder(_ id: DocumentID) -> AnyPublisher<Order?, Error> {
         store.observePublisher(
             query: """
                 SELECT * FROM \(Order.collectionName)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
-            arguments: ["id": order.documentId.id, "locationId": order.documentId.locationId],
+            arguments: ["id": id.id, "locationId": id.locationId],
             mapTo: Order.self
         )
-        .compactMap(\.first)
-        .catch { _ in Empty<Order, Never>() }
+        .map(\.first)
         .eraseToAnyPublisher()
     }
 
@@ -113,8 +103,8 @@ import Foundation
 
     func clearCart(of order: Order) {
         guard !order.cart.isEmpty else { return }
-        // UNSET target paths can't be parameterized in DQL, so the cart keys
-        // (app-generated line-item UUIDs) are interpolated; all values use :named args.
+        // App-generated UUID paths need quoted identifiers, not DQL value arguments.
+        // https://docs.ditto.live/dql/update
         let unsetList = order.cart.keys.map { "cart.`\($0)`" }.joined(separator: ", ")
         execute(
             """
@@ -148,10 +138,6 @@ import Foundation
     }
 
     // MARK: Eviction
-    //
-    // Storage cleanup on app launch, gated to at most once per 24h. Observer
-    // queries filter by location/TTL, so this is purely about preventing the
-    // local store from accumulating expired orders.
 
     func runEvictionIfDue(defaults: UserDefaults = .standard, calendar: Calendar = .current) async {
         let eviction = OrderEviction(
@@ -177,6 +163,10 @@ import Foundation
 
     // MARK: Helpers
 
+    private func startOfToday() -> String {
+        DittoWireDate.string(from: Calendar.current.startOfDay(for: now()))
+    }
+
     private func upsert(order: Order) {
         guard let json = try? order.dittoJSONString() else { return }
         execute(
@@ -200,9 +190,7 @@ import Foundation
         }
     }
 
-    // DittoStore.execute runs off the main actor and takes a non-Sendable
-    // [String: Any?]. Building the dictionary here, outside the main actor,
-    // lets Swift 6 prove nothing else holds it when it is sent.
+    // Non-Sendable query arguments need a single owner across the Swift actor boundary.
     private nonisolated static func execute(store: DittoStore, query: String, args: [String: String]) async throws {
         let arguments: [String: Any?] = args.mapValues { $0 }
         _ = try await store.execute(query: query, arguments: arguments)

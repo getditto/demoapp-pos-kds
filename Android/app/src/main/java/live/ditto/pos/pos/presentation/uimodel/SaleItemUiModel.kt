@@ -8,14 +8,16 @@ data class SaleItemUiModel(
     val id: String,
     @DrawableRes val imageResource: Int,
     val label: String,
-    val price: Double = 0.0
+    val price: Double = 0.0,
+    val locationId: String = ""
 ) {
     companion object {
         fun from(saleItem: SaleItem): SaleItemUiModel = SaleItemUiModel(
             id = saleItem.documentId.id,
             imageResource = ImageNameMapping.resourceFor(saleItem.imageName) ?: 0,
             label = saleItem.name,
-            price = saleItem.price.dollars
+            price = saleItem.price.dollars,
+            locationId = saleItem.documentId.locationId
         )
     }
 }

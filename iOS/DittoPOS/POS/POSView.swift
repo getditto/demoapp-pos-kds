@@ -20,13 +20,10 @@ import SwiftUI
         orderViewWidth = .screenWidth * 0.40
     }
 
-    /// Sale-item tile side length, sized to the current horizontal size class.
-    /// Compact (e.g. iPhone portrait) gets a smaller tile.
     func itemSide(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
         sizeClass == .compact ? 100 : 160
     }
 
-    /// Grid column definition for the menu, derived from the tile size.
     func gridColumns(for sizeClass: UserInterfaceSizeClass?) -> [GridItem] {
         [GridItem(.adaptive(minimum: itemSide(for: sizeClass)), alignment: .top)]
     }
@@ -35,17 +32,21 @@ import SwiftUI
 struct POSView: View {
     @StateObject private var layoutViewModel = POSLayoutViewModel()
     @StateObject private var viewModel: POSViewModel
+    let isActive: Bool
 
     init(
         ordersRepository: OrdersRepository,
         saleItemsRepository: SaleItemsRepository,
-        locationsRepository: LocationsRepository
+        locationsRepository: LocationsRepository,
+        isActive: Bool = true
     ) {
         _viewModel = StateObject(wrappedValue: POSViewModel(
             ordersRepository: ordersRepository,
             saleItemsRepository: saleItemsRepository,
-            locationsRepository: locationsRepository
+            locationPublisher: locationsRepository.$currentLocation.eraseToAnyPublisher(),
+            locationId: { locationsRepository.currentLocationId }
         ))
+        self.isActive = isActive
     }
 
     var body: some View {
@@ -61,6 +62,9 @@ struct POSView: View {
         }
         .environmentObject(viewModel)
         .environmentObject(layoutViewModel)
+        .onAppear { viewModel.setVisible(isActive) }
+        .onChange(of: isActive) { viewModel.setVisible($0) }
+        .onDisappear { viewModel.setVisible(false) }
         .onRotate { orient in
             guard orient.isLandscape || orient.isPortrait else { return }
             DispatchQueue.main.async {

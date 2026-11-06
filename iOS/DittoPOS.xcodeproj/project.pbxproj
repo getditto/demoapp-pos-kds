@@ -74,6 +74,13 @@
 		C1460000000000000000B003 /* OrderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A003 /* OrderSelection.swift */; };
 		C1460000000000000000C003 /* OrderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A003 /* OrderSelection.swift */; };
 		C1460000000000000000B100 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = C1460000000000000000A100 /* Fixtures */; };
+		C1340000000000000000B001 /* VisibleObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A001 /* VisibleObservation.swift */; };
+		C1340000000000000000C001 /* VisibleObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A001 /* VisibleObservation.swift */; };
+		C1340000000000000000B002 /* SaleItemCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A002 /* SaleItemCommands.swift */; };
+		C1340000000000000000C002 /* SaleItemCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A002 /* SaleItemCommands.swift */; };
+		C1340000000000000000D001 /* SaleItemsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A002 /* SaleItemsRepository.swift */; };
+		C1340000000000000000D002 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF142A3CCAB6005BC2AE /* POSViewModel.swift */; };
+		C1340000000000000000D003 /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -126,6 +133,8 @@
 		C1460000000000000000A002 /* KitchenOrders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitchenOrders.swift; sourceTree = "<group>"; };
 		C1460000000000000000A003 /* OrderSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderSelection.swift; sourceTree = "<group>"; };
 		C1460000000000000000A100 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../Tests/Fixtures; sourceTree = SOURCE_ROOT; };
+		C1340000000000000000A001 /* VisibleObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisibleObservation.swift; sourceTree = "<group>"; };
+		C1340000000000000000A002 /* SaleItemCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemCommands.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -260,6 +269,8 @@
 				112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */,
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
+				C1340000000000000000A002 /* SaleItemCommands.swift */,
+				C1340000000000000000A001 /* VisibleObservation.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
 				DAFEED01000000000000A001 /* CartLineItem.swift */,
 				DAFEED01000000000000A002 /* Payment.swift */,
@@ -471,6 +482,8 @@
 				14DECF062A3A68B0005BC2AE /* Location.swift in Sources */,
 				1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,
+				C1340000000000000000B002 /* SaleItemCommands.swift in Sources */,
+				C1340000000000000000B001 /* VisibleObservation.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
 				14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */,
 				1460E33B2A93DA5D007A2A6D /* KDSOrderView.swift in Sources */,
@@ -498,6 +511,9 @@
 				C1460000000000000000C002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000C003 /* OrderSelection.swift in Sources */,
 				C15600000000000000000001 /* CurrencyUtils.swift in Sources */,
+				C1340000000000000000D003 /* KDSViewModel.swift in Sources */,
+				C1340000000000000000D002 /* POSViewModel.swift in Sources */,
+				C1340000000000000000D001 /* SaleItemsRepository.swift in Sources */,
 				C15600000000000000000002 /* SettingsModel.swift in Sources */,
 				C15600000000000000000003 /* Utils.swift in Sources */,
 				C15600000000000000000004 /* DittoExtensions.swift in Sources */,
@@ -507,6 +523,8 @@
 				C15600000000000000000008 /* StatusLog.swift in Sources */,
 				C15600000000000000000009 /* DocumentID.swift in Sources */,
 				C1560000000000000000000A /* SaleItem.swift in Sources */,
+				C1340000000000000000C002 /* SaleItemCommands.swift in Sources */,
+				C1340000000000000000C001 /* VisibleObservation.swift in Sources */,
 				C1560000000000000000000B /* ImageNameMapping.swift in Sources */,
 				C1560000000000000000000C /* Location.swift in Sources */,
 				C1560000000000000000000D /* LocationSeed.swift in Sources */,

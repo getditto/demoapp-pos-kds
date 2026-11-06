@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import live.ditto.pos.LocalActivity
@@ -16,7 +17,7 @@ fun DemoLocationSelectionScreen(
     mainViewModel: MainViewModel = hiltViewModel(LocalActivity.current),
     navHostController: NavHostController
 ) {
-    val state by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val state by mainViewModel.uiState.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED)
 
     DemoLocationsList(
         locations = state.locations,

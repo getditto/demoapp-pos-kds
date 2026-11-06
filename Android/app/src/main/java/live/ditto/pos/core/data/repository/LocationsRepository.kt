@@ -19,13 +19,7 @@ import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Owns the `locations` collection and the active-location state.
- * `setActiveLocation` is the only writer — it persists to [AppSettings] and
- * applies [DittoManager]'s sync group. Other per-collection repositories
- * subscribe to `locationIdFlow()` and re-register their own subscriptions
- * when it emits. Mirrors iOS `LocationsRepository`.
- */
+// Location selection is device-local so it cannot switch another demo device.
 @Singleton
 class LocationsRepository @Inject constructor(
     private val dittoManager: DittoManager,
@@ -35,12 +29,6 @@ class LocationsRepository @Inject constructor(
     private var subscription: DittoSyncSubscription? = null
     private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /**
-     * One shared observer on `locations`, mirroring iOS's single `allLocations`
-     * publisher. `by lazy` so `requireDitto()` isn't touched at injection time,
-     * and `stateIn` so every consumer replays the latest list off one observer
-     * instead of opening its own.
-     */
     private val allLocations by lazy {
         ditto.store
             .observeAsFlow<Location>("SELECT * FROM ${Location.COLLECTION_NAME}")
@@ -49,11 +37,7 @@ class LocationsRepository @Inject constructor(
     }
 
     init {
-        // Restore the persisted active location on first injection (mirrors
-        // iOS) — but only if it's still one of the seven demo locations. A
-        // stale id (e.g. a legacy custom location that no longer exists) is
-        // cleared so the user is forced to re-pick, and the sync group is reset
-        // to default. The sync group applies as part of `setActiveLocation`.
+        // Retired custom-location IDs must not bypass setup.
         repoScope.launch {
             val saved = appSettings.locationId()
             if (saved.isNotEmpty()) {
@@ -77,11 +61,6 @@ class LocationsRepository @Inject constructor(
         }
     }
 
-    /**
-     * Switch the active location. Persists, applies the sync group, and downstream
-     * repositories react via `locationIdFlow()`. Pass an empty string to clear
-     * the selection and reset the sync group back to default.
-     */
     suspend fun setActiveLocation(locationId: String) {
         appSettings.setLocationId(locationId = locationId)
         if (locationId.isNotEmpty()) {
@@ -91,23 +70,16 @@ class LocationsRepository @Inject constructor(
         }
     }
 
-    /** Reactive stream of the active location id. Empty string when not set. */
     fun locationIdFlow(): Flow<String> = appSettings.locationIdFlow()
 
     fun observeAllLocations(): Flow<List<Location>> = allLocations
 
-    /**
-     * The active location resolved against the synced `locations` collection.
-     * Null when nothing is selected, or when the saved id isn't one of the demo
-     * locations — [observeAllLocations] already filters to those, so no separate
-     * validity check is needed. Mirrors iOS `LocationsRepository.currentLocation`.
-     */
     fun currentLocationFlow(): Flow<Location?> =
         combine(locationIdFlow(), observeAllLocations()) { locationId, locations ->
             if (locationId.isEmpty()) null else locations.firstOrNull { it.id == locationId }
         }
 
     private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val STOP_TIMEOUT_MILLIS = 0L
     }
 }

@@ -5,15 +5,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.orders.KitchenOrders
@@ -40,28 +39,20 @@ constructor(
         private const val OUTPUT_DATE_FORMAT = "h:mm a"
     }
 
-    // Most-recent snapshot of the kitchen orders feed, used by the click
-    // handler to find the order being advanced without re-collecting the flow.
+    // Status actions reuse the UI snapshot instead of opening another observer.
     private var latestOrders: List<Order> = emptyList()
 
-    private val _uiState = MutableStateFlow(KdsUiState(tickets = emptyList()))
-    val uiState: StateFlow<KdsUiState> = _uiState.asStateFlow()
-
-    init {
-        // Re-observe whenever locationId changes — flatMapLatest cancels the
-        // old observer and starts a fresh one for the new location.
-        appSettings.locationIdFlow()
-            .filter { it.isNotEmpty() }
-            .flatMapLatest { locationId ->
-                ordersRepository.observeLocationOrders(locationId).map(KitchenOrders::select)
-            }
-            .onEach { orders ->
-                latestOrders = orders
-                updateTickets(orders)
-            }
-            .flowOn(dispatcherIo)
-            .launchIn(viewModelScope)
-    }
+    val uiState: StateFlow<KdsUiState> = appSettings.locationIdFlow()
+        .flatMapLatest { locationId ->
+            if (locationId.isEmpty()) return@flatMapLatest flowOf(emptyList<Order>())
+            ordersRepository.observeLocationOrders(locationId).map(KitchenOrders::select)
+        }
+        .onEach { orders ->
+            latestOrders = orders
+        }
+        .flowOn(dispatcherIo)
+        .map { orders -> KdsUiState(tickets = orders.map(::toTicketUi)) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), KdsUiState(emptyList()))
 
     fun updateTicketStatus(orderId: String) {
         viewModelScope.launch(dispatcherIo) {
@@ -73,10 +64,6 @@ constructor(
                 appSettings.setCurrentOrderId("")
             }
         }
-    }
-
-    private fun updateTickets(orders: List<Order>) {
-        _uiState.value = _uiState.value.copy(tickets = orders.map(::toTicketUi))
     }
 
     private fun toTicketUi(order: Order): TicketItemUi = TicketItemUi(

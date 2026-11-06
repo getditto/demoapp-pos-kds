@@ -5,11 +5,8 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-// Demo-only orchestration. Seed content is in LocationSeed / SaleItemSeed.
-//
-// `INITIAL DOCUMENTS` writes each document only if it doesn't already exist
-// — idempotent and peer-safe, so every device can run this on launch and
-// the network converges on a single copy.
+// INITIAL lets peers seed the same defaults without overwriting existing edits.
+// https://docs.ditto.live/dql/insert#insert-with-initial-documents
 
 import DittoSwift
 import Foundation
@@ -33,14 +30,14 @@ struct DemoSeeder {
 
     func seedSaleItems() async {
         await bulkInitialInsert(
-            into: SaleItem.collectionName,
-            documents: SaleItemSeed.saleItemsForAllLocations(),
+            into: SaleItemCommands.creationCollection,
+            documents: SaleItemSeed.saleItemsForAllLocations().map {
+                SaleItemCreation(metadata: $0.metadata, initialQuantity: 20)
+            },
             label: "seedSaleItems"
         )
     }
 
-    /// Single bulk `INSERT INTO ... INITIAL DOCUMENTS (...), (...), ...`
-    /// — one round-trip for the whole seed set.
     private func bulkInitialInsert<T: Encodable>(
         into collectionName: String,
         documents: [T],
