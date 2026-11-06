@@ -1,7 +1,7 @@
 import XCTest
 
 final class KitchenAndSelectionTests: XCTestCase {
-    func testKitchenGroupsStagesNewestFirstAndKeepsUnpaidOrders() throws {
+    func testKitchenGroupsStagesNewestFirstKeepsUnpaidAndHidesEmptyOrders() throws {
         let template = try OrderFixture.load()
         func order(_ id: String, _ stage: OrderStatus, _ seconds: TimeInterval, paid: Bool = false) -> Order {
             Order(
@@ -14,6 +14,8 @@ final class KitchenAndSelectionTests: XCTestCase {
             order("ready-new", .processed, 20, paid: true), order("preparing-old", .inProcess, 11),
             order("done", .delivered, 30), order("ready-old", .processed, 10),
             order("preparing-new", .inProcess, 21), order("canceled", .canceled, 40), order("open", .open, 50),
+            Order(documentId: DocumentID(id: "empty", locationId: "42"), cart: [:], payments: [:],
+                  statusLog: ["2026-04-01T12:00:00.000Z": "inProcess"], createdAt: Date(timeIntervalSince1970: 60)),
         ]
         let selected = KitchenOrders.select(from: orders)
         XCTAssertEqual(selected.map(\.documentId.id), ["preparing-new", "preparing-old", "ready-new", "ready-old"])

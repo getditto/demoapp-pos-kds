@@ -8,69 +8,55 @@
 import Combine
 import DittoSwift
 
-/// Owns the `locations` collection and the in-memory state for the currently
-/// selected location. `allLocations` is filtered to the seven demo location
-/// IDs defensively. `currentLocationId` is the single source of truth for
-/// "which location is active" — UI calls `setActive(_:)` to switch and the
-/// per-collection repositories react via their own subscriptions to
-/// `$currentLocationId`. `currentLocation` is a convenience derivation for
-/// views.
+// Location selection is device-local so it cannot switch another demo device.
 @MainActor final class LocationsRepository: ObservableObject {
 
     @Published private(set) var allLocations: [Location] = []
     @Published private(set) var currentLocationId: String?
     @Published private(set) var currentLocation: Location?
+    @Published private(set) var isLoading = true
 
-    private let dittoManager: DittoManager
-    private var ditto: Ditto { dittoManager.ditto }
+    private let ditto: Ditto
+    private let updateSyncGroup: (String?) -> Void
     private var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
     private var subscription: DittoSyncSubscription?
     private var locationsObserver = AnyCancellable({})
-    private var currentLocationDerivation = AnyCancellable({})
+    private var isVisible = false
 
-    init(dittoManager: DittoManager = .shared) {
-        self.dittoManager = dittoManager
+    init(ditto: Ditto, updateSyncGroup: @escaping (String?) -> Void) {
+        self.ditto = ditto
+        self.updateSyncGroup = updateSyncGroup
         startSubscription()
-        observeAllLocations()
         deriveCurrentLocation()
-        // Restore the persisted active location on launch — but only if it's
-        // still one of the seven demo locations. Passes through the same setter
-        // the UI uses, so the sync group is applied here too.
         if let saved = Settings.locationId {
             if LocationSeed.demoLocationIds.contains(saved) {
                 setActiveLocation(saved)
             } else {
-                // Stale id (e.g. a legacy custom location that no longer
-                // exists). Clear it so the user is forced to re-pick, and reset
-                // the sync group to default.
+                // Retired custom-location IDs must not bypass setup.
                 setActiveLocation(nil)
             }
         }
     }
 
-    /// Switch the active location. Persists, publishes, and applies Ditto's
-    /// sync group. Pass `nil` to clear the selection and reset the sync group
-    /// back to default.
+    func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
+        isVisible = visible
+        locationsObserver.cancel()
+        allLocations = []
+        isLoading = true
+        if visible { observeAllLocations() }
+    }
+
     func setActiveLocation(_ locationId: String?) {
         Settings.locationId = locationId
         currentLocationId = locationId
-        if let locationId {
-            dittoManager.applySyncGroup(locationId: locationId)
-        } else {
-            dittoManager.resetSyncGroup()
-        }
+        updateSyncGroup(locationId)
     }
 
     private func startSubscription() {
-        do {
-            subscription = try sync.registerSubscription(
-                query: "SELECT * FROM \(Location.collectionName)"
-            )
-        } catch {
-            reportSubscriptionFailure("subscribe locations", error)
-        }
+        subscription = try! sync.registerSubscription(query: "SELECT * FROM \(Location.collectionName)")
     }
 
     private func observeAllLocations() {
@@ -81,16 +67,18 @@ import DittoSwift
         .map { locations in
             locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
         }
-        .replaceError(with: [])
-        .assign(to: \.allLocations, on: self)
+        .sink { [weak self] locations in
+            self?.allLocations = locations
+            self?.isLoading = false
+        }
     }
 
     private func deriveCurrentLocation() {
-        currentLocationDerivation = Publishers.CombineLatest($currentLocationId, $allLocations)
+        Publishers.CombineLatest($currentLocationId, $allLocations)
             .map { id, all in
                 guard let id else { return nil }
                 return all.first { $0.id == id }
             }
-            .assign(to: \.currentLocation, on: self)
+            .assign(to: &$currentLocation)
     }
 }

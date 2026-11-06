@@ -11,16 +11,21 @@ struct KDSOrdersGridView: View {
     @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel: KDSViewModel
     let ordersRepository: OrdersRepository
+    let isActive: Bool
     @State var columns = [GridItem(.adaptive(minimum: 172), alignment: .top)]
 
-    init(ordersRepository: OrdersRepository) {
+    init(ordersRepository: OrdersRepository, isActive: Bool = true) {
         self.ordersRepository = ordersRepository
+        self.isActive = isActive
         _viewModel = StateObject(wrappedValue: KDSViewModel(ordersRepository: ordersRepository))
     }
 
     var body: some View {
         Group {
-            if viewModel.orders.isEmpty {
+            if viewModel.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.orders.isEmpty {
                 emptyState
             } else {
                 ScrollView(showsIndicators: false) {
@@ -35,6 +40,9 @@ struct KDSOrdersGridView: View {
         }
         .background(.background)
         .toolbarBackground(colorScheme == .dark ? .black : .white, for: .navigationBar)
+        .onAppear { viewModel.setVisible(isActive) }
+        .onChange(of: isActive) { viewModel.setVisible($0) }
+        .onDisappear { viewModel.setVisible(false) }
     }
 
     private var emptyState: some View {

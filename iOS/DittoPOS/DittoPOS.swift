@@ -17,14 +17,17 @@ struct DittoPOS: App {
 
     init() {
         let manager = DittoManager.shared
-        let locationsRepository = LocationsRepository(dittoManager: manager)
+        let locationsRepository = LocationsRepository(ditto: manager.ditto, updateSyncGroup: { locationId in
+            if let locationId { manager.applySyncGroup(locationId: locationId) }
+            else { manager.resetSyncGroup() }
+        })
         let ordersRepository = OrdersRepository(
             ditto: manager.ditto,
             locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()
         )
         let saleItemsRepository = SaleItemsRepository(
-            dittoManager: manager,
-            locationsRepository: locationsRepository
+            ditto: manager.ditto,
+            locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()
         )
         _locationsRepository = StateObject(wrappedValue: locationsRepository)
         _ordersRepository = StateObject(wrappedValue: ordersRepository)
@@ -39,7 +42,7 @@ struct DittoPOS: App {
                 .environmentObject(saleItemsRepository)
                 .task {
                     await DemoSeeder(store: DittoManager.shared.ditto.store).seedAll()
-                    await ordersRepository.runEvictionIfDue()
+                    try! await ordersRepository.runEvictionIfDue()
                 }
         }
     }

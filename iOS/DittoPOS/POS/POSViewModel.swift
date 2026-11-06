@@ -13,6 +13,8 @@ import SwiftUI
 
     @Published private(set) var currentOrder: Order?
     @Published private(set) var saleItems: [SaleItem] = []
+    @Published private(set) var isCatalogLoading = true
+    var isLoading: Bool { isCatalogLoading || currentOrder == nil }
 
     // MARK: Derived UI state
 
@@ -33,11 +35,7 @@ import SwiftUI
     var actionsDisabled: Bool { orderIsPaid || orderIsEmpty }
     var payButtonLabel: String { orderIsPaid ? "Paid" : "Pay" }
 
-    /// What the order list needs to auto-scroll to the bottom: the id of the
-    /// trailing line item and the animation delay (the delay only matters
-    /// during landscape rotation when the keyboard is settling). Returns nil
-    /// when the device is in a transitional orientation — in that case the
-    /// view should skip the scroll.
+    // Rotation must settle before scrolling an order alongside the keyboard.
     func scrollToBottomConfig() -> (id: String, delay: TimeInterval)? {
         let orientation = UIDevice.current.orientation
         guard orientation.isLandscape || orientation.isPortrait else { return nil }
@@ -52,77 +50,80 @@ import SwiftUI
 
     private let ordersRepository: OrdersRepository
     private let saleItemsRepository: SaleItemsRepository
-    private let locationsRepository: LocationsRepository
+    private let locationId: () -> String?
+    private let catalogObservation = VisibleObservation<String, [SaleItem]>()
+    private let orderObservation = VisibleObservation<DocumentID, Order?>()
+    private var isVisible = false
+    private var observedLocation: String?
+    private var selectedOrderId: DocumentID?
+    private var newOrderTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
 
     init(
         ordersRepository: OrdersRepository,
         saleItemsRepository: SaleItemsRepository,
-        locationsRepository: LocationsRepository
+        locationPublisher: AnyPublisher<String?, Never>,
+        locationId: @escaping () -> String?
     ) {
         self.ordersRepository = ordersRepository
         self.saleItemsRepository = saleItemsRepository
-        self.locationsRepository = locationsRepository
+        self.locationId = locationId
 
-        // Menu items follow the active location.
-        saleItemsRepository.$locationSaleItems
+        locationPublisher
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .assign(to: &$saleItems)
-
-        // On location change: reset any unpaid order left at the previous
-        // location, then start a fresh order at the new one (or clear when
-        // cleared). `scan` pairs consecutive emissions so we can read both
-        // the outgoing and incoming location in one place.
-        locationsRepository.$currentLocation
-            .scan((nil, nil)) { acc, next -> (Location?, Location?) in
-                (acc.1, next)
-            }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] previous, current in
-                guard let self else { return }
-
-                if let previous,
-                   let outgoing = currentOrder,
-                   !outgoing.isPaid,
-                   outgoing.documentId.locationId == previous.id,
-                   previous.id != current?.id {
-                    ordersRepository.reset(order: outgoing)
-                }
-
-                guard let current else {
+            .sink { [weak self] current in
+                guard let self, current == locationId() else { return }
+                if let current {
+                    startNewOrder(for: current)
+                } else {
+                    newOrderTask?.cancel()
+                    selectedOrderId = nil
                     currentOrder = nil
-                    return
+                    updateObservations()
                 }
-
-                if let order = currentOrder, order.documentId.locationId == current.id, !order.isPaid {
-                    return
-                }
-
-                startNewOrder(for: current.id)
             }
             .store(in: &cancellables)
 
-        // Re-bind the current order to the synced version on every emission.
-        // Only assign when we find a match — right after `startNewOrder`
-        // writes a doc, the observer hasn't round-tripped yet and the new id
-        // isn't in `locationOrders`, so a nil assignment would clobber it.
-        ordersRepository.$locationOrders
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] orders in
-                guard let self,
-                      let match = OrderSelection.observedOrder(
-                          id: currentOrder?.documentId.id,
-                          locationId: locationsRepository.currentLocationId,
-                          in: orders
-                      )
-                else { return }
-                currentOrder = match
+    }
+
+    func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
+        isVisible = visible
+        currentOrder = nil
+        updateObservations()
+    }
+
+    private func updateObservations() {
+        let selectedLocation = locationId()
+        let activeLocation = isVisible ? selectedLocation : nil
+        if observedLocation != activeLocation {
+            saleItems = []
+            isCatalogLoading = true
+            observedLocation = activeLocation
+        }
+        catalogObservation.set(activeLocation, observe: saleItemsRepository.observeLocationSaleItems) { [weak self] items in
+            self?.saleItems = items
+            self?.isCatalogLoading = false
+        }
+        let id = selectedOrderId
+        orderObservation.set(activeLocation == id?.locationId ? id : nil, observe: ordersRepository.observeOrder) { [weak self] order in
+            guard let self else { return }
+            guard let order else {
+                if let locationId = locationId() { startNewOrder(for: locationId) }
+                return
             }
-            .store(in: &cancellables)
+            guard let matched = OrderSelection.observedOrder(id: selectedOrderId?.id, locationId: locationId(), in: [order])
+            else { return }
+            currentOrder = matched
+        }
     }
 
     func addOrderItem(_ saleItem: SaleItem) {
-        guard let order = currentOrder else { return }
+        guard let order = currentOrder,
+              order.documentId.locationId == locationId(),
+              saleItem.documentId.locationId == order.documentId.locationId
+        else { return }
         ordersRepository.add(
             item: CartLineItem(from: saleItem),
             lineItemId: CartLineItem.newLineItemId(),
@@ -131,25 +132,34 @@ import SwiftUI
     }
 
     func payCurrentOrder() {
-        guard let order = currentOrder else { return }
+        guard let order = currentOrder, order.documentId.locationId == locationId() else { return }
         let payment = Payment(type: .cash, amount: order.total, status: .complete)
         ordersRepository.addPayment(payment, paymentId: Payment.newPaymentId(), to: order)
 
         // Brief pause so the paid state is visible, then start a fresh order.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self, let locationId = locationsRepository.currentLocationId else { return }
+            guard let self, let locationId = locationId() else { return }
             startNewOrder(for: locationId)
         }
     }
 
     func clearCurrentOrderCart() {
-        guard let order = currentOrder else { return }
+        guard let order = currentOrder, order.documentId.locationId == locationId() else { return }
         ordersRepository.clearCart(of: order)
     }
 
     private func startNewOrder(for locationId: String) {
+        newOrderTask?.cancel()
+        selectedOrderId = nil
+        currentOrder = nil
+        updateObservations()
         let order = Order.new(locationId: locationId)
-        currentOrder = order
-        ordersRepository.add(order: order)
+        newOrderTask = Task { [weak self] in
+            guard let self else { return }
+            try! await ordersRepository.add(order: order)
+            guard !Task.isCancelled, locationId == self.locationId() else { return }
+            selectedOrderId = order.documentId
+            updateObservations()
+        }
     }
 }

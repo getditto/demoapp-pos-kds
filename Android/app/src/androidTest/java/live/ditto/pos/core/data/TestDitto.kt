@@ -3,6 +3,7 @@ package live.ditto.pos.core.data
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.ditto.kotlin.Ditto
 import com.ditto.kotlin.DittoConfig
@@ -11,11 +12,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.job
 import kotlinx.datetime.TimeZone
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.data.repository.OrdersRepository
+import live.ditto.pos.core.data.repository.SaleItemsRepository
+import live.ditto.pos.settings.AppSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -26,13 +31,21 @@ import kotlin.time.Instant
 internal class TestDitto(
     val ditto: Ditto,
     val preferences: SharedPreferences,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val directory: File
 ) {
-    fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z")): OrdersRepository = OrdersRepository(
+    val settings: AppSettings by lazy {
+        AppSettings(PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(directory, "ui.preferences_pb") }))
+    }
+
+    fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope)
+    fun locations(updateSyncGroup: suspend (String?) -> Unit): LocationsRepository = LocationsRepository({ ditto }, settings, updateSyncGroup, scope)
+
+    fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow(), clock: () -> Instant = { now }): OrdersRepository = OrdersRepository(
         dittoProvider = { ditto },
-        locationIds = emptyFlow(),
+        locationIds = locationIds,
         preferences = { preferences },
-        now = { now },
+        now = clock,
         timeZone = { TimeZone.UTC },
         repoScope = scope
     )
@@ -73,7 +86,7 @@ internal class TestDitto(
                     assertFalse(ditto.isActivated)
                     assertFalse(ditto.sync.isActive)
                     try {
-                        TestDitto(ditto, context.getSharedPreferences(id, Context.MODE_PRIVATE), scope).block()
+                        TestDitto(ditto, context.getSharedPreferences(id, Context.MODE_PRIVATE), scope, directory).block()
                     } finally {
                         assertFalse("Tests must never start sync", ditto.sync.isActive)
                     }

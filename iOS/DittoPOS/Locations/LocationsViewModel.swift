@@ -8,15 +8,11 @@
 import Combine
 import SwiftUI
 
-/// Wraps `LocationsRepository` for the Locations tab: exposes the list of
-/// locations and the currently selected one as `@Published`, plus a
-/// `Binding<Location?>` the SwiftUI `List` can drive directly. The
-/// "only fire when the id actually changes" guard lives here, not in the
-/// view.
 @MainActor final class LocationsViewModel: ObservableObject {
 
     @Published private(set) var locations: [Location] = []
     @Published private(set) var selectedLocation: Location?
+    @Published private(set) var isLoading = true
 
     private let locationsRepository: LocationsRepository
     private var cancellables = Set<AnyCancellable>()
@@ -25,6 +21,7 @@ import SwiftUI
         self.locationsRepository = locationsRepository
 
         locationsRepository.$allLocations.assign(to: &$locations)
+        locationsRepository.$isLoading.assign(to: &$isLoading)
 
         Publishers.CombineLatest(
             locationsRepository.$allLocations,
@@ -37,8 +34,6 @@ import SwiftUI
         .assign(to: &$selectedLocation)
     }
 
-    /// Setter that drops no-op selections (the SwiftUI `List` will write the
-    /// current value back on every render).
     func selectLocation(_ location: Location?) {
         guard let id = location?.id, id != locationsRepository.currentLocationId else { return }
         locationsRepository.setActiveLocation(id)

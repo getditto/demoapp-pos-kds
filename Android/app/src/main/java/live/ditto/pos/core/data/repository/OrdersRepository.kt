@@ -2,7 +2,6 @@ package live.ditto.pos.core.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.ditto.kotlin.Ditto
 import com.ditto.kotlin.DittoSyncSubscription
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -11,13 +10,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import live.ditto.ditto_wrapper.DittoManager
+import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.decodeOrSkip
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
@@ -53,31 +56,36 @@ class OrdersRepository internal constructor(
 
     private val ditto: Ditto get() = dittoProvider()
     private var subscription: DittoSyncSubscription? = null
+    private val subscriptionMutex = Mutex()
+    private var activeLocationId: String? = null
+    private var subscriptionCutoff = preferences().getLong(LAST_EVICTION_KEY, 0L).let { lastRun ->
+        startOfDayIso(if (lastRun > 0) Instant.fromEpochMilliseconds(lastRun) else now())
+    }
 
     init {
-        // Pull the active location from LocationsRepository and re-register
-        // the subscription on every change. Mirrors iOS.
         locationIds
-            .filter { it.isNotEmpty() }
             .distinctUntilChanged()
-            .onEach { locationId -> setActiveLocation(locationId) }
+            .onEach { locationId -> setActiveLocation(locationId.takeIf { it.isNotEmpty() }) }
             .launchIn(repoScope)
     }
 
-    private fun setActiveLocation(locationId: String) {
+    private suspend fun setActiveLocation(locationId: String?) = subscriptionMutex.withLock {
+        activeLocationId = locationId
+        refreshSubscription()
+    }
+
+    private fun refreshSubscription() {
         subscription?.close()
-        subscription = try {
-            ditto.sync.registerSubscription(
-                """
+        subscription = null
+        val locationId = activeLocationId ?: return
+        subscription = ditto.sync.registerSubscription(
+            """
                     SELECT * FROM ${Order.COLLECTION_NAME}
                     WHERE _id.locationId = :locationId
                         AND createdAt > :TTL
-                """.trimIndent(),
-                mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
-            )
-        } catch (error: Throwable) {
-            reportSubscriptionFailure("subscribe orders", error)
-        }
+            """.trimIndent(),
+            mapOf("locationId" to locationId, "TTL" to subscriptionCutoff)
+        )
     }
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
@@ -85,9 +93,8 @@ class OrdersRepository internal constructor(
             query = """
                 SELECT * FROM ${Order.COLLECTION_NAME}
                 WHERE _id.locationId = :locationId
-                    AND createdAt > :TTL
             """.trimIndent(),
-            args = mapOf("locationId" to locationId, "TTL" to startOfTodayIso())
+            args = mapOf("locationId" to locationId)
         )
 
     suspend fun upsert(order: Order) {
@@ -101,10 +108,20 @@ class OrdersRepository internal constructor(
         )
     }
 
+    suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
+        CURRENT_ORDER_QUERY,
+        mapOf("id" to id.id, "locationId" to id.locationId)
+    ) { it.decodeOrSkip<Order>().firstOrNull() }
+
+    fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(
+        CURRENT_ORDER_QUERY,
+        mapOf("id" to id.id, "locationId" to id.locationId)
+    ).map { it.firstOrNull() }
+
     suspend fun clearCart(order: Order) {
         if (order.cart.isEmpty()) return
-        // UNSET target paths can't be parameterized in DQL, so the cart keys
-        // (app-generated line-item UUIDs) are interpolated; all values use :named args.
+        // App-generated UUID paths need quoted identifiers, not DQL value arguments.
+        // https://docs.ditto.live/dql/update
         val unsetList = order.cartPathsForUnset()
         ditto.store.execute(
             """
@@ -116,31 +133,6 @@ class OrdersRepository internal constructor(
         )
     }
 
-    suspend fun reset(order: Order) {
-        val createdAtNow = now().toDittoIsoString()
-        val baseArgs = mapOf<String, Any>(
-            "id" to order.documentId.id,
-            "locationId" to order.documentId.locationId,
-            "createdAt" to createdAtNow
-        )
-        val query = if (order.cart.isEmpty()) {
-            """
-                UPDATE ${Order.COLLECTION_NAME}
-                SET createdAt = :createdAt
-                WHERE _id.id = :id AND _id.locationId = :locationId
-            """.trimIndent()
-        } else {
-            val unsetList = order.cartPathsForUnset()
-            """
-                UPDATE ${Order.COLLECTION_NAME}
-                SET createdAt = :createdAt
-                UNSET $unsetList
-                WHERE _id.id = :id AND _id.locationId = :locationId
-            """.trimIndent()
-        }
-        ditto.store.execute(query, baseArgs)
-    }
-
     suspend fun runEvictionIfDue() {
         val prefs = preferences()
         val eviction = OrderEviction(
@@ -149,23 +141,31 @@ class OrdersRepository internal constructor(
             lastRun = { prefs.getLong(LAST_EVICTION_KEY, 0L) },
             recordRun = { prefs.edit().putLong(LAST_EVICTION_KEY, it).apply() },
             evict = { cutoff ->
-                ditto.store.execute(
-                    "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
-                    mapOf("TTL" to cutoff)
-                )
+                subscriptionMutex.withLock {
+                    // An active subscription can fetch evicted documents again.
+                    // https://docs.ditto.live/sdk/latest/crud/delete#evicting-data
+                    subscription?.close()
+                    subscription = null
+                    try {
+                        ditto.store.execute(
+                            "EVICT FROM ${Order.COLLECTION_NAME} WHERE createdAt <= :TTL",
+                            mapOf("TTL" to cutoff)
+                        )
+                        subscriptionCutoff = cutoff
+                    } finally {
+                        refreshSubscription()
+                    }
+                }
             }
         )
-        try {
-            eviction.runIfDue()?.let { Log.i("Eviction", "evicted orders with createdAt <= $it") }
-        } catch (error: Throwable) {
-            Log.w("Eviction", error.message.orEmpty())
-        }
+        eviction.runIfDue()
     }
 
-    private fun startOfTodayIso(): String =
-        timeZone().let { zone -> now().toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
+    private fun startOfDayIso(instant: Instant): String =
+        timeZone().let { zone -> instant.toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
 
     companion object {
+        private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId"
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }

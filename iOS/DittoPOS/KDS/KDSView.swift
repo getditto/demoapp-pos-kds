@@ -9,12 +9,14 @@ import SwiftUI
 
 struct KDSView: View {
     let ordersRepository: OrdersRepository
+    let isActive: Bool
 
-    init(ordersRepository: OrdersRepository) {
+    init(ordersRepository: OrdersRepository, isActive: Bool = true) {
         self.ordersRepository = ordersRepository
+        self.isActive = isActive
     }
 
     var body: some View {
-        KDSOrdersGridView(ordersRepository: ordersRepository)
+        KDSOrdersGridView(ordersRepository: ordersRepository, isActive: isActive)
     }
 }

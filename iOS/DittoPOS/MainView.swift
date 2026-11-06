@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var ordersRepository: OrdersRepository
     @EnvironmentObject var saleItemsRepository: SaleItemsRepository
     @EnvironmentObject var locationsRepository: LocationsRepository
@@ -22,9 +23,7 @@ struct MainView: View {
         NavigationStack {
             Group {
                 if viewModel.needsLocation {
-                    // Blocks the app until a location is picked, rather than
-                    // letting the user reach an inert POS/KDS. Mirrors Android
-                    // showing `InitialSetupScreen` in place of the app.
+                    // A location is required before the demo can accept orders.
                     LocationsView(
                         locationsRepository: locationsRepository,
                         title: viewModel.mainTitle
@@ -34,14 +33,16 @@ struct MainView: View {
                         POSView(
                             ordersRepository: ordersRepository,
                             saleItemsRepository: saleItemsRepository,
-                            locationsRepository: locationsRepository
+                            locationsRepository: locationsRepository,
+                            isActive: scenePhase == .active && viewModel.selectedTab == .pos && !viewModel.presentSettingsView
                         )
                         .tabItem {
                             Label("POS", systemImage: "dot.squareshape")
                         }
                         .tag(TabViews.pos)
 
-                        KDSView(ordersRepository: ordersRepository)
+                        KDSView(ordersRepository: ordersRepository,
+                                isActive: scenePhase == .active && viewModel.selectedTab == .kds && !viewModel.presentSettingsView)
                             .tabItem {
                                 Label("KDS", systemImage: "square.grid.3x1.below.line.grid.1x2")
                             }
@@ -60,6 +61,9 @@ struct MainView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                if locationsRepository.isLoading {
+                    ToolbarItem(placement: .principal) { ProgressView() }
+                }
                 ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button {
                         viewModel.presentSettingsView = true
@@ -71,5 +75,8 @@ struct MainView: View {
             .navigationTitle(viewModel.mainTitle)
             .navigationBarTitleDisplayMode(.inline)
         }
+        .onAppear { locationsRepository.setVisible(scenePhase == .active) }
+        .onChange(of: scenePhase) { locationsRepository.setVisible($0 == .active) }
+        .onDisappear { locationsRepository.setVisible(false) }
     }
 }

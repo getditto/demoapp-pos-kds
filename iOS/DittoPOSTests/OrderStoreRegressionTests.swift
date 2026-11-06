@@ -26,34 +26,6 @@ import XCTest
         }
     }
 
-    func testResetClearsLinesAndChangesDateWithoutLosingPaymentOrStatus() async throws {
-        for empty in [false, true] {
-            try await TestDitto.withInstance { ditto in
-                var original = try OrderFixture.load()
-                if empty { original.cart = [:] }
-                let other = Order(
-                    documentId: DocumentID(id: original.documentId.id, locationId: "other"),
-                    cart: original.cart, payments: original.payments, statusLog: original.statusLog,
-                    createdAt: original.createdAt)
-                let resetAt = try DittoWireDate.date(from: "2026-05-01T10:20:30.123Z")
-                try await insert(original, into: ditto)
-                try await insert(other, into: ditto)
-                let repository = OrdersRepository(
-                    ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { resetAt })
-                try await observeChange(ditto, original, satisfying: { $0.cart.isEmpty && $0.createdAt == resetAt }) {
-                    repository.reset(order: original)
-                }
-                let reset = try await read(original.documentId, from: ditto)
-                XCTAssertEqual(reset.createdAt, resetAt)
-                XCTAssertTrue(reset.cart.isEmpty)
-                XCTAssertEqual(reset.payments, original.payments)
-                XCTAssertEqual(reset.statusLog, original.statusLog)
-                let unchanged = try await read(other.documentId, from: ditto)
-                XCTAssertEqual(unchanged, other)
-            }
-        }
-    }
-
     func testLocalEvictionIncludesMidnightAndUnpaidOrdersButRetainsLaterRecords() async throws {
         try await TestDitto.withInstance { ditto in
             let midnight = try DittoWireDate.date(from: "2026-04-01T00:00:00.000Z")
@@ -74,8 +46,8 @@ import XCTest
             defer { defaults.removePersistentDomain(forName: suite) }
             let now = midnight.addingTimeInterval(12 * 60 * 60)
             let repository = OrdersRepository(
-                ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now })
-            await repository.runEvictionIfDue(defaults: defaults, calendar: calendar)
+                ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now }, defaults: defaults, calendar: calendar)
+            try await repository.runEvictionIfDue()
             let result = try await ditto.store.execute(
                 query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "42"])
             let remaining: [Order] = try result.decode()

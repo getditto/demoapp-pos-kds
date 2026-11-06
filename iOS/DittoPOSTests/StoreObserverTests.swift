@@ -19,16 +19,12 @@ import XCTest
             let subscription = ditto.store.observePublisher(
                 query: "SELECT * FROM observer_test WHERE locationId = :locationId",
                 arguments: ["locationId": "B"], mapTo: Item.self
-            ).sink(
-                receiveCompletion: { completion in
-                    if case .failure(let error) = completion { XCTFail("Adapter failed: \(error)") }
-                },
-                receiveValue: { items in
+            ).sink { items in
                     let names = items.map(\.name)
                     XCTAssertTrue(names == ["Initial"] || names == ["Updated"], "Unexpected decoded payload: \(names)")
                     if names == ["Initial"] { initial.fulfill() }
                     if names == ["Updated"] { updated.fulfill() }
-                })
+                }
             defer { subscription.cancel() }
             await fulfillment(of: [initial], timeout: 5)
             _ = try await ditto.store.execute(

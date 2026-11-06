@@ -1,0 +1,212 @@
+// Freeze beab457 payloads/INITIAL writes so migration tests cannot track new model changes.
+import Foundation
+import DittoSwift
+
+//
+//  LegacySaleItem.swift
+//  DittoPOS
+//
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
+//
+
+
+struct LegacySaleItem: Codable, Hashable, Sendable {
+    let documentId: DocumentID
+    let name: String
+    let imageName: String  // canonical wire key; resolve via ImageNameMapping
+    let price: Price
+
+    private enum CodingKeys: String, CodingKey {
+        case documentId = "_id"
+        case name, imageName, price
+    }
+
+    static let collectionName = "sale_items"
+}
+
+extension LegacySaleItem: CustomStringConvertible {
+    var description: String { "\(name): \(price.description)" }
+}
+
+extension LegacySaleItem {
+    static func seed(id: String, locationId: String, name: String, imageName: String, cents: Int) -> LegacySaleItem {
+        LegacySaleItem(
+            documentId: DocumentID(id: id, locationId: locationId),
+            name: name,
+            imageName: imageName,
+            price: Price(cents: cents)
+        )
+    }
+}
+//
+//  LegacyLocation.swift
+//  DittoPOS
+//
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
+//
+
+
+struct LegacyLocation: Identifiable, Hashable, Equatable, Codable, Sendable {
+    let id: String
+    let name: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case name
+    }
+
+    static let collectionName = "locations"
+}
+//
+//  LegacySaleItemSeed.swift
+//  DittoPOS
+//
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
+//
+
+// Demo-only data.
+
+
+enum LegacySaleItemSeed {
+    private struct Item {
+        let id: String
+        let name: String
+        let imageName: String
+        let cents: Int
+    }
+
+    private static let catalog: [Item] = [
+        Item(id: "00001", name: "Burger",        imageName: "burger",       cents: 850),
+        Item(id: "00002", name: "Burrito",       imageName: "burrito",      cents: 650),
+        Item(id: "00003", name: "Fried Chicken", imageName: "chicken",      cents: 800),
+        Item(id: "00004", name: "Potato Chips",  imageName: "chips",        cents: 250),
+        Item(id: "00005", name: "Coffee",        imageName: "coffee",       cents: 195),
+        Item(id: "00006", name: "Cookies",       imageName: "cookies",      cents: 350),
+        Item(id: "00007", name: "Corn",          imageName: "corn",         cents: 350),
+        Item(id: "00008", name: "French Fries",  imageName: "fries",        cents: 350),
+        Item(id: "00009", name: "Fruit Salad",   imageName: "fruit_salad",  cents: 650),
+        Item(id: "00010", name: "Gumbo",         imageName: "gumbo",        cents: 995),
+        Item(id: "00011", name: "Ice Cream",     imageName: "ice_cream",    cents: 250),
+        Item(id: "00012", name: "Milk",          imageName: "milk",         cents: 200),
+        Item(id: "00013", name: "Onion Rings",   imageName: "onion_rings",  cents: 350),
+        Item(id: "00014", name: "Pancakes",      imageName: "pancakes",     cents: 550),
+        Item(id: "00015", name: "Pie",           imageName: "pie",          cents: 450),
+        Item(id: "00016", name: "Salad",         imageName: "salad",        cents: 650),
+        Item(id: "00017", name: "Sandwich",      imageName: "sandwich",     cents: 450),
+        Item(id: "00018", name: "Soft Drink",    imageName: "soft_drink",   cents: 150),
+        Item(id: "00019", name: "Tacos",         imageName: "tacos",        cents: 650),
+        Item(id: "00020", name: "Veggie Plate",  imageName: "veggies",      cents: 750)
+    ]
+
+    private static let menus: [String: [String]] = [
+        "00001": ["00001", "00008", "00013", "00018", "00012", "00011", "00006"],            // Ham's: burger/fries/onion rings/soda/milk/ice cream/cookies
+        "00002": ["00016", "00009", "00020", "00017", "00018", "00005", "00012"],            // Sally's: salad/fruit salad/veggies/sandwich/soda/coffee/milk
+        "00003": ["00003", "00017", "00016", "00020", "00018", "00005", "00006"],            // Kyle's: chicken/sandwich/salad/veggies/soda/coffee/cookies
+        "00004": ["00017", "00016", "00020", "00009", "00018", "00005", "00015"],            // Frank's: sandwich/salad/veggies/fruit salad/soda/coffee/pie
+        "00005": ["00014", "00009", "00005", "00012", "00011", "00015", "00006"],            // Cathy's: pancakes/fruit salad/coffee/milk/ice cream/pie/cookies
+        "00006": ["00010", "00017", "00007", "00018", "00012", "00015"],                     // Gilbert's: gumbo/sandwich/corn/soda/milk/pie
+        "00007": ["00019", "00002", "00007", "00018", "00003", "00011"]                      // Tarra's: tacos/burrito/corn/soda/chicken/ice cream
+    ]
+
+    static func saleItemsForAllLocations() -> [LegacySaleItem] {
+        var out: [LegacySaleItem] = []
+        for location in LegacyLocationSeed.demoLocations {
+            for itemId in menus[location.id] ?? [] {
+                guard let item = catalog.first(where: { $0.id == itemId }) else { continue }
+                out.append(LegacySaleItem.seed(
+                    id: item.id,
+                    locationId: location.id,
+                    name: item.name,
+                    imageName: item.imageName,
+                    cents: item.cents
+                ))
+            }
+        }
+        return out
+    }
+}
+//
+//  LegacyLocationSeed.swift
+//  DittoPOS
+//
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
+//
+
+// Demo-only data.
+
+
+enum LegacyLocationSeed {
+    static let demoLocations: [LegacyLocation] = [
+        LegacyLocation(id: "00001", name: "Ham's Burgers"),
+        LegacyLocation(id: "00002", name: "Sally's Salad Bar"),
+        LegacyLocation(id: "00003", name: "Kyle's Kabobs"),
+        LegacyLocation(id: "00004", name: "Frank's Falafels"),
+        LegacyLocation(id: "00005", name: "Cathy's Crepes"),
+        LegacyLocation(id: "00006", name: "Gilbert's Gumbo"),
+        LegacyLocation(id: "00007", name: "Tarra's Tacos")
+    ]
+
+    static let demoLocationIds: [String] = demoLocations.map(\.id)
+}
+//
+//  LegacyDemoSeeder.swift
+//  DittoPOS
+//
+//  Copyright © 2026 DittoLive Incorporated. All rights reserved.
+//
+
+
+
+@MainActor
+struct LegacyDemoSeeder {
+    let store: DittoStore
+
+    func seedAll() async {
+        await seedLocations()
+        await seedSaleItems()
+    }
+
+    func seedLocations() async {
+        await bulkInitialInsert(
+            into: LegacyLocation.collectionName,
+            documents: LegacyLocationSeed.demoLocations,
+            label: "seedLocations"
+        )
+    }
+
+    func seedSaleItems() async {
+        await bulkInitialInsert(
+            into: LegacySaleItem.collectionName,
+            documents: LegacySaleItemSeed.saleItemsForAllLocations(),
+            label: "seedSaleItems"
+        )
+    }
+
+    private func bulkInitialInsert<T: Encodable>(
+        into collectionName: String,
+        documents: [T],
+        label: String
+    ) async {
+        guard !documents.isEmpty else { return }
+
+        var args: [String: Any?] = [:]
+        var placeholders: [String] = []
+        for (index, document) in documents.enumerated() {
+            let key = "d\(index)"
+            args[key] = (try? document.dittoJSONString()) ?? "{}"
+            placeholders.append("(deserialize_json(:\(key)))")
+        }
+
+        do {
+            _ = try await store.execute(
+                query: """
+                    INSERT INTO \(collectionName)
+                    INITIAL DOCUMENTS \(placeholders.joined(separator: ", "))
+                    """,
+                arguments: args
+            )
+        } catch {
+            print("LegacyDemoSeeder.\(label): ERROR \(error.localizedDescription)")
+        }
+    }
+}

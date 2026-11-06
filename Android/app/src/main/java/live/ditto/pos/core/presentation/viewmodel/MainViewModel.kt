@@ -5,12 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.ditto.kotlin.Ditto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.repository.LocationsRepository
@@ -23,80 +21,57 @@ import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
-    private val refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
-    private val getDittoInstanceUseCase: GetDittoInstanceUseCase,
-    private val appConfigurationStateUseCase: AppConfigurationStateUseCase,
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
-    private val getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
+class MainViewModel internal constructor(
+    private val refreshPermissions: () -> Unit,
+    private val getDittoInstance: () -> Ditto,
+    appConfigurationStateUseCase: AppConfigurationStateUseCase,
+    getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val getMissingPermissions: () -> Array<String>,
     private val locationsRepository: LocationsRepository
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(
-        AppState(
-            currentLocationName = "",
-            locations = emptyList(),
-            appConfigurationState = AppConfigurationState.LOCATION_NEEDED
-        )
+    @Inject constructor(
+        refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
+        getDittoInstanceUseCase: GetDittoInstanceUseCase,
+        appConfigurationStateUseCase: AppConfigurationStateUseCase,
+        getCurrentLocationUseCase: GetCurrentLocationUseCase,
+        getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
+        locationsRepository: LocationsRepository
+    ) : this(
+        refreshDittoPermissionsUseCase::invoke,
+        getDittoInstanceUseCase::invoke,
+        appConfigurationStateUseCase,
+        getCurrentLocationUseCase,
+        getMissingPermissionsUseCase::invoke,
+        locationsRepository
     )
-    val uiState = _uiState.asStateFlow()
 
-    init {
-        // Every field below derives from the active location, so picking one
-        // drives the setup gate, the title, and the picker with no imperative
-        // refresh. Mirrors iOS, where all three hang off `$currentLocationId`.
-        appConfigurationStateUseCase()
-            .onEach { appConfigurationState ->
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        appConfigurationState = appConfigurationState
-                    )
-                }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(viewModelScope)
+    val configuration = appConfigurationStateUseCase().stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        AppConfigurationState.LOCATION_NEEDED
+    )
 
-        // Title follows the active location, live — a rename synced from
-        // another peer lands here without a re-pull. Mirrors iOS `mainTitle`.
-        getCurrentLocationUseCase()
-            .onEach { location ->
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        currentLocationName = location?.name ?: ""
-                    )
-                }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(viewModelScope)
-
-        // Backs the location picker. Both picker screens read this rather than
-        // the demo seed, so what's on screen is what's in the collection.
+    val uiState = combine(
+        getCurrentLocationUseCase(),
         locationsRepository.observeAllLocations()
-            .onEach { locations ->
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        locations = locations
-                    )
-                }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(viewModelScope)
-    }
+    ) { location, locations ->
+        AppState(location?.name.orEmpty(), locations.orEmpty(), isLoading = locations == null)
+    }.flowOn(Dispatchers.IO).stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
+        AppState("", emptyList(), isLoading = true)
+    )
 
     fun checkDittoPermissions(onPermissionsChecked: (missingPermissions: Array<String>) -> Unit) {
-        onPermissionsChecked(getMissingPermissionsUseCase())
+        onPermissionsChecked(getMissingPermissions())
     }
 
     fun refreshDittoPermissions() {
-        refreshDittoPermissionsUseCase()
+        refreshPermissions()
     }
 
-    fun requireDitto(): Ditto = getDittoInstanceUseCase()
+    fun requireDitto(): Ditto = getDittoInstance()
 
-    /**
-     * The only writer. Persisting the id is what advances the gate, the title,
-     * and the picker — they all observe it.
-     */
     fun updateCurrentLocation(locationId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             locationsRepository.setActiveLocation(locationId = locationId)
@@ -107,5 +82,5 @@ class MainViewModel @Inject constructor(
 data class AppState(
     val currentLocationName: String,
     val locations: List<Location>,
-    val appConfigurationState: AppConfigurationState
+    val isLoading: Boolean = false
 )

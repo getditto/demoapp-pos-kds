@@ -1,13 +1,11 @@
 package live.ditto.pos.core.data.demo
 
-// Demo-only orchestration. Seed content is in LocationSeed / SaleItemSeed.
-//
-// `INITIAL DOCUMENTS` writes each document only if it doesn't already exist
-// — idempotent and peer-safe, so every device can run this on launch and
-// the network converges on a single copy.
+// INITIAL lets peers seed the same defaults without overwriting existing edits.
+// https://docs.ditto.live/dql/insert#insert-with-initial-documents
 
 import com.ditto.kotlin.Ditto
-import live.ditto.pos.core.data.SaleItem
+import live.ditto.pos.core.data.SaleItemCommands
+import live.ditto.pos.core.data.SaleItemCreation
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
 
@@ -21,27 +19,20 @@ class DemoSeeder(private val ditto: Ditto) {
     suspend fun seedLocations() {
         bulkInitialInsert(
             collectionName = Location.COLLECTION_NAME,
-            documents = LocationSeed.demoLocations.map { it.dittoJsonString() },
-            label = "seedLocations"
+            documents = LocationSeed.demoLocations.map { it.dittoJsonString() }
         )
     }
 
     suspend fun seedSaleItems() {
         bulkInitialInsert(
-            collectionName = SaleItem.COLLECTION_NAME,
-            documents = SaleItemSeed.saleItemsForAllLocations().map { it.dittoJsonString() },
-            label = "seedSaleItems"
+            collectionName = SaleItemCommands.CREATION_COLLECTION,
+            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, 20L).json() }
         )
     }
 
-    /**
-     * Single bulk `INSERT INTO ... INITIAL DOCUMENTS (...), (...), ...`
-     * — one round-trip for the whole seed set.
-     */
     private suspend fun bulkInitialInsert(
         collectionName: String,
-        documents: List<String>,
-        label: String
+        documents: List<String>
     ) {
         if (documents.isEmpty()) return
 
@@ -52,16 +43,12 @@ class DemoSeeder(private val ditto: Ditto) {
             "(deserialize_json(:$key))"
         }
 
-        try {
-            ditto.store.execute(
-                """
+        ditto.store.execute(
+            """
                 INSERT INTO $collectionName
                 INITIAL DOCUMENTS ${placeholders.joinToString(", ")}
-                """.trimIndent(),
-                args
-            )
-        } catch (error: Throwable) {
-            android.util.Log.w("DemoSeeder", "$label: ${error.message}")
-        }
+            """.trimIndent(),
+            args
+        )
     }
 }

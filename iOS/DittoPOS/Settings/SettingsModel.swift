@@ -5,7 +5,6 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import Combine
 import Foundation
 
 enum TabViews: Int, Identifiable {
@@ -25,12 +24,7 @@ enum TabViews: Int, Identifiable {
         get { defaults.selectedTabView }
         set(value) { defaults.selectedTabView = value }
     }
-    static var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> { defaults.selectedTabViewPublisher }
 
-    // For testing only
-    static func clearLocationsSetup() {
-        locationId = nil
-    }
 }
 
 extension UserDefaults {
@@ -59,18 +53,6 @@ extension UserDefaults {
         set(newValue) {
             let tabInt = newValue?.rawValue ?? 0
             set(tabInt, forKey: UserDefaultsKeys.selectedTab)
-
-            let retTab = newValue == nil ? nil : TabViews(rawValue: tabInt)
-            Self.selectedTabSubject.send(retTab)
         }
-    }
-
-    // Workaround for UserDefaults does not support publishing optional Int natively, so to implement
-    // selectedTabViewPublisher, we have to be notified when selectedTabView is updated (above).
-    @MainActor private static let selectedTabSubject = PassthroughSubject<TabViews?, Never>()
-
-    @MainActor var selectedTabViewPublisher: AnyPublisher<TabViews?, Never> {
-        Self.selectedTabSubject
-            .eraseToAnyPublisher()
     }
 }

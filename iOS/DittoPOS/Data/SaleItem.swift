@@ -7,18 +7,58 @@
 
 import Foundation
 
-struct SaleItem: Codable, Hashable, Sendable {
+struct SaleItem: Decodable, Hashable, Sendable {
     let documentId: DocumentID
     let name: String
-    let imageName: String  // canonical wire key; resolve via ImageNameMapping
+    let imageName: String
+    let price: Price
+    let quantity: Int64?
+
+    private enum CodingKeys: String, CodingKey {
+        case documentId = "_id"
+        case name, imageName, price, quantity
+    }
+
+    init(documentId: DocumentID, name: String, imageName: String, price: Price, quantity: Int64? = nil) {
+        self.documentId = documentId
+        self.name = name
+        self.imageName = imageName
+        self.price = price
+        self.quantity = quantity
+    }
+
+    var metadata: SaleItemMetadata {
+        SaleItemMetadata(documentId: documentId, name: name, imageName: imageName, price: price)
+    }
+
+    static let collectionName = "sale_items"
+}
+
+struct SaleItemMetadata: Codable, Hashable, Sendable {
+    let documentId: DocumentID
+    let name: String
+    let imageName: String
     let price: Price
 
     private enum CodingKeys: String, CodingKey {
         case documentId = "_id"
         case name, imageName, price
     }
+}
 
-    static let collectionName = "sale_items"
+struct SaleItemCreation: Encodable, Sendable {
+    let metadata: SaleItemMetadata
+    let initialQuantity: Int64
+
+    private enum CodingKeys: String, CodingKey {
+        case quantity
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try metadata.encode(to: encoder)
+        var fields = encoder.container(keyedBy: CodingKeys.self)
+        try fields.encode(initialQuantity, forKey: .quantity)
+    }
 }
 
 extension SaleItem: CustomStringConvertible {

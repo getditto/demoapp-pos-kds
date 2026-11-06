@@ -16,17 +16,12 @@ import javax.inject.Singleton
 
 private const val DATA_STORE_NAME = "settings"
 
-/**
- * Device-local app preferences backed by Android DataStore. Not synced via
- * Ditto — the per-collection repositories in `core.data.repository` own
- * synced data. The two are kept in separate packages so the boundary
- * between "local-only" and "synced" is visible at the import line. Mirrors
- * iOS `Settings` (`iOS/DittoPOS/Settings/`).
- */
+// A device's selected location/cart must not change another demo device's selection.
 @Singleton
-class AppSettings @Inject constructor(
-    @ApplicationContext private val context: Context
+class AppSettings internal constructor(
+    private val store: DataStore<Preferences>
 ) {
+    @Inject constructor(@ApplicationContext context: Context) : this(context.dataStore)
 
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
@@ -36,13 +31,8 @@ class AppSettings @Inject constructor(
 
     suspend fun locationId(): String = getStringPreference(locationIdKey)
 
-    /**
-     * Reactive stream of the current location id. Empty string when not set.
-     * View models should `flatMapLatest` on this to switch their Ditto
-     * observers when the user picks a different location.
-     */
     fun locationIdFlow(): Flow<String> =
-        context.dataStore.data
+        store.data
             .map { it[locationIdKey] ?: "" }
             .distinctUntilChanged()
 
@@ -59,7 +49,7 @@ class AppSettings @Inject constructor(
     private suspend fun getStringPreference(
         preferencesKey: Preferences.Key<String>,
         defaultValue: String = ""
-    ): String = context.dataStore.data
+    ): String = store.data
         .map { preferences ->
             preferences[preferencesKey]
         }.first() ?: defaultValue
@@ -68,7 +58,7 @@ class AppSettings @Inject constructor(
         preferencesKey: Preferences.Key<T>,
         value: T
     ) {
-        context.dataStore.edit { settings ->
+        store.edit { settings ->
             settings[preferencesKey] = value
         }
     }
