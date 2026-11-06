@@ -17,7 +17,10 @@ struct DittoPOS: App {
 
     init() {
         let manager = DittoManager.shared
-        let locationsRepository = LocationsRepository(dittoManager: manager)
+        let locationsRepository = LocationsRepository(ditto: manager.ditto, updateSyncGroup: { locationId in
+            if let locationId { manager.applySyncGroup(locationId: locationId) }
+            else { manager.resetSyncGroup() }
+        })
         let ordersRepository = OrdersRepository(
             ditto: manager.ditto,
             locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher()

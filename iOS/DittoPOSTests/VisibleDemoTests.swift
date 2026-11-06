@@ -3,6 +3,60 @@ import DittoSwift
 import XCTest
 
 @MainActor final class VisibleDemoTests: XCTestCase {
+    func testLocationReloadClearsPresentationWithoutChangingSelectionOrCancelingTheCart() async throws {
+        let previous = Settings.defaults
+        let suite = "LocationLoadingTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        Settings.defaults = defaults
+        defer {
+            Settings.defaults = previous
+            defaults.removePersistentDomain(forName: suite)
+        }
+        try await TestDitto.withInstance { ditto in
+            var groups: [String?] = []
+            let locations = LocationsRepository(ditto: ditto, updateSyncGroup: { groups.append($0) })
+            await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
+            XCTAssertTrue(locations.allLocations.isEmpty)
+            await DemoSeeder(store: ditto.store).seedLocations()
+            await expect(locations.$allLocations, matching: { $0.count == 7 }) { }
+            let id = "00001"
+            locations.setActiveLocation(id)
+            let ids = locations.$currentLocationId.eraseToAnyPublisher()
+            let orders = OrdersRepository(ditto: ditto, locationPublisher: ids)
+            let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
+            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
+                documentId: DocumentID(id: "coffee", locationId: id), name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { locations.currentLocationId })
+            await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
+            await expect(pos.$currentOrder, matching: { $0 != nil }) { }
+            await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(pos.saleItems[0]) }
+            let order = try XCTUnwrap(pos.currentOrder)
+            pos.setVisible(false)
+            locations.setVisible(false)
+            XCTAssertTrue(locations.isLoading)
+            XCTAssertTrue(locations.allLocations.isEmpty)
+            XCTAssertNil(locations.currentLocation)
+            XCTAssertEqual(locations.currentLocationId, id)
+            XCTAssertTrue(ditto.store.observers.isEmpty)
+
+            _ = try await ditto.store.execute(query: "UPDATE locations SET name = :name WHERE _id = :id", arguments: ["name": "Renamed location", "id": id])
+            await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
+            XCTAssertEqual(locations.currentLocation?.name, "Renamed location")
+            await expect(pos.$currentOrder, matching: { $0?.documentId == order.documentId }) { pos.setVisible(true) }
+            XCTAssertEqual(pos.currentOrder, order)
+            let stored = try await readOrder(order.documentId, from: ditto)
+            XCTAssertEqual(stored, order)
+            XCTAssertEqual(groups, [id])
+
+            pos.setVisible(false)
+            locations.setVisible(false)
+            _ = try await ditto.store.execute(query: "DELETE FROM locations")
+            await expect(locations.$isLoading, matching: { !$0 }) { locations.setVisible(true) }
+            XCTAssertTrue(locations.allLocations.isEmpty)
+            XCTAssertEqual(locations.currentLocationId, id)
+        }
+    }
+
     func testMidnightTabReentryKeepsTheStoredCartUntilEvictionThenStartsANewOne() async throws {
         try await TestDitto.withInstance { ditto in
             var now = try DittoWireDate.date(from: "2026-04-02T09:00:00.000Z")
@@ -19,7 +73,7 @@ import XCTest
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
             try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
                 documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
-            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
+            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
             let kitchen = KDSViewModel(ordersRepository: orders)
             await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
             await expect(pos.$currentOrder, matching: { $0 != nil }) { }
@@ -66,7 +120,7 @@ import XCTest
                 let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
                 let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199))
                 try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
-                let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
+                let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
                 await expect(pos.$saleItems, matching: { !$0.isEmpty }) { pos.setVisible(true) }
                 await expect(pos.$currentOrder, matching: { $0 != nil }) { }
                 let item = try XCTUnwrap(pos.saleItems.first)
@@ -116,7 +170,7 @@ import XCTest
             try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 0))
             try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
                 documentId: DocumentID(id: "coffee", locationId: "B"), name: "Other location", imageName: "milk", price: Price(cents: 250)), initialQuantity: 7))
-            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: location.eraseToAnyPublisher(), locationId: { location.value?.id })
+            let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
             let kitchen = KDSViewModel(ordersRepository: orders)
             XCTAssertEqual(ditto.store.observers.count, baseline)
 

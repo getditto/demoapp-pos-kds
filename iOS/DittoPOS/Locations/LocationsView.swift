@@ -27,15 +27,13 @@ struct LocationsView: View {
 
     var body: some View {
         VStack {
-            if viewModel.locations.isEmpty {
-                // This is the blocking setup screen until a location is picked,
-                // so an empty list would be indistinguishable from a hang.
-                // Locations are seeded into the local store on launch, so this
-                // shows only until that lands. Deliberately not a fallback to
-                // LocationSeed — that would mask a seed that never lands.
+            if viewModel.isLoading {
                 Spacer()
                 ProgressView("Loading locations…")
                 Spacer()
+            } else if viewModel.locations.isEmpty {
+                Text("No locations available")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(viewModel.locations, id: \.self, selection: viewModel.selectionBinding) { item in
                     LocationRowView(location: item)

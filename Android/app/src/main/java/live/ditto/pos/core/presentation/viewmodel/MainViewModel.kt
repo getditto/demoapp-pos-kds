@@ -30,16 +30,21 @@ class MainViewModel @Inject constructor(
     private val locationsRepository: LocationsRepository
 ) : ViewModel() {
 
+    val configuration = appConfigurationStateUseCase().stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        AppConfigurationState.LOCATION_NEEDED
+    )
+
     val uiState = combine(
-        appConfigurationStateUseCase(),
         getCurrentLocationUseCase(),
         locationsRepository.observeAllLocations()
-    ) { configuration, location, locations ->
-        AppState(location?.name.orEmpty(), locations, configuration)
+    ) { location, locations ->
+        AppState(location?.name.orEmpty(), locations.orEmpty(), isLoading = locations == null)
     }.flowOn(Dispatchers.IO).stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(stopTimeoutMillis = 0),
-        AppState("", emptyList(), AppConfigurationState.LOCATION_NEEDED)
+        SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
+        AppState("", emptyList(), isLoading = true)
     )
 
     fun checkDittoPermissions(onPermissionsChecked: (missingPermissions: Array<String>) -> Unit) {
@@ -62,5 +67,5 @@ class MainViewModel @Inject constructor(
 data class AppState(
     val currentLocationName: String,
     val locations: List<Location>,
-    val appConfigurationState: AppConfigurationState
+    val isLoading: Boolean = false
 )

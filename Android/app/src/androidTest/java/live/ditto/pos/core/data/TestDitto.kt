@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.job
 import kotlinx.datetime.TimeZone
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.core.data.repository.SaleItemsRepository
 import live.ditto.pos.settings.AppSettings
@@ -38,6 +39,7 @@ internal class TestDitto(
     }
 
     fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope)
+    fun locations(updateSyncGroup: suspend (String?) -> Unit): LocationsRepository = LocationsRepository({ ditto }, settings, updateSyncGroup, scope)
 
     fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow(), clock: () -> Instant = { now }): OrdersRepository = OrdersRepository(
         dittoProvider = { ditto },

@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -21,19 +22,29 @@ import javax.inject.Singleton
 
 // Location selection is device-local so it cannot switch another demo device.
 @Singleton
-class LocationsRepository @Inject constructor(
-    private val dittoManager: DittoManager,
-    private val appSettings: AppSettings
+class LocationsRepository internal constructor(
+    private val dittoProvider: () -> Ditto,
+    private val appSettings: AppSettings,
+    private val updateSyncGroup: suspend (String?) -> Unit,
+    private val repoScope: CoroutineScope
 ) {
-    private val ditto: Ditto get() = dittoManager.requireDitto()
+    @Inject constructor(dittoManager: DittoManager, appSettings: AppSettings) : this(
+        dittoManager::requireDitto,
+        appSettings,
+        { locationId ->
+            if (locationId != null) dittoManager.setSyncGroup(locationId) else dittoManager.resetSyncGroup()
+        },
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    )
+
+    private val ditto: Ditto get() = dittoProvider()
     private var subscription: DittoSyncSubscription? = null
-    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val allLocations by lazy {
         ditto.store
             .observeAsFlow<Location>("SELECT * FROM ${Location.COLLECTION_NAME}")
-            .map { locations -> locations.filter { it.id in LocationSeed.demoLocationIds } }
-            .stateIn(repoScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+            .map { locations -> locations.filter { it.id in LocationSeed.demoLocationIds } as List<Location>? }
+            .stateIn(repoScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), null)
     }
 
     init {
@@ -59,23 +70,15 @@ class LocationsRepository @Inject constructor(
 
     suspend fun setActiveLocation(locationId: String) {
         appSettings.setLocationId(locationId = locationId)
-        if (locationId.isNotEmpty()) {
-            dittoManager.setSyncGroup(locationId)
-        } else {
-            dittoManager.resetSyncGroup()
-        }
+        updateSyncGroup(locationId.takeIf { it.isNotEmpty() })
     }
 
     fun locationIdFlow(): Flow<String> = appSettings.locationIdFlow()
 
-    fun observeAllLocations(): Flow<List<Location>> = allLocations
+    fun observeAllLocations(): StateFlow<List<Location>?> = allLocations
 
     fun currentLocationFlow(): Flow<Location?> =
         combine(locationIdFlow(), observeAllLocations()) { locationId, locations ->
-            if (locationId.isEmpty()) null else locations.firstOrNull { it.id == locationId }
+            if (locationId.isEmpty()) null else locations?.firstOrNull { it.id == locationId }
         }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 0L
-    }
 }

@@ -62,7 +62,7 @@ import SwiftUI
     init(
         ordersRepository: OrdersRepository,
         saleItemsRepository: SaleItemsRepository,
-        locationPublisher: AnyPublisher<Location?, Never>,
+        locationPublisher: AnyPublisher<String?, Never>,
         locationId: @escaping () -> String?
     ) {
         self.ordersRepository = ordersRepository
@@ -71,15 +71,15 @@ import SwiftUI
 
         // An unpaid cart belongs to its original location.
         locationPublisher
-            .removeDuplicates { $0?.id == $1?.id }
-            .scan((nil, nil)) { acc, next -> (Location?, Location?) in
+            .removeDuplicates()
+            .scan((nil, nil)) { acc, next -> (String?, String?) in
                 (acc.1, next)
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] previous, current in
                 guard let self else { return }
                 let outgoing = selectedOrderId
-                if previous?.id != current?.id {
+                if previous != current {
                     selectedOrderId = nil
                     currentOrder = nil
                     updateObservations()
@@ -87,18 +87,18 @@ import SwiftUI
                 Task {
                     if let previous,
                        let outgoing,
-                       outgoing.locationId == previous.id,
-                       previous.id != current?.id {
+                       outgoing.locationId == previous,
+                       previous != current {
                         try! await ordersRepository.resetUnpaidOrder(outgoing)
                     }
-                    guard current?.id == locationId() else { return }
+                    guard current == locationId() else { return }
                     guard let current else {
                         currentOrder = nil
                         updateObservations()
                         return
                     }
-                    if selectedOrderId?.locationId == current.id { return }
-                    startNewOrder(for: current.id)
+                    if selectedOrderId?.locationId == current { return }
+                    startNewOrder(for: current)
                 }
             }
             .store(in: &cancellables)

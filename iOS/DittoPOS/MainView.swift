@@ -61,6 +61,9 @@ struct MainView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                if locationsRepository.isLoading {
+                    ToolbarItem(placement: .principal) { ProgressView() }
+                }
                 ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button {
                         viewModel.presentSettingsView = true

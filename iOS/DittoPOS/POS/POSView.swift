@@ -43,7 +43,7 @@ struct POSView: View {
         _viewModel = StateObject(wrappedValue: POSViewModel(
             ordersRepository: ordersRepository,
             saleItemsRepository: saleItemsRepository,
-            locationPublisher: locationsRepository.$currentLocation.eraseToAnyPublisher(),
+            locationPublisher: locationsRepository.$currentLocationId.eraseToAnyPublisher(),
             locationId: { locationsRepository.currentLocationId }
         ))
         self.isActive = isActive

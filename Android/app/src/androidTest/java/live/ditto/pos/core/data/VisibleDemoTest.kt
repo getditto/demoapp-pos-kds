@@ -17,6 +17,8 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import live.ditto.pos.core.data.demo.DemoSeeder
+import live.ditto.pos.core.data.locations.Location
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.kds.KDSViewModel
 import live.ditto.pos.kds.KdsUiState
@@ -31,6 +33,52 @@ import kotlin.time.Instant
 
 @RunWith(AndroidJUnit4::class)
 class VisibleDemoTest {
+    @Test
+    fun locationReloadHasFreshPendingAndEmptyResultsWithoutChangingTheSelectedId() = runBlocking<Unit> {
+        TestDitto.withInstance {
+            val id = "00001"
+            settings.setLocationId(id)
+            val groups = Channel<String?>(Channel.UNLIMITED)
+            val locations = locations { groups.send(it) }
+            assertEquals(id, withTimeout(5_000) { groups.receive() })
+            val state = locations.observeAllLocations()
+            assertEquals(null, state.value)
+            val snapshots = Channel<List<Location>?>(Channel.UNLIMITED)
+            coroutineScope {
+                var collection = launch { state.collect { snapshots.send(it) } }
+                try {
+                    snapshots.await { it != null && it.isEmpty() }
+                    DemoSeeder(ditto).seedLocations()
+                    snapshots.await { it?.size == 7 }
+                    collection.cancelAndJoin()
+                    awaitObserverCount(0)
+                    withTimeout(5_000) { while (state.value != null) yield() }
+                    while (snapshots.tryReceive().isSuccess) { }
+
+                    ditto.store.execute("UPDATE locations SET name = :name WHERE _id = :id", mapOf("name" to "Renamed location", "id" to id))
+                    collection = launch { state.collect { snapshots.send(it) } }
+                    val fresh = requireNotNull(snapshots.await { it != null })
+                    assertEquals("Renamed location", fresh.single { it.id == id }.name)
+                    assertEquals(id, settings.locationId())
+                    assertTrue(groups.tryReceive().isFailure)
+                    collection.cancelAndJoin()
+                    awaitObserverCount(0)
+                    withTimeout(5_000) { while (state.value != null) yield() }
+                    while (snapshots.tryReceive().isSuccess) { }
+
+                    ditto.store.execute("DELETE FROM locations")
+                    collection = launch { state.collect { snapshots.send(it) } }
+                    snapshots.await { it != null && it.isEmpty() }
+                    assertEquals(id, settings.locationId())
+                } finally {
+                    collection.cancelAndJoin()
+                }
+            }
+            snapshots.close()
+            groups.close()
+        }
+    }
+
     @Test
     fun storedCartSurvivesRelaunchAndMidnightTabReentryUntilEviction() = runBlocking {
         TestDitto.withInstance {

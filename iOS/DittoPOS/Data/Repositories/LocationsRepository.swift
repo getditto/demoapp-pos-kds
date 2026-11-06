@@ -14,18 +14,20 @@ import DittoSwift
     @Published private(set) var allLocations: [Location] = []
     @Published private(set) var currentLocationId: String?
     @Published private(set) var currentLocation: Location?
+    @Published private(set) var isLoading = true
 
-    private let dittoManager: DittoManager
-    private var ditto: Ditto { dittoManager.ditto }
+    private let ditto: Ditto
+    private let updateSyncGroup: (String?) -> Void
     private var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
     private var subscription: DittoSyncSubscription?
     private var locationsObserver = AnyCancellable({})
-    private var currentLocationDerivation = AnyCancellable({})
+    private var isVisible = false
 
-    init(dittoManager: DittoManager = .shared) {
-        self.dittoManager = dittoManager
+    init(ditto: Ditto, updateSyncGroup: @escaping (String?) -> Void) {
+        self.ditto = ditto
+        self.updateSyncGroup = updateSyncGroup
         startSubscription()
         deriveCurrentLocation()
         if let saved = Settings.locationId {
@@ -39,18 +41,18 @@ import DittoSwift
     }
 
     func setVisible(_ visible: Bool) {
+        guard isVisible != visible else { return }
+        isVisible = visible
         locationsObserver.cancel()
+        allLocations = []
+        isLoading = true
         if visible { observeAllLocations() }
     }
 
     func setActiveLocation(_ locationId: String?) {
         Settings.locationId = locationId
         currentLocationId = locationId
-        if let locationId {
-            dittoManager.applySyncGroup(locationId: locationId)
-        } else {
-            dittoManager.resetSyncGroup()
-        }
+        updateSyncGroup(locationId)
     }
 
     private func startSubscription() {
@@ -65,15 +67,18 @@ import DittoSwift
         .map { locations in
             locations.filter { LocationSeed.demoLocationIds.contains($0.id) }
         }
-        .assign(to: \.allLocations, on: self)
+        .sink { [weak self] locations in
+            self?.allLocations = locations
+            self?.isLoading = false
+        }
     }
 
     private func deriveCurrentLocation() {
-        currentLocationDerivation = Publishers.CombineLatest($currentLocationId, $allLocations)
+        Publishers.CombineLatest($currentLocationId, $allLocations)
             .map { id, all in
                 guard let id else { return nil }
                 return all.first { $0.id == id }
             }
-            .assign(to: \.currentLocation, on: self)
+            .assign(to: &$currentLocation)
     }
 }
