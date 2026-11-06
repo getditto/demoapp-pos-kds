@@ -127,27 +127,6 @@ import Foundation
         )
     }
 
-    // A hidden POS snapshot can predate a payment or cancellation.
-    func resetUnpaidOrder(_ id: DocumentID) async throws {
-        guard let order = try await Self.readOrder(id, store: store), !order.isPaid else { return }
-        let createdAtNow = DittoWireDate.string(from: now())
-        let args: [String: String] = [
-            "id": order.documentId.id,
-            "locationId": order.documentId.locationId,
-            "createdAt": createdAtNow
-        ]
-        let setClause = "SET createdAt = :createdAt"
-        let whereClause = "WHERE _id.id = :id AND _id.locationId = :locationId"
-        let query: String
-        if order.cart.isEmpty {
-            query = "UPDATE \(Order.collectionName) \(setClause) \(whereClause)"
-        } else {
-            let unsetList = order.cart.keys.map { "cart.`\($0)`" }.joined(separator: ", ")
-            query = "UPDATE \(Order.collectionName) \(setClause) UNSET \(unsetList) \(whereClause)"
-        }
-        try await Self.execute(store: store, query: query, args: args)
-    }
-
     // MARK: Eviction
 
     func runEvictionIfDue() async throws {
@@ -195,15 +174,6 @@ import Foundation
         Task {
             try! await Self.execute(store: store, query: query, args: args)
         }
-    }
-
-    // Non-Sendable query arguments need a single owner across the Swift actor boundary.
-    private nonisolated static func readOrder(_ id: DocumentID, store: DittoStore) async throws -> Order? {
-        let result = try await store.execute(
-            query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
-            arguments: ["id": id.id, "locationId": id.locationId])
-        let orders: [Order] = result.decodeOrSkip()
-        return orders.first
     }
 
     private nonisolated static func execute(store: DittoStore, query: String, args: [String: String]) async throws {

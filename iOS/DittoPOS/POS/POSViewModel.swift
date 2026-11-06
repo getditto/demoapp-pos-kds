@@ -69,36 +69,18 @@ import SwiftUI
         self.saleItemsRepository = saleItemsRepository
         self.locationId = locationId
 
-        // An unpaid cart belongs to its original location.
         locationPublisher
             .removeDuplicates()
-            .scan((nil, nil)) { acc, next -> (String?, String?) in
-                (acc.1, next)
-            }
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] previous, current in
-                guard let self else { return }
-                let outgoing = selectedOrderId
-                if previous != current {
+            .sink { [weak self] current in
+                guard let self, current == locationId() else { return }
+                if let current {
+                    startNewOrder(for: current)
+                } else {
+                    newOrderTask?.cancel()
                     selectedOrderId = nil
                     currentOrder = nil
                     updateObservations()
-                }
-                Task {
-                    if let previous,
-                       let outgoing,
-                       outgoing.locationId == previous,
-                       previous != current {
-                        try! await ordersRepository.resetUnpaidOrder(outgoing)
-                    }
-                    guard current == locationId() else { return }
-                    guard let current else {
-                        currentOrder = nil
-                        updateObservations()
-                        return
-                    }
-                    if selectedOrderId?.locationId == current { return }
-                    startNewOrder(for: current)
                 }
             }
             .store(in: &cancellables)

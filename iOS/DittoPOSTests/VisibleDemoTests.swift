@@ -124,8 +124,8 @@ import XCTest
         }
     }
 
-    func testLocationChangePreservesOrdersPaidOrCanceledWhilePOSWasHidden() async throws {
-        for canceled in [false, true] {
+    func testLocationChangePreservesOutgoingOrdersAndStockWhilePOSWasHidden() async throws {
+        for state in ["empty", "unpaid", "paid", "canceled"] {
             try await TestDitto.withInstance { ditto in
                 let location = CurrentValueSubject<Location?, Never>(Location(id: "A", name: "A"))
                 let ids = location.map { $0?.id }.eraseToAnyPublisher()
@@ -137,19 +137,28 @@ import XCTest
                 await expect(pos.$saleItems, matching: { !$0.isEmpty }) { pos.setVisible(true) }
                 await expect(pos.$currentOrder, matching: { $0 != nil }) { }
                 let item = try XCTUnwrap(pos.saleItems.first)
-                await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
+                if state != "empty" {
+                    await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
+                }
                 let outgoing = try XCTUnwrap(pos.currentOrder)
                 pos.setVisible(false)
                 XCTAssertTrue(ditto.store.observers.isEmpty)
 
-                let changed = canceled
-                    ? outgoing.appendingStatus(.canceled, at: Date().addingTimeInterval(2))
-                    : outgoing.addingPayment(Payment(type: .cash, amount: outgoing.total, status: .complete), paymentId: "other-device")
+                let retained = Order(documentId: outgoing.documentId, cart: outgoing.cart, payments: outgoing.payments,
+                                     statusLog: outgoing.statusLog, createdAt: try DittoWireDate.date(from: "2026-04-01T12:00:00.000Z"))
+                let changed: Order
+                switch state {
+                case "paid": changed = retained.addingPayment(Payment(type: .cash, amount: outgoing.total, status: .complete), paymentId: "other-device")
+                case "canceled": changed = retained.appendingStatus(.canceled, at: Date().addingTimeInterval(2))
+                default: changed = retained
+                }
                 _ = try await ditto.store.execute(
                     query: "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                     arguments: ["json": try changed.dittoJSONString()])
                 let stored = try await readOrder(outgoing.documentId, from: ditto)
-                XCTAssertTrue(stored.isPaid)
+                XCTAssertEqual(stored.isPaid, state == "paid" || state == "canceled")
+                let stockBefore = try await ditto.store.execute(query: "SELECT * FROM sale_items WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+                let originalItems: [SaleItem] = try stockBefore.decode()
                 XCTAssertNil(pos.currentOrder)
 
                 await expect(pos.$currentOrder, matching: { $0?.documentId.locationId == "B" }) {
@@ -158,7 +167,10 @@ import XCTest
                 }
                 pos.setVisible(false)
                 let saved = try await readOrder(outgoing.documentId, from: ditto)
-                XCTAssertEqual(saved, stored)
+                XCTAssertEqual(saved, stored, state)
+                let stockAfter = try await ditto.store.execute(query: "SELECT * FROM sale_items WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+                let savedItems: [SaleItem] = try stockAfter.decode()
+                XCTAssertEqual(savedItems, originalItems, state)
                 XCTAssertTrue(ditto.store.observers.isEmpty)
             }
         }

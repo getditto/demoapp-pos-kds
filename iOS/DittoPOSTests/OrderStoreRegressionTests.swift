@@ -26,33 +26,6 @@ import XCTest
         }
     }
 
-    func testResetUnpaidOrderClearsLinesAndChangesOnlyItsDateAndCart() async throws {
-        for empty in [false, true] {
-            try await TestDitto.withInstance { ditto in
-                var original = try OrderFixture.load()
-                original.payments = [:]
-                if empty { original.cart = [:] }
-                let other = Order(
-                    documentId: DocumentID(id: original.documentId.id, locationId: "other"),
-                    cart: original.cart, payments: original.payments, statusLog: original.statusLog,
-                    createdAt: original.createdAt)
-                let resetAt = try DittoWireDate.date(from: "2026-05-01T10:20:30.123Z")
-                try await insert(original, into: ditto)
-                try await insert(other, into: ditto)
-                let repository = OrdersRepository(
-                    ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { resetAt })
-                try await repository.resetUnpaidOrder(original.documentId)
-                let reset = try await read(original.documentId, from: ditto)
-                XCTAssertEqual(reset.createdAt, resetAt)
-                XCTAssertTrue(reset.cart.isEmpty)
-                XCTAssertEqual(reset.payments, original.payments)
-                XCTAssertEqual(reset.statusLog, original.statusLog)
-                let unchanged = try await read(other.documentId, from: ditto)
-                XCTAssertEqual(unchanged, other)
-            }
-        }
-    }
-
     func testLocalEvictionIncludesMidnightAndUnpaidOrdersButRetainsLaterRecords() async throws {
         try await TestDitto.withInstance { ditto in
             let midnight = try DittoWireDate.date(from: "2026-04-01T00:00:00.000Z")

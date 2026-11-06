@@ -39,8 +39,8 @@ import kotlin.time.Instant
 @RunWith(AndroidJUnit4::class)
 class VisibleDemoTest {
     @Test
-    fun locationChangePreservesOrdersPaidOrCanceledWhilePOSWasHidden() = runBlocking {
-        for (canceled in listOf(false, true)) {
+    fun locationChangePreservesOutgoingOrdersAndStockWhilePOSWasHidden() = runBlocking {
+        for (state in listOf("empty", "unpaid", "paid", "canceled")) {
             TestDitto.withInstance {
                 settings.setLocationId("A")
                 val orders = repository(locationIds = settings.locationIdFlow())
@@ -60,30 +60,36 @@ class VisibleDemoTest {
                         var collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
                         try {
                             val ready = states.await { it.currentOrderId.isNotEmpty() && it.saleItems.size == 1 }
-                            pos.addItemToCart(ready.saleItems.single())
-                            val filled = states.await { it.orderItems.size == 1 }
-                            val outgoing = read(DocumentID(filled.currentOrderId, "A"))
+                            if (state != "empty") {
+                                pos.addItemToCart(ready.saleItems.single())
+                                states.await { it.orderItems.size == 1 }
+                            }
+                            val outgoing = read(DocumentID(ready.currentOrderId, "A"))
                             collection.cancelAndJoin()
                             awaitObserverCount(0)
                             withTimeout(5_000) { while (!pos.uiState.value.isLoading) yield() }
                             assertTrue(pos.uiState.value.orderItems.isEmpty())
 
-                            val changed = if (canceled) {
-                                outgoing.appendingStatus(OrderStatus.CANCELED, Instant.fromEpochMilliseconds(Clock.System.now().toEpochMilliseconds() + 2_000))
-                            } else {
-                                outgoing.addingPayment(Payment(PaymentType.CASH, outgoing.total), "other-device")
+                            val retained = outgoing.copy(createdAt = Instant.parse("2026-04-01T12:00:00.000Z"))
+                            val changed = when (state) {
+                                "paid" -> retained.addingPayment(Payment(PaymentType.CASH, outgoing.total), "other-device")
+                                "canceled" -> retained.appendingStatus(OrderStatus.CANCELED, Instant.fromEpochMilliseconds(Clock.System.now().toEpochMilliseconds() + 2_000))
+                                else -> retained
                             }
                             ditto.store.execute(
                                 "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                                 mapOf("json" to changed.dittoJsonString())
                             )
                             val stored = read(outgoing.documentId)
-                            assertTrue(stored.isPaid)
+                            assertEquals(state == "paid" || state == "canceled", stored.isPaid)
+                            val stockBefore = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
                             settings.setLocationId("B")
                             collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
                             val destination = states.await { it.currentOrderId.isNotEmpty() && it.currentOrderId != outgoing.documentId.id }
                             assertEquals("B", read(DocumentID(destination.currentOrderId, "B")).documentId.locationId)
-                            assertEquals(stored, read(outgoing.documentId))
+                            assertEquals(state, stored, read(outgoing.documentId))
+                            val stockAfter = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
+                            assertEquals(state, stockBefore, stockAfter)
                         } finally {
                             collection.cancelAndJoin()
                         }
