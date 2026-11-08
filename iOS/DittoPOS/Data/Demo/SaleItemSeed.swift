@@ -10,6 +10,8 @@
 import Foundation
 
 enum SaleItemSeed {
+    static let initialQuantity: Int64 = 20
+
     private struct Item {
         let id: String
         let name: String

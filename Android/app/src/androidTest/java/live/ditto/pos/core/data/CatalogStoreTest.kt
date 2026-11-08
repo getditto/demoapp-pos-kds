@@ -65,7 +65,7 @@ class CatalogStoreTest {
                         current.seedAll()
                         old.seedAll()
                         val id = DocumentID("00001", "00001")
-                        assertEquals(if (oldFirst) null else 20L, readItem(id).quantity)
+                        assertEquals(20L, readItem(id).quantity)
                         val rows = ditto.store.execute("SELECT * FROM sale_items") { it.decode<SaleItem>() }
                         assertEquals(LegacySaleItemSeed.saleItemsForAllLocations().map { it.documentId }.toSet(), rows.map { it.documentId }.toSet())
                         for (legacy in LegacySaleItemSeed.saleItemsForAllLocations()) {
@@ -73,7 +73,7 @@ class CatalogStoreTest {
                         }
                         val expectedIDs = LegacySaleItemSeed.saleItemsForAllLocations().filter { it.documentId.locationId == "00001" }.map { it.documentId }.toSet()
                         val visible = snapshots.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
-                        assertEquals(if (oldFirst) null else 20L, visible.single { it.documentId == id }.quantity)
+                        assertEquals(20L, visible.single { it.documentId == id }.quantity)
                         val zero = DocumentID("00013", "00001")
                         val positive = DocumentID("00018", "00001")
                         repository.restart(0, zero)
