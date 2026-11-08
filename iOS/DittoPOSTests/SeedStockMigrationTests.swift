@@ -82,27 +82,42 @@ import XCTest
     func testVisibleCatalogUpgradesLateLegacyInputAndLocationReentryPreservesStock() async throws {
         try await TestDitto.withInstance { ditto in
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            let snapshots = CurrentValueSubject<[SaleItem]?, Never>(nil)
-            var observation = catalog.observeLocationSaleItems("00001").sink { snapshots.send($0) }
+            let latestResult = CurrentValueSubject<[SaleItem]?, Never>(nil)
+            var receivedResults: [[SaleItem]] = []
+            @MainActor func observe(_ locationId: String) -> AnyCancellable {
+                catalog.observeLocationSaleItems(locationId).sink {
+                    receivedResults.append($0)
+                    latestResult.send($0)
+                }
+            }
+            var observation = observe("00001")
             defer { observation.cancel() }
-            await expect(snapshots, matching: { $0?.isEmpty == true }) { }
+            await expect(latestResult, matching: { $0?.isEmpty == true }) { }
             await LegacyDemoSeeder(store: ditto.store).seedAll()
-            await expect(snapshots, matching: { $0?.count == 7 }) { }
-            XCTAssertTrue(snapshots.value?.allSatisfy { $0.quantity == 20 } == true)
+            await expect(latestResult, matching: { $0?.isEmpty == false }) { }
+            let prepared = try XCTUnwrap(receivedResults.first { !$0.isEmpty })
+            XCTAssertEqual(prepared.count, 7)
+            XCTAssertTrue(prepared.allSatisfy { $0.quantity == 20 })
             observation.cancel()
             XCTAssertTrue(ditto.store.observers.isEmpty)
-            let other = CurrentValueSubject<[SaleItem]?, Never>(nil)
-            observation = catalog.observeLocationSaleItems("00002").sink { other.send($0) }
-            await expect(other, matching: { $0?.count == 7 }) { }
-            XCTAssertTrue(other.value?.allSatisfy { $0.quantity == 20 } == true)
+            receivedResults.removeAll()
+            latestResult.send(nil)
+            observation = observe("00002")
+            await expect(latestResult, matching: { $0?.isEmpty == false }) { }
+            let other = try XCTUnwrap(receivedResults.first { !$0.isEmpty })
+            XCTAssertEqual(other.count, 7)
+            XCTAssertTrue(other.allSatisfy { $0.quantity == 20 })
             observation.cancel()
             let id = DocumentID(id: "00001", locationId: "00001")
             try await catalog.restart(0, id: id)
             try await catalog.increment(-2, id: id)
-            snapshots.send(nil)
-            observation = catalog.observeLocationSaleItems("00001").sink { snapshots.send($0) }
-            await expect(snapshots, matching: { $0?.count == 7 }) { }
-            XCTAssertEqual(snapshots.value?.first { $0.documentId == id }?.quantity, -2)
+            receivedResults.removeAll()
+            latestResult.send(nil)
+            observation = observe("00001")
+            await expect(latestResult, matching: { $0?.isEmpty == false }) { }
+            let returned = try XCTUnwrap(receivedResults.first { !$0.isEmpty })
+            XCTAssertEqual(returned.count, 7)
+            XCTAssertEqual(returned.first { $0.documentId == id }?.quantity, -2)
         }
     }
 

@@ -110,13 +110,15 @@ class SeedStockMigrationTest {
                 try {
                     snapshots.await { it.isEmpty() }
                     LegacyDemoSeeder(ditto).seedAll()
-                    val prepared = snapshots.await { it.size == 7 }
+                    val prepared = snapshots.await { it.isNotEmpty() }
+                    assertEquals(7, prepared.size)
                     assertTrue(prepared.all { it.quantity == 20L })
                     observation.cancelAndJoin()
                     assertTrue(ditto.store.observers.isEmpty())
                     while (snapshots.tryReceive().isSuccess) { }
                     observation = launch { catalog.observeLocationSaleItems("00002").collect { snapshots.send(it) } }
-                    val other = snapshots.await { it.size == 7 }
+                    val other = snapshots.await { it.isNotEmpty() }
+                    assertEquals(7, other.size)
                     assertTrue(other.all { it.quantity == 20L })
                     observation.cancelAndJoin()
                     val id = DocumentID("00001", "00001")
@@ -124,7 +126,8 @@ class SeedStockMigrationTest {
                     catalog.increment(-2, id)
                     while (snapshots.tryReceive().isSuccess) { }
                     observation = launch { catalog.observeLocationSaleItems("00001").collect { snapshots.send(it) } }
-                    val returned = snapshots.await { it.size == 7 }
+                    val returned = snapshots.await { it.isNotEmpty() }
+                    assertEquals(7, returned.size)
                     assertEquals(-2L, returned.single { it.documentId == id }.quantity)
                 } finally {
                     observation.cancelAndJoin()
