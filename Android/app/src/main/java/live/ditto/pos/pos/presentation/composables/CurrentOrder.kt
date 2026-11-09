@@ -14,7 +14,7 @@ import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 
 @Composable
 fun CurrentOrder(
-    orderId: String,
+    orderTitle: String,
     orderItems: List<OrderItemUiModel>,
     orderTotal: String,
     onPayButtonClicked: () -> Unit,
@@ -25,7 +25,7 @@ fun CurrentOrder(
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = stringResource(R.string.current_order_id, orderId))
+        Text(text = stringResource(R.string.current_order_id, orderTitle))
         HorizontalDivider()
         OrderItemsList(
             orderItems = orderItems
@@ -43,7 +43,7 @@ fun CurrentOrder(
 @Preview
 private fun CurrentOrderViewPreview() {
     CurrentOrder(
-        orderId = "#2311FFC",
+        orderTitle = "2311FFC0",
         orderItems = emptyList(),
         orderTotal = "$13.37",
         onPayButtonClicked = { },

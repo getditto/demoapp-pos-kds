@@ -14,6 +14,17 @@ internal object OrderFixture {
 }
 
 class OrderModelTest {
+    // The order number shown on POS and KDS is the first 8 characters of the
+    // ID in uppercase, so orders created on Android (lowercase UUIDs) and iOS
+    // (uppercase UUIDs) look the same on every device.
+    @Test
+    fun `title is the first eight characters of the id in uppercase`() {
+        fun order(id: String) = OrderFixture.load().copy(documentId = DocumentID(id, "42"))
+        assertEquals("FE9B5646", order("fe9b5646-6319-4f20-b4e6-3ae2841e395e").title)
+        assertEquals("D8161832", order("D8161832-0C3A-4E2B-9F4D-5A6B7C8D9E0F").title)
+        assertEquals("AB12", order("ab12").title)
+    }
+
     @Test
     fun `known fixture preserves composite identity maps quotes and unicode on the wire`() {
         val order = OrderFixture.load()

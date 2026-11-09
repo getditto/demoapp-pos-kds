@@ -15,6 +15,18 @@ enum OrderFixture {
 }
 
 final class OrderModelTests: XCTestCase {
+    /// The order number shown on POS and KDS is the first 8 characters of the
+    /// ID in uppercase, so orders created on Android (lowercase UUIDs) and iOS
+    /// (uppercase UUIDs) look the same on every device.
+    func testTitleIsTheFirstEightCharactersOfTheIdInUppercase() {
+        func order(id: String) -> Order {
+            Order(documentId: DocumentID(id: id, locationId: "42"), cart: [:], payments: [:], statusLog: [:], createdAt: Date())
+        }
+        XCTAssertEqual(order(id: "fe9b5646-6319-4f20-b4e6-3ae2841e395e").title, "FE9B5646")
+        XCTAssertEqual(order(id: "D8161832-0C3A-4E2B-9F4D-5A6B7C8D9E0F").title, "D8161832")
+        XCTAssertEqual(order(id: "ab12").title, "AB12")
+    }
+
     func testKnownWireFixtureDecodesAndEncodesWithoutLosingMapsOrEscaping() throws {
         let order = try OrderFixture.load()
         XCTAssertEqual(order.documentId, DocumentID(id: "order-'\"☕", locationId: "42"))

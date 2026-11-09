@@ -60,6 +60,7 @@ class VisibleDemoTest {
                         var collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
                         try {
                             val ready = states.await { it.currentOrderId.isNotEmpty() && it.saleItems.size == 1 }
+                            assertEquals(ready.currentOrderId.take(8).uppercase(), ready.currentOrderTitle)
                             if (state != "empty") {
                                 pos.addItemToCart(ready.saleItems.single())
                                 states.await { it.orderItems.size == 1 }
