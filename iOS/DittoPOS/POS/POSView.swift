@@ -8,29 +8,18 @@
 
 import SwiftUI
 
-@MainActor class POSLayoutViewModel: ObservableObject {
-    @Published var menuViewWidth: CGFloat = 0.0
-    @Published var orderViewWidth: CGFloat = 0.0
-    init() {
-        updateWidths()
-    }
-
-    func updateWidths() {
-        menuViewWidth = .screenWidth * 0.56
-        orderViewWidth = .screenWidth * 0.40
-    }
-
-    func itemSide(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+/// Sale item cell size and grid columns, by horizontal size class.
+enum POSGridMetrics {
+    static func itemSide(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
         sizeClass == .compact ? 100 : 160
     }
 
-    func gridColumns(for sizeClass: UserInterfaceSizeClass?) -> [GridItem] {
+    static func gridColumns(for sizeClass: UserInterfaceSizeClass?) -> [GridItem] {
         [GridItem(.adaptive(minimum: itemSide(for: sizeClass)), alignment: .top)]
     }
 }
 
 struct POSView: View {
-    @StateObject private var layoutViewModel = POSLayoutViewModel()
     @StateObject private var viewModel: POSViewModel
     let isActive: Bool
 
@@ -54,29 +43,18 @@ struct POSView: View {
             if viewModel.isLoading {
                 ProgressView()
             } else {
-                HStack {
+                POSSplitLayout {
                     POSGridView()
-                        .frame(width: layoutViewModel.menuViewWidth)
-
-                    Divider()
-
+                } order: {
                     POSOrderView()
                         .padding(8)
-                        .frame(width: layoutViewModel.orderViewWidth)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environmentObject(viewModel)
-        .environmentObject(layoutViewModel)
         .onAppear { viewModel.setVisible(isActive) }
         .onChange(of: isActive) { viewModel.setVisible($0) }
         .onDisappear { viewModel.setVisible(false) }
-        .onRotate { orient in
-            guard orient.isLandscape || orient.isPortrait else { return }
-            DispatchQueue.main.async {
-                layoutViewModel.updateWidths()
-            }
-        }
     }
 }
