@@ -87,6 +87,14 @@
 		C1340000000000000000D003 /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
 		C1340000000000000000D004 /* LocationsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A003 /* LocationsRepository.swift */; };
 		C1340000000000000000D005 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A006 /* MainViewModel.swift */; };
+		C1540000000000000000B001 /* BrandResources in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A001 /* BrandResources */; };
+		C1540000000000000000C001 /* BrandResources in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A001 /* BrandResources */; };
+		C1540000000000000000B002 /* BrandIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A002 /* BrandIcons.xcassets */; };
+		C1540000000000000000C002 /* BrandIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A002 /* BrandIcons.xcassets */; };
+		C1540000000000000000B003 /* BrandResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A003 /* BrandResources.swift */; };
+		C1540000000000000000C003 /* BrandResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A003 /* BrandResources.swift */; };
+		C1540000000000000000B004 /* BrandResourcesPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A004 /* BrandResourcesPreview.swift */; };
+		C1540000000000000000C004 /* BrandResourcesPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A004 /* BrandResourcesPreview.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -143,6 +151,10 @@
 		C1460000000000000000A100 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../Tests/Fixtures; sourceTree = SOURCE_ROOT; };
 		C1340000000000000000A001 /* VisibleObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisibleObservation.swift; sourceTree = "<group>"; };
 		C1340000000000000000A002 /* SaleItemCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemCommands.swift; sourceTree = "<group>"; };
+		C1540000000000000000A001 /* BrandResources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BrandResources; sourceTree = "<group>"; };
+		C1540000000000000000A002 /* BrandIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = BrandIcons.xcassets; sourceTree = "<group>"; };
+		C1540000000000000000A003 /* BrandResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandResources.swift; sourceTree = "<group>"; };
+		C1540000000000000000A004 /* BrandResourcesPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandResourcesPreview.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -239,6 +251,7 @@
 				14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */,
 				14CD51B22A2FE2D50018DE87 /* MainView.swift */,
 				DAFACE01000000000000A006 /* MainViewModel.swift */,
+				C1540000000000000000F001 /* DesignSystem */,
 				14DECF042A3A6868005BC2AE /* Data */,
 				1420B7992A4A23CD00EBF40F /* KDS */,
 				1420B7982A4A23AC00EBF40F /* Locations */,
@@ -324,6 +337,17 @@
 				C1470000000000000000A001 /* SeedStockMigration.swift */,
 			);
 			path = Demo;
+			sourceTree = "<group>";
+		};
+		C1540000000000000000F001 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				C1540000000000000000A001 /* BrandResources */,
+				C1540000000000000000A002 /* BrandIcons.xcassets */,
+				C1540000000000000000A003 /* BrandResources.swift */,
+				C1540000000000000000A004 /* BrandResourcesPreview.swift */,
+			);
+			path = DesignSystem;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -421,6 +445,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1540000000000000000B001 /* BrandResources in Resources */,
+				C1540000000000000000B002 /* BrandIcons.xcassets in Resources */,
 				14CD51B82A2FE2D60018DE87 /* Preview Assets.xcassets in Resources */,
 				14CD51B52A2FE2D60018DE87 /* Assets.xcassets in Resources */,
 			);
@@ -430,6 +456,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1540000000000000000C001 /* BrandResources in Resources */,
+				C1540000000000000000C002 /* BrandIcons.xcassets in Resources */,
 				C1460000000000000000B100 /* Fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -466,6 +494,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1540000000000000000B003 /* BrandResources.swift in Sources */,
+				C1540000000000000000B004 /* BrandResourcesPreview.swift in Sources */,
 				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000B003 /* OrderSelection.swift in Sources */,
@@ -519,6 +549,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1540000000000000000C003 /* BrandResources.swift in Sources */,
+				C1540000000000000000C004 /* BrandResourcesPreview.swift in Sources */,
 				C1460000000000000000C001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000C002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000C003 /* OrderSelection.swift in Sources */,

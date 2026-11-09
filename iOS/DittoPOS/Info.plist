@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>BrandResources/Fonts/ChakraPetch-Regular.ttf</string>
+		<string>BrandResources/Fonts/Geist.ttf</string>
+		<string>BrandResources/Fonts/GeistMono.ttf</string>
+	</array>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_http-alt._tcp.</string>
