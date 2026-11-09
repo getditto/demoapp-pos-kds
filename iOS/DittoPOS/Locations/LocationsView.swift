@@ -1,47 +1,43 @@
-///
-//  LocationsView.swift
-//  DittoPOS
-//
-//  Created by Eric Turner on 6/15/23.
-//
-//  Copyright © 2023 DittoLive Incorporated. All rights reserved.
-
+import DittoUI
 import SwiftUI
 
-struct LocationRowView: View {
-    let location: Location
-    var id: String { location.id }
-    var body: some View {
-        Text(location.name)
-    }
-}
-
 struct LocationsView: View {
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: LocationsViewModel
-    private let title: String
+    let onSelect: (String) -> Void
 
-    init(locationsRepository: LocationsRepository, title: String = "Locations") {
+    init(locationsRepository: LocationsRepository, onSelect: @escaping (String) -> Void) {
         _viewModel = StateObject(wrappedValue: LocationsViewModel(locationsRepository: locationsRepository))
-        self.title = title
+        self.onSelect = onSelect
     }
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            DittoHeader("Select location", location: viewModel.selectedLocation?.name)
             if viewModel.isLoading {
-                Spacer()
-                ProgressView("Loading locations…")
-                Spacer()
+                ProgressView("Loading locations…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.locations.isEmpty {
-                Text("No locations available")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                DittoEmptyState("No locations available", message: "Demo locations will appear here.", icon: "map-pin")
             } else {
-                List(viewModel.locations, id: \.self, selection: viewModel.selectionBinding) { item in
-                    LocationRowView(location: item)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(viewModel.locations, id: \.id) { location in
+                            Button {
+                                onSelect(location.id)
+                                dismiss()
+                            } label: {
+                                DittoRow(location.name, icon: "map-pin") {
+                                    if viewModel.selectedLocation?.id == location.id { DittoIcon("check") }
+                                    else { DittoIcon("caret-right") }
+                                }
+                            }.buttonStyle(.plain)
+                        }
+                    }.padding(DittoLayout.padding)
                 }
-                Spacer()
             }
         }
-        .navigationTitle(title)
+        .background(DittoColors.background)
+        .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

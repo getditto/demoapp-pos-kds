@@ -2,20 +2,8 @@ package live.ditto.pos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
-
 val OpenStatusTicketColor = Color(0xFFFF0000)
 val InProcessStatusTicketColor = Color(0xFF96AED3)
 val ProcessedStatusTicketColor = Color(0xFF1C7F88)
 val DeliveredStatusTicketColor = Color(0xFF2E7D32)
 val CanceledStatusTicketColor = Color(0xFFFF5722)
-
-// Pay button: white label on a green that keeps at least 4.5:1 contrast.
-val PayButtonContainerColor = Color(0xFF2E7D32)
-val PayButtonContentColor = Color.White

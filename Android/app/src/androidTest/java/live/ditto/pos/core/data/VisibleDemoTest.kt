@@ -126,7 +126,8 @@ class VisibleDemoTest {
                             AppConfigurationStateUseCase(settings),
                             GetCurrentLocationUseCase(locations),
                             { error("Presentation must not request permissions") },
-                            locations
+                            locations,
+                            settings
                         )
                     }
                 }
@@ -166,7 +167,8 @@ class VisibleDemoTest {
 
                         ditto.store.execute("DELETE FROM locations")
                         collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
-                        snapshots.await { !it.isLoading && it.locations.isEmpty() && it.currentLocationName.isEmpty() }
+                        val empty = snapshots.await { !it.isLoading && it.locations.isEmpty() && it.currentLocationName.isEmpty() }
+                        assertEquals(id, empty.currentLocationId)
                         assertEquals(id, settings.locationId())
                         assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
                     } finally {

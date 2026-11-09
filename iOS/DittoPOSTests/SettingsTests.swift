@@ -18,9 +18,9 @@ import XCTest
         Settings.selectedTabView = .pos
         Settings.selectedTabView = nil
         XCTAssertEqual(defaults.integer(forKey: key), 0)
-        Settings.selectedTabView = .locations
+        Settings.selectedTabView = .settings
         XCTAssertEqual(defaults.integer(forKey: key), 3)
         Settings.defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        XCTAssertEqual(Settings.selectedTabView, .locations)
+        XCTAssertEqual(Settings.selectedTabView, .settings)
     }
 }

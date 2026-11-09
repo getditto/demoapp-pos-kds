@@ -11,6 +11,7 @@ import SwiftUI
 
 @main
 struct DittoPOS: App {
+    @StateObject private var appearance = AppearanceSettings(defaults: Settings.defaults)
     @StateObject private var locationsRepository: LocationsRepository
     @StateObject private var ordersRepository: OrdersRepository
     @StateObject private var saleItemsRepository: SaleItemsRepository
@@ -36,7 +37,10 @@ struct DittoPOS: App {
 
     var body: some Scene {
         WindowGroup {
-            MainView(locationsRepository: locationsRepository)
+            AppTheme(appearance: appearance) {
+                MainView(locationsRepository: locationsRepository)
+                    .environmentObject(appearance)
+            }
                 .environmentObject(locationsRepository)
                 .environmentObject(ordersRepository)
                 .environmentObject(saleItemsRepository)

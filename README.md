@@ -11,7 +11,7 @@ The UI has three tabs:
 - **POS** — order entry and payment for the currently selected location.
 - **KDS** — orders the kitchen is currently preparing (`inProcess`) or has
   finished (`processed`) for the currently selected location.
-- **Locations** — list of demo restaurant locations to switch between.
+- **Settings** — location selection, System/Light/Dark appearance and Ditto Tools.
 
 The app runs on iOS and Android and the two platforms sync with each other
 over Ditto.
@@ -52,20 +52,43 @@ These stores use no encryption/private key or license token and never start sync
 Simulate peer-originated changes with sequenced DQL writes to the local test store.
 Real peer convergence and file transfer have separate manual acceptance checks.
 
-The iOS test bundle compiles the production source files directly and runs without
-the demo app or its `.env`. Android uses JVM logic tests and emulator-based
-repository/observer tests whose runner substitutes a plain `Application`, bypassing
-the demo's Hilt startup, seeding and sync. Both platforms load the same independently
-authored order JSON from `Tests/Fixtures`. `.ci/build.env` supplies placeholder
-constants for Android app compilation only. These commands never launch the demo
-UI or initialize its application startup, and need no Ditto authentication or
-app-store signing credentials. When extending iOS coverage, add shared production
-files to the standalone test target's Sources phase; do not copy their logic.
+The standalone iOS `DittoPOSTests` bundle compiles production logic directly,
+without the demo app or its `.env`. `DittoUIPresentationTests` uses XCUITest and a
+small `DittoUIHost` to exercise the real theme, shell and Settings presentation.
+That host has no Ditto SDK, repositories or demo startup. Android uses JVM logic
+tests and emulator-based repository/UI tests whose runner substitutes a plain
+`Application`, bypassing the demo's Hilt startup, seeding and sync. Both platforms
+load the same independently authored order JSON from `Tests/Fixtures` for store
+tests. `.ci/build.env` supplies placeholder constants for Android app compilation
+only. These commands never launch the real demo apps and need no Ditto
+authentication or app-store signing credentials. Add production logic to the
+standalone target's Sources phase when extending its coverage; do not copy it.
 
 Local and CI check builds use build number **9999**. Actual release builds
 can supply `CURRENT_PROJECT_VERSION=<number>` to `xcodebuild` or
 `-PdittoBuildNumber=<number>` to Gradle. These inputs do not change the
 marketing version or allocate a shipping number.
+
+## Settings
+
+Settings contains the location picker, a device-local System/Light/Dark appearance
+choice and the imported Ditto Tools. Version/build and SDK information come from
+the running app.
+
+<img src="docs/screenshots/settings/ios-phone-light.png" width="260" alt="Native iOS Settings presentation" />
+<img src="docs/screenshots/settings/android-phone-light.png" width="260" alt="Native Android Settings presentation" />
+
+## Native UI libraries
+
+`iOS/DittoUI` is a local Swift package; `Android/ditto-ui` is a Compose library.
+They own semantic styling, shared presentation components and bundled brand
+resources, with no Ditto, navigation or app-state dependencies. App code supplies
+values, bindings, callbacks and content. Package publication is separate work.
+
+Open `ComponentCatalog.swift` in Xcode Canvas or `ComponentCatalog.kt` in Android
+Studio Preview to inspect the actual shared controls in light/dark and large text.
+The app-owned `SettingsContent` / `SettingsScreen` compose these foundations;
+previews and the isolated UI hosts are developer resources, not app destinations.
 
 ## Data model
 
@@ -104,18 +127,15 @@ the document's natural key for sync grouping/routing, and lets DQL filter by
 
 ### Schema migration
 
-This PR introduces the v2 schema in a new `pos_orders` collection (Pattern 2
-from the Ditto schema-versioning guide). The old `orders` / `transactions`
-schema is left in place but no longer read or written; the major version is
-bumped from `1.0.0` to `2.0.0` so old + old peers and new + new peers each
-operate independently.
+Current orders use the `pos_orders` collection. Legacy `orders` and
+`transactions` documents are no longer read or written by the app.
 
 ## App features
 
 ### Location selection
 
 The app ships with seven hand-curated demo restaurant locations. Pick one on
-first launch; reset later via Settings → Advanced.
+first launch; open Settings → Location to switch later.
 
 The selected location's numeric id is used as Ditto's `syncGroup`, so only
 devices at the same location form a peer-to-peer mesh. See the

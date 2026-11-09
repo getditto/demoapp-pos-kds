@@ -6,7 +6,6 @@
 //
 
 import Combine
-import SwiftUI
 
 @MainActor final class LocationsViewModel: ObservableObject {
 
@@ -34,15 +33,4 @@ import SwiftUI
         .assign(to: &$selectedLocation)
     }
 
-    func selectLocation(_ location: Location?) {
-        guard let id = location?.id, id != locationsRepository.currentLocationId else { return }
-        locationsRepository.setActiveLocation(id)
-    }
-
-    var selectionBinding: Binding<Location?> {
-        Binding(
-            get: { [weak self] in self?.selectedLocation },
-            set: { [weak self] in self?.selectLocation($0) }
-        )
-    }
 }

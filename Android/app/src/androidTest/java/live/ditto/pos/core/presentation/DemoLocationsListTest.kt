@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import live.ditto.pos.core.data.locations.Location
@@ -24,8 +26,7 @@ class DemoLocationsListTest {
 
     private val locations = (1..7).map { Location(id = "location-$it", name = "Location $it") }
 
-    // A phone in landscape leaves room for only a few location buttons. Every
-    // location must still be reachable and selectable.
+    // Landscape phones must keep every location reachable.
     @Test
     fun lastLocationIsReachableAndSelectableInAShortSpace() {
         var selected: Location? = null
@@ -35,8 +36,8 @@ class DemoLocationsListTest {
             }
         }
 
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Location 7"))
         compose.onNodeWithText("Location 7")
-            .performScrollTo()
             .assertIsDisplayed()
             .performClick()
 

@@ -87,14 +87,58 @@
 		C1340000000000000000D003 /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
 		C1340000000000000000D004 /* LocationsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A003 /* LocationsRepository.swift */; };
 		C1340000000000000000D005 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A006 /* MainViewModel.swift */; };
-		C1540000000000000000B001 /* BrandResources in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A001 /* BrandResources */; };
-		C1540000000000000000C001 /* BrandResources in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A001 /* BrandResources */; };
-		C1540000000000000000B002 /* BrandIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A002 /* BrandIcons.xcassets */; };
-		C1540000000000000000C002 /* BrandIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A002 /* BrandIcons.xcassets */; };
-		C1540000000000000000B003 /* BrandResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A003 /* BrandResources.swift */; };
-		C1540000000000000000C003 /* BrandResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A003 /* BrandResources.swift */; };
-		C1540000000000000000B004 /* BrandResourcesPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A004 /* BrandResourcesPreview.swift */; };
-		C1540000000000000000C004 /* BrandResourcesPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1540000000000000000A004 /* BrandResourcesPreview.swift */; };
+		C1330000000000000000B001 /* DittoUI in Frameworks */ ={
+			isa = PBXBuildFile;
+			productRef = C1330000000000000000A001;
+		};
+		C1330000000000000000B002 /* DittoUI in Frameworks */ ={
+			isa = PBXBuildFile;
+			productRef = C1330000000000000000A001;
+		};
+		C1330000000000000000B003 /* AppAppearance.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A003;
+		};
+		C1330000000000000000B004 /* AppAppearance.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A003;
+		};
+		C1330000000000000000B005 /* SettingsContent.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A005;
+		};
+		C1330000000000000000B006 /* SettingsContent.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A005;
+		};
+		C1330000000000000000B007 /* AppShell.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A007;
+		};
+		C1330000000000000000B008 /* AppShell.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A007;
+		};
+		C1331000000000000000B001 /* DittoUI in Frameworks */ ={
+			isa = PBXBuildFile;
+			productRef = C1330000000000000000A001;
+		};
+		C1331000000000000000B002 /* AppAppearance.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A003;
+		};
+		C1331000000000000000B003 /* SettingsModel.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = "07F1B1FC2C2B690A007AB5A2";
+		};
+		C1331000000000000000B004 /* AppShell.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A007;
+		};
+		C1331000000000000000B005 /* SettingsContent.swift in Sources */ ={
+			isa = PBXBuildFile;
+			fileRef = C1330000000000000000A005;
+		};
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -151,14 +195,50 @@
 		C1460000000000000000A100 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../Tests/Fixtures; sourceTree = SOURCE_ROOT; };
 		C1340000000000000000A001 /* VisibleObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisibleObservation.swift; sourceTree = "<group>"; };
 		C1340000000000000000A002 /* SaleItemCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemCommands.swift; sourceTree = "<group>"; };
-		C1540000000000000000A001 /* BrandResources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BrandResources; sourceTree = "<group>"; };
-		C1540000000000000000A002 /* BrandIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = BrandIcons.xcassets; sourceTree = "<group>"; };
-		C1540000000000000000A003 /* BrandResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandResources.swift; sourceTree = "<group>"; };
-		C1540000000000000000A004 /* BrandResourcesPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandResourcesPreview.swift; sourceTree = "<group>"; };
+		C1330000000000000000A003 /* AppAppearance.swift */ ={
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = AppAppearance.swift;
+			sourceTree = "<group>";
+		};
+		C1330000000000000000A005 /* SettingsContent.swift */ ={
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = SettingsContent.swift;
+			sourceTree = "<group>";
+		};
+		C1330000000000000000A007 /* AppShell.swift */ ={
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = AppShell.swift;
+			sourceTree = "<group>";
+		};
+		C1331000000000000000A001 ={
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			path = DittoUIHost.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C1331000000000000000A002 ={
+			isa = PBXFileReference;
+			explicitFileType = wrapper.cfbundle;
+			path = DittoUIPresentationTests.xctest;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A48472EA2FA4DF71004A821E /* DittoPOSTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DittoPOSTests; sourceTree = "<group>"; };
+		C1331000000000000000A003 ={
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DittoUIHost;
+			sourceTree = "<group>";
+		};
+		C1331000000000000000A004 ={
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DittoUIPresentationTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +247,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				07AE54C82C81812600E1FCBD /* DittoSwift in Frameworks */,
+				C1330000000000000000B001 /* DittoUI in Frameworks */,
 				07AE54CB2C81814400E1FCBD /* DittoAllToolsMenu in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -176,6 +257,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				C15600000000000000000100 /* DittoSwift in Frameworks */,
+				C1330000000000000000B002 /* DittoUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F001 ={
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1331000000000000000B001,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F002 ={
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -232,6 +329,8 @@
 				A48472EA2FA4DF71004A821E /* DittoPOSTests */,
 				C1460000000000000000A100 /* Fixtures */,
 				14CD51AE2A2FE2D50018DE87 /* Products */,
+				C1331000000000000000A003,
+				C1331000000000000000A004,
 				147F43562A37F13300294403 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -240,6 +339,8 @@
 			isa = PBXGroup;
 			children = (
 				14CD51AD2A2FE2D50018DE87 /* DittoPOS.app */,
+				C1331000000000000000A001,
+				C1331000000000000000A002,
 				A48472E92FA4DF71004A821E /* DittoPOSTests.xctest */,
 			);
 			name = Products;
@@ -250,8 +351,8 @@
 			children = (
 				14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */,
 				14CD51B22A2FE2D50018DE87 /* MainView.swift */,
+				C1330000000000000000A007 /* AppShell.swift */,
 				DAFACE01000000000000A006 /* MainViewModel.swift */,
-				C1540000000000000000F001 /* DesignSystem */,
 				14DECF042A3A6868005BC2AE /* Data */,
 				1420B7992A4A23CD00EBF40F /* KDS */,
 				1420B7982A4A23AC00EBF40F /* Locations */,
@@ -314,6 +415,8 @@
 			children = (
 				148071152A8C2E930091EC03 /* SettingsView.swift */,
 				07F1B1FC2C2B690A007AB5A2 /* SettingsModel.swift */,
+				C1330000000000000000A003 /* AppAppearance.swift */,
+				C1330000000000000000A005 /* SettingsContent.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -339,17 +442,6 @@
 			path = Demo;
 			sourceTree = "<group>";
 		};
-		C1540000000000000000F001 /* DesignSystem */ = {
-			isa = PBXGroup;
-			children = (
-				C1540000000000000000A001 /* BrandResources */,
-				C1540000000000000000A002 /* BrandIcons.xcassets */,
-				C1540000000000000000A003 /* BrandResources.swift */,
-				C1540000000000000000A004 /* BrandResourcesPreview.swift */,
-			);
-			path = DesignSystem;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -368,6 +460,7 @@
 			);
 			name = DittoPOS;
 			packageProductDependencies = (
+				C1330000000000000000A001 /* DittoUI */,
 				07AE54C72C81812600E1FCBD /* DittoSwift */,
 				07AE54CA2C81814400E1FCBD /* DittoAllToolsMenu */,
 			);
@@ -392,11 +485,57 @@
 			);
 			name = DittoPOSTests;
 			packageProductDependencies = (
+				C1330000000000000000A001 /* DittoUI */,
 				07AE54C72C81812600E1FCBD /* DittoSwift */,
 			);
 			productName = DittoPOSTests;
 			productReference = A48472E92FA4DF71004A821E /* DittoPOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+
+		C1331000000000000000D001 ={
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1331000000000000000E001;
+			buildPhases = (
+				C1331000000000000000F003,
+				C1331000000000000000F001,
+				C1331000000000000000F005,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C1331000000000000000A003,
+			);
+			name = DittoUIHost;
+			packageProductDependencies = (
+				C1330000000000000000A001,
+			);
+			productName = DittoUIHost;
+			productReference = C1331000000000000000A001;
+			productType = com.apple.product-type.application;
+		};
+		C1331000000000000000D002 ={
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1331000000000000000E002;
+			buildPhases = (
+				C1331000000000000000F004,
+				C1331000000000000000F002,
+				C1331000000000000000F006,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C1331000000000000000D003,
+			);
+			fileSystemSynchronizedGroups = (
+				C1331000000000000000A004,
+			);
+			name = DittoUIPresentationTests;
+			productName = DittoUIPresentationTests;
+			productReference = C1331000000000000000A002;
+			productType = com.apple.product-type.bundle.ui-testing;
 		};
 /* End PBXNativeTarget section */
 
@@ -409,6 +548,7 @@
 				LastUpgradeCheck = 1520;
 				ORGANIZATIONNAME = "DittoLive Incorporated";
 				TargetAttributes = {
+                    C1331000000000000000D002 = { CreatedOnToolsVersion = 26.4.1; TestTargetID = C1331000000000000000D001; };
 					14CD51AC2A2FE2D50018DE87 = {
 						CreatedOnToolsVersion = 14.3.1;
 					};
@@ -427,6 +567,7 @@
 			);
 			mainGroup = 14CD51A42A2FE2D50018DE87;
 			packageReferences = (
+				C1330000000000000000F001 /* XCLocalSwiftPackageReference "DittoUI" */,
 				07AE54C42C81812600E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */,
 				07AE54C92C81814400E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftTools" */,
 			);
@@ -436,6 +577,8 @@
 			targets = (
 				14CD51AC2A2FE2D50018DE87 /* DittoPOS */,
 				A48472E82FA4DF70004A821E /* DittoPOSTests */,
+				C1331000000000000000D001,
+				C1331000000000000000D002,
 			);
 		};
 /* End PBXProject section */
@@ -445,8 +588,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1540000000000000000B001 /* BrandResources in Resources */,
-				C1540000000000000000B002 /* BrandIcons.xcassets in Resources */,
 				14CD51B82A2FE2D60018DE87 /* Preview Assets.xcassets in Resources */,
 				14CD51B52A2FE2D60018DE87 /* Assets.xcassets in Resources */,
 			);
@@ -456,9 +597,21 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1540000000000000000C001 /* BrandResources in Resources */,
-				C1540000000000000000C002 /* BrandIcons.xcassets in Resources */,
 				C1460000000000000000B100 /* Fixtures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F005 ={
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F006 ={
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,12 +647,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1540000000000000000B003 /* BrandResources.swift in Sources */,
-				C1540000000000000000B004 /* BrandResourcesPreview.swift in Sources */,
 				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000B003 /* OrderSelection.swift in Sources */,
 				14CD51B32A2FE2D50018DE87 /* MainView.swift in Sources */,
+				C1330000000000000000B007 /* AppShell.swift in Sources */,
 				DAFACE01000000000000B005 /* MainViewModel.swift in Sources */,
 				1460E33D2A93DCC8007A2A6D /* KDSViewModel.swift in Sources */,
 				14DECF1D2A3D13D9005BC2AE /* POSOrderView.swift in Sources */,
@@ -534,6 +686,8 @@
 				DAFACE01000000000000B006 /* LocationsViewModel.swift in Sources */,
 				148071162A8C2E930091EC03 /* SettingsView.swift in Sources */,
 				07F1B1FD2C2B690A007AB5A2 /* SettingsModel.swift in Sources */,
+				C1330000000000000000B003 /* AppAppearance.swift in Sources */,
+				C1330000000000000000B005 /* SettingsContent.swift in Sources */,
 				14DECF1B2A3D13CF005BC2AE /* POSGridView.swift in Sources */,
 				14DECF152A3CCAB6005BC2AE /* POSViewModel.swift in Sources */,
 				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,
@@ -549,8 +703,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1540000000000000000C003 /* BrandResources.swift in Sources */,
-				C1540000000000000000C004 /* BrandResourcesPreview.swift in Sources */,
+				C1330000000000000000B004 /* AppAppearance.swift in Sources */,
+				C1330000000000000000B008 /* AppShell.swift in Sources */,
+				C1330000000000000000B006 /* SettingsContent.swift in Sources */,
 				C1460000000000000000C001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000C002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000C003 /* OrderSelection.swift in Sources */,
@@ -579,6 +734,24 @@
 				C1560000000000000000000F /* DemoSeeder.swift in Sources */,
 				C1470000000000000000C001 /* SeedStockMigration.swift in Sources */,
 				C15600000000000000000010 /* OrdersRepository.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F003 ={
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1331000000000000000B002,
+				C1331000000000000000B003,
+				C1331000000000000000B004,
+				C1331000000000000000B005,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1331000000000000000F004 ={
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -832,6 +1005,86 @@
 			};
 			name = Release;
 		};
+		C1331000000000000000C001 ={
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+				PRODUCT_BUNDLE_IDENTIFIER = live.ditto.pos.ui-test-host;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = "6.0";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C1331000000000000000C002 ={
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+				PRODUCT_BUNDLE_IDENTIFIER = live.ditto.pos.ui-test-host;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = "6.0";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C1331000000000000000C003 ={
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = live.ditto.pos.presentation-tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = "6.0";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DittoUIHost;
+			};
+			name = Debug;
+		};
+		C1331000000000000000C004 ={
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = live.ditto.pos.presentation-tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = "6.0";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DittoUIHost;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -862,6 +1115,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C1331000000000000000E001 ={
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1331000000000000000C001,
+				C1331000000000000000C002,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C1331000000000000000E002 ={
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1331000000000000000C003,
+				C1331000000000000000C004,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -883,7 +1154,25 @@
 		};
 /* End XCRemoteSwiftPackageReference section */
 
+/* Begin PBXTargetDependency section */
+		C1331000000000000000D003 ={
+			isa = PBXTargetDependency;
+			target = C1331000000000000000D001;
+		};
+/* End PBXTargetDependency section */
+/* Begin XCLocalSwiftPackageReference section */
+		C1330000000000000000F001 /* XCLocalSwiftPackageReference "DittoUI" */ ={
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DittoUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		C1330000000000000000A001 /* DittoUI */ ={
+			isa = XCSwiftPackageProductDependency;
+			package = C1330000000000000000F001;
+			productName = DittoUI;
+		};
 		07AE54C72C81812600E1FCBD /* DittoSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 07AE54C42C81812600E1FCBD /* XCRemoteSwiftPackageReference "DittoSwiftPackage" */;

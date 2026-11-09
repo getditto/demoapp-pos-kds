@@ -1,31 +1,19 @@
 package live.ditto.pos.core.presentation.composables.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,137 +21,101 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
+import com.ditto.kotlin.Ditto
+import com.ditto.tools.toolsviewer.DittoToolsViewer
+import live.ditto.pos.BuildConfig
 import live.ditto.pos.LocalActivity
-import live.ditto.pos.R
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
-import live.ditto.pos.core.presentation.composables.navigation.PosKDSNavigationDrawer
+import live.ditto.pos.core.presentation.composables.DemoLocationsList
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
-import live.ditto.pos.core.presentation.navigation.NavigationDrawerItem
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.MainViewModel
+import live.ditto.pos.kds.presentation.composables.KdsScreen
+import live.ditto.pos.pos.presentation.composables.screens.PosScreen
+import live.ditto.pos.settings.AppAppearance
+import live.ditto.ui.DittoHeader
+import live.ditto.ui.DittoIcon
+import live.ditto.ui.R
 
 @Composable
-fun PosKdsApp(
-    viewModel: MainViewModel = hiltViewModel(LocalActivity.current)
-) {
+fun PosKdsApp(viewModel: MainViewModel = hiltViewModel(LocalActivity.current)) {
     val state by viewModel.uiState.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED)
     val configuration by viewModel.configuration.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED)
-    val navHostController = rememberNavController()
-
-    when (configuration) {
-        AppConfigurationState.VALID -> {
-            PosKdsApp(
-                navHostController = navHostController,
-                state = state
-            )
-        }
-
-        AppConfigurationState.LOCATION_NEEDED -> {
-            if (state.isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            } else {
-                InitialSetupScreen(locations = state.locations)
-            }
-        }
-    }
+    val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+    PosKdsShell(
+        state = state, needsLocation = configuration == AppConfigurationState.LOCATION_NEEDED,
+        appearance = appearance ?: AppAppearance.SYSTEM,
+        version = BuildConfig.VERSION_NAME, build = BuildConfig.VERSION_CODE.toString(), sdkVersion = Ditto.VERSION,
+        onAppearance = viewModel::setAppearance, onLocation = viewModel::updateCurrentLocation,
+        pos = { PosScreen() }, kds = { KdsScreen() },
+        tools = { onExit -> DittoToolsViewer(ditto = viewModel.requireDitto(), onExitTools = onExit) }
+    )
 }
 
 @Composable
-private fun PosKdsApp(
-    navHostController: NavHostController,
-    state: AppState
-) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    val currentDestination by navHostController.currentBackStackEntryAsState()
-    val onDittoTools = currentDestination?.destination?.route == NavigationDrawerItem.DittoToolsDrawerItem.route
-
-    Surface {
-        PosKDSNavigationDrawer(
-            navController = navHostController,
-            drawerState = drawerState,
-            scope = scope,
-            gesturesEnabled = !onDittoTools
-        ) {
-            PosKDSScaffold(
-                navHostController = navHostController,
-                state = state,
-                onNavigationClicked = {
-                    scope.launch {
-                        drawerState.apply {
-                            if (isClosed) open() else close()
-                        }
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun PosKDSScaffold(
-    navHostController: NavHostController,
+fun PosKdsShell(
     state: AppState,
-    onNavigationClicked: () -> Unit
+    needsLocation: Boolean,
+    appearance: AppAppearance,
+    version: String,
+    build: String,
+    sdkVersion: String,
+    onAppearance: (AppAppearance) -> Unit,
+    onLocation: (String, () -> Unit) -> Unit,
+    pos: @Composable () -> Unit,
+    kds: @Composable () -> Unit,
+    tools: @Composable (() -> Unit) -> Unit,
+    controller: NavHostController = rememberNavController(),
+    startDestination: String = "pos"
 ) {
+    val entry by controller.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    val onTools = route == "settings/tools"
+    val selecting = route == "settings/locations"
+    val title = if (needsLocation || selecting) {
+        "Select location"
+    } else {
+        when (route) {
+            "kds" -> "Kitchen"
+            "settings" -> "Settings"
+            else -> "POS"
+        }
+    }
     Scaffold(
         bottomBar = {
-            PosKdsNavigationBar(
-                onItemClick = {
-                    // Tools must release its viewer when returning to a tab.
-                    if (navHostController.currentDestination?.route == NavigationDrawerItem.DittoToolsDrawerItem.route) {
-                        navHostController.popBackStack()
-                    }
-                    // Preserve each tab's cart state while its queries are stopped.
-                    navHostController.navigate(route = it.route) {
-                        popUpTo(navHostController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
+            if (!needsLocation && !onTools) {
+                PosKdsNavigationBar(selectedRoute = route) { item ->
+                    controller.navigate(item.route) {
+                        popUpTo(controller.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
                 }
-            )
-        },
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(Modifier.size(24.dp))
-                    } else {
-                        Text(text = state.currentLocationName)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { onNavigationClicked() }) {
-                        Icon(
-                            imageVector = Icons.Filled.Menu,
-                            contentDescription = stringResource(R.string.hamburger_menu)
-                        )
-                    }
-                }
-            )
-        },
-        content = {
-            Surface(modifier = Modifier.padding(it)) {
-                PosKdsNavHost(
-                    navHostController = navHostController
-                )
             }
         }
-    )
-}
-
-@Preview
-@Composable
-private fun PosKdsAppPreview() {
-    PosKdsApp()
+    ) { padding ->
+        Surface(Modifier.padding(padding), color = MaterialTheme.colorScheme.background) {
+            Column {
+                if (!onTools) {
+                    if (selecting) {
+                        IconButton(onClick = { controller.popBackStack() }) { DittoIcon(R.drawable.phosphor_arrow_left, description = "Back") }
+                    }
+                    DittoHeader(title, location = state.currentLocationName, tablet = LocalConfiguration.current.screenWidthDp >= 600)
+                }
+                if (needsLocation) {
+                    if (state.isLoading) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    } else {
+                        DemoLocationsList(state.locations, onDemoLocationSelected = { onLocation(it.id) {} })
+                    }
+                } else {
+                    PosKdsNavHost(
+                        controller, state, appearance, version, build, sdkVersion,
+                        onAppearance, onLocation, pos, kds, tools, startDestination
+                    )
+                }
+            }
+        }
+    }
 }
