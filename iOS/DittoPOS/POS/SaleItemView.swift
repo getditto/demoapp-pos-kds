@@ -19,6 +19,7 @@ struct SaleItemView: View {
             Spacer()
             Image(ImageNameMapping.assetName(for: item.imageName))
                 .resizable()
+                .scaledToFit()
 
             Text(item.name)
                 .scaledFont(size: 16)
