@@ -19,12 +19,18 @@ struct SaleItemView: View {
             Spacer()
             Image(ImageNameMapping.assetName(for: item.imageName))
                 .resizable()
+                .scaledToFit()
 
             Text(item.name)
                 .scaledFont(size: 16)
         }
         .lineLimit(1)
         .padding(0)
+        // Fill the cell and make all of it tappable. The image is scaled to
+        // fit, so it no longer covers the cell's full width, and taps only
+        // land on drawn content by default.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
     }
 }
 
