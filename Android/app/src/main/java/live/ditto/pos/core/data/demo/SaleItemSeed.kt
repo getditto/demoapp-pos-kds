@@ -5,6 +5,8 @@ package live.ditto.pos.core.data.demo
 import live.ditto.pos.core.data.SaleItem
 
 object SaleItemSeed {
+    const val INITIAL_QUANTITY = 20L
+
     private data class Item(
         val id: String,
         val name: String,

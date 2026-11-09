@@ -51,6 +51,8 @@
 		DAFEED01000000000000B007 /* LocationSeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A007 /* LocationSeed.swift */; };
 		DAFEED01000000000000B008 /* SaleItemSeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A008 /* SaleItemSeed.swift */; };
 		DAFEED01000000000000B009 /* DemoSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A009 /* DemoSeeder.swift */; };
+		C1470000000000000000B001 /* SeedStockMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1470000000000000000A001 /* SeedStockMigration.swift */; };
+		C1470000000000000000C001 /* SeedStockMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1470000000000000000A001 /* SeedStockMigration.swift */; };
 		DAFEED01000000000000B00A /* DocumentID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFEED01000000000000A00A /* DocumentID.swift */; };
 		C15600000000000000000001 /* CurrencyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14039BEF2A4789AE001903ED /* CurrencyUtils.swift */; };
 		C15600000000000000000002 /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F1B1FC2C2B690A007AB5A2 /* SettingsModel.swift */; };
@@ -133,6 +135,7 @@
 		DAFEED01000000000000A007 /* LocationSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSeed.swift; sourceTree = "<group>"; };
 		DAFEED01000000000000A008 /* SaleItemSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemSeed.swift; sourceTree = "<group>"; };
 		DAFEED01000000000000A009 /* DemoSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSeeder.swift; sourceTree = "<group>"; };
+		C1470000000000000000A001 /* SeedStockMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedStockMigration.swift; sourceTree = "<group>"; };
 		DAFEED01000000000000A00A /* DocumentID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentID.swift; sourceTree = "<group>"; };
 		C1460000000000000000A001 /* OrderEviction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderEviction.swift; sourceTree = "<group>"; };
 		C1460000000000000000A002 /* KitchenOrders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitchenOrders.swift; sourceTree = "<group>"; };
@@ -318,6 +321,7 @@
 				DAFEED01000000000000A007 /* LocationSeed.swift */,
 				DAFEED01000000000000A008 /* SaleItemSeed.swift */,
 				DAFEED01000000000000A009 /* DemoSeeder.swift */,
+				C1470000000000000000A001 /* SeedStockMigration.swift */,
 			);
 			path = Demo;
 			sourceTree = "<group>";
@@ -482,6 +486,7 @@
 				DAFEED01000000000000B007 /* LocationSeed.swift in Sources */,
 				DAFEED01000000000000B008 /* SaleItemSeed.swift in Sources */,
 				DAFEED01000000000000B009 /* DemoSeeder.swift in Sources */,
+				C1470000000000000000B001 /* SeedStockMigration.swift in Sources */,
 				149CABC62A32C43700729331 /* Env.swift in Sources */,
 				112311FF2B3DBA0100A04E44 /* DittoExtensions.swift in Sources */,
 				14DECF192A3D1254005BC2AE /* SaleItemView.swift in Sources */,
@@ -540,6 +545,7 @@
 				C1560000000000000000000D /* LocationSeed.swift in Sources */,
 				C1560000000000000000000E /* SaleItemSeed.swift in Sources */,
 				C1560000000000000000000F /* DemoSeeder.swift in Sources */,
+				C1470000000000000000C001 /* SeedStockMigration.swift in Sources */,
 				C15600000000000000000010 /* OrdersRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

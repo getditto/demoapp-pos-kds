@@ -53,7 +53,7 @@ import XCTest
                 await old.seedAll()
                 let first = DocumentID(id: "00001", locationId: "00001")
                 let initial = try await read(first, from: ditto)
-                XCTAssertEqual(initial.quantity, oldFirst ? nil : 20)
+                XCTAssertEqual(initial.quantity, 20)
                 let all = try await ditto.store.execute(query: "SELECT * FROM sale_items")
                 let rows: [SaleItem] = try all.decode()
                 XCTAssertEqual(Set(rows.map(\.documentId)), Set(LegacySaleItemSeed.saleItemsForAllLocations().map(\.documentId)))
@@ -63,7 +63,7 @@ import XCTest
                 }
                 let expectedIDs = Set(LegacySaleItemSeed.saleItemsForAllLocations().filter { $0.documentId.locationId == "00001" }.map(\.documentId))
                 let visible = try await snapshot(from: snapshots, matching: { Set($0.map(\.documentId)) == expectedIDs })
-                XCTAssertEqual(visible.first { $0.documentId == first }?.quantity, oldFirst ? nil : 20)
+                XCTAssertEqual(visible.first { $0.documentId == first }?.quantity, 20)
 
                 let zero = DocumentID(id: "00013", locationId: "00001")
                 let positive = DocumentID(id: "00018", locationId: "00001")

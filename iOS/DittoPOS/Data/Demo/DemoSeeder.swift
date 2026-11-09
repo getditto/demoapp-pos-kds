@@ -31,9 +31,10 @@ struct DemoSeeder {
         await bulkInitialInsert(
             into: SaleItemCommands.creationCollection,
             documents: SaleItemSeed.saleItemsForAllLocations().map {
-                SaleItemCreation(metadata: $0.metadata, initialQuantity: 20)
+                SaleItemCreation(metadata: $0.metadata, initialQuantity: SaleItemSeed.initialQuantity)
             }
         )
+        try! await SeedStockMigration.upgradeAll(store: store)
     }
 
     private func bulkInitialInsert<T: Encodable>(

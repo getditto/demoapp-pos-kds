@@ -26,8 +26,9 @@ class DemoSeeder(private val ditto: Ditto) {
     suspend fun seedSaleItems() {
         bulkInitialInsert(
             collectionName = SaleItemCommands.CREATION_COLLECTION,
-            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, 20L).json() }
+            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, SaleItemSeed.INITIAL_QUANTITY).json() }
         )
+        SeedStockMigration.upgradeAll(ditto.store)
     }
 
     private suspend fun bulkInitialInsert(
