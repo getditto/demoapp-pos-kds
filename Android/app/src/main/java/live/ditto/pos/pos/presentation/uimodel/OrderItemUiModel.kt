@@ -1,6 +1,5 @@
 package live.ditto.pos.pos.presentation.uimodel
 
-import android.icu.text.NumberFormat
 import live.ditto.pos.core.data.CartLineItem
 
 data class OrderItemUiModel(
@@ -11,7 +10,7 @@ data class OrderItemUiModel(
     companion object {
         fun from(line: CartLineItem): OrderItemUiModel = OrderItemUiModel(
             name = line.name,
-            price = NumberFormat.getCurrencyInstance().format(line.price.dollars),
+            price = line.price.formatted(),
             rawPrice = line.price.dollars
         )
     }

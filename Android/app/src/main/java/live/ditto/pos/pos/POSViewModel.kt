@@ -1,6 +1,5 @@
 package live.ditto.pos.pos
 
-import android.icu.text.NumberFormat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -93,7 +92,7 @@ constructor(
         PosUiState(
             currentOrderId = order.documentId.id,
             orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
-            orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars),
+            orderTotal = order.total.formatted(),
             saleItems = items.map(SaleItemUiModel::from)
         )
     }.stateIn(
