@@ -15,3 +15,7 @@ val InProcessStatusTicketColor = Color(0xFF96AED3)
 val ProcessedStatusTicketColor = Color(0xFF1C7F88)
 val DeliveredStatusTicketColor = Color(0xFF2E7D32)
 val CanceledStatusTicketColor = Color(0xFFFF5722)
+
+// Pay button: white label on a green that keeps at least 4.5:1 contrast.
+val PayButtonContainerColor = Color(0xFF2E7D32)
+val PayButtonContentColor = Color.White
