@@ -23,6 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
+import live.ditto.pos.ui.theme.PayButtonContainerColor
+import live.ditto.pos.ui.theme.PayButtonContentColor
 
 @Composable
 fun CheckoutSection(
@@ -54,7 +56,10 @@ fun CheckoutSection(
                 enabled = isPayButtonEnabled,
                 onClick = { onPayButtonClicked() },
                 shape = RoundedCornerShape(4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PayButtonContainerColor,
+                    contentColor = PayButtonContentColor
+                ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = stringResource(R.string.button_pay))
