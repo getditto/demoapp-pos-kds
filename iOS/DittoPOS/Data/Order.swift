@@ -20,7 +20,9 @@ struct Order: Hashable, Codable, Sendable {
         case statusLog = "status_log"
     }
 
-    var title: String { String(documentId.id.prefix(8)) }
+    /// Order number shown on POS and KDS. Uppercase, so orders created on
+    /// Android (lowercase UUIDs) and iOS look the same on every device.
+    var title: String { String(documentId.id.prefix(8)).uppercased() }
 
     var status: OrderStatus { StatusLogDerivation.currentStatus(from: statusLog) }
 

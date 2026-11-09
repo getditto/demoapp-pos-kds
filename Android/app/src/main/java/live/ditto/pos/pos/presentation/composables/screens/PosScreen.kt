@@ -47,7 +47,7 @@ fun PosScreen(
                 .fillMaxHeight()
         ) {
             CurrentOrder(
-                orderId = state.currentOrderId,
+                orderTitle = state.currentOrderTitle,
                 orderItems = state.orderItems,
                 orderTotal = state.orderTotal,
                 onPayButtonClicked = { viewModel.payForOrder() },

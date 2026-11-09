@@ -92,6 +92,7 @@ constructor(
         }
         PosUiState(
             currentOrderId = order.documentId.id,
+            currentOrderTitle = order.title,
             orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
             orderTotal = NumberFormat.getCurrencyInstance().format(order.total.dollars),
             saleItems = items.map(SaleItemUiModel::from)
@@ -163,5 +164,6 @@ data class PosUiState(
     val orderItems: List<OrderItemUiModel>,
     val orderTotal: String,
     val saleItems: List<SaleItemUiModel>,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val currentOrderTitle: String = ""
 )

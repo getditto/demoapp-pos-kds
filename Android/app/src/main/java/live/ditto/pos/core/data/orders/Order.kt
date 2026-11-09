@@ -22,7 +22,9 @@ data class Order(
     @Serializable(with = DittoInstantSerializer::class)
     val createdAt: Instant
 ) {
-    val title: String get() = documentId.id.take(8)
+    // Order number shown on POS and KDS. Uppercase, so orders created on
+    // Android (lowercase UUIDs) and iOS look the same on every device.
+    val title: String get() = documentId.id.take(8).uppercase()
 
     val status: OrderStatus get() = StatusLogDerivation.currentStatus(statusLog)
     val isPaid: Boolean get() = status == OrderStatus.CANCELED || payments.isNotEmpty()
