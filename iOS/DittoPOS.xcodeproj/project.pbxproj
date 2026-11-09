@@ -26,6 +26,8 @@
 		14DECF062A3A68B0005BC2AE /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF052A3A68B0005BC2AE /* Location.swift */; };
 		14DECF082A3A7F76005BC2AE /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF072A3A7F76005BC2AE /* Order.swift */; };
 		14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF0C2A3BDC27005BC2AE /* POSView.swift */; };
+		C0020000000000000000B001 /* POSSplitLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0020000000000000000A001 /* POSSplitLayout.swift */; };
+		C0020000000000000000B002 /* POSSplitLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0020000000000000000A001 /* POSSplitLayout.swift */; };
 		14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF0E2A3BDC31005BC2AE /* KDSView.swift */; };
 		14DECF112A3BDC3A005BC2AE /* LocationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF102A3BDC3A005BC2AE /* LocationsView.swift */; };
 		14DECF152A3CCAB6005BC2AE /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF142A3CCAB6005BC2AE /* POSViewModel.swift */; };
@@ -106,6 +108,7 @@
 		14DECF052A3A68B0005BC2AE /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		14DECF072A3A7F76005BC2AE /* Order.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Order.swift; sourceTree = "<group>"; };
 		14DECF0C2A3BDC27005BC2AE /* POSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSView.swift; sourceTree = "<group>"; };
+		C0020000000000000000A001 /* POSSplitLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSSplitLayout.swift; sourceTree = "<group>"; };
 		14DECF0E2A3BDC31005BC2AE /* KDSView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDSView.swift; sourceTree = "<group>"; };
 		14DECF102A3BDC3A005BC2AE /* LocationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsView.swift; sourceTree = "<group>"; };
 		14DECF142A3CCAB6005BC2AE /* POSViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POSViewModel.swift; sourceTree = "<group>"; };
@@ -173,6 +176,7 @@
 				14039BED2A465F37001903ED /* POSOrderTotalView.swift */,
 				14DECF1C2A3D13D9005BC2AE /* POSOrderView.swift */,
 				14DECF0C2A3BDC27005BC2AE /* POSView.swift */,
+				C0020000000000000000A001 /* POSSplitLayout.swift */,
 				14DECF182A3D1254005BC2AE /* SaleItemView.swift */,
 			);
 			path = POS;
@@ -500,6 +504,7 @@
 				14FFFEEF2A43639A00DD6806 /* POSOrderItemView.swift in Sources */,
 				14DECF082A3A7F76005BC2AE /* Order.swift in Sources */,
 				14DECF0D2A3BDC27005BC2AE /* POSView.swift in Sources */,
+				C0020000000000000000B001 /* POSSplitLayout.swift in Sources */,
 				14039BEE2A465F37001903ED /* POSOrderTotalView.swift in Sources */,
 				14DECF0F2A3BDC31005BC2AE /* KDSView.swift in Sources */,
 			);
@@ -517,6 +522,7 @@
 				C1340000000000000000D004 /* LocationsRepository.swift in Sources */,
 				C1340000000000000000D005 /* MainViewModel.swift in Sources */,
 				C1340000000000000000D002 /* POSViewModel.swift in Sources */,
+				C0020000000000000000B002 /* POSSplitLayout.swift in Sources */,
 				C1340000000000000000D001 /* SaleItemsRepository.swift in Sources */,
 				C15600000000000000000002 /* SettingsModel.swift in Sources */,
 				C15600000000000000000003 /* Utils.swift in Sources */,

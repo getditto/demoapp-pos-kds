@@ -7,15 +7,6 @@
 
 import SwiftUI
 
-extension CGFloat {
-    @MainActor static var screenWidth: CGFloat {
-        UIScreen.main.bounds.width
-    }
-    @MainActor static var screenHeight: CGFloat {
-        UIScreen.main.bounds.height
-    }
-}
-
 extension UIScreen {
     static var isLandscape: Bool {
         UIScreen.main.bounds.width > UIScreen.main.bounds.height
