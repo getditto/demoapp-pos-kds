@@ -8,6 +8,7 @@ import com.ditto.kotlin.DittoConfig
 import com.ditto.kotlin.DittoFactory
 import com.ditto.kotlin.DittoLogLevel
 import com.ditto.kotlin.DittoLogger
+import com.ditto.kotlin.DittoStore
 import com.ditto.kotlin.transports.DittoSyncPermissions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class DittoManager(
     private val dittoDevelopmentToken: String,
     private val dittoServerUrl: String
 ) {
+    @Volatile private var attachmentsConfigured = false
     private val ditto: Ditto? by lazy {
         // Defensive backstop only: build-time credential validation lives in
         // build.gradle.kts (dittoEnv), which fails the build with a clear
@@ -66,6 +68,8 @@ class DittoManager(
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
+                        configureAttachmentFetching(store)
+                        attachmentsConfigured = true
                         sync.start()
                     } catch (e: Throwable) {
                         Log.e(TAG, "Failed to start sync: ${e.message}")
@@ -75,6 +79,12 @@ class DittoManager(
         } catch (e: Exception) {
             Log.e(TAG, e.message.orEmpty())
             null
+        }
+    }
+
+    companion object {
+        suspend fun configureAttachmentFetching(store: DittoStore) {
+            store.execute("ALTER SYSTEM SET attachments_auto_fetch = true")
         }
     }
 
@@ -100,6 +110,8 @@ class DittoManager(
                 // https://docs.ditto.live/sdk/latest/sync/creating-sync-groups
                 config.global.syncGroup = value
             }
+            // Location callbacks can arrive before asynchronous startup configuration finishes.
+            if (!attachmentsConfigured) return
             ditto.sync.start()
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to apply sync group $value: ${e.message}")
@@ -117,6 +129,7 @@ class DittoManager(
             ditto.updateTransportConfig { config ->
                 config.global.syncGroup = 0u
             }
+            if (!attachmentsConfigured) return
             ditto.sync.start()
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to reset sync group: ${e.message}")

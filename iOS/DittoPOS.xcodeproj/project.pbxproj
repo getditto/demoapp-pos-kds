@@ -139,6 +139,17 @@
 			isa = PBXBuildFile;
 			fileRef = C1330000000000000000A005;
 		};
+		3100C30DC3A697A9C46348CD /* PhotoReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBAFC06291F7B9651A62818 /* PhotoReference.swift */; };
+		3636EB0D281CE95A42762001 /* PhotoReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBAFC06291F7B9651A62818 /* PhotoReference.swift */; };
+		F568D727E3502D6A9AEE92F8 /* PhotoAttachments.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB7140A1A1F0D6E1A745C9A /* PhotoAttachments.swift */; };
+		25E4F2F7CE4DAC00AEEAEAD1 /* PhotoAttachments.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB7140A1A1F0D6E1A745C9A /* PhotoAttachments.swift */; };
+		A9DE9BCD51C014DF9094023E /* PhotoPreparation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A362A43A72A2E28E39ADA022 /* PhotoPreparation.swift */; };
+		C25B349F44580607E3F52E51 /* PhotoPreparation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A362A43A72A2E28E39ADA022 /* PhotoPreparation.swift */; };
+		E92195261798ADE12A99B563 /* PhotoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91028803BF5FF31B2835B62 /* PhotoLoader.swift */; };
+		4275D46CB60CB0B89A56D628 /* PhotoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91028803BF5FF31B2835B62 /* PhotoLoader.swift */; };
+		51CD2A7A015BE39F4026DA5D /* ProductPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */; };
+		662BD72B047402C398F398B2 /* ProductPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */; };
+		C1490000000000000000B100 /* burger.png in Resources */ = {isa = PBXBuildFile; fileRef = C1490000000000000000A100 /* burger.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -225,6 +236,12 @@
 			path = DittoUIPresentationTests.xctest;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		5BBAFC06291F7B9651A62818 /* PhotoReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoReference.swift; path = PhotoReference.swift; sourceTree = "<group>"; };
+		DFB7140A1A1F0D6E1A745C9A /* PhotoAttachments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoAttachments.swift; path = PhotoAttachments.swift; sourceTree = "<group>"; };
+		A362A43A72A2E28E39ADA022 /* PhotoPreparation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoPreparation.swift; path = PhotoPreparation.swift; sourceTree = "<group>"; };
+		F91028803BF5FF31B2835B62 /* PhotoLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoLoader.swift; path = PhotoLoader.swift; sourceTree = "<group>"; };
+		09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProductPhotoView.swift; path = ProductPhotoView.swift; sourceTree = "<group>"; };
+		C1490000000000000000A100 /* burger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = burger.png; path = DittoPOS/Assets.xcassets/burger.imageset/burger.png; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -325,9 +342,9 @@
 		14CD51A42A2FE2D50018DE87 = {
 			isa = PBXGroup;
 			children = (
+				C1490000000000000000A101 /* Test fixtures */,
 				14CD51AF2A2FE2D50018DE87 /* DittoPOS */,
 				A48472EA2FA4DF71004A821E /* DittoPOSTests */,
-				C1460000000000000000A100 /* Fixtures */,
 				14CD51AE2A2FE2D50018DE87 /* Products */,
 				C1331000000000000000A003,
 				C1331000000000000000A004,
@@ -349,6 +366,7 @@
 		14CD51AF2A2FE2D50018DE87 /* DittoPOS */ = {
 			isa = PBXGroup;
 			children = (
+				AEADCEC849CCEE2D3A677EC6 /* Photos */,
 				14CD51B02A2FE2D50018DE87 /* DittoPOS.swift */,
 				14CD51B22A2FE2D50018DE87 /* MainView.swift */,
 				C1330000000000000000A007 /* AppShell.swift */,
@@ -388,6 +406,7 @@
 		14DECF042A3A6868005BC2AE /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				8D31C3C233529EAFCC25D646 /* Images */,
 				14CD51BE2A2FE3EE0018DE87 /* DittoManager.swift */,
 				112311FE2B3DBA0100A04E44 /* DittoExtensions.swift */,
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
@@ -440,6 +459,34 @@
 				C1470000000000000000A001 /* SeedStockMigration.swift */,
 			);
 			path = Demo;
+			sourceTree = "<group>";
+		};
+		8D31C3C233529EAFCC25D646 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				5BBAFC06291F7B9651A62818 /* PhotoReference.swift */,
+				DFB7140A1A1F0D6E1A745C9A /* PhotoAttachments.swift */,
+				A362A43A72A2E28E39ADA022 /* PhotoPreparation.swift */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
+		AEADCEC849CCEE2D3A677EC6 /* Photos */ = {
+			isa = PBXGroup;
+			children = (
+				F91028803BF5FF31B2835B62 /* PhotoLoader.swift */,
+				09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */,
+			);
+			path = Photos;
+			sourceTree = "<group>";
+		};
+		C1490000000000000000A101 /* Test fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				C1490000000000000000A100 /* burger.png */,
+				C1460000000000000000A100 /* Fixtures */,
+			);
+			name = "Test fixtures";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -597,6 +644,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1490000000000000000B100 /* burger.png in Resources */,
 				C1460000000000000000B100 /* Fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -647,6 +695,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3100C30DC3A697A9C46348CD /* PhotoReference.swift in Sources */,
+				F568D727E3502D6A9AEE92F8 /* PhotoAttachments.swift in Sources */,
+				A9DE9BCD51C014DF9094023E /* PhotoPreparation.swift in Sources */,
+				E92195261798ADE12A99B563 /* PhotoLoader.swift in Sources */,
+				51CD2A7A015BE39F4026DA5D /* ProductPhotoView.swift in Sources */,
 				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000B003 /* OrderSelection.swift in Sources */,
@@ -703,6 +756,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3636EB0D281CE95A42762001 /* PhotoReference.swift in Sources */,
+				25E4F2F7CE4DAC00AEEAEAD1 /* PhotoAttachments.swift in Sources */,
+				C25B349F44580607E3F52E51 /* PhotoPreparation.swift in Sources */,
+				4275D46CB60CB0B89A56D628 /* PhotoLoader.swift in Sources */,
+				662BD72B047402C398F398B2 /* ProductPhotoView.swift in Sources */,
 				C1330000000000000000B004 /* AppAppearance.swift in Sources */,
 				C1330000000000000000B008 /* AppShell.swift in Sources */,
 				C1330000000000000000B006 /* SettingsContent.swift in Sources */,

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import live.ditto.pos.core.data.images.PhotoReference
 
 @Serializable
 data class SaleItem(
@@ -13,7 +14,8 @@ data class SaleItem(
     val name: String,
     val imageName: String,
     val price: Price,
-    val quantity: Long? = null
+    val quantity: Long? = null,
+    val image: PhotoReference? = null
 ) {
     val metadata: SaleItemMetadata get() = SaleItemMetadata(documentId, name, imageName, price)
 

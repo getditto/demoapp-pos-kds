@@ -90,6 +90,13 @@ Studio Preview to inspect the actual shared controls in light/dark and large tex
 The app-owned `SettingsContent` / `SettingsScreen` compose these foundations;
 previews and the isolated UI hosts are developer resources, not app destinations.
 
+`PhotoCatalog.swift` and `PhotoCatalog.kt` preview shared photo containers and
+placeholders at phone and tablet sizes. The app-owned `ProductPhotoView` /
+`ProductPhoto` load optional Ditto attachments, cancel loading when hidden and
+reuse a bounded decoded-image cache. Offline tests cover photo replacement,
+removal, delayed file availability and crop/export logic. Crop geometry uses
+shared cases from `Tests/Fixtures/photo-crops.json` on both platforms.
+
 ## Data model
 
 The demo follows current Ditto guidance for denormalized documents and
@@ -116,6 +123,9 @@ Collections:
 - **`sale_items`** — synced menu items, one document per item per location.
   Hand-curated demo data is seeded once on first launch via
   `INSERT INTO ... INITIAL DOCUMENTS (...)` (idempotent, peer-safe).
+  The optional `image` attachment is prepared for the image migration; current
+  menu seeding and display still use `imageName` until that cutover. Missing or
+  pending attachment files use a generic photo placeholder in the new renderer.
 
 - **`locations`** — one document per location.
 
