@@ -15,6 +15,7 @@ public struct DittoComponentCatalog: View {
                         Button("Disabled") {}.buttonStyle(DittoButtonStyle()).disabled(true)
                     }
                     Button("Secondary") {}.buttonStyle(DittoButtonStyle(.secondary))
+                    Button("Text action") {}.buttonStyle(DittoButtonStyle(.text))
                     DittoField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
                     DittoRow("Ditto Tools") { DittoIcon("caret-right") }
                     DittoChoiceRow("Selected option", selected: selected) { selected.toggle() }

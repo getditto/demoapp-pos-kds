@@ -12,7 +12,7 @@ struct POSOrderTotalView: View {
     @EnvironmentObject var viewModel: POSViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .bottom, spacing: DittoLayout.gap) {
                     Text("Total")
@@ -25,30 +25,25 @@ struct POSOrderTotalView: View {
                 }
             }
             .font(DittoTypography.body)
-            .padding(.vertical, 4)
+            .frame(minHeight: 40)
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: DittoLayout.gap) {
-                    clearButton
-                    payButton
-                }
-                VStack(spacing: DittoLayout.gap) {
-                    clearButton.frame(maxWidth: .infinity)
-                    payButton
-                }
-            }
+            payButton
+            clearButton
         }
+        .padding(DittoLayout.padding)
     }
 
     private var clearButton: some View {
-        Button("Clear", action: viewModel.clearCurrentOrderCart)
-            .buttonStyle(DittoButtonStyle(.secondary))
-            .disabled(viewModel.actionsDisabled)
+        Button(action: viewModel.clearCurrentOrderCart) {
+            Text("Clear cart").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(DittoButtonStyle(.text))
+        .disabled(viewModel.actionsDisabled)
     }
 
     private var payButton: some View {
         Button(action: viewModel.payCurrentOrder) {
-            Text(viewModel.payButtonLabel).frame(maxWidth: .infinity)
+            Text("\(viewModel.payButtonLabel) \(viewModel.orderTotalDisplay)").frame(maxWidth: .infinity)
         }
         .buttonStyle(DittoButtonStyle())
         .disabled(viewModel.actionsDisabled)

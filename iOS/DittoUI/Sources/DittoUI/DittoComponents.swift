@@ -1,23 +1,25 @@
 import SwiftUI
 
 public struct DittoButtonStyle: ButtonStyle {
-    public enum Kind { case primary, secondary, destructive }
+    public enum Kind { case primary, secondary, destructive, text }
     @Environment(\.isEnabled) private var isEnabled
     private let kind: Kind
     public init(_ kind: Kind = .primary) { self.kind = kind }
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(DittoTypography.action).textCase(.uppercase)
+            .multilineTextAlignment(.center)
             .padding(.horizontal, DittoLayout.padding)
             .frame(minHeight: DittoLayout.controlHeight)
             .foregroundStyle(isEnabled ? foreground : DittoColors.disabledText)
-            .background(isEnabled ? background : DittoColors.disabled,
-                        in: RoundedRectangle(cornerRadius: DittoLayout.radius))
-            .overlay(RoundedRectangle(cornerRadius: DittoLayout.radius)
+            .background(isEnabled ? background : kind == .text ? .clear : DittoColors.disabled,
+                        in: RoundedRectangle(cornerRadius: DittoLayout.buttonRadius))
+            .overlay(RoundedRectangle(cornerRadius: DittoLayout.buttonRadius)
                 .strokeBorder(kind == .secondary ? DittoColors.border : .clear))
+            .contentShape(RoundedRectangle(cornerRadius: DittoLayout.buttonRadius))
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
     private var foreground: Color { kind == .primary ? DittoColors.onAccent : kind == .destructive ? DittoColors.critical : DittoColors.text }
-    private var background: Color { kind == .primary ? DittoColors.accent : DittoColors.surface }
+    private var background: Color { kind == .primary ? DittoColors.accent : kind == .text ? .clear : DittoColors.surface }
 }
 
 public struct DittoSurface<Content: View>: View {

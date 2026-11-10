@@ -27,6 +27,7 @@ public enum DittoLayout {
     public static let gap: CGFloat = 8
     public static let padding: CGFloat = 16
     public static let radius: CGFloat = 16
+    public static let buttonRadius: CGFloat = 12
     public static let controlHeight: CGFloat = 48
 }
 
