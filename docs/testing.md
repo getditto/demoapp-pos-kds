@@ -28,10 +28,12 @@ These stores use no encryption/private key or license token and never start sync
 Simulate peer-originated changes with sequenced DQL writes to the local test store.
 Real peer convergence and file transfer have separate manual acceptance checks.
 
-The standalone iOS `DittoPOSTests` bundle compiles production logic directly,
-without the demo app or its `.env`. `AppUIPresentationTests` uses XCUITest and a
-small `AppUIHost` to exercise the real theme, shell and Settings presentation.
-That host has no Ditto SDK, repositories or demo startup. Android uses JVM logic
+The iOS `DittoPOSTests` bundle compiles production logic directly and uses the
+small `AppUIHost` for native SwiftUI lifecycle checks, without the demo app or
+its `.env`. `AppUIPresentationTests` uses XCUITest with the same host to exercise
+the real theme, shell and Settings presentation. The host's startup has no Ditto
+SDK, repositories or demo startup; offline stores are opened only by tests.
+Android uses JVM logic
 tests and emulator-based repository/UI tests whose runner substitutes a plain
 `Application`, bypassing the demo's Hilt startup, seeding and sync. Both platforms
 load the same independently authored order JSON from `Tests/Fixtures` for store
@@ -56,6 +58,12 @@ Open `ComponentCatalog.swift` in Xcode Canvas or `ComponentCatalog.kt` in Androi
 Studio Preview to inspect the actual shared controls in light/dark and large text.
 The app-owned `SettingsContent` / `SettingsScreen` compose these foundations;
 previews and the isolated UI hosts are developer resources, not app destinations.
+
+The component catalogs also preview shared photo containers and placeholders.
+The app-owned `ProductPhotoView` / `ProductPhoto` load optional Ditto attachments,
+cancel loading when hidden and reuse a bounded decoded-image cache. Offline tests
+cover photo replacement, removal, delayed file availability and crop/export logic,
+including shared cases from `Tests/Fixtures/photo-crops.json`.
 
 ## Manual DQL scripts
 
