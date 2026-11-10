@@ -13,6 +13,13 @@ struct POSOrderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            orderContent.padding(8)
+            POSOrderTotalView()
+        }
+    }
+
+    private var orderContent: some View {
+        VStack(spacing: 0) {
             Text(viewModel.orderTitle)
                 .font(DittoTypography.body)
                 .padding(.bottom, 8)
@@ -39,8 +46,6 @@ struct POSOrderView: View {
             }
             .padding(.bottom, 4)
             .listStyle(.plain)
-
-            POSOrderTotalView()
         }
     }
 

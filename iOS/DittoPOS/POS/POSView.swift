@@ -46,7 +46,6 @@ struct POSView: View {
                     POSGridView()
                 } order: {
                     POSOrderView()
-                        .padding(8)
                 }
             }
         }
