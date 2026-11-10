@@ -104,34 +104,34 @@ class SeedStockMigrationTest {
     fun visibleCatalogUpgradesLateLegacyInputAndLocationReentryPreservesStock() = runBlocking {
         TestDitto.withInstance {
             val catalog = catalog()
-            val snapshots = Channel<List<SaleItem>>(Channel.UNLIMITED)
+            val observedItems = Channel<List<SaleItem>>(Channel.UNLIMITED)
             coroutineScope {
-                var observation = launch { catalog.observeLocationSaleItems("00001").collect { snapshots.send(it) } }
+                var observation = launch { catalog.observeLocationSaleItems("00001").collect { observedItems.send(it) } }
                 try {
-                    snapshots.await { it.isEmpty() }
+                    observedItems.await { it.isEmpty() }
                     LegacyDemoSeeder(ditto).seedAll()
-                    val prepared = snapshots.await { it.isNotEmpty() }
+                    val prepared = observedItems.await { it.isNotEmpty() }
                     assertEquals(7, prepared.size)
                     assertTrue(prepared.all { it.quantity == 20L })
                     observation.cancelAndJoin()
                     assertTrue(ditto.store.observers.isEmpty())
-                    while (snapshots.tryReceive().isSuccess) { }
-                    observation = launch { catalog.observeLocationSaleItems("00002").collect { snapshots.send(it) } }
-                    val other = snapshots.await { it.isNotEmpty() }
+                    while (observedItems.tryReceive().isSuccess) { }
+                    observation = launch { catalog.observeLocationSaleItems("00002").collect { observedItems.send(it) } }
+                    val other = observedItems.await { it.isNotEmpty() }
                     assertEquals(7, other.size)
                     assertTrue(other.all { it.quantity == 20L })
                     observation.cancelAndJoin()
                     val id = DocumentID("00001", "00001")
                     catalog.restart(0, id)
                     catalog.increment(-2, id)
-                    while (snapshots.tryReceive().isSuccess) { }
-                    observation = launch { catalog.observeLocationSaleItems("00001").collect { snapshots.send(it) } }
-                    val returned = snapshots.await { it.isNotEmpty() }
+                    while (observedItems.tryReceive().isSuccess) { }
+                    observation = launch { catalog.observeLocationSaleItems("00001").collect { observedItems.send(it) } }
+                    val returned = observedItems.await { it.isNotEmpty() }
                     assertEquals(7, returned.size)
                     assertEquals(-2L, returned.single { it.documentId == id }.quantity)
                 } finally {
                     observation.cancelAndJoin()
-                    snapshots.close()
+                    observedItems.close()
                 }
             }
         }
