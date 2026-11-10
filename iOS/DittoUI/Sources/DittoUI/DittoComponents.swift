@@ -31,26 +31,54 @@ public struct DittoSurface<Content: View>: View {
 
 public struct DittoRow<Trailing: View>: View {
     private let title: String
+    private let eyebrow: String?
     private let detail: String?
-    private let icon: String
+    private let icon: String?
+    private let outlined: Bool
     private let trailing: Trailing
-    public init(_ title: String, detail: String? = nil, icon: String, @ViewBuilder trailing: () -> Trailing) {
-        self.title = title; self.detail = detail; self.icon = icon; self.trailing = trailing()
+    public init(_ title: String, eyebrow: String? = nil, detail: String? = nil, icon: String? = nil, outlined: Bool = false, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title; self.eyebrow = eyebrow; self.detail = detail; self.icon = icon; self.outlined = outlined; self.trailing = trailing()
     }
     public var body: some View {
         HStack(spacing: 12) {
-            DittoIcon(icon)
+            if let icon { DittoIcon(icon) }
             VStack(alignment: .leading, spacing: 4) {
+                if let eyebrow { Text(eyebrow).font(DittoTypography.caption).foregroundStyle(DittoColors.secondaryText) }
                 Text(title).font(DittoTypography.body)
                 if let detail { Text(detail).font(DittoTypography.caption).foregroundStyle(DittoColors.secondaryText) }
             }
             Spacer(minLength: 8)
             trailing
         }
-        .frame(minHeight: DittoLayout.controlHeight)
+        .frame(minHeight: eyebrow == nil ? 32 : DittoLayout.controlHeight)
         .padding(DittoLayout.padding)
         .background(DittoColors.surface, in: RoundedRectangle(cornerRadius: DittoLayout.radius))
+        .overlay(RoundedRectangle(cornerRadius: DittoLayout.radius).strokeBorder(outlined ? DittoColors.border : .clear))
         .contentShape(Rectangle())
+    }
+}
+
+public struct DittoChoiceRow: View {
+    private let title: String
+    private let selected: Bool
+    private let action: () -> Void
+    public init(_ title: String, selected: Bool, action: @escaping () -> Void) {
+        self.title = title; self.selected = selected; self.action = action
+    }
+    public var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Text(title).font(DittoTypography.body)
+                Spacer(minLength: 8)
+                if selected { DittoIcon("check", size: 22) }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(minHeight: DittoLayout.controlHeight)
+            .background(selected ? DittoColors.selection : .clear, in: RoundedRectangle(cornerRadius: 8))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -79,26 +107,31 @@ public struct DittoHeader: View {
     private let location: String?
     public init(_ title: String, location: String? = nil) { self.title = title; self.location = location }
     public var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 16) {
                 Image("ditto-symbol", bundle: .module).resizable().scaledToFit()
                     .frame(width: sizeClass == .regular ? 28 : 24.5, height: sizeClass == .regular ? 32 : 28)
                     .accessibilityLabel("Ditto")
+                if sizeClass == .regular { titleText }
                 Spacer(minLength: 8)
                 if let location, !location.isEmpty {
                     HStack(spacing: 6) {
                         DittoIcon("map-pin", size: 18)
-                        Text(location).font(DittoTypography.caption)
+                        Text(location).font(DittoTypography.footnote)
                     }.foregroundStyle(DittoColors.secondaryText)
                 }
-            }
-            Text(title).font(DittoTypography.pageTitle)
-                .frame(minHeight: titleLineHeight, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
+            }.frame(minHeight: sizeClass == .regular ? 56 : 48)
+            if sizeClass != .regular { titleText.frame(minHeight: 64, alignment: .leading) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, sizeClass == .regular ? 20 : DittoLayout.padding)
-        .padding(.vertical, DittoLayout.padding)
+        .padding(.vertical, sizeClass == .regular ? DittoLayout.padding : 0)
+        .background(DittoColors.background)
+    }
+    private var titleText: some View {
+        Text(title).font(DittoTypography.pageTitle)
+            .frame(minHeight: titleLineHeight, alignment: .leading)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 

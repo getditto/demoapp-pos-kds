@@ -21,24 +21,24 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Appearance"].exists)
         XCUIDevice.shared.appearance = .dark
         assertAppearance("Dark", in: app)
-        app.segmentedControls.buttons["Light"].tap()
+        app.buttons["Light"].tap()
         assertAppearance("Light", in: app)
         XCUIDevice.shared.appearance = .light
         XCUIDevice.shared.appearance = .dark
         assertAppearance("Light", in: app)
-        app.segmentedControls.buttons["System"].tap()
+        app.buttons["System"].tap()
         assertAppearance("Dark", in: app)
         app.buttons["POS"].firstMatch.tap()
         XCTAssertEqual(app.textFields["Draft"].value as? String, "retained")
         app.buttons["Settings"].firstMatch.tap()
-        app.segmentedControls.buttons["Dark"].tap()
+        app.buttons["Dark"].tap()
         app.terminate()
         XCUIDevice.shared.appearance = .light
         app.launchArguments = []
         app.launch()
         assertAppearance("Dark", in: app)
         app.buttons["Settings"].firstMatch.tap()
-        app.segmentedControls.buttons["System"].tap()
+        app.buttons["System"].tap()
         assertAppearance("Light", in: app)
     }
 

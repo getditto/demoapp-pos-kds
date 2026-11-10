@@ -12,34 +12,41 @@ struct SettingsContent: View {
     let onTools: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Button(action: onLocation) {
-                    DittoRow("Location", detail: location, icon: "map-pin") { DittoIcon("caret-right") }
-                }.buttonStyle(.plain)
-                DittoSurface {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Appearance").font(DittoTypography.heading)
-                        Picker("Appearance", selection: $appearance) {
-                            Text("System").tag(AppAppearance.system)
-                            Text("Light").tag(AppAppearance.light)
-                            Text("Dark").tag(AppAppearance.dark)
-                        }.pickerStyle(.segmented)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: sizeClass == .regular ? 16 : 12) {
+                        Button(action: onLocation) {
+                            DittoRow(location, eyebrow: "Location") { DittoIcon("caret-right") }
+                        }.buttonStyle(.plain)
+                        DittoSurface {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Appearance").font(DittoTypography.body.weight(.medium))
+                                Text("System follows this device’s setting.")
+                                    .font(DittoTypography.footnote).foregroundStyle(DittoColors.secondaryText)
+                                ForEach(AppAppearance.allCases) { option in
+                                    DittoChoiceRow(option.rawValue.capitalized, selected: appearance == option) { appearance = option }
+                                }
+                            }
+                        }
+                        Button(action: onTools) {
+                            DittoRow("Ditto Tools") { DittoIcon("caret-right") }
+                        }.buttonStyle(.plain)
                     }
+                    Spacer(minLength: 24)
+                    VStack(spacing: 4) {
+                        Text("Build \(version) (\(build))")
+                        Text("Powered by Ditto Edge SDK \(sdkVersion)")
+                        Link("ditto.com", destination: URL(string: "https://ditto.com")!)
+                            .underline().frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .font(DittoTypography.caption).foregroundStyle(DittoColors.secondaryText)
+                    .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 }
-                Button(action: onTools) {
-                    DittoRow("Ditto Tools", icon: "gear") { DittoIcon("caret-right") }
-                }.buttonStyle(.plain)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Build \(version) (\(build))")
-                    Text("Powered by Ditto Edge SDK \(sdkVersion)")
-                    Link("ditto.com", destination: URL(string: "https://ditto.com")!)
-                        .underline()
-                }.font(DittoTypography.caption).foregroundStyle(DittoColors.secondaryText)
+                .frame(minHeight: max(0, geometry.size.height - 32), alignment: .top)
+                .padding(.horizontal, sizeClass == .regular ? 20 : DittoLayout.padding)
+                .padding(.vertical, DittoLayout.padding)
             }
-            .padding(.horizontal, sizeClass == .regular ? 20 : DittoLayout.padding)
-            .padding(.vertical, DittoLayout.padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(DittoColors.background)
     }

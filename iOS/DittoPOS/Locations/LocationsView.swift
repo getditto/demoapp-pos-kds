@@ -26,7 +26,7 @@ struct LocationsView: View {
                                 onSelect(location.id)
                                 dismiss()
                             } label: {
-                                DittoRow(location.name, icon: "map-pin") {
+                                DittoRow(location.name, icon: "map-pin", outlined: true) {
                                     if viewModel.selectedLocation?.id == location.id { DittoIcon("check") }
                                     else { DittoIcon("caret-right") }
                                 }

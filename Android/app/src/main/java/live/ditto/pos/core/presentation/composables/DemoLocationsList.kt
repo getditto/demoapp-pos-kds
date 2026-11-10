@@ -20,7 +20,7 @@ fun DemoLocationsList(locations: List<Location>, modifier: Modifier = Modifier, 
     } else {
         LazyColumn(modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(locations, key = { it.id }) { location ->
-                DittoRow(location.name, R.drawable.phosphor_map_pin, onClick = { onDemoLocationSelected(location) })
+                DittoRow(location.name, R.drawable.phosphor_map_pin, onClick = { onDemoLocationSelected(location) }, outlined = true)
             }
         }
     }

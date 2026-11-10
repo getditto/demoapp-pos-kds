@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct DittoComponentCatalog: View {
     @State private var text = ""
+    @State private var selected = true
     public init() {}
     public var body: some View {
         DittoTheme {
@@ -15,7 +16,8 @@ public struct DittoComponentCatalog: View {
                     }
                     Button("Secondary") {}.buttonStyle(DittoButtonStyle(.secondary))
                     DittoField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
-                    DittoRow("Ditto Tools", icon: "gear") { DittoIcon("caret-right") }
+                    DittoRow("Ditto Tools") { DittoIcon("caret-right") }
+                    DittoChoiceRow("Selected option", selected: selected) { selected.toggle() }
                     HStack(alignment: .top, spacing: 16) {
                         DittoWell { DittoEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
                         DittoSurface { Text("#32B9A42D").font(DittoTypography.action); Text("2 × Burger") }

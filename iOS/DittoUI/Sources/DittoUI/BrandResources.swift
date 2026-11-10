@@ -16,7 +16,8 @@ public enum DittoTypography {
     public static var pageTitle: Font { font("ChakraPetch-Regular", size: 34, relativeTo: .largeTitle) }
     public static var body: Font { font("Geist-Regular", size: 17, relativeTo: .body) }
     public static var heading: Font { font("Geist-Regular", size: 20, relativeTo: .title3) }
-    public static var caption: Font { font("Geist-Regular", size: 14, relativeTo: .subheadline) }
+    public static var caption: Font { font("Geist-Regular", size: 12, relativeTo: .caption) }
+    public static var footnote: Font { font("Geist-Regular", size: 13, relativeTo: .footnote) }
     public static var action: Font { font("GeistMono-Regular", size: 14, relativeTo: .callout) }
 
     private static func font(_ name: String, size: CGFloat, relativeTo style: Font.TextStyle) -> Font {

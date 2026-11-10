@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ComponentCatalog(dark: Boolean = false) {
     var text by remember { mutableStateOf("") }
+    var selected by remember { mutableStateOf(true) }
     DittoTheme(dark) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             DittoHeader("Components", location = "Ham's Burgers")
@@ -29,7 +30,8 @@ fun ComponentCatalog(dark: Boolean = false) {
             }
             DittoButton("SECONDARY", {}, secondary = true)
             DittoField("Name", error = "Enter a name.") { BasicTextField(text, onValueChange = { text = it }) }
-            DittoRow("Ditto Tools", R.drawable.phosphor_gear, {})
+            DittoRow("Ditto Tools", onClick = {})
+            DittoChoiceRow("Selected option", selected, { selected = !selected })
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 DittoWell(Modifier.weight(1f)) { DittoEmptyState("No orders preparing", "New orders will appear here.", R.drawable.phosphor_cooking_pot) }
                 DittoSurface(Modifier.weight(1f)) {

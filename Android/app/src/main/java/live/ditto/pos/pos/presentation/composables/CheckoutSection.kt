@@ -2,6 +2,7 @@ package live.ditto.pos.pos.presentation.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
@@ -19,7 +20,7 @@ fun CheckoutSection(orderTotal: String, isPayButtonEnabled: Boolean, onPayButton
             Text(stringResource(R.string.label_total))
             Text(orderTotal)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             DittoButton("CLEAR", onCancelButtonClicked, enabled = isPayButtonEnabled, secondary = true)
             DittoButton(stringResource(R.string.button_pay).uppercase(), onPayButtonClicked, Modifier.weight(1f), enabled = isPayButtonEnabled)
         }
