@@ -30,7 +30,7 @@ final class KitchenAndSelectionTests: XCTestCase {
         XCTAssertNil(OrderStatus.canceled.next)
     }
 
-    func testObservedSelectionUsesBothOrderAndLocationAndRejectsMissingSnapshots() throws {
+    func testObservedSelectionUsesBothOrderAndLocationAndRejectsMissingOrders() throws {
         let local = try OrderFixture.load()
         var foreign = local
         foreign = Order(

@@ -7,8 +7,7 @@
 
 import Foundation
 
-// Snapshot of a SaleItem at add-time — the receipt records the price the
-// customer paid, not the current SaleItem price.
+// Catalog edits must not rewrite the item details or prices recorded on an order.
 struct CartLineItem: Codable, Hashable, Equatable, Sendable {
     let saleItemId: String
     let name: String

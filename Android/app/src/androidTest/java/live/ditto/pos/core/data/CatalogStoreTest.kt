@@ -55,10 +55,10 @@ class CatalogStoreTest {
             TestDitto.withInstance {
                 coroutineScope {
                     val repository = catalog()
-                    val snapshots = Channel<List<SaleItem>>(Channel.UNLIMITED)
-                    val observation = launch { repository.observeLocationSaleItems("00001").collect { snapshots.send(it) } }
+                    val observedItems = Channel<List<SaleItem>>(Channel.UNLIMITED)
+                    val observation = launch { repository.observeLocationSaleItems("00001").collect { observedItems.send(it) } }
                     try {
-                        snapshots.await { it.isEmpty() }
+                        observedItems.await { it.isEmpty() }
                         val old = LegacyDemoSeeder(ditto)
                         val current = DemoSeeder(ditto)
                         if (oldFirst) old.seedAll()
@@ -72,7 +72,7 @@ class CatalogStoreTest {
                             assertEquals(SaleItemMetadata(legacy.documentId, legacy.name, legacy.imageName, legacy.price), rows.single { it.documentId == legacy.documentId }.metadata)
                         }
                         val expectedIDs = LegacySaleItemSeed.saleItemsForAllLocations().filter { it.documentId.locationId == "00001" }.map { it.documentId }.toSet()
-                        val visible = snapshots.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
+                        val visible = observedItems.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
                         assertEquals(20L, visible.single { it.documentId == id }.quantity)
                         val zero = DocumentID("00013", "00001")
                         val positive = DocumentID("00018", "00001")
@@ -105,14 +105,14 @@ class CatalogStoreTest {
                             mapOf("id" to removed.id, "locationId" to removed.locationId)
                         ) { it.decodeOrSkip<SaleItem>() }
                         assertTrue(deletedVisibleItems.isEmpty())
-                        snapshots.await { items ->
+                        observedItems.await { items ->
                             items.none { it.documentId == removed } &&
                                 items.any { it.documentId == custom.documentId && it.quantity == 3L } &&
                                 items.any { it.documentId == id && it.name == "Edited" && it.quantity == -2L }
                         }
                     } finally {
                         observation.cancelAndJoin()
-                        snapshots.close()
+                        observedItems.close()
                     }
                 }
             }

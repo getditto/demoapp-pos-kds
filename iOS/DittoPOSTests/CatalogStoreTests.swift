@@ -41,11 +41,11 @@ import XCTest
         for oldFirst in [true, false] {
             try await TestDitto.withInstance { ditto in
                 let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-                let snapshots = CurrentValueSubject<[SaleItem]?, Never>(nil)
+                let observedItems = CurrentValueSubject<[SaleItem]?, Never>(nil)
                 let observation = repository.observeLocationSaleItems("00001").sink(
-                    receiveValue: { snapshots.send($0) })
+                    receiveValue: { observedItems.send($0) })
                 defer { observation.cancel() }
-                _ = try await snapshot(from: snapshots, matching: { $0.isEmpty })
+                _ = try await waitForItems(from: observedItems, matching: { $0.isEmpty })
                 let old = LegacyDemoSeeder(store: ditto.store)
                 let current = DemoSeeder(store: ditto.store)
                 if oldFirst { await old.seedAll() }
@@ -62,7 +62,7 @@ import XCTest
                                    SaleItemMetadata(documentId: legacy.documentId, name: legacy.name, imageName: legacy.imageName, price: legacy.price))
                 }
                 let expectedIDs = Set(LegacySaleItemSeed.saleItemsForAllLocations().filter { $0.documentId.locationId == "00001" }.map(\.documentId))
-                let visible = try await snapshot(from: snapshots, matching: { Set($0.map(\.documentId)) == expectedIDs })
+                let visible = try await waitForItems(from: observedItems, matching: { Set($0.map(\.documentId)) == expectedIDs })
                 XCTAssertEqual(visible.first { $0.documentId == first }?.quantity, 20)
 
                 let zero = DocumentID(id: "00013", locationId: "00001")
@@ -97,7 +97,7 @@ import XCTest
                                                           arguments: ["id": deleted.id, "locationId": deleted.locationId])
                 let visibleDeletedItems: [SaleItem] = removed.decodeOrSkip()
                 XCTAssertTrue(visibleDeletedItems.isEmpty)
-                _ = try await snapshot(from: snapshots, matching: { items in
+                _ = try await waitForItems(from: observedItems, matching: { items in
                     !items.contains { $0.documentId == deleted }
                         && items.contains { $0.documentId == custom.documentId && $0.quantity == 3 }
                         && items.contains { $0.documentId == first && $0.name == "Edited" && $0.quantity == -2 }
@@ -106,7 +106,7 @@ import XCTest
         }
     }
 
-    private func snapshot(from subject: CurrentValueSubject<[SaleItem]?, Never>, matching predicate: @escaping ([SaleItem]) -> Bool) async throws -> [SaleItem] {
+    private func waitForItems(from subject: CurrentValueSubject<[SaleItem]?, Never>, matching predicate: @escaping ([SaleItem]) -> Bool) async throws -> [SaleItem] {
         let ready = expectation(description: "Running catalog observer delivered expected items")
         var received: [SaleItem]?
         let observation = subject.compactMap { $0 }.filter(predicate).prefix(1).sink {

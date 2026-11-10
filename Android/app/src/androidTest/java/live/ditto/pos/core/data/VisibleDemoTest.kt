@@ -136,26 +136,26 @@ class VisibleDemoTest {
             root.refreshDittoPermissions()
             assertEquals(1, permissionRefreshes)
             assertTrue(root.uiState.value.isLoading)
-            val snapshots = Channel<AppState>(Channel.UNLIMITED)
+            val uiStates = Channel<AppState>(Channel.UNLIMITED)
             try {
                 assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, withTimeout(5_000) { root.configuration.first { it == AppConfigurationStateUseCase.AppConfigurationState.VALID } })
                 coroutineScope {
-                    var collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
+                    var collection = launch(Dispatchers.Main) { root.uiState.collect { uiStates.send(it) } }
                     try {
-                        snapshots.await { !it.isLoading && it.locations.isEmpty() }
+                        uiStates.await { !it.isLoading && it.locations.isEmpty() }
                         DemoSeeder(ditto).seedLocations()
-                        snapshots.await { it.locations.size == 7 && it.currentLocationName == "Ham's Burgers" }
+                        uiStates.await { it.locations.size == 7 && it.currentLocationName == "Ham's Burgers" }
                         collection.cancelAndJoin()
                         awaitObserverCount(0)
                         withTimeout(5_000) { while (!root.uiState.value.isLoading) yield() }
                         assertTrue(root.uiState.value.locations.isEmpty())
                         assertEquals("", root.uiState.value.currentLocationName)
                         assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
-                        while (snapshots.tryReceive().isSuccess) { }
+                        while (uiStates.tryReceive().isSuccess) { }
 
                         ditto.store.execute("UPDATE locations SET name = :name WHERE _id = :id", mapOf("name" to "Renamed location", "id" to id))
-                        collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
-                        val fresh = snapshots.await { !it.isLoading && it.currentLocationName == "Renamed location" }
+                        collection = launch(Dispatchers.Main) { root.uiState.collect { uiStates.send(it) } }
+                        val fresh = uiStates.await { !it.isLoading && it.currentLocationName == "Renamed location" }
                         assertEquals("Renamed location", fresh.locations.single { it.id == id }.name)
                         assertEquals(id, settings.locationId())
                         assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
@@ -163,11 +163,11 @@ class VisibleDemoTest {
                         collection.cancelAndJoin()
                         awaitObserverCount(0)
                         withTimeout(5_000) { while (!root.uiState.value.isLoading) yield() }
-                        while (snapshots.tryReceive().isSuccess) { }
+                        while (uiStates.tryReceive().isSuccess) { }
 
                         ditto.store.execute("DELETE FROM locations")
-                        collection = launch(Dispatchers.Main) { root.uiState.collect { snapshots.send(it) } }
-                        val empty = snapshots.await { !it.isLoading && it.locations.isEmpty() && it.currentLocationName.isEmpty() }
+                        collection = launch(Dispatchers.Main) { root.uiState.collect { uiStates.send(it) } }
+                        val empty = uiStates.await { !it.isLoading && it.locations.isEmpty() && it.currentLocationName.isEmpty() }
                         assertEquals(id, empty.currentLocationId)
                         assertEquals(id, settings.locationId())
                         assertEquals(AppConfigurationStateUseCase.AppConfigurationState.VALID, root.configuration.value)
@@ -177,7 +177,7 @@ class VisibleDemoTest {
                 }
             } finally {
                 withContext(Dispatchers.Main) { owner.viewModelStore.clear() }
-                snapshots.close()
+                uiStates.close()
                 groups.close()
             }
         }

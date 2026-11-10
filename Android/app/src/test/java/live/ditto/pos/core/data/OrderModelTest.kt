@@ -84,7 +84,7 @@ class OrderModelTest {
     }
 
     @Test
-    fun `line snapshot retains old catalog metadata after replacement`() {
+    fun `order line retains original catalog details after replacement`() {
         var catalog = SaleItem(DocumentID("coffee", "42"), "Original", "coffee", Price(199))
         val line = CartLineItem.from(catalog, qty = 3)
         catalog = catalog.copy(name = "Renamed", imageName = "tea", price = Price(999))
