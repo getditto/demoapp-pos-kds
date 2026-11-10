@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,19 +48,29 @@ fun DittoButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
             onClick,
             modifier.heightIn(min = DittoLayout.controlHeight),
             enabled = enabled,
-            shape = RoundedCornerShape(DittoLayout.radius),
+            shape = CircleShape,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        ) { Text(text, style = DittoTypography.action) }
+        ) { Text(text, style = DittoTypography.action, textAlign = TextAlign.Center) }
     } else {
         Button(
             onClick,
             modifier.heightIn(min = DittoLayout.controlHeight),
             enabled = enabled,
-            shape = RoundedCornerShape(DittoLayout.radius),
+            shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = DittoColors.actionFill, contentColor = DittoColors.onAction)
-        ) { Text(text, style = DittoTypography.action) }
+        ) { Text(text, style = DittoTypography.action, textAlign = TextAlign.Center) }
     }
+}
+
+@Composable
+fun DittoTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    TextButton(
+        onClick,
+        modifier.heightIn(min = DittoLayout.controlHeight),
+        enabled = enabled,
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+    ) { Text(text, style = DittoTypography.action, textAlign = TextAlign.Center) }
 }
 
 @Composable

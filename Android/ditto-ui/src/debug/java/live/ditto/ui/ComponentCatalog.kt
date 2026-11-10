@@ -29,6 +29,7 @@ fun ComponentCatalog(dark: Boolean = false) {
                 DittoButton("DISABLED", {}, enabled = false)
             }
             DittoButton("SECONDARY", {}, secondary = true)
+            DittoTextButton("TEXT ACTION", {})
             DittoField("Name", error = "Enter a name.") { BasicTextField(text, onValueChange = { text = it }) }
             DittoRow("Ditto Tools", onClick = {})
             DittoChoiceRow("Selected option", selected, { selected = !selected })
