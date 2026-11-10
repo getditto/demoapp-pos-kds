@@ -86,6 +86,9 @@ Collections:
 - **`sale_items`** — synced menu items, one document per item per location.
   Hand-curated demo data is seeded once on first launch via
   `INSERT INTO ... INITIAL DOCUMENTS (...)` (idempotent, peer-safe).
+  The optional `image` attachment is prepared for the image migration; current
+  menu seeding and display still use `imageName` until that cutover. Missing or
+  pending attachment files use a generic photo placeholder in the new renderer.
 
 - **`locations`** — one document per location.
 
