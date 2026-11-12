@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -26,7 +25,8 @@ fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, store: DittoStor
 
 @Composable
 internal fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
-    val image by loader.image.collectAsState()
+    // File arrival must redraw the placeholder without another document update.
+    val image = loader.image.collectAsState().value
     LaunchedEffect(loader, owner, reference?.id) { loader.update(reference, owner)?.join() }
     DisposableEffect(loader) { onDispose { loader.stop() } }
     DittoPhoto(if (loader.matches(reference)) image?.asImageBitmap() else null, modifier, contentScale, cornerRadius)

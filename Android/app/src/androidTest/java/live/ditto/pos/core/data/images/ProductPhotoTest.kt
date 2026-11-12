@@ -1,6 +1,8 @@
 package live.ditto.pos.core.data.images
 
 import android.graphics.Color
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -9,10 +11,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.Price
@@ -30,6 +38,31 @@ import java.util.concurrent.atomic.AtomicLong
 
 class ProductPhotoTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun completedAttachmentRendersWithoutAnotherParentUpdate() = runBlocking {
+        TestDitto.withInstance {
+            val id = DocumentID("coffee", "A")
+            val repository = catalog()
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 2))
+            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED, 63, 63), "image/png", ditto.store).use { imported ->
+                PhotoAttachments.replace(imported, id, ditto.store)
+                val reference = repository.observeLocationSaleItems(id.locationId).first { it.singleOrNull()?.image != null }.single().image
+                compose.setContent {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        ProductPhoto(reference, id, ditto.store, Modifier.size(56.dp).testTag("photo"))
+                    }
+                }
+                compose.waitUntil(5_000) {
+                    val pixels = compose.onNodeWithTag("photo").captureToImage().toPixelMap()
+                    val pixel = pixels[pixels.width / 2, pixels.height / 2]
+                    pixel.red > 0.99f && pixel.green < 0.01f && pixel.blue < 0.01f
+                }
+                val pixels = compose.onNodeWithTag("photo").captureToImage().toPixelMap()
+                assertEquals(androidx.compose.ui.graphics.Color.Red, pixels[pixels.width / 2, pixels.height / 2])
+            }
+        }
+    }
 
     @Test
     fun observedCatalogDrivesPhotoViewReplacementReuseRemovalAndVisibility() = runBlocking {
