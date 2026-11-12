@@ -2,8 +2,10 @@ package live.ditto.pos.core.data.images
 
 import com.ditto.kotlin.DittoAttachment
 import com.ditto.kotlin.DittoStore
+import com.ditto.kotlin.DittoTransaction
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.orders.dqlIdentifier
 import java.io.ByteArrayInputStream
 
 object PhotoAttachments {
@@ -39,6 +41,18 @@ object PhotoAttachments {
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf("id" to id.id, "locationId" to id.locationId)
+        )
+    }
+
+    suspend fun copy(reference: PhotoReference, orderId: DocumentID, lineItemId: String, transaction: DittoTransaction) {
+        val line = dqlIdentifier(lineItemId)
+        transaction.execute(
+            """
+                UPDATE COLLECTION pos_orders (cart MAP($line MAP(image ATTACHMENT)))
+                SET cart.$line.image = :image
+                WHERE _id.id = :id AND _id.locationId = :locationId
+            """.trimIndent(),
+            mapOf("image" to reference.token(), "id" to orderId.id, "locationId" to orderId.locationId)
         )
     }
 }

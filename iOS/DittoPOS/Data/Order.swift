@@ -55,7 +55,12 @@ extension Order {
 extension Order {
     func addingCartLineItem(_ lineItem: CartLineItem, lineItemId: String) -> Order {
         var copy = self
-        copy.cart[lineItemId] = lineItem
+        if var recorded = copy.cart[lineItemId] {
+            recorded.qty = lineItem.qty
+            copy.cart[lineItemId] = recorded
+        } else {
+            copy.cart[lineItemId] = lineItem
+        }
         let entry = StatusLogDerivation.entry(.inProcess)
         copy.statusLog[entry.timestamp] = entry.status
         return copy

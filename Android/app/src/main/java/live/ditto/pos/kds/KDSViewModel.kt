@@ -59,11 +59,7 @@ constructor(
         viewModelScope.launch(dispatcherIo) {
             val order = latestOrders.firstOrNull { it.documentId.id == orderId } ?: return@launch
             val nextStatus = KitchenOrders.nextStatus(order.status) ?: return@launch
-            ordersRepository.upsert(order.appendingStatus(nextStatus))
-
-            if (nextStatus == OrderStatus.PROCESSED && appSettings.currentOrderId() == order.documentId.id) {
-                appSettings.setCurrentOrderId("")
-            }
+            ordersRepository.updateStatus(nextStatus, order.documentId)
         }
     }
 

@@ -35,4 +35,16 @@ enum PhotoAttachments {
             arguments: ["id": id.id, "locationId": id.locationId]
         )
     }
+
+    static func copy(_ reference: PhotoReference, to orderId: DocumentID, lineItemId: String, executor: any DittoQueryExecuting & Sendable) async throws {
+        let line = dqlIdentifier(lineItemId)
+        try await executor.execute(
+            query: """
+                UPDATE COLLECTION pos_orders (cart MAP(\(line) MAP(image ATTACHMENT)))
+                SET cart.\(line).image = :image
+                WHERE _id.id = :id AND _id.locationId = :locationId
+                """,
+            arguments: ["image": reference.token, "id": orderId.id, "locationId": orderId.locationId]
+        )
+    }
 }

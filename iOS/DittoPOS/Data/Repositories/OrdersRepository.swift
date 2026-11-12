@@ -94,10 +94,7 @@ import Foundation
     // MARK: Mutations
 
     func add(order: Order) async throws {
-        try await Self.execute(
-            store: store,
-            query: "INSERT INTO \(Order.collectionName) DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
-            args: ["json": try order.dittoJSONString()])
+        try await OrderCommands.upsert(order, store: store)
     }
 
     func add(item: CartLineItem, lineItemId: String, to order: Order) {
@@ -105,26 +102,18 @@ import Foundation
     }
 
     func updateStatus(of order: Order, with status: OrderStatus) {
-        upsert(order: order.appendingStatus(status))
+        let store = store
+        Task { try! await OrderCommands.updateStatus(status, of: order.documentId, executor: store) }
     }
 
     func addPayment(_ payment: Payment, paymentId: String, to order: Order) {
-        upsert(order: order.addingPayment(payment, paymentId: paymentId))
+        let store = store
+        Task { try! await OrderCommands.addPayment(payment, paymentId: paymentId, to: order.documentId, executor: store) }
     }
 
     func clearCart(of order: Order) {
-        guard !order.cart.isEmpty else { return }
-        // App-generated UUID paths need quoted identifiers, not DQL value arguments.
-        // https://docs.ditto.live/dql/update
-        let unsetList = order.cart.keys.map { "cart.`\($0)`" }.joined(separator: ", ")
-        execute(
-            """
-            UPDATE \(Order.collectionName)
-            UNSET \(unsetList)
-            WHERE _id.id = :id AND _id.locationId = :locationId
-            """,
-            args: ["id": order.documentId.id, "locationId": order.documentId.locationId]
-        )
+        let store = store
+        Task { try! await OrderCommands.clearCart(of: order, executor: store) }
     }
 
     // MARK: Eviction
@@ -158,26 +147,7 @@ import Foundation
     // MARK: Helpers
 
     private func upsert(order: Order) {
-        let json = try! order.dittoJSONString()
-        execute(
-            """
-            INSERT INTO \(Order.collectionName)
-            DOCUMENTS (deserialize_json(:json))
-            ON ID CONFLICT DO UPDATE_LOCAL_DIFF
-            """,
-            args: ["json": json]
-        )
-    }
-
-    private func execute(_ query: String, args: [String: String] = [:]) {
         let store = store
-        Task {
-            try! await Self.execute(store: store, query: query, args: args)
-        }
-    }
-
-    private nonisolated static func execute(store: DittoStore, query: String, args: [String: String]) async throws {
-        let arguments: [String: Any?] = args.mapValues { $0 }
-        _ = try await store.execute(query: query, arguments: arguments)
+        Task { try! await OrderCommands.upsert(order, store: store) }
     }
 }
