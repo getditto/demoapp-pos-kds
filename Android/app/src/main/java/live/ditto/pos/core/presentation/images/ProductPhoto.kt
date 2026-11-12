@@ -21,8 +21,13 @@ import live.ditto.ui.DittoPhoto
 fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, store: DittoStore, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
     val scope = rememberCoroutineScope()
     val loader = remember(store) { PhotoLoader.from(store, scope) }
+    ProductPhoto(reference, owner, loader, modifier, contentScale, cornerRadius)
+}
+
+@Composable
+internal fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
     val image by loader.image.collectAsState()
-    LaunchedEffect(owner, reference?.id) { loader.update(reference, owner)?.join() }
+    LaunchedEffect(loader, owner, reference?.id) { loader.update(reference, owner)?.join() }
     DisposableEffect(loader) { onDispose { loader.stop() } }
     DittoPhoto(if (loader.matches(reference)) image?.asImageBitmap() else null, modifier, contentScale, cornerRadius)
 }
