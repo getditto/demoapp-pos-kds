@@ -8,8 +8,7 @@
 
 import SwiftUI
 
-/// Sale item cell size and grid columns, by horizontal size class.
-enum POSGridMetrics {
+enum POSGridLayout {
     static func itemSide(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
         sizeClass == .compact ? 100 : 160
     }
@@ -47,7 +46,6 @@ struct POSView: View {
                     POSGridView()
                 } order: {
                     POSOrderView()
-                        .padding(8)
                 }
             }
         }

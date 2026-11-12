@@ -83,12 +83,12 @@ class OrderStoreRegressionTest {
             insert(original.copy(documentId = DocumentID("older", "42"), createdAt = Instant.parse("2026-03-31T23:59:59.999Z")))
             val repository = repository()
             coroutineScope {
-                val snapshots = Channel<List<Order>>(Channel.UNLIMITED)
+                val observedOrders = Channel<List<Order>>(Channel.UNLIMITED)
                 val selected = Channel<Order?>(Channel.UNLIMITED)
                 val other = Channel<Order?>(Channel.UNLIMITED)
                 val adjacent = Channel<Order?>(Channel.UNLIMITED)
                 val collection = launch {
-                    repository.observeLocationOrders("42").collect { snapshots.send(it) }
+                    repository.observeLocationOrders("42").collect { observedOrders.send(it) }
                 }
                 val selectedCollection = launch { repository.observeOrder(original.documentId).collect { selected.send(it) } }
                 val otherCollection = launch { repository.observeOrder(foreign.documentId).collect { other.send(it) } }
@@ -97,7 +97,7 @@ class OrderStoreRegressionTest {
                     assertEquals(original, withTimeout(5_000) { selected.receive() })
                     assertEquals(foreign, withTimeout(5_000) { other.receive() })
                     assertEquals(neighbor, withTimeout(5_000) { adjacent.receive() })
-                    val initial = withTimeout(5_000) { snapshots.receive() }
+                    val initial = withTimeout(5_000) { observedOrders.receive() }
                     assertEquals(setOf(original.documentId.id, "midnight", "older"), initial.map { it.documentId.id }.toSet())
                     assertEquals(setOf("42"), initial.map { it.documentId.locationId }.toSet())
                     val updatedAt = Instant.parse("2026-04-01T13:00:00.123Z")
@@ -106,7 +106,7 @@ class OrderStoreRegressionTest {
                         "UPDATE pos_orders SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
                         mapOf("date" to updatedAt.toDittoIsoString(), "id" to original.documentId.id, "locationId" to "42")
                     )
-                    val updated = withTimeout(5_000) { snapshots.receive() }
+                    val updated = withTimeout(5_000) { observedOrders.receive() }
                     assertEquals(original.copy(createdAt = updatedAt), updated.single { it.documentId == original.documentId })
                     assertEquals(original.copy(createdAt = updatedAt), withTimeout(5_000) { selected.receive() })
                     assertEquals(initial.filter { it.documentId != original.documentId }.toSet(), updated.filter { it.documentId != original.documentId }.toSet())
@@ -121,7 +121,7 @@ class OrderStoreRegressionTest {
                     selectedCollection.cancelAndJoin()
                     otherCollection.cancelAndJoin()
                     adjacentCollection.cancelAndJoin()
-                    snapshots.close()
+                    observedOrders.close()
                     selected.close()
                     other.close()
                     adjacent.close()

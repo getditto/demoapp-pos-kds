@@ -18,6 +18,8 @@ import live.ditto.pos.core.domain.usecase.GetCurrentLocationUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetDittoInstanceUseCase
 import live.ditto.pos.core.domain.usecase.ditto.GetMissingPermissionsUseCase
 import live.ditto.pos.core.domain.usecase.ditto.RefreshDittoPermissionsUseCase
+import live.ditto.pos.settings.AppAppearance
+import live.ditto.pos.settings.AppSettings
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,7 +29,8 @@ class MainViewModel internal constructor(
     appConfigurationStateUseCase: AppConfigurationStateUseCase,
     getCurrentLocationUseCase: GetCurrentLocationUseCase,
     private val getMissingPermissions: () -> Array<String>,
-    private val locationsRepository: LocationsRepository
+    private val locationsRepository: LocationsRepository,
+    private val settings: AppSettings
 ) : ViewModel() {
     @Inject constructor(
         refreshDittoPermissionsUseCase: RefreshDittoPermissionsUseCase,
@@ -35,15 +38,23 @@ class MainViewModel internal constructor(
         appConfigurationStateUseCase: AppConfigurationStateUseCase,
         getCurrentLocationUseCase: GetCurrentLocationUseCase,
         getMissingPermissionsUseCase: GetMissingPermissionsUseCase,
-        locationsRepository: LocationsRepository
+        locationsRepository: LocationsRepository,
+        settings: AppSettings
     ) : this(
         refreshDittoPermissionsUseCase::invoke,
         getDittoInstanceUseCase::invoke,
         appConfigurationStateUseCase,
         getCurrentLocationUseCase,
         getMissingPermissionsUseCase::invoke,
-        locationsRepository
+        locationsRepository,
+        settings
     )
+
+    val appearance = settings.appearanceFlow().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun setAppearance(appearance: AppAppearance) {
+        viewModelScope.launch { settings.setAppearance(appearance) }
+    }
 
     val configuration = appConfigurationStateUseCase().stateIn(
         viewModelScope,
@@ -53,9 +64,10 @@ class MainViewModel internal constructor(
 
     val uiState = combine(
         getCurrentLocationUseCase(),
-        locationsRepository.observeAllLocations()
-    ) { location, locations ->
-        AppState(location?.name.orEmpty(), locations.orEmpty(), isLoading = locations == null)
+        locationsRepository.observeAllLocations(),
+        settings.locationIdFlow()
+    ) { location, locations, locationId ->
+        AppState(location?.name.orEmpty(), locations.orEmpty(), isLoading = locations == null, currentLocationId = locationId)
     }.flowOn(Dispatchers.IO).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
@@ -72,9 +84,10 @@ class MainViewModel internal constructor(
 
     fun requireDitto(): Ditto = getDittoInstance()
 
-    fun updateCurrentLocation(locationId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            locationsRepository.setActiveLocation(locationId = locationId)
+    fun updateCurrentLocation(locationId: String, onSelected: () -> Unit = {}) {
+        viewModelScope.launch {
+            if (settings.locationId() != locationId) locationsRepository.setActiveLocation(locationId = locationId)
+            onSelected()
         }
     }
 }
@@ -82,5 +95,6 @@ class MainViewModel internal constructor(
 data class AppState(
     val currentLocationName: String,
     val locations: List<Location>,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val currentLocationId: String = ""
 )

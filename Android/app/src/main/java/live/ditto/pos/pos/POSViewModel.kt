@@ -45,7 +45,6 @@ constructor(
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
-    // Latest snapshots, so mutation handlers don't re-collect the flows.
     private var latestOrder: Order? = null
     private var latestSaleItems: List<SaleItem> = emptyList()
 

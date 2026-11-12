@@ -1,49 +1,29 @@
 package live.ditto.pos.core.presentation.composables.navigation
 
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import live.ditto.pos.core.presentation.navigation.BottomNavItem
+import live.ditto.ui.DittoIcon
 
 @Composable
-fun PosKdsNavigationBar(
-    onItemClick: (bottomNavItem: BottomNavItem) -> Unit
-) {
-    val bottomNavItems = listOf(
-        BottomNavItem.PointOfSale,
-        BottomNavItem.KitchenDisplay,
-        BottomNavItem.DemoLocationSelection
-    )
-
-    NavigationBar {
-        bottomNavItems.forEach { item ->
+fun PosKdsNavigationBar(selectedRoute: String?, onItemClick: (BottomNavItem) -> Unit) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+        listOf(BottomNavItem.PointOfSale, BottomNavItem.KitchenDisplay, BottomNavItem.Settings).forEach { item ->
             NavigationBarItem(
-                selected = false,
-                onClick = {
-                    onItemClick(item)
-                },
-                icon = {
-                    Icon(
-                        imageVector = item.selectedIcon,
-                        contentDescription = stringResource(id = item.label)
-                    )
-                },
-                label = {
-                    Text(text = stringResource(id = item.label))
-                }
+                selected = selectedRoute == item.route || (item == BottomNavItem.Settings && selectedRoute?.startsWith("settings/") == true),
+                onClick = { onItemClick(item) },
+                icon = { DittoIcon(item.icon) },
+                label = { Text(item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
+                )
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun PosKdsNavigationBarPreview() {
-    PosKdsNavigationBar(
-        onItemClick = { }
-    )
 }

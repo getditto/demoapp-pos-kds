@@ -27,6 +27,7 @@ class AppSettings internal constructor(
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
         private val locationIdKey = stringPreferencesKey("location_id")
         private val currentOrderId = stringPreferencesKey("current_order_id")
+        private val appearanceKey = stringPreferencesKey("appearance")
     }
 
     suspend fun locationId(): String = getStringPreference(locationIdKey)
@@ -44,6 +45,16 @@ class AppSettings internal constructor(
 
     suspend fun setCurrentOrderId(orderId: String) {
         setPreferences(currentOrderId, orderId)
+    }
+
+    fun appearanceFlow(): Flow<AppAppearance> = store.data
+        .map { preferences ->
+            AppAppearance.entries.firstOrNull { it.name == preferences[appearanceKey] } ?: AppAppearance.SYSTEM
+        }
+        .distinctUntilChanged()
+
+    suspend fun setAppearance(appearance: AppAppearance) {
+        setPreferences(appearanceKey, appearance.name)
     }
 
     private suspend fun getStringPreference(

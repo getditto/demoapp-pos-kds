@@ -55,6 +55,9 @@
                ReferencedContainer = "container:DittoPOS.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference skipped="NO" parallelizable="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="C1331000000000000000D002" BuildableName="DittoUIPresentationTests.xctest" BlueprintName="DittoUIPresentationTests" ReferencedContainer="container:DittoPOS.xcodeproj" />
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

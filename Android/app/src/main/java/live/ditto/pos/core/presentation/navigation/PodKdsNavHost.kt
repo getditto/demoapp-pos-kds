@@ -1,41 +1,61 @@
 package live.ditto.pos.core.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.ditto.tools.toolsviewer.DittoToolsViewer
-import live.ditto.pos.core.presentation.composables.screens.DemoLocationSelectionScreen
-import live.ditto.pos.core.presentation.viewmodel.MainViewModel
-import live.ditto.pos.kds.presentation.composables.KdsScreen
-import live.ditto.pos.pos.presentation.composables.screens.PosScreen
+import live.ditto.pos.core.presentation.composables.DemoLocationsList
+import live.ditto.pos.settings.AppAppearance
+import live.ditto.pos.settings.presentation.SettingsScreen
 
 @Composable
 fun PosKdsNavHost(
     navHostController: NavHostController,
-    viewModel: MainViewModel = hiltViewModel()
+    state: live.ditto.pos.core.presentation.viewmodel.AppState,
+    appearance: AppAppearance,
+    version: String,
+    build: String,
+    sdkVersion: String,
+    onAppearance: (AppAppearance) -> Unit,
+    onLocation: (String, () -> Unit) -> Unit,
+    pos: @Composable () -> Unit,
+    kds: @Composable () -> Unit,
+    tools: @Composable (() -> Unit) -> Unit,
+    startDestination: String
 ) {
-    NavHost(
-        navController = navHostController,
-        startDestination = BottomNavItem.PointOfSale.route
-    ) {
-        composable(BottomNavItem.PointOfSale.route) {
-            PosScreen()
-        }
-        composable(BottomNavItem.KitchenDisplay.route) {
-            KdsScreen()
-        }
-        composable(BottomNavItem.DemoLocationSelection.route) {
-            DemoLocationSelectionScreen(
-                navHostController = navHostController
+    NavHost(navController = navHostController, startDestination = startDestination) {
+        composable(BottomNavItem.PointOfSale.route) { pos() }
+        composable(BottomNavItem.KitchenDisplay.route) { kds() }
+        composable(BottomNavItem.Settings.route) {
+            SettingsScreen(
+                location = state.currentLocationName,
+                appearance = appearance,
+                version = version,
+                build = build,
+                sdkVersion = sdkVersion,
+                onAppearance = onAppearance,
+                onLocation = { navHostController.navigate("settings/locations") },
+                onTools = { navHostController.navigate("settings/tools") }
             )
         }
-        composable(NavigationDrawerItem.DittoToolsDrawerItem.route) {
-            DittoToolsViewer(
-                ditto = viewModel.requireDitto(),
-                onExitTools = { navHostController.popBackStack() }
-            )
+        composable("settings/locations") {
+            DemoLocationsList(state.locations, onDemoLocationSelected = { location ->
+                val changed = location.id != state.currentLocationId
+                onLocation(location.id) {
+                    navHostController.popBackStack()
+                    if (changed) {
+                        navHostController.navigate(BottomNavItem.PointOfSale.route) {
+                            popUpTo(navHostController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            })
+        }
+        composable("settings/tools") {
+            tools { navHostController.popBackStack() }
         }
     }
 }

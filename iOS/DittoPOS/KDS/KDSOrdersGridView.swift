@@ -5,6 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
+import DittoUI
 import SwiftUI
 
 struct KDSOrdersGridView: View {
@@ -38,24 +39,13 @@ struct KDSOrdersGridView: View {
                 }
             }
         }
-        .background(.background)
-        .toolbarBackground(colorScheme == .dark ? .black : .white, for: .navigationBar)
+        .background(DittoColors.background)
         .onAppear { viewModel.setVisible(isActive) }
         .onChange(of: isActive) { viewModel.setVisible($0) }
         .onDisappear { viewModel.setVisible(false) }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "tray")
-                .font(.system(size: 56))
-                .foregroundStyle(.secondary)
-            Text("No active orders")
-                .font(.title3.weight(.semibold))
-            Text("Orders entered in POS will appear here.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        DittoEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
     }
 }

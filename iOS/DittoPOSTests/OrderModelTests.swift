@@ -85,7 +85,7 @@ final class OrderModelTests: XCTestCase {
         XCTAssertTrue(order.appendingStatus(.canceled).isPaid)
     }
 
-    func testLineSnapshotRetainsOriginalMetadataAfterCatalogReplacement() {
+    func testOrderLineRetainsOriginalDetailsAfterCatalogReplacement() {
         var catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Original", imageName: "coffee", cents: 199)
         let line = CartLineItem(from: catalog, qty: 3)
         catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Renamed", imageName: "tea", cents: 999)

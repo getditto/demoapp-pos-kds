@@ -1,105 +1,30 @@
 package live.ditto.pos.pos.presentation.composables
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
-import live.ditto.pos.ui.theme.PayButtonContainerColor
-import live.ditto.pos.ui.theme.PayButtonContentColor
+import live.ditto.ui.DittoButton
+import live.ditto.ui.DittoLayout
+import live.ditto.ui.DittoTextButton
 
 @Composable
-fun CheckoutSection(
-    orderTotal: String,
-    isPayButtonEnabled: Boolean,
-    onPayButtonClicked: () -> Unit,
-    onCancelButtonClicked: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = stringResource(R.string.label_total))
-            Text(text = orderTotal)
+fun CheckoutSection(orderTotal: String, isPayButtonEnabled: Boolean, onPayButtonClicked: () -> Unit, onCancelButtonClicked: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(DittoLayout.padding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        FlowRow(Modifier.fillMaxWidth().heightIn(min = 40.dp), horizontalArrangement = Arrangement.spacedBy(DittoLayout.gap)) {
+            Text(stringResource(R.string.label_total))
+            Text(orderTotal, Modifier.weight(1f), textAlign = TextAlign.End)
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            CancelButton(
-                enabled = isPayButtonEnabled,
-                onCancelButtonClicked = onCancelButtonClicked
-            )
-            Button(
-                enabled = isPayButtonEnabled,
-                onClick = { onPayButtonClicked() },
-                shape = RoundedCornerShape(4.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PayButtonContainerColor,
-                    contentColor = PayButtonContentColor
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = stringResource(R.string.button_pay))
-            }
-        }
+        DittoButton("${stringResource(R.string.button_pay).uppercase()} $orderTotal", onPayButtonClicked, Modifier.fillMaxWidth(), enabled = isPayButtonEnabled)
+        DittoTextButton("CLEAR CART", onCancelButtonClicked, Modifier.fillMaxWidth(), enabled = isPayButtonEnabled)
     }
-}
-
-@Composable
-private fun CancelButton(
-    enabled: Boolean,
-    onCancelButtonClicked: () -> Unit
-) {
-    val colorFilter = if (enabled) {
-        ColorFilter.tint(Color.Red)
-    } else {
-        ColorFilter.tint(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f))
-    }
-    IconButton(
-        enabled = enabled,
-        onClick = { onCancelButtonClicked() }
-    ) {
-        Image(
-            imageVector = Icons.Filled.Cancel,
-            contentDescription = stringResource(R.string.button_cancel_order),
-            colorFilter = colorFilter,
-            modifier = Modifier
-                .width(48.dp)
-                .height(48.dp)
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CheckoutSectionPreview() {
-    CheckoutSection(
-        orderTotal = "$13.37",
-        isPayButtonEnabled = true,
-        onPayButtonClicked = {},
-        onCancelButtonClicked = {}
-    )
 }

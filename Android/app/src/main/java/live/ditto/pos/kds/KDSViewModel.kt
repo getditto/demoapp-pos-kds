@@ -40,7 +40,6 @@ constructor(
         private const val OUTPUT_DATE_FORMAT = "h:mm a"
     }
 
-    // Status actions reuse the UI snapshot instead of opening another observer.
     private var latestOrders: List<Order> = emptyList()
 
     val uiState: StateFlow<KdsUiState> = appSettings.locationIdFlow()
