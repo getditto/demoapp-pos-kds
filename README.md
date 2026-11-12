@@ -78,6 +78,16 @@ the running app.
 <img src="docs/screenshots/settings/ios-phone-light.png" width="260" alt="Native iOS Settings presentation" />
 <img src="docs/screenshots/settings/android-phone-light.png" width="260" alt="Native Android Settings presentation" />
 
+## Kitchen display
+
+Phones show full-width tickets. Tablets separate Preparing and Ready into two
+columns, with a bounded empty state only when the other stage has tickets.
+Use **Mark ready** and **Complete order** to advance tickets; payment is shown
+separately and does not gate the kitchen workflow.
+
+<img src="docs/screenshots/kds/kds-after-ios-phone-light-active.png" width="260" alt="iOS kitchen tickets and stage actions" />
+<img src="docs/screenshots/kds/kds-after-android-phone-light-active.png" width="260" alt="Android kitchen tickets and stage actions" />
+
 ## Native UI libraries
 
 `iOS/DittoUI` is a local Swift package; `Android/ditto-ui` is a Compose library.
@@ -148,13 +158,14 @@ A new order is created when you select a location or pay an existing one,
 starting with status `open`. Adding the first item moves it to `inProcess`
 and it becomes visible in the KDS view across the mesh.
 
-In KDS, tap an `inProcess` (blue) order to advance it to `processed` (green).
-Tap a `processed` order to mark it `delivered`, which removes it from the
-view. A double-dollar-sign on the order border indicates payment.
+In KDS, use **Mark ready** to move a Preparing (`inProcess`) order to Ready (`processed`).
+Use **Complete order** to mark it `delivered` and remove it from the kitchen
+view. Each ticket shows Paid or Unpaid; unpaid orders can still move through
+the kitchen. Empty orders are hidden.
 
 Because the KDS view shows every device's orders for the current location,
 multiple peers running the same demo concurrently will each see the others'
-orders. Order status changes by tap from any device.
+orders. Any device can advance a ticket using its stage action.
 
 ### "Paid" check
 

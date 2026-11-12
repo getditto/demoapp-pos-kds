@@ -34,18 +34,12 @@ fun ComponentCatalog(dark: Boolean = false) {
             DittoRow("Ditto Tools", onClick = {})
             DittoChoiceRow("Selected option", selected, { selected = !selected })
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                DittoWell(Modifier.weight(1f)) { DittoEmptyState("No orders preparing", "New orders will appear here.", R.drawable.phosphor_cooking_pot) }
-                DittoSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = DittoTypography.action)
-                    Text("2 × Burger")
-                }
+                DittoWell(Modifier.weight(1f)) { Text("No orders preparing") }
+                DittoTicket("#32B9A42D", listOf("2 × Burger"), true, "2 min ago", true, {}, Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                DittoSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = DittoTypography.action)
-                    Text("2 × Burger")
-                }
-                DittoWell(Modifier.weight(1f)) { DittoEmptyState("No orders ready", "Completed orders will appear here.", R.drawable.phosphor_cooking_pot) }
+                DittoTicket("#32B9A42D", listOf("2 × Burger"), false, "2 min ago", false, {}, Modifier.weight(1f))
+                DittoWell(Modifier.weight(1f)) { Text("No orders ready") }
             }
         }
     }

@@ -15,6 +15,7 @@ public enum BrandResources {
 public enum DittoTypography {
     public static var pageTitle: Font { font("ChakraPetch-Regular", size: 34, relativeTo: .largeTitle) }
     public static var body: Font { font("Geist-Regular", size: 17, relativeTo: .body) }
+    public static var title: Font { font("Geist-Regular", size: 22, relativeTo: .title2).weight(.medium) }
     public static var heading: Font { font("Geist-Regular", size: 20, relativeTo: .title3) }
     public static var caption: Font { font("Geist-Regular", size: 12, relativeTo: .caption) }
     public static var footnote: Font { font("Geist-Regular", size: 13, relativeTo: .footnote) }

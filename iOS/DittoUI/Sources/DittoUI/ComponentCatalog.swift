@@ -19,14 +19,14 @@ public struct DittoComponentCatalog: View {
                     DittoField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
                     DittoRow("Ditto Tools") { DittoIcon("caret-right") }
                     DittoChoiceRow("Selected option", selected: selected) { selected.toggle() }
-                    HStack(alignment: .top, spacing: 16) {
-                        DittoWell { DittoEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
-                        DittoSurface { Text("#32B9A42D").font(DittoTypography.action); Text("2 × Burger") }
-                    }.frame(minHeight: 260)
-                    HStack(alignment: .top, spacing: 16) {
-                        DittoSurface { Text("#32B9A42D").font(DittoTypography.action); Text("2 × Burger") }
-                        DittoWell { DittoEmptyState("No orders ready", message: "Completed orders will appear here.", icon: "cooking-pot") }
-                    }.frame(minHeight: 260)
+                    HStack(alignment: .top, spacing: 24) {
+                        DittoWell { Text("No orders preparing").foregroundStyle(DittoColors.secondaryText) }
+                        DittoTicket(title: "#32B9A42D", lines: ["2 × Burger"], isPaid: true, elapsed: "2 min ago", isReady: true) {}
+                    }
+                    HStack(alignment: .top, spacing: 24) {
+                        DittoTicket(title: "#32B9A42D", lines: ["2 × Burger"], isPaid: false, elapsed: "2 min ago", isReady: false) {}
+                        DittoWell { Text("No orders ready").foregroundStyle(DittoColors.secondaryText) }
+                    }
                 }.padding(DittoLayout.padding)
             }
         }

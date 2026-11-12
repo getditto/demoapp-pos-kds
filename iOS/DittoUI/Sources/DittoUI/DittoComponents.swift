@@ -141,12 +141,15 @@ public struct DittoEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    public init(_ title: String, message: String, icon: String) { self.title = title; self.message = message; self.icon = icon }
+    private let prominent: Bool
+    public init(_ title: String, message: String, icon: String, prominent: Bool = false) {
+        self.title = title; self.message = message; self.icon = icon; self.prominent = prominent
+    }
     public var body: some View {
         VStack(spacing: 12) {
-            DittoIcon(icon, size: 56).foregroundStyle(DittoColors.secondaryText)
-            Text(title).font(DittoTypography.heading)
-            Text(message).font(DittoTypography.caption).foregroundStyle(DittoColors.secondaryText)
+            DittoIcon(icon, size: prominent ? 40 : 56).foregroundStyle(prominent ? DittoColors.success : DittoColors.secondaryText)
+            Text(title).font(prominent ? DittoTypography.title : DittoTypography.heading)
+            Text(message).font(prominent ? DittoTypography.body : DittoTypography.caption).foregroundStyle(DittoColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -157,8 +160,8 @@ public struct DittoWell<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.frame(maxWidth: .infinity, minHeight: 240)
-            .background(DittoColors.disabled.opacity(0.4), in: RoundedRectangle(cornerRadius: DittoLayout.radius))
-            .overlay(RoundedRectangle(cornerRadius: DittoLayout.radius).strokeBorder(DittoColors.border, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+        content.padding(24).frame(maxWidth: .infinity, minHeight: 160)
+            .background(DittoColors.background, in: RoundedRectangle(cornerRadius: DittoLayout.radius))
+            .overlay(RoundedRectangle(cornerRadius: DittoLayout.radius).strokeBorder(DittoColors.subtleBorder))
     }
 }

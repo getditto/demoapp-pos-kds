@@ -6,6 +6,8 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -17,7 +19,18 @@ import androidx.compose.ui.unit.sp
 object DittoColors {
     val actionFill = Color(0xFFE7EE00)
     val onAction = Color.Black
+    val success: Color
+        @Composable get() = LocalStatusColors.current.success
+    val brandText: Color
+        @Composable get() = LocalStatusColors.current.brandText
+    val subtleBorder: Color
+        @Composable get() = LocalStatusColors.current.border
 }
+
+private data class StatusColors(val success: Color, val brandText: Color, val border: Color)
+private val lightStatus = StatusColors(Color(0xFF007A50), Color(0xFF6C7000), Color(0xFFE5E5E5))
+private val darkStatus = StatusColors(Color(0xFF6EE7B7), Color(0xFFECF238), Color(0xFF525252))
+private val LocalStatusColors = staticCompositionLocalOf { lightStatus }
 
 object DittoLayout {
     val gap = 8.dp
@@ -75,5 +88,7 @@ private val darkColors = darkColorScheme(
 
 @Composable
 fun DittoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (darkTheme) darkColors else lightColors, typography = DittoTypography.styles, content = content)
+    CompositionLocalProvider(LocalStatusColors provides if (darkTheme) darkStatus else lightStatus) {
+        MaterialTheme(colorScheme = if (darkTheme) darkColors else lightColors, typography = DittoTypography.styles, content = content)
+    }
 }
