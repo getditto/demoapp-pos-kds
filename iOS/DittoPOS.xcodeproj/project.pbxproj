@@ -81,7 +81,9 @@
 		C1340000000000000000B001 /* VisibleObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A001 /* VisibleObservation.swift */; };
 		C1340000000000000000C001 /* VisibleObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A001 /* VisibleObservation.swift */; };
 		C1340000000000000000B002 /* SaleItemCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A002 /* SaleItemCommands.swift */; };
+		C1510000000000000000B001 /* OrderCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1510000000000000000A001 /* OrderCommands.swift */; };
 		C1340000000000000000C002 /* SaleItemCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1340000000000000000A002 /* SaleItemCommands.swift */; };
+		C1510000000000000000C001 /* OrderCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1510000000000000000A001 /* OrderCommands.swift */; };
 		C1340000000000000000D001 /* SaleItemsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFACE01000000000000A002 /* SaleItemsRepository.swift */; };
 		C1340000000000000000D002 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DECF142A3CCAB6005BC2AE /* POSViewModel.swift */; };
 		C1340000000000000000D003 /* KDSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1460E33C2A93DCC8007A2A6D /* KDSViewModel.swift */; };
@@ -148,7 +150,9 @@
 		E92195261798ADE12A99B563 /* PhotoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91028803BF5FF31B2835B62 /* PhotoLoader.swift */; };
 		4275D46CB60CB0B89A56D628 /* PhotoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91028803BF5FF31B2835B62 /* PhotoLoader.swift */; };
 		51CD2A7A015BE39F4026DA5D /* ProductPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */; };
+		C1510000000000000000B002 /* OrderLinePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1510000000000000000A002 /* OrderLinePhotoView.swift */; };
 		662BD72B047402C398F398B2 /* ProductPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */; };
+		C1510000000000000000C002 /* OrderLinePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1510000000000000000A002 /* OrderLinePhotoView.swift */; };
 		C1490000000000000000B100 /* burger.png in Resources */ = {isa = PBXBuildFile; fileRef = C1490000000000000000A100 /* burger.png */; };
 /* End PBXBuildFile section */
 
@@ -206,6 +210,7 @@
 		C1460000000000000000A100 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../Tests/Fixtures; sourceTree = SOURCE_ROOT; };
 		C1340000000000000000A001 /* VisibleObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisibleObservation.swift; sourceTree = "<group>"; };
 		C1340000000000000000A002 /* SaleItemCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaleItemCommands.swift; sourceTree = "<group>"; };
+		C1510000000000000000A001 /* OrderCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderCommands.swift; sourceTree = "<group>"; };
 		C1330000000000000000A003 /* AppAppearance.swift */ ={
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -241,6 +246,7 @@
 		A362A43A72A2E28E39ADA022 /* PhotoPreparation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoPreparation.swift; path = PhotoPreparation.swift; sourceTree = "<group>"; };
 		F91028803BF5FF31B2835B62 /* PhotoLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoLoader.swift; path = PhotoLoader.swift; sourceTree = "<group>"; };
 		09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProductPhotoView.swift; path = ProductPhotoView.swift; sourceTree = "<group>"; };
+		C1510000000000000000A002 /* OrderLinePhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OrderLinePhotoView.swift; path = OrderLinePhotoView.swift; sourceTree = "<group>"; };
 		C1490000000000000000A100 /* burger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = burger.png; path = DittoPOS/Assets.xcassets/burger.imageset/burger.png; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -412,6 +418,7 @@
 				14DECF052A3A68B0005BC2AE /* Location.swift */,
 				14DECF162A3CFF7D005BC2AE /* SaleItem.swift */,
 				C1340000000000000000A002 /* SaleItemCommands.swift */,
+				C1510000000000000000A001 /* OrderCommands.swift */,
 				C1340000000000000000A001 /* VisibleObservation.swift */,
 				14DECF072A3A7F76005BC2AE /* Order.swift */,
 				DAFEED01000000000000A001 /* CartLineItem.swift */,
@@ -476,6 +483,7 @@
 			children = (
 				F91028803BF5FF31B2835B62 /* PhotoLoader.swift */,
 				09AF00F544F96D015A4B7EAC /* ProductPhotoView.swift */,
+				C1510000000000000000A002 /* OrderLinePhotoView.swift */,
 			);
 			path = Photos;
 			sourceTree = "<group>";
@@ -701,6 +709,7 @@
 				A9DE9BCD51C014DF9094023E /* PhotoPreparation.swift in Sources */,
 				E92195261798ADE12A99B563 /* PhotoLoader.swift in Sources */,
 				51CD2A7A015BE39F4026DA5D /* ProductPhotoView.swift in Sources */,
+				C1510000000000000000B002 /* OrderLinePhotoView.swift in Sources */,
 				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
 				C1460000000000000000B003 /* OrderSelection.swift in Sources */,
@@ -730,6 +739,7 @@
 				1414DEC22AA0F8D600D9CE87 /* KDSOrderItemView.swift in Sources */,
 				14DECF172A3CFF7D005BC2AE /* SaleItem.swift in Sources */,
 				C1340000000000000000B002 /* SaleItemCommands.swift in Sources */,
+				C1510000000000000000B001 /* OrderCommands.swift in Sources */,
 				C1340000000000000000B001 /* VisibleObservation.swift in Sources */,
 				14CD51B12A2FE2D50018DE87 /* DittoPOS.swift in Sources */,
 				14039BF02A4789AE001903ED /* CurrencyUtils.swift in Sources */,
@@ -762,6 +772,7 @@
 				C25B349F44580607E3F52E51 /* PhotoPreparation.swift in Sources */,
 				4275D46CB60CB0B89A56D628 /* PhotoLoader.swift in Sources */,
 				662BD72B047402C398F398B2 /* ProductPhotoView.swift in Sources */,
+				C1510000000000000000C002 /* OrderLinePhotoView.swift in Sources */,
 				C1330000000000000000B004 /* AppAppearance.swift in Sources */,
 				C1330000000000000000B008 /* AppShell.swift in Sources */,
 				C1330000000000000000B006 /* SettingsContent.swift in Sources */,
@@ -785,6 +796,7 @@
 				C15600000000000000000009 /* DocumentID.swift in Sources */,
 				C1560000000000000000000A /* SaleItem.swift in Sources */,
 				C1340000000000000000C002 /* SaleItemCommands.swift in Sources */,
+				C1510000000000000000C001 /* OrderCommands.swift in Sources */,
 				C1340000000000000000C001 /* VisibleObservation.swift in Sources */,
 				C1560000000000000000000B /* ImageNameMapping.swift in Sources */,
 				C1560000000000000000000C /* Location.swift in Sources */,

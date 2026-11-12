@@ -119,7 +119,7 @@ constructor(
         if (current.documentId.locationId != latestCatalogLocation) return
         viewModelScope.launch(dispatcherIO) {
             val payment = Payment(type = PaymentType.CASH, amount = current.total)
-            ordersRepository.upsert(current.addingPayment(payment, paymentId = Payment.newPaymentId()))
+            ordersRepository.addPayment(payment, Payment.newPaymentId(), current.documentId)
 
             // Repeated observer emissions must not create extra carts.
             openNewOrder(current.documentId.locationId)
