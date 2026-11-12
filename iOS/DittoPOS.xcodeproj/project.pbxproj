@@ -526,6 +526,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C1490000000000000000D001,
 			);
 			fileSystemSynchronizedGroups = (
 				A48472EA2FA4DF71004A821E /* DittoPOSTests */,
@@ -1017,6 +1018,8 @@
 		A48472EF2FA4DF71004A821E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DittoUIHost.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DittoUIHost";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GXR5UNHBG5;
@@ -1042,6 +1045,8 @@
 		A48472F02FA4DF71004A821E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DittoUIHost.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DittoUIHost";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GXR5UNHBG5;
@@ -1213,6 +1218,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin PBXTargetDependency section */
+		C1490000000000000000D001 = {
+			isa = PBXTargetDependency;
+			target = C1331000000000000000D001;
+		};
 		C1331000000000000000D003 ={
 			isa = PBXTargetDependency;
 			target = C1331000000000000000D001;

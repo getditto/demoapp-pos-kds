@@ -1,6 +1,7 @@
 import Combine
 import DittoSwift
 import Foundation
+import SwiftUI
 import UIKit
 import XCTest
 
@@ -59,6 +60,81 @@ import XCTest
         loader.stop()
     }
 
+    func testObservedCatalogDrivesPhotoViewReplacementReuseRemovalAndVisibility() async throws {
+        try await TestDitto.withInstance { ditto in
+            let source = ControlledPhotos()
+            let loader = PhotoLoader(cache: PhotoImageCache(), fetch: source.fetch)
+            let state = PhotoViewState(owner: owner)
+            let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
+            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: owner, name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+            let observation = repository.observeLocationSaleItems(owner.locationId).sink { state.item = $0.first }
+            defer { observation.cancel() }
+            let host = UIHostingController(rootView: ObservedPhoto(state: state, loader: loader))
+            let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+            let window = try XCTUnwrap(scene.windows.first { $0.isKeyWindow })
+            let root = try XCTUnwrap(window.rootViewController)
+            root.addChild(host)
+            host.view.frame = root.view.bounds
+            root.view.addSubview(host.view)
+            host.didMove(toParent: root)
+            host.view.setNeedsLayout()
+            host.view.layoutIfNeeded()
+            XCTAssertTrue(host.view.window === window)
+            defer {
+                host.willMove(toParent: nil)
+                host.view.removeFromSuperview()
+                host.removeFromParent()
+            }
+            try await waitForView(host.view) { scene.activationState == .foregroundActive }
+            try await waitForView(host.view) { state.appeared }
+
+            let a = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
+            let b = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
+            try await PhotoAttachments.replace(a, for: owner, executor: ditto.store)
+            try await waitForView(host.view) { state.item?.image?.id == a.id }
+            try await waitForView(host.view) { state.renderedReference == a.id }
+            try await waitForView(host.view) { !source.requests.isEmpty }
+            XCTAssertEqual(source.requests.count, 1)
+            XCTAssertEqual(source.requests.first?.reference.id, a.id)
+            try await repository.increment(1, id: owner)
+            try await waitForView(host.view) { state.item?.quantity == 3 }
+            XCTAssertEqual(source.requests.count, 1)
+            try await PhotoAttachments.replace(b, for: owner, executor: ditto.store)
+            try await waitForView(host.view) { source.requests.count == 2 }
+            XCTAssertEqual(source.requests.last?.reference.id, b.id)
+            XCTAssertEqual(source.canceled, [0])
+            try await PhotoAttachments.remove(for: owner, executor: ditto.store)
+            try await waitForView(host.view) { source.canceled == [0, 1] }
+            XCTAssertNil(loader.image)
+            try await PhotoAttachments.replace(a, for: owner, executor: ditto.store)
+            try await waitForView(host.view) { source.requests.count == 3 }
+            state.owner = DocumentID(id: owner.id, locationId: "B")
+            try await waitForView(host.view) { source.requests.count == 4 }
+            XCTAssertEqual(source.canceled, [0, 1, 2])
+            state.visible = false
+            try await waitForView(host.view) { source.canceled == [0, 1, 2, 3] }
+            state.visible = true
+            try await waitForView(host.view) { source.requests.count == 5 }
+            state.visible = false
+            try await waitForView(host.view) { source.canceled == [0, 1, 2, 3, 4] }
+        }
+    }
+
+    private func waitForView(_ view: UIView, file: StaticString = #filePath, line: UInt = #line, _ condition: () -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(5)
+        while !condition(), Date() < deadline {
+            view.setNeedsLayout()
+            view.layoutIfNeeded()
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        guard condition() else {
+            XCTFail("The observed photo view did not update", file: file, line: line)
+            throw ViewWaitFailure.timedOut
+        }
+    }
+
+    private enum ViewWaitFailure: Error { case timedOut }
+
     func testSDKFileAvailabilityUpdatesTheImageWithoutAnotherDocumentResultAndStopReleasesTheFetcher() async throws {
         try await TestDitto.withInstance { origin in
             let data = PhotoTestImages.png(.red)
@@ -101,6 +177,30 @@ import XCTest
             query: "UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": owner.id, "locationId": owner.locationId, "image": reference.token]
         )
+    }
+}
+
+@MainActor private final class PhotoViewState: ObservableObject {
+    @Published var item: SaleItem?
+    @Published var owner: DocumentID
+    @Published var visible = true
+    @Published var appeared = false
+    @Published var renderedReference: String?
+
+    init(owner: DocumentID) { self.owner = owner }
+}
+
+private struct ObservedPhoto: View {
+    @ObservedObject var state: PhotoViewState
+    let loader: PhotoLoader
+
+    var body: some View {
+        if state.visible {
+            ProductPhotoView(reference: state.item?.image, owner: state.owner, loader: loader)
+                .frame(width: 40, height: 40)
+                .onAppear { state.appeared = true }
+                .onChange(of: state.item?.image?.id) { state.renderedReference = $0 }
+        }
     }
 }
 
