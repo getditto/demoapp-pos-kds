@@ -1,7 +1,7 @@
 package live.ditto.pos.kds
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -50,7 +50,7 @@ class KitchenBoardTest {
         var observed by mutableStateOf(listOf(ready))
         var tablet by mutableStateOf(true)
         compose.setContent {
-            DittoTheme { Box(Modifier.width(if (tablet) 1024.dp else 393.dp)) { TicketGrid(observed) {} } }
+            DittoTheme { Box(Modifier.requiredWidth(if (tablet) 1024.dp else 393.dp)) { TicketGrid(observed) {} } }
         }
         compose.onNodeWithText("No orders preparing").assertExists()
         compose.onNodeWithContentDescription("Complete order, #READY001").assertExists()
