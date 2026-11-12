@@ -42,7 +42,7 @@ data class Order(
     fun addingCartLineItem(lineItem: CartLineItem, lineItemId: String): Order {
         val (timestamp, statusValue) = StatusLogDerivation.entry(OrderStatus.IN_PROCESS)
         return copy(
-            cart = cart + (lineItemId to lineItem),
+            cart = cart + (lineItemId to (cart[lineItemId]?.copy(qty = lineItem.qty) ?: lineItem)),
             statusLog = statusLog + (timestamp to statusValue)
         )
     }

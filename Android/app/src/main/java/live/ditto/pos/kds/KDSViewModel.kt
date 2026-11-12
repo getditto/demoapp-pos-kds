@@ -52,7 +52,7 @@ constructor(
         viewModelScope.launch(dispatcherIo) {
             val order = latestOrders.firstOrNull { it.documentId.id == orderId } ?: return@launch
             val nextStatus = KitchenOrders.nextStatus(order.status) ?: return@launch
-            ordersRepository.upsert(order.appendingStatus(nextStatus))
+            ordersRepository.updateStatus(nextStatus, order.documentId)
         }
     }
 
