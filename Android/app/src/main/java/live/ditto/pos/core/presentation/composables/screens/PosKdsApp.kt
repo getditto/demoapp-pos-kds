@@ -78,7 +78,7 @@ fun PosKdsShell(
         "Select location"
     } else {
         when (route) {
-            "kds" -> "Kitchen"
+            "kds" -> "Kitchen display"
             "settings" -> "Settings"
             else -> "POS"
         }

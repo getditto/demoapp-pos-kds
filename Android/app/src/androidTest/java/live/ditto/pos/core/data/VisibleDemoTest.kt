@@ -326,6 +326,7 @@ class VisibleDemoTest {
                         assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items") })
                         kitchen.updateTicketStatus(preparing.tickets.single().orderId)
                         kitchenStates.await { it.tickets.singleOrNull()?.orderStatus == OrderStatus.PROCESSED }
+                        assertEquals(firstID, settings.currentOrderId())
                         kitchenCollection.cancelAndJoin()
                         awaitObserverCount(baseline)
                         withTimeout(5_000) { while (!kitchen.uiState.value.isLoading) yield() }
