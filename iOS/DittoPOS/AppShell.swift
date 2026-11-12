@@ -44,7 +44,7 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
     private var title: String {
         switch selectedTab {
         case .pos: return "POS"
-        case .kds: return "Kitchen"
+        case .kds: return "Kitchen display"
         case .settings: return "Settings"
         }
     }

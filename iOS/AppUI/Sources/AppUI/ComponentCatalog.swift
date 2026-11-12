@@ -19,14 +19,14 @@ public struct ComponentCatalog: View {
                     AppField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
                     AppRow("Ditto Tools") { AppIcon("caret-right") }
                     AppChoiceRow("Selected option", selected: selected) { selected.toggle() }
-                    HStack(alignment: .top, spacing: 16) {
-                        AppWell { AppEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
-                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
-                    }.frame(minHeight: 260)
-                    HStack(alignment: .top, spacing: 16) {
-                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
-                        AppWell { AppEmptyState("No orders ready", message: "Completed orders will appear here.", icon: "cooking-pot") }
-                    }.frame(minHeight: 260)
+                    HStack(alignment: .top, spacing: 24) {
+                        AppWell { Text("No orders preparing").foregroundStyle(AppColors.secondaryText) }
+                        AppTicket(title: "#32B9A42D", lines: ["2 × Burger"], isPaid: true, elapsed: "2 min ago", isReady: true) {}
+                    }
+                    HStack(alignment: .top, spacing: 24) {
+                        AppTicket(title: "#32B9A42D", lines: ["2 × Burger"], isPaid: false, elapsed: "2 min ago", isReady: false) {}
+                        AppWell { Text("No orders ready").foregroundStyle(AppColors.secondaryText) }
+                    }
                 }.padding(AppLayout.padding)
             }
         }

@@ -10,12 +10,8 @@
     <string name="label_total">Total</string>
     <string name="navigation_drawer_label_ditto_tools">Ditto Tools</string>
     <string name="current_order_id">Order #%1$s</string>
-    <string name="kds_ticket_header">%1$s #%2$s</string>
-    <string name="ticket_paid_description">Check Mark</string>
     <string name="location_selection_title">Please Select Location</string>
     <string name="location_selection_empty">No locations available</string>
     <string name="hamburger_menu">Menu</string>
-    <string name="kds_empty_title">No active orders</string>
-    <string name="kds_empty_description">Orders entered in POS will appear here.</string>
 
 </resources>
