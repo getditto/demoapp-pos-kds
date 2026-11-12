@@ -141,12 +141,15 @@ public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    public init(_ title: String, message: String, icon: String) { self.title = title; self.message = message; self.icon = icon }
+    private let prominent: Bool
+    public init(_ title: String, message: String, icon: String, prominent: Bool = false) {
+        self.title = title; self.message = message; self.icon = icon; self.prominent = prominent
+    }
     public var body: some View {
         VStack(spacing: 12) {
-            AppIcon(icon, size: 56).foregroundStyle(AppColors.secondaryText)
-            Text(title).font(AppTypography.heading)
-            Text(message).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+            AppIcon(icon, size: prominent ? 40 : 56).foregroundStyle(prominent ? AppColors.success : AppColors.secondaryText)
+            Text(title).font(prominent ? AppTypography.title : AppTypography.heading)
+            Text(message).font(prominent ? AppTypography.body : AppTypography.caption).foregroundStyle(AppColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -157,8 +160,8 @@ public struct AppWell<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.frame(maxWidth: .infinity, minHeight: 240)
-            .background(AppColors.disabled.opacity(0.4), in: RoundedRectangle(cornerRadius: AppLayout.radius))
-            .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+        content.padding(24).frame(maxWidth: .infinity, minHeight: 160)
+            .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppLayout.radius))
+            .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.subtleBorder))
     }
 }
