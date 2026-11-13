@@ -12,12 +12,11 @@ import live.ditto.pos.core.data.images.PhotoReference
 data class SaleItem(
     @SerialName("_id") val documentId: DocumentID,
     val name: String,
-    val imageName: String,
     val price: Price,
     val quantity: Long? = null,
     val image: PhotoReference? = null
 ) {
-    val metadata: SaleItemMetadata get() = SaleItemMetadata(documentId, name, imageName, price)
+    val metadata: SaleItemMetadata get() = SaleItemMetadata(documentId, name, price)
 
     companion object {
         const val COLLECTION_NAME = "sale_items"
@@ -26,12 +25,10 @@ data class SaleItem(
             id: String,
             locationId: String,
             name: String,
-            imageName: String,
             cents: Int
         ): SaleItem = SaleItem(
             documentId = DocumentID(id = id, locationId = locationId),
             name = name,
-            imageName = imageName,
             price = Price(cents)
         )
     }
@@ -41,7 +38,6 @@ data class SaleItem(
 data class SaleItemMetadata(
     @SerialName("_id") val documentId: DocumentID,
     val name: String,
-    val imageName: String,
     val price: Price
 )
 
