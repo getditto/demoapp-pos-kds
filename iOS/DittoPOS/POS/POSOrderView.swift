@@ -30,7 +30,9 @@ struct POSOrderView: View {
                 ScrollView(showsIndicators: false) {
                     Section {
                         ForEach(viewModel.orderItems, id: \.id) { entry in
-                            POSOrderItemView(lineItemId: entry.id, entry.item)
+                            if let orderID = viewModel.currentOrder?.documentId {
+                                POSOrderItemView(lineItemId: entry.id, item: entry.item, orderID: orderID, store: viewModel.photoStore)
+                            }
                             divider()
                         }
                         .onChange(of: viewModel.orderItems.count) { _ in

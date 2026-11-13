@@ -24,11 +24,11 @@ class CatalogStoreTest {
             val repository = catalog()
             val id = DocumentID("coffee-'\"冰", "A")
             val other = id.copy(locationId = "B")
-            val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
+            val metadata = SaleItemMetadata(id, "Coffee", Price(199))
             repository.create(SaleItemCreation(metadata, 2))
             repository.create(SaleItemCreation(metadata.copy(documentId = other, name = "Other", price = Price(250)), 7))
             repository.increment(-3, id)
-            val replacement = metadata.copy(name = "Renamed \"冰\"", imageName = "milk", price = Price(0))
+            val replacement = metadata.copy(name = "Renamed \"冰\"", price = Price(0))
             repository.updateMetadata(replacement)
             val edited = readItem(id)
             assertEquals(-1L, edited.quantity)
@@ -60,7 +60,7 @@ class CatalogStoreTest {
                     try {
                         observedItems.await { it.isEmpty() }
                         val old = LegacyDemoSeeder(ditto)
-                        val current = DemoSeeder(ditto)
+                        val current = DemoSeeder(ditto, bundledPhotos)
                         if (oldFirst) old.seedAll()
                         current.seedAll()
                         old.seedAll()
@@ -69,7 +69,7 @@ class CatalogStoreTest {
                         val rows = ditto.store.execute("SELECT * FROM sale_items") { it.decode<SaleItem>() }
                         assertEquals(LegacySaleItemSeed.saleItemsForAllLocations().map { it.documentId }.toSet(), rows.map { it.documentId }.toSet())
                         for (legacy in LegacySaleItemSeed.saleItemsForAllLocations()) {
-                            assertEquals(SaleItemMetadata(legacy.documentId, legacy.name, legacy.imageName, legacy.price), rows.single { it.documentId == legacy.documentId }.metadata)
+                            assertEquals(SaleItemMetadata(legacy.documentId, legacy.name, legacy.price), rows.single { it.documentId == legacy.documentId }.metadata)
                         }
                         val expectedIDs = LegacySaleItemSeed.saleItemsForAllLocations().filter { it.documentId.locationId == "00001" }.map { it.documentId }.toSet()
                         val visible = observedItems.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
@@ -80,13 +80,13 @@ class CatalogStoreTest {
                         repository.restart(11, positive)
                         repository.restart(0, id)
                         repository.increment(-2, id)
-                        repository.updateMetadata(SaleItemMetadata(id, "Edited", "milk", Price(0)))
+                        repository.updateMetadata(SaleItemMetadata(id, "Edited", Price(0)))
                         val removed = DocumentID("00008", "00001")
                         ditto.store.execute(
                             "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
                             mapOf("id" to removed.id, "locationId" to removed.locationId)
                         )
-                        val custom = SaleItemMetadata(DocumentID("95f203b6-0251-4ed8-8ae2-bbcb808bf356", "00001"), "Custom", "coffee", Price(0))
+                        val custom = SaleItemMetadata(DocumentID("95f203b6-0251-4ed8-8ae2-bbcb808bf356", "00001"), "Custom", Price(0))
                         repository.create(SaleItemCreation(custom, 3))
                         current.seedAll()
                         old.seedAll()

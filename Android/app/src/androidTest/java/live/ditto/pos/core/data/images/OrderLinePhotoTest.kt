@@ -35,7 +35,7 @@ class OrderLinePhotoTest {
         TestDitto.withInstance {
             val id = DocumentID("coffee", "A")
             val catalog = catalog()
-            catalog.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 1))
+            catalog.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", Price(199)), 1))
             PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED, 63, 63), "image/png", ditto.store).use { red ->
                 PhotoAttachments.replace(red, id, ditto.store)
                 val sale = ditto.store.execute("SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to id.id, "locationId" to id.locationId)) { it.decode<SaleItem>().single() }

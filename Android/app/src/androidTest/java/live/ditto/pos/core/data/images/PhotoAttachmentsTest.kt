@@ -30,9 +30,9 @@ class PhotoAttachmentsTest {
             val id = DocumentID("coffee'冰", "A")
             val other = id.copy(locationId = "B")
             val repository = catalog()
-            val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
+            val metadata = SaleItemMetadata(id, "Coffee", Price(199))
             repository.create(SaleItemCreation(metadata, 2))
-            repository.create(SaleItemCreation(SaleItemMetadata(other, "Other", "milk", Price(250)), 7))
+            repository.create(SaleItemCreation(SaleItemMetadata(other, "Other", Price(250)), 7))
             repository.increment(-4, id)
             PhotoAttachments.configure(ditto.store)
             ditto.store.execute("SHOW attachments_auto_fetch") { result ->

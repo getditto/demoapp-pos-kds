@@ -36,7 +36,7 @@ class PriceFormatTest {
     @Test
     fun `order lines use the device locale but the line's currency`() {
         Locale.setDefault(Locale.JAPAN)
-        val line = CartLineItem("corn", "Corn", "corn", Price(350))
+        val line = CartLineItem("corn", "Corn", Price(350))
         assertEquals("$3.50", OrderItemUiModel.from(line).price)
     }
 }

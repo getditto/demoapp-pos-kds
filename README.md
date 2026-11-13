@@ -123,11 +123,13 @@ Collections:
     and launch-time eviction.
 
 - **`sale_items`** — synced menu items, one document per item per location.
-  Hand-curated demo data is seeded once on first launch via
-  `INSERT INTO ... INITIAL DOCUMENTS (...)` (idempotent, peer-safe).
-  The optional `image` attachment is prepared for the image migration; current
-  menu seeding and display still use `imageName` until that cutover. Missing or
-  pending attachment files use a generic photo placeholder in the new renderer.
+  Every peer seeds the identical legacy payload with `INITIAL DOCUMENTS`, then
+  guarded migrations add missing stock counters and optional photo attachments.
+  Keeping those initial payloads identical preserves the
+  [INITIAL document contract](https://docs.ditto.live/dql/insert#insert-with-initial-documents).
+  Quantity changes use typed counter commands; metadata edits leave stock alone.
+  The UI reads photos only from the optional `image` attachment. Missing or
+  pending files use a generic photo placeholder.
 
 - **`locations`** — one document per location.
 
@@ -141,6 +143,20 @@ the document's natural key for sync grouping/routing, and lets DQL filter by
 
 Current orders use the `pos_orders` collection. Legacy `orders` and
 `transactions` documents are no longer read or written by the app.
+
+Bundled food PNGs are migration inputs, selected by stable item and location
+identity. Migration writes typed attachments and removes `imageName`; the UI
+never falls back to those bundles. Startup and active location-scoped observers
+prepare legacy catalog items and order lines, including records received later.
+New cart lines retain their own optional photo reference so catalog edits and
+deletions cannot change the recorded order image.
+
+Native POS previews with attachment-backed menu and recorded cart photos:
+
+| iOS | Android |
+| --- | --- |
+| <img src="docs/screenshots/image-migration/ios-expanded-after.png" alt="iOS POS with attachment photos" width="500"> | <img src="docs/screenshots/image-migration/android-expanded-after.png" alt="Android POS with attachment photos" width="500"> |
+
 
 ## App features
 

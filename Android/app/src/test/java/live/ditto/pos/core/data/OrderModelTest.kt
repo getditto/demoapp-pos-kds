@@ -1,6 +1,8 @@
 package live.ditto.pos.core.data
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import live.ditto.pos.core.data.orders.Order
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,7 +34,9 @@ class OrderModelTest {
         assertEquals("Coffee \"冰\"", order.cart["line-1"]?.name)
         assertEquals(OrderStatus.IN_PROCESS, order.status)
         assertTrue(order.isPaid)
-        assertEquals(Json.parseToJsonElement(OrderFixture.text()), Json.parseToJsonElement(order.dittoJsonString()))
+        val original = Json.parseToJsonElement(OrderFixture.text()).jsonObject
+        val cart = original.getValue("cart").jsonObject.mapValues { (_, line) -> JsonObject(line.jsonObject - "imageName") }
+        assertEquals(JsonObject(original + ("cart" to JsonObject(cart))), Json.parseToJsonElement(order.dittoJsonString()))
     }
 
     @Test
@@ -46,7 +50,7 @@ class OrderModelTest {
     @Test
     fun `adding repeated product lines preserves receipt payment and status history`() {
         val original = OrderFixture.load()
-        val item = CartLineItem("coffee-冰", "New coffee", "coffee", Price(100), qty = 2)
+        val item = CartLineItem("coffee-冰", "New coffee", Price(100), qty = 2)
         val updated = original.addingCartLineItem(item, "line-3")
         assertEquals(1297, updated.totalCents)
         assertEquals(original.cart["line-1"], updated.cart["line-1"])
@@ -75,7 +79,7 @@ class OrderModelTest {
 
     @Test
     fun `zero dollar cart still needs a payment entry and canceled is terminal`() {
-        val item = CartLineItem("free", "Free sample", "", Price(0), qty = 2)
+        val item = CartLineItem("free", "Free sample", Price(0), qty = 2)
         val order = Order.new("42").addingCartLineItem(item, "free-1")
         assertEquals(0, order.totalCents)
         assertFalse(order.isPaid)
@@ -85,12 +89,11 @@ class OrderModelTest {
 
     @Test
     fun `order line retains original catalog details after replacement`() {
-        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", "coffee", Price(199))
+        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", Price(199))
         val line = CartLineItem.from(catalog, qty = 3)
-        catalog = catalog.copy(name = "Renamed", imageName = "tea", price = Price(999))
+        catalog = catalog.copy(name = "Renamed", price = Price(999))
         assertEquals("Original", line.name)
         assertEquals(199, line.price.amount)
-        assertEquals("coffee", line.imageName)
         assertEquals(3, line.qty)
         assertEquals(999, CartLineItem.from(catalog).price.amount)
     }

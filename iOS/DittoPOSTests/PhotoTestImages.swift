@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 @MainActor enum PhotoTestImages {
     static var stockPhoto: Data {
         get throws {
-            let url = Bundle(for: PhotoAttachmentsTests.self).url(forResource: "burger", withExtension: "png")!
+            let url = Bundle(for: PhotoAttachmentsTests.self).url(forResource: "burger", withExtension: "png", subdirectory: "StarterImages")!
             return try Data(contentsOf: url)
         }
     }

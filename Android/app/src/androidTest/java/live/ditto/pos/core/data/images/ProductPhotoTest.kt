@@ -44,7 +44,7 @@ class ProductPhotoTest {
         TestDitto.withInstance {
             val id = DocumentID("coffee", "A")
             val repository = catalog()
-            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 2))
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", Price(199)), 2))
             PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED, 63, 63), "image/png", ditto.store).use { imported ->
                 PhotoAttachments.replace(imported, id, ditto.store)
                 val reference = repository.observeLocationSaleItems(id.locationId).first { it.singleOrNull()?.image != null }.single().image
@@ -69,7 +69,7 @@ class ProductPhotoTest {
         TestDitto.withInstance {
             val id = DocumentID("coffee", "A")
             val repository = catalog()
-            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 2))
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", Price(199)), 2))
             val requests = CopyOnWriteArrayList<PhotoReference>()
             val canceled = CopyOnWriteArrayList<Int>()
             val observedQuantity = AtomicLong()

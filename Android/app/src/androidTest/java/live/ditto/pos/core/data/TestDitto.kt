@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.job
 import kotlinx.datetime.TimeZone
+import live.ditto.pos.core.data.demo.BundledFoodPhotos
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.data.repository.OrdersRepository
@@ -34,11 +35,13 @@ internal class TestDitto(
     private val scope: CoroutineScope,
     private val directory: File
 ) {
+    val bundledPhotos = BundledFoodPhotos(InstrumentationRegistry.getInstrumentation().targetContext)
+
     val settings: AppSettings by lazy {
         AppSettings(PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(directory, "ui.preferences_pb") }))
     }
 
-    fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope)
+    fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope, bundledPhotos)
     fun locations(updateSyncGroup: suspend (String?) -> Unit): LocationsRepository = LocationsRepository({ ditto }, settings, updateSyncGroup, scope)
 
     fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow(), clock: () -> Instant = { now }): OrdersRepository = OrdersRepository(
@@ -47,7 +50,8 @@ internal class TestDitto(
         preferences = { preferences },
         now = clock,
         timeZone = { TimeZone.UTC },
-        repoScope = scope
+        repoScope = scope,
+        bundledPhotos = bundledPhotos
     )
 
     suspend fun insert(order: Order) {

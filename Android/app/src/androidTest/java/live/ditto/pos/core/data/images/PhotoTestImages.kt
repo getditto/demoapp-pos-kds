@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 internal object PhotoTestImages {
     val stockPhoto: ByteArray
         get() = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources
-            .openRawResource(live.ditto.pos.R.drawable.burger).use { it.readBytes() }
+            .openRawResource(live.ditto.pos.R.raw.stock_burger).use { it.readBytes() }
 
     val colors = listOf(android.graphics.Color.RED, android.graphics.Color.GREEN, android.graphics.Color.BLUE, android.graphics.Color.YELLOW)
 

@@ -20,14 +20,16 @@ final class SaleItemSeedTests: XCTestCase {
         }
     }
 
-    func testCompositeIdsAreUniqueAcrossAllSeededItems() {
-        let items = SaleItemSeed.saleItemsForAllLocations()
-        let keys = items.map { "\($0.documentId.id)|\($0.documentId.locationId)" }
-        XCTAssertEqual(
-            keys.count,
-            Set(keys).count,
-            "Duplicate (id, locationId) pairs detected in seed data"
-        )
+    func testInitialDocumentsMatchThePinnedLegacySeederExactly() throws {
+        // Different INITIAL payloads for one ID have undefined merge behavior.
+        // https://docs.ditto.live/dql/insert#insert-with-initial-documents
+        let old = LegacySaleItemSeed.saleItemsForAllLocations()
+        let current = SaleItemSeed.initialDocuments()
+        XCTAssertEqual(current.count, old.count)
+        for (current, old) in zip(current, old) {
+            let actual = try JSONSerialization.jsonObject(with: JSONEncoder.ditto.encode(current)) as? NSDictionary
+            let expected = try JSONSerialization.jsonObject(with: JSONEncoder.ditto.encode(old)) as? NSDictionary
+            XCTAssertEqual(actual, expected)
+        }
     }
-
 }
