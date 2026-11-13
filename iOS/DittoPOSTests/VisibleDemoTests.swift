@@ -30,7 +30,7 @@ import XCTest
             let orders = OrdersRepository(ditto: ditto, locationPublisher: ids)
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
             try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
-                documentId: DocumentID(id: "coffee", locationId: id), name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+                documentId: DocumentID(id: "coffee", locationId: id), name: "Coffee", price: Price(cents: 199)), initialQuantity: 2))
             let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { locations.currentLocationId })
             await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
             await expect(pos.$currentOrder, matching: { $0 != nil }) { }
@@ -85,7 +85,7 @@ import XCTest
             let orders = OrdersRepository(ditto: ditto, locationPublisher: ids, now: { now }, defaults: defaults, calendar: calendar)
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
             try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
-                documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+                documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", price: Price(cents: 199)), initialQuantity: 2))
             let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
             let kitchen = KDSViewModel(ordersRepository: orders)
             await expect(pos.$saleItems, matching: { $0.count == 1 }) { pos.setVisible(true) }
@@ -131,7 +131,7 @@ import XCTest
                 let ids = location.map { $0?.id }.eraseToAnyPublisher()
                 let orders = OrdersRepository(ditto: ditto, locationPublisher: ids)
                 let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
-                let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", imageName: "coffee", price: Price(cents: 199))
+                let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Coffee", price: Price(cents: 199))
                 try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
                 let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
                 await expect(pos.$saleItems, matching: { !$0.isEmpty }) { pos.setVisible(true) }
@@ -191,10 +191,10 @@ import XCTest
             let ids = location.map { $0?.id }.eraseToAnyPublisher()
             let orders = OrdersRepository(ditto: ditto, locationPublisher: ids, now: { Date(timeIntervalSince1970: 0) })
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: ids)
-            let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Original", imageName: "coffee", price: Price(cents: 199))
+            let metadata = SaleItemMetadata(documentId: DocumentID(id: "coffee", locationId: "A"), name: "Original", price: Price(cents: 199))
             try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 0))
             try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(
-                documentId: DocumentID(id: "coffee", locationId: "B"), name: "Other location", imageName: "milk", price: Price(cents: 250)), initialQuantity: 7))
+                documentId: DocumentID(id: "coffee", locationId: "B"), name: "Other location", price: Price(cents: 250)), initialQuantity: 7))
             let pos = POSViewModel(ordersRepository: orders, saleItemsRepository: catalog, locationPublisher: ids, locationId: { location.value?.id })
             let kitchen = KDSViewModel(ordersRepository: orders)
             XCTAssertEqual(ditto.store.observers.count, baseline)
@@ -208,7 +208,7 @@ import XCTest
             // Adding quantity metadata must preserve existing checkout behavior.
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(item) }
             let originalCart = pos.currentOrder
-            let liveMetadata = SaleItemMetadata(documentId: metadata.documentId, name: "Live update", imageName: "milk", price: Price(cents: 250))
+            let liveMetadata = SaleItemMetadata(documentId: metadata.documentId, name: "Live update", price: Price(cents: 250))
             try await catalog.updateMetadata(liveMetadata)
             await expect(pos.$saleItems, matching: { $0.first?.metadata == liveMetadata }) { }
             XCTAssertEqual(pos.saleItems.first?.metadata, liveMetadata)
@@ -219,7 +219,7 @@ import XCTest
             XCTAssertTrue(pos.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline)
 
-            try await catalog.updateMetadata(SaleItemMetadata(documentId: metadata.documentId, name: "Renamed", imageName: "milk", price: Price(cents: 0)))
+            try await catalog.updateMetadata(SaleItemMetadata(documentId: metadata.documentId, name: "Renamed", price: Price(cents: 0)))
             await expect(kitchen.$orders, matching: { $0.count == 1 }) { kitchen.setVisible(true) }
             XCTAssertFalse(kitchen.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline + 1)

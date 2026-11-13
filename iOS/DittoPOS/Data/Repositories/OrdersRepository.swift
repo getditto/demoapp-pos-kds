@@ -107,6 +107,12 @@ import Foundation
 
     private func observeOrders(query: String, arguments: [String: Any?]) -> AnyPublisher<[Order], Never> {
         store.observePublisher(query: query, arguments: arguments, mapTo: Order.self)
+            .map { [store] orders in
+                Deferred { OrderPreparation(orders: orders, store: store).publisher }
+                    .eraseToAnyPublisher()
+            }
+            .switchToLatest()
+            .eraseToAnyPublisher()
     }
 
     // MARK: Mutations
@@ -167,5 +173,30 @@ import Foundation
     private func upsert(order: Order) {
         let store = store
         Task { try! await OrderCommands.upsert(order, store: store) }
+    }
+}
+
+@MainActor private final class OrderPreparation {
+    private let result = CurrentValueSubject<[Order]?, Never>(nil)
+    private var task: Task<Void, Never>?
+
+    init(orders: [Order], store: DittoStore) {
+        task = Task {
+            do {
+                let prepared = try await SeedImageMigration.prepareOrders(orders, store: store)
+                guard !Task.isCancelled else { return }
+                result.send(prepared)
+                result.send(completion: .finished)
+            } catch {
+                guard !Task.isCancelled else { return }
+                preconditionFailure("Order preparation failed: \(error)")
+            }
+        }
+    }
+
+    var publisher: AnyPublisher<[Order], Never> {
+        result.compactMap { $0 }
+            .handleEvents(receiveCancel: { self.task?.cancel() })
+            .eraseToAnyPublisher()
     }
 }

@@ -52,6 +52,31 @@ enum SaleItemSeed {
         "00007": ["00019", "00002", "00007", "00018", "00003", "00011"]                      // Tarra's: tacos/burrito/corn/soda/chicken/ice cream
     ]
 
+    struct InitialDocument: Encodable, Sendable {
+        let documentId: DocumentID
+        let name: String
+        let imageName: String
+        let price: Price
+
+        private enum CodingKeys: String, CodingKey {
+            case documentId = "_id"
+            case name, imageName, price
+        }
+    }
+
+    // INITIAL data must match the legacy operation on every peer; upgrades follow it.
+    // https://docs.ditto.live/dql/insert#insert-with-initial-documents
+    static func initialDocuments() -> [InitialDocument] {
+        LocationSeed.demoLocations.flatMap { location in
+            (menus[location.id] ?? []).compactMap { id in
+                catalog.first { $0.id == id }.map {
+                    InitialDocument(documentId: DocumentID(id: id, locationId: location.id),
+                                    name: $0.name, imageName: $0.imageName, price: Price(cents: $0.cents))
+                }
+            }
+        }
+    }
+
     static func saleItemsForAllLocations() -> [SaleItem] {
         var out: [SaleItem] = []
         for location in LocationSeed.demoLocations {
@@ -61,7 +86,6 @@ enum SaleItemSeed {
                     id: item.id,
                     locationId: location.id,
                     name: item.name,
-                    imageName: item.imageName,
                     cents: item.cents
                 ))
             }

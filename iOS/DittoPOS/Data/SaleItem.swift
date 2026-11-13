@@ -10,27 +10,25 @@ import Foundation
 struct SaleItem: Decodable, Hashable, Sendable {
     let documentId: DocumentID
     let name: String
-    let imageName: String
     let price: Price
     let quantity: Int64?
     let image: PhotoReference?
 
     private enum CodingKeys: String, CodingKey {
         case documentId = "_id"
-        case name, imageName, price, quantity, image
+        case name, price, quantity, image
     }
 
-    init(documentId: DocumentID, name: String, imageName: String, price: Price, quantity: Int64? = nil, image: PhotoReference? = nil) {
+    init(documentId: DocumentID, name: String, price: Price, quantity: Int64? = nil, image: PhotoReference? = nil) {
         self.documentId = documentId
         self.name = name
-        self.imageName = imageName
         self.price = price
         self.quantity = quantity
         self.image = image
     }
 
     var metadata: SaleItemMetadata {
-        SaleItemMetadata(documentId: documentId, name: name, imageName: imageName, price: price)
+        SaleItemMetadata(documentId: documentId, name: name, price: price)
     }
 
     static let collectionName = "sale_items"
@@ -39,12 +37,11 @@ struct SaleItem: Decodable, Hashable, Sendable {
 struct SaleItemMetadata: Codable, Hashable, Sendable {
     let documentId: DocumentID
     let name: String
-    let imageName: String
     let price: Price
 
     private enum CodingKeys: String, CodingKey {
         case documentId = "_id"
-        case name, imageName, price
+        case name, price
     }
 }
 
@@ -68,11 +65,10 @@ extension SaleItem: CustomStringConvertible {
 }
 
 extension SaleItem {
-    static func seed(id: String, locationId: String, name: String, imageName: String, cents: Int) -> SaleItem {
+    static func seed(id: String, locationId: String, name: String, cents: Int) -> SaleItem {
         SaleItem(
             documentId: DocumentID(id: id, locationId: locationId),
             name: name,
-            imageName: imageName,
             price: Price(cents: cents)
         )
     }

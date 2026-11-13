@@ -29,12 +29,11 @@ struct DemoSeeder {
 
     func seedSaleItems() async {
         await bulkInitialInsert(
-            into: SaleItemCommands.creationCollection,
-            documents: SaleItemSeed.saleItemsForAllLocations().map {
-                SaleItemCreation(metadata: $0.metadata, initialQuantity: SaleItemSeed.initialQuantity)
-            }
+            into: SaleItem.collectionName,
+            documents: SaleItemSeed.initialDocuments()
         )
         try! await SeedStockMigration.upgradeAll(store: store)
+        try! await SeedImageMigration.upgradeAll(store: store)
     }
 
     private func bulkInitialInsert<T: Encodable>(
