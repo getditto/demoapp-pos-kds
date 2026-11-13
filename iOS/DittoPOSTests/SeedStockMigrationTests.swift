@@ -8,11 +8,11 @@ import XCTest
             await LegacyDemoSeeder(store: ditto.store).seedAll()
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
             var expected = Dictionary(uniqueKeysWithValues: LegacySaleItemSeed.saleItemsForAllLocations().map {
-                ($0.documentId, SaleItemMetadata(documentId: $0.documentId, name: $0.name, imageName: $0.imageName, price: $0.price))
+                ($0.documentId, SaleItemMetadata(documentId: $0.documentId, name: $0.name, price: $0.price))
             })
             for location in LocationSeed.demoLocations {
                 let id = try XCTUnwrap(LegacySaleItemSeed.saleItemsForAllLocations().first { $0.documentId.locationId == location.id }?.documentId)
-                let edited = SaleItemMetadata(documentId: id, name: "Edited \"\(location.id)\"", imageName: "milk", price: Price(cents: 0))
+                let edited = SaleItemMetadata(documentId: id, name: "Edited \"\(location.id)\"", price: Price(cents: 0))
                 try await catalog.updateMetadata(edited)
                 expected[id] = edited
             }
@@ -36,7 +36,7 @@ import XCTest
             for id in [DocumentID(id: "f23b0e5a-f372-4578-a4f9-efc8323a4bd7", locationId: "00001"), DocumentID(id: "00001", locationId: "00002")] {
                 let item = LegacySaleItem.seed(id: id.id, locationId: id.locationId, name: "Custom", imageName: "coffee", cents: 0)
                 _ = try await ditto.store.execute(query: "INSERT INTO sale_items DOCUMENTS (deserialize_json(:json))", arguments: ["json": try item.dittoJSONString()])
-                expected[id] = SaleItemMetadata(documentId: id, name: item.name, imageName: item.imageName, price: item.price)
+                expected[id] = SaleItemMetadata(documentId: id, name: item.name, price: item.price)
             }
             await DemoSeeder(store: ditto.store).seedAll()
             let upgraded = try await allItems(ditto)
@@ -97,7 +97,7 @@ import XCTest
             await expect(latestResult, matching: { $0?.isEmpty == false }) { }
             let prepared = try XCTUnwrap(receivedResults.first { !$0.isEmpty })
             XCTAssertEqual(prepared.count, 7)
-            XCTAssertTrue(prepared.allSatisfy { $0.quantity == 20 })
+            XCTAssertTrue(prepared.allSatisfy { $0.quantity == 20 && $0.image != nil })
             observation.cancel()
             XCTAssertTrue(ditto.store.observers.isEmpty)
             receivedResults.removeAll()
@@ -106,7 +106,7 @@ import XCTest
             await expect(latestResult, matching: { $0?.isEmpty == false }) { }
             let other = try XCTUnwrap(receivedResults.first { !$0.isEmpty })
             XCTAssertEqual(other.count, 7)
-            XCTAssertTrue(other.allSatisfy { $0.quantity == 20 })
+            XCTAssertTrue(other.allSatisfy { $0.quantity == 20 && $0.image != nil })
             observation.cancel()
             let id = DocumentID(id: "00001", locationId: "00001")
             try await catalog.restart(0, id: id)

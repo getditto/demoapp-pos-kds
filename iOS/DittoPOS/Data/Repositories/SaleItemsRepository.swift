@@ -11,7 +11,7 @@ import DittoSwift
 @MainActor final class SaleItemsRepository: ObservableObject {
 
     private let ditto: Ditto
-    private var store: DittoStore { ditto.store }
+    var store: DittoStore { ditto.store }
     private var sync: DittoSync { ditto.sync }
 
     private var subscription: DittoSyncSubscription?
@@ -51,9 +51,8 @@ import DittoSwift
     func observeLocationSaleItems(_ locationId: String) -> AnyPublisher<[SaleItem], Never> {
         store.observePublisher(query: Self.catalogQuery, arguments: ["locationId": locationId], mapTo: SaleItem.self)
             .map { [store] items -> AnyPublisher<[SaleItem], Never> in
-                guard SeedStockMigration.mayNeedUpgrade(items) else { return Just(items).eraseToAnyPublisher() }
-                return Deferred {
-                    CatalogPreparation(store: store, locationId: locationId).publisher
+                Deferred {
+                    CatalogPreparation(items: items, store: store, locationId: locationId).publisher
                 }.eraseToAnyPublisher()
             }
             .switchToLatest()
@@ -66,20 +65,15 @@ import DittoSwift
     func restart(_ quantity: Int64, id: DocumentID) async throws { try await SaleItemCommands.restart(quantity, id: id, store: store) }
 }
 
-// Preparing legacy stock must finish before this query result becomes ready for the UI.
+// Legacy fields are migrated before this query result becomes ready for the UI.
 @MainActor private final class CatalogPreparation {
     private let result = CurrentValueSubject<[SaleItem]?, Never>(nil)
     private var task: Task<Void, Never>?
 
-    init(store: DittoStore, locationId: String) {
+    init(items: [SaleItem], store: DittoStore, locationId: String) {
         task = Task {
             do {
-                let items: [SaleItem] = try await store.transaction { transaction in
-                    try await SeedStockMigration.upgrade(locationId: locationId, transaction: transaction)
-                    let current = try await transaction.execute(
-                        query: SaleItemsRepository.catalogQuery, arguments: ["locationId": locationId])
-                    return current.decodeOrSkip()
-                }
+                let items = try await SeedImageMigration.prepareCatalog(items, locationId: locationId, store: store)
                 guard !Task.isCancelled else { return }
                 result.send(items)
                 result.send(completion: .finished)

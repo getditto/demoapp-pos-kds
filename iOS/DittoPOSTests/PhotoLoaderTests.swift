@@ -66,7 +66,7 @@ import XCTest
             let loader = PhotoLoader(cache: PhotoImageCache(), fetch: source.fetch)
             let state = PhotoViewState(owner: owner)
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: owner, name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: owner, name: "Coffee", price: Price(cents: 199)), initialQuantity: 2))
             let observation = repository.observeLocationSaleItems(owner.locationId).sink { state.item = $0.first }
             defer { observation.cancel() }
             let host = UIHostingController(rootView: ObservedPhoto(state: state, loader: loader))

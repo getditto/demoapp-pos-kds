@@ -14,9 +14,9 @@ struct POSGridView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             LazyVGrid(columns: POSGridLayout.gridColumns(for: horizontalSizeClass)) {
-                ForEach(viewModel.saleItems, id: \.self) { item in
+                ForEach(viewModel.saleItems, id: \.documentId) { item in
                     let side = POSGridLayout.itemSide(for: horizontalSizeClass)
-                    SaleItemView(item, length: side)
+                    SaleItemView(item: item, store: viewModel.photoStore)
                         .frame(width: side, height: side + 8)
                         .onTapGesture {
                             viewModel.addOrderItem(item)
