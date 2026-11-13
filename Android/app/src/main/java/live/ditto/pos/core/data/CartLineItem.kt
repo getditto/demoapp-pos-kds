@@ -14,8 +14,6 @@ import kotlin.time.Instant
 data class CartLineItem(
     val saleItemId: String,
     val name: String,
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    val imageName: String? = null,
     val price: Price,
     val qty: Int = 1,
     @Serializable(with = DittoInstantSerializer::class)
@@ -29,7 +27,6 @@ data class CartLineItem(
         fun from(saleItem: SaleItem, qty: Int = 1): CartLineItem = CartLineItem(
             saleItemId = saleItem.documentId.id,
             name = saleItem.name,
-            imageName = saleItem.imageName,
             price = saleItem.price,
             qty = qty,
             image = saleItem.image

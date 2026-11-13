@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import live.ditto.ditto_wrapper.DittoManager
+import live.ditto.pos.core.data.demo.BundledFoodPhotos
 import live.ditto.pos.core.data.demo.DemoSeeder
 import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.data.repository.OrdersRepository
@@ -16,15 +17,15 @@ import javax.inject.Inject
 @HiltAndroidApp
 class DittoPOSApplication : Application() {
 
+    @Inject lateinit var bundledPhotos: BundledFoodPhotos
+
     @Inject lateinit var dittoManager: DittoManager
 
     @Inject lateinit var locationsRepository: LocationsRepository
 
     @Inject lateinit var ordersRepository: OrdersRepository
 
-    // Injected here even though we don't reference it directly — its init
-    // block sets up the location-id flow collector that drives the sale_items
-    // subscription on app start.
+    // Catalog sync must stay active independently of visible tabs.
     @Suppress("unused")
     @Inject
     lateinit var saleItemsRepository: SaleItemsRepository
@@ -35,7 +36,7 @@ class DittoPOSApplication : Application() {
         super.onCreate()
         locationsRepository.startSubscription()
         applicationScope.launch {
-            DemoSeeder(dittoManager.requireDitto()).seedAll()
+            DemoSeeder(dittoManager.requireDitto(), bundledPhotos).seedAll()
             ordersRepository.runEvictionIfDue()
         }
     }

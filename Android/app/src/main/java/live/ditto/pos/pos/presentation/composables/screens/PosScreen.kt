@@ -37,6 +37,7 @@ fun PosScreen(
         ) {
             SaleItemsGrid(
                 saleItems = state.saleItems,
+                photoStore = viewModel.photoStore,
                 onSaleItemClicked = {
                     viewModel.addItemToCart(it)
                 }
@@ -48,6 +49,7 @@ fun PosScreen(
         ) {
             CurrentOrder(
                 orderTitle = state.currentOrderTitle,
+                photoStore = viewModel.photoStore,
                 orderItems = state.orderItems,
                 orderTotal = state.orderTotal,
                 onPayButtonClicked = { viewModel.payForOrder() },

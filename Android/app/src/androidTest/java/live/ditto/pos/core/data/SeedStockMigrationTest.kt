@@ -27,11 +27,11 @@ class SeedStockMigrationTest {
             LegacyDemoSeeder(ditto).seedAll()
             val catalog = catalog()
             val expected = LegacySaleItemSeed.saleItemsForAllLocations().associate {
-                it.documentId to SaleItemMetadata(it.documentId, it.name, it.imageName, it.price)
+                it.documentId to SaleItemMetadata(it.documentId, it.name, it.price)
             }.toMutableMap()
             for (location in LocationSeed.demoLocations) {
                 val id = LegacySaleItemSeed.saleItemsForAllLocations().first { it.documentId.locationId == location.id }.documentId
-                val edited = SaleItemMetadata(id, "Edited \"${location.id}\"", "milk", Price(0))
+                val edited = SaleItemMetadata(id, "Edited \"${location.id}\"", Price(0))
                 catalog.updateMetadata(edited)
                 expected[id] = edited
             }
@@ -56,9 +56,9 @@ class SeedStockMigrationTest {
             for (id in listOf(DocumentID("f23b0e5a-f372-4578-a4f9-efc8323a4bd7", "00001"), DocumentID("00001", "00002"))) {
                 val item = LegacySaleItem.seed(id.id, id.locationId, "Custom", "coffee", 0)
                 ditto.store.execute("INSERT INTO sale_items DOCUMENTS (deserialize_json(:json))", mapOf("json" to item.dittoJsonString()))
-                expected[id] = SaleItemMetadata(id, item.name, item.imageName, item.price)
+                expected[id] = SaleItemMetadata(id, item.name, item.price)
             }
-            DemoSeeder(ditto).seedAll()
+            DemoSeeder(ditto, bundledPhotos).seedAll()
             val upgraded = allItems()
             assertEquals(expected, upgraded.associate { it.documentId to it.metadata })
             val seedIds = LegacySaleItemSeed.saleItemsForAllLocations().map { it.documentId }.toSet()
@@ -72,7 +72,7 @@ class SeedStockMigrationTest {
             assertEquals(1, absent)
             catalog.increment(-1, positive)
             val beforeRetry = allItems()
-            DemoSeeder(ditto).seedAll()
+            DemoSeeder(ditto, bundledPhotos).seedAll()
             assertEquals(beforeRetry.toSet(), allItems().toSet())
         }
     }
