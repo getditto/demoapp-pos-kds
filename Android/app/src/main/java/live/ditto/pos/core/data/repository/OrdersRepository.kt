@@ -7,22 +7,32 @@ import com.ditto.kotlin.DittoSyncSubscription
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.decodeOrSkip
+import live.ditto.pos.core.data.demo.BundledFoodPhotos
+import live.ditto.pos.core.data.demo.SeedImageMigration
+import live.ditto.pos.core.data.demo.documentId
+import live.ditto.pos.core.data.demo.hasLegacyOrderInput
+import live.ditto.pos.core.data.dittoJson
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrderCommands
@@ -40,19 +50,22 @@ class OrdersRepository internal constructor(
     private val preferences: () -> SharedPreferences,
     private val now: () -> Instant,
     private val timeZone: () -> TimeZone,
-    repoScope: CoroutineScope
+    repoScope: CoroutineScope,
+    private val bundledPhotos: BundledFoodPhotos
 ) {
     @Inject constructor(
         @ApplicationContext context: Context,
         dittoManager: DittoManager,
-        locationsRepository: LocationsRepository
+        locationsRepository: LocationsRepository,
+        bundledPhotos: BundledFoodPhotos
     ) : this(
         dittoProvider = dittoManager::requireDitto,
         locationIds = locationsRepository.locationIdFlow(),
         preferences = { context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE) },
         now = { Clock.System.now() },
         timeZone = TimeZone::currentSystemDefault,
-        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+        bundledPhotos = bundledPhotos
     )
 
     private val ditto: Ditto get() = dittoProvider()
@@ -90,12 +103,12 @@ class OrdersRepository internal constructor(
     }
 
     fun observeLocationOrders(locationId: String): Flow<List<Order>> =
-        ditto.store.observeAsFlow(
+        observePreparedOrders(
             query = """
                 SELECT * FROM ${Order.COLLECTION_NAME}
                 WHERE _id.locationId = :locationId
             """.trimIndent(),
-            args = mapOf("locationId" to locationId)
+            arguments = mapOf("locationId" to locationId)
         )
 
     suspend fun upsert(order: Order) {
@@ -110,15 +123,28 @@ class OrdersRepository internal constructor(
         OrderCommands.updateStatus(status, id, ditto.store)
     }
 
-    suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
-        CURRENT_ORDER_QUERY,
-        mapOf("id" to id.id, "locationId" to id.locationId)
-    ) { it.decodeOrSkip<Order>().firstOrNull() }
+    suspend fun findOrder(id: DocumentID): Order? {
+        SeedImageMigration(ditto.store, bundledPhotos).upgradeOrders(listOf(id))
+        return ditto.store.execute(CURRENT_ORDER_QUERY, mapOf("id" to id.id, "locationId" to id.locationId)) {
+            it.decodeOrSkip<Order>().firstOrNull()
+        }
+    }
 
-    fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(
+    fun observeOrder(id: DocumentID): Flow<Order?> = observePreparedOrders(
         CURRENT_ORDER_QUERY,
         mapOf("id" to id.id, "locationId" to id.locationId)
     ).map { it.firstOrNull() }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observePreparedOrders(query: String, arguments: Map<String, Any>): Flow<List<Order>> =
+        ditto.store.observeAsFlow<JsonObject>(query, arguments).mapLatest { rows ->
+            if (rows.hasLegacyOrderInput()) {
+                SeedImageMigration(ditto.store, bundledPhotos).upgradeOrders(rows.mapNotNull { it.documentId() })
+                ditto.store.execute(query, arguments) { it.decodeOrSkip<Order>() }
+            } else {
+                rows.mapNotNull { runCatching { dittoJson.decodeFromJsonElement<Order>(it) }.getOrNull() }
+            }
+        }.flowOn(Dispatchers.IO)
 
     suspend fun clearCart(order: Order) {
         OrderCommands.clearCart(order, ditto.store)

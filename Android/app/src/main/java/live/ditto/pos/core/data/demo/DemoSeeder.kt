@@ -4,12 +4,11 @@ package live.ditto.pos.core.data.demo
 // https://docs.ditto.live/dql/insert#insert-with-initial-documents
 
 import com.ditto.kotlin.Ditto
-import live.ditto.pos.core.data.SaleItemCommands
-import live.ditto.pos.core.data.SaleItemCreation
+import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
 
-class DemoSeeder(private val ditto: Ditto) {
+class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos) {
 
     suspend fun seedAll() {
         seedLocations()
@@ -25,10 +24,11 @@ class DemoSeeder(private val ditto: Ditto) {
 
     suspend fun seedSaleItems() {
         bulkInitialInsert(
-            collectionName = SaleItemCommands.CREATION_COLLECTION,
-            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, SaleItemSeed.INITIAL_QUANTITY).json() }
+            collectionName = SaleItem.COLLECTION_NAME,
+            documents = SaleItemSeed.initialDocuments()
         )
         SeedStockMigration.upgradeAll(ditto.store)
+        SeedImageMigration(ditto.store, photos).upgradeAll()
     }
 
     private suspend fun bulkInitialInsert(

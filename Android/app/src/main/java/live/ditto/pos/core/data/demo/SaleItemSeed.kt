@@ -2,7 +2,12 @@ package live.ditto.pos.core.data.demo
 
 // Demo-only data.
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.SaleItem
+import live.ditto.pos.core.data.dittoJsonString
 
 object SaleItemSeed {
     const val INITIAL_QUANTITY = 20L
@@ -47,20 +52,35 @@ object SaleItemSeed {
         "00007" to listOf("00019", "00002", "00007", "00018", "00003", "00011")
     )
 
-    fun saleItemsForAllLocations(): List<SaleItem> {
+    internal fun initialItems(): List<InitialSaleItem> {
         val byId = catalog.associateBy { it.id }
         return LocationSeed.demoLocations.flatMap { location ->
             (menus[location.id] ?: emptyList()).mapNotNull { itemId ->
                 byId[itemId]?.let { item ->
-                    SaleItem.seed(
-                        id = item.id,
-                        locationId = location.id,
+                    InitialSaleItem(
+                        documentId = DocumentID(item.id, location.id),
                         name = item.name,
                         imageName = item.imageName,
-                        cents = item.cents
+                        price = Price(item.cents)
                     )
                 }
             }
         }
     }
+    fun saleItemsForAllLocations(): List<SaleItem> = initialItems().map {
+        SaleItem(it.documentId, it.name, it.price)
+    }
+
+    internal fun contains(id: DocumentID): Boolean = id.id in menus[id.locationId].orEmpty()
+    internal fun initialDocuments(): List<String> = initialItems().map { it.dittoJsonString() }
 }
+
+// INITIAL must keep the same payload as installations that still seed these IDs.
+// https://docs.ditto.live/dql/insert#insert-with-initial-documents
+@Serializable
+internal data class InitialSaleItem(
+    @SerialName("_id") val documentId: DocumentID,
+    val name: String,
+    val imageName: String,
+    val price: Price
+)

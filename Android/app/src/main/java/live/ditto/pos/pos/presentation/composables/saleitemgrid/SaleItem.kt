@@ -1,6 +1,5 @@
 package live.ditto.pos.pos.presentation.composables.saleitemgrid
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +9,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,19 +16,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import live.ditto.pos.R
+import com.ditto.kotlin.DittoStore
+import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.presentation.images.ProductPhoto
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.ui.DittoPhoto
 
 @Composable
 fun LazyGridItemScope.SaleItem(
     modifier: Modifier = Modifier,
     saleItemUiModel: SaleItemUiModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    photoStore: DittoStore? = null
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -44,13 +44,11 @@ fun LazyGridItemScope.SaleItem(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp)),
-                painter = painterResource(id = saleItemUiModel.imageResource),
-                contentDescription = saleItemUiModel.label
-            )
+            if (photoStore != null) {
+                ProductPhoto(saleItemUiModel.image, DocumentID(saleItemUiModel.id, saleItemUiModel.locationId), photoStore, Modifier.fillMaxSize())
+            } else {
+                DittoPhoto(null, Modifier.fillMaxSize())
+            }
         }
         Text(
             text = saleItemUiModel.label,
@@ -69,7 +67,6 @@ private fun SaleItemPreview() {
     val saleItems = listOf(
         SaleItemUiModel(
             id = "007",
-            imageResource = R.drawable.burger,
             label = "Tasty Burger"
         )
     )

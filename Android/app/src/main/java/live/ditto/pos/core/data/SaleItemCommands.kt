@@ -18,12 +18,11 @@ object SaleItemCommands {
     suspend fun updateMetadata(metadata: SaleItemMetadata, store: DittoStore) {
         store.execute(
             """
-                UPDATE sale_items SET name = :name, imageName = :imageName, price = deserialize_json(:price)
+                UPDATE sale_items SET name = :name, price = deserialize_json(:price)
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf(
                 "name" to metadata.name,
-                "imageName" to metadata.imageName,
                 "price" to metadata.price.dittoJsonString(),
                 "id" to metadata.documentId.id,
                 "locationId" to metadata.documentId.locationId

@@ -151,9 +151,11 @@ prepare legacy catalog items and order lines, including records received later.
 New cart lines retain their own optional photo reference so catalog edits and
 deletions cannot change the recorded order image.
 
-Native POS preview after the attachment cutover:
+Native POS previews with attachment-backed menu and recorded cart photos:
 
-<img src="docs/screenshots/image-migration/ios-expanded-after.png" alt="iOS POS with attachment-backed menu and recorded cart photos" width="900">
+| iOS | Android |
+| --- | --- |
+| <img src="docs/screenshots/image-migration/ios-expanded-after.png" alt="iOS POS with attachment photos" width="500"> | <img src="docs/screenshots/image-migration/android-expanded-after.png" alt="Android POS with attachment photos" width="500"> |
 
 
 ## App features
