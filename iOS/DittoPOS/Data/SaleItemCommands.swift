@@ -18,11 +18,11 @@ enum SaleItemCommands {
         _ = try await store.execute(
             query: """
                 UPDATE sale_items
-                SET name = :name, imageName = :imageName, price = deserialize_json(:price)
+                SET name = :name, price = deserialize_json(:price)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
             arguments: [
-                "name": metadata.name, "imageName": metadata.imageName,
+                "name": metadata.name,
                 "price": try metadata.price.dittoJSONString(),
                 "id": metadata.documentId.id, "locationId": metadata.documentId.locationId
             ]

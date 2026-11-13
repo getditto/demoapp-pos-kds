@@ -8,13 +8,13 @@ import XCTest
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
             let id = DocumentID(id: "coffee-'\"冰", locationId: "A")
             let other = DocumentID(id: id.id, locationId: "B")
-            let metadata = SaleItemMetadata(documentId: id, name: "Coffee", imageName: "coffee", price: Price(cents: 199))
+            let metadata = SaleItemMetadata(documentId: id, name: "Coffee", price: Price(cents: 199))
             try await repository.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
             try await repository.create(SaleItemCreation(
-                metadata: SaleItemMetadata(documentId: other, name: "Other", imageName: "coffee", price: Price(cents: 250)),
+                metadata: SaleItemMetadata(documentId: other, name: "Other", price: Price(cents: 250)),
                 initialQuantity: 7))
             try await repository.increment(-3, id: id)
-            let replacement = SaleItemMetadata(documentId: id, name: "Renamed \"冰\"", imageName: "milk", price: Price(cents: 0))
+            let replacement = SaleItemMetadata(documentId: id, name: "Renamed \"冰\"", price: Price(cents: 0))
             try await repository.updateMetadata(replacement)
             let edited = try await read(id, from: ditto)
             XCTAssertEqual(edited.quantity, -1)
@@ -59,7 +59,7 @@ import XCTest
                 XCTAssertEqual(Set(rows.map(\.documentId)), Set(LegacySaleItemSeed.saleItemsForAllLocations().map(\.documentId)))
                 for legacy in LegacySaleItemSeed.saleItemsForAllLocations() {
                     XCTAssertEqual(rows.first { $0.documentId == legacy.documentId }?.metadata,
-                                   SaleItemMetadata(documentId: legacy.documentId, name: legacy.name, imageName: legacy.imageName, price: legacy.price))
+                                   SaleItemMetadata(documentId: legacy.documentId, name: legacy.name, price: legacy.price))
                 }
                 let expectedIDs = Set(LegacySaleItemSeed.saleItemsForAllLocations().filter { $0.documentId.locationId == "00001" }.map(\.documentId))
                 let visible = try await waitForItems(from: observedItems, matching: { Set($0.map(\.documentId)) == expectedIDs })
@@ -72,11 +72,11 @@ import XCTest
 
                 try await repository.restart(0, id: first)
                 try await repository.increment(-2, id: first)
-                try await repository.updateMetadata(SaleItemMetadata(documentId: first, name: "Edited", imageName: "milk", price: Price(cents: 0)))
+                try await repository.updateMetadata(SaleItemMetadata(documentId: first, name: "Edited", price: Price(cents: 0)))
                 let deleted = DocumentID(id: "00008", locationId: "00001")
                 _ = try await ditto.store.execute(query: "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
                                                   arguments: ["id": deleted.id, "locationId": deleted.locationId])
-                let custom = SaleItemMetadata(documentId: DocumentID(id: "95f203b6-0251-4ed8-8ae2-bbcb808bf356", locationId: "00001"), name: "Custom", imageName: "coffee", price: Price(cents: 0))
+                let custom = SaleItemMetadata(documentId: DocumentID(id: "95f203b6-0251-4ed8-8ae2-bbcb808bf356", locationId: "00001"), name: "Custom", price: Price(cents: 0))
                 try await repository.create(SaleItemCreation(metadata: custom, initialQuantity: 3))
 
                 await current.seedAll()

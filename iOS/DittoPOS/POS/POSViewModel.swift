@@ -16,6 +16,8 @@ import SwiftUI
     @Published private(set) var isCatalogLoading = true
     var isLoading: Bool { isCatalogLoading || currentOrder == nil }
 
+    var photoStore: DittoStore { saleItemsRepository.store }
+
     // MARK: Derived UI state
 
     var orderTitle: String {

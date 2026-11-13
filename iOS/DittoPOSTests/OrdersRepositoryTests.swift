@@ -42,7 +42,7 @@ import XCTest
             XCTAssertEqual(Set(kitchen.orders.map(\.documentId)), [original.documentId, neighbor.documentId])
 
             let updated = original.addingCartLineItem(
-                CartLineItem(saleItemId: "item-1", name: "Burger", imageName: "burger", price: Price(cents: 850), createdAt: original.createdAt),
+                CartLineItem(saleItemId: "item-1", name: "Burger", price: Price(cents: 850), createdAt: original.createdAt),
                 lineItemId: "line-3")
             try await repository.add(order: updated)
             await expect(local, matching: { $0?.cart.count == 3 }) { }

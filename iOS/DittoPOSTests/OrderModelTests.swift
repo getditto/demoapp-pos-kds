@@ -34,9 +34,12 @@ final class OrderModelTests: XCTestCase {
         XCTAssertEqual(order.status, .inProcess)
         XCTAssertTrue(order.isPaid)
         let encoded = try JSONEncoder.ditto.encode(order)
-        let expected = try XCTUnwrap(JSONSerialization.jsonObject(with: OrderFixture.data()) as? NSDictionary)
+        var expected = try XCTUnwrap(JSONSerialization.jsonObject(with: OrderFixture.data()) as? [String: Any])
+        var cart = try XCTUnwrap(expected["cart"] as? [String: [String: Any]])
+        for key in cart.keys { cart[key]?.removeValue(forKey: "imageName") }
+        expected["cart"] = cart
         let actual = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? NSDictionary)
-        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(actual, expected as NSDictionary)
     }
 
     func testTotalsCountEveryUnitAndSummaryCombinesRepeatedNames() throws {
@@ -49,7 +52,7 @@ final class OrderModelTests: XCTestCase {
     func testAddingAnotherLinePreservesReceiptAndPaymentHistory() throws {
         let original = try OrderFixture.load()
         let item = CartLineItem(
-            saleItemId: "coffee-冰", name: "New coffee", imageName: "coffee", price: Price(cents: 100), qty: 2)
+            saleItemId: "coffee-冰", name: "New coffee", price: Price(cents: 100), qty: 2)
         let updated = original.addingCartLineItem(item, lineItemId: "line-3")
         XCTAssertEqual(updated.totalCents, 1297)
         XCTAssertEqual(updated.cart["line-1"], original.cart["line-1"])
@@ -77,7 +80,7 @@ final class OrderModelTests: XCTestCase {
     }
 
     func testZeroDollarCartStillRequiresAPaymentEntryAndCanceledIsTerminal() {
-        let item = CartLineItem(saleItemId: "free", name: "Free sample", imageName: "", price: Price(cents: 0), qty: 2)
+        let item = CartLineItem(saleItemId: "free", name: "Free sample", price: Price(cents: 0), qty: 2)
         let order = Order.new(locationId: "42").addingCartLineItem(item, lineItemId: "free-1")
         XCTAssertEqual(order.totalCents, 0)
         XCTAssertFalse(order.isPaid)
@@ -86,12 +89,11 @@ final class OrderModelTests: XCTestCase {
     }
 
     func testOrderLineRetainsOriginalDetailsAfterCatalogReplacement() {
-        var catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Original", imageName: "coffee", cents: 199)
+        var catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Original", cents: 199)
         let line = CartLineItem(from: catalog, qty: 3)
-        catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Renamed", imageName: "tea", cents: 999)
+        catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Renamed", cents: 999)
         XCTAssertEqual(line.name, "Original")
         XCTAssertEqual(line.price.amount, 199)
-        XCTAssertEqual(line.imageName, "coffee")
         XCTAssertEqual(line.qty, 3)
         XCTAssertEqual(CartLineItem(from: catalog).price.amount, 999)
     }
