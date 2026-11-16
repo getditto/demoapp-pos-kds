@@ -6,11 +6,13 @@ A demo Point-of-Sale + Kitchen Display System for a quick service restaurant
 chain. Customer orders are entered in the POS view and appear in real time on
 the KDS view as they move through the kitchen workflow.
 
-The UI has three tabs:
+The UI has four tabs:
 
 - **POS** — order entry and payment for the currently selected location.
 - **KDS** — orders the kitchen is currently preparing (`inProcess`) or has
   finished (`processed`) for the currently selected location.
+- **Orders** — a live, paginated list of nonempty orders stored on this device
+  for the currently selected location.
 - **Settings** — location selection, System/Light/Dark appearance and Ditto Tools.
 
 The app runs on iOS and Android and the two platforms sync with each other
@@ -45,6 +47,18 @@ separately and does not gate the kitchen workflow.
 
 <img src="docs/screenshots/kds/ios-phone.png" width="260" alt="iOS kitchen tickets and stage actions" />
 <img src="docs/screenshots/kds/android-phone.png" width="260" alt="Android kitchen tickets and stage actions" />
+
+## Orders
+
+Orders shows recorded items, workflow state, date and total, newest first, with
+50 orders per page. The list and page count update as orders change.
+
+Empty carts are excluded from both queries. Paid, unpaid and zero-total orders
+are included while locally stored. This view uses the existing subscription and
+eviction policies; it does not fetch older history.
+
+<img src="docs/screenshots/orders/ios-phone-light.png" width="260" alt="iOS Orders with workflow state and pagination" />
+<img src="docs/screenshots/orders/android-phone-light.png" width="260" alt="Android Orders with workflow state and pagination" />
 
 ## Data model
 

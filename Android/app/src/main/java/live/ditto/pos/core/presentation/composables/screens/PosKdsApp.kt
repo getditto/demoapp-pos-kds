@@ -33,6 +33,7 @@ import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
+import live.ditto.pos.orders.OrdersScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 import live.ditto.pos.settings.AppAppearance
 import live.ditto.ui.AppIcon
@@ -49,7 +50,7 @@ fun PosKdsApp(viewModel: MainViewModel = hiltViewModel(LocalActivity.current)) {
         appearance = appearance ?: AppAppearance.SYSTEM,
         version = BuildConfig.VERSION_NAME, build = BuildConfig.VERSION_CODE.toString(), sdkVersion = Ditto.VERSION,
         onAppearance = viewModel::setAppearance, onLocation = viewModel::updateCurrentLocation,
-        pos = { PosScreen() }, kds = { KdsScreen() },
+        pos = { PosScreen() }, kds = { KdsScreen() }, orders = { OrdersScreen() },
         tools = { onExit -> DittoToolsViewer(ditto = viewModel.requireDitto(), onExitTools = onExit) }
     )
 }
@@ -66,6 +67,7 @@ fun PosKdsShell(
     onLocation: (String, () -> Unit) -> Unit,
     pos: @Composable () -> Unit,
     kds: @Composable () -> Unit,
+    orders: @Composable () -> Unit,
     tools: @Composable (() -> Unit) -> Unit,
     controller: NavHostController = rememberNavController(),
     startDestination: String = "pos"
@@ -79,6 +81,7 @@ fun PosKdsShell(
     } else {
         when (route) {
             "kds" -> "Kitchen display"
+            "orders" -> "Orders"
             "settings" -> "Settings"
             else -> "POS"
         }
@@ -113,7 +116,7 @@ fun PosKdsShell(
                 } else {
                     PosKdsNavHost(
                         controller, state, appearance, version, build, sdkVersion,
-                        onAppearance, onLocation, pos, kds, tools, startDestination
+                        onAppearance, onLocation, pos, kds, orders, tools, startDestination
                     )
                 }
             }
