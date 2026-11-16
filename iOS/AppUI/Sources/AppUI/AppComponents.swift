@@ -137,19 +137,22 @@ public struct AppHeader: View {
     }
 }
 
+public enum AppEmptyStateStyle { case standard, success, large }
+
 public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    private let prominent: Bool
-    public init(_ title: String, message: String, icon: String, prominent: Bool = false) {
-        self.title = title; self.message = message; self.icon = icon; self.prominent = prominent
+    private let style: AppEmptyStateStyle
+    public init(_ title: String, message: String, icon: String, style: AppEmptyStateStyle = .standard) {
+        self.title = title; self.message = message; self.icon = icon; self.style = style
     }
     public var body: some View {
-        VStack(spacing: 12) {
-            AppIcon(icon, size: prominent ? 40 : 56).foregroundStyle(prominent ? AppColors.success : AppColors.secondaryText)
-            Text(title).font(prominent ? AppTypography.title : AppTypography.heading)
-            Text(message).font(prominent ? AppTypography.body : AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+        VStack(spacing: style == .large ? 16 : 12) {
+            AppIcon(icon, size: style == .large ? 64 : style == .success ? 40 : 56)
+                .foregroundStyle(style == .large ? AppColors.text : style == .success ? AppColors.success : AppColors.secondaryText)
+            Text(title).font(style == .standard ? AppTypography.heading : AppTypography.title)
+            Text(message).font(style == .standard ? AppTypography.caption : AppTypography.body).foregroundStyle(AppColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

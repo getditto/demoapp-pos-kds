@@ -146,15 +146,30 @@ fun AppHeader(title: String, modifier: Modifier = Modifier, location: String = "
     }
 }
 
+enum class AppEmptyStateStyle { STANDARD, SUCCESS, LARGE }
+
 @Composable
-fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, prominent: Boolean = false) {
+fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, style: AppEmptyStateStyle = AppEmptyStateStyle.STANDARD) {
     Box(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CompositionLocalProvider(LocalContentColor provides if (prominent) AppColors.success else MaterialTheme.colorScheme.onSurfaceVariant) {
-                AppIcon(icon, size = if (prominent) 40.dp else 56.dp)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(if (style == AppEmptyStateStyle.LARGE) 16.dp else 12.dp)) {
+            CompositionLocalProvider(
+                LocalContentColor provides when (style) {
+                    AppEmptyStateStyle.LARGE -> MaterialTheme.colorScheme.onSurface
+                    AppEmptyStateStyle.SUCCESS -> AppColors.success
+                    AppEmptyStateStyle.STANDARD -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            ) {
+                AppIcon(
+                    icon,
+                    size = when (style) {
+                        AppEmptyStateStyle.LARGE -> 64.dp
+                        AppEmptyStateStyle.SUCCESS -> 40.dp
+                        AppEmptyStateStyle.STANDARD -> 56.dp
+                    }
+                )
             }
-            Text(title, style = if (prominent) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-            Text(message, style = if (prominent) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text(title, style = if (style == AppEmptyStateStyle.STANDARD) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+            Text(message, style = if (style == AppEmptyStateStyle.STANDARD) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }

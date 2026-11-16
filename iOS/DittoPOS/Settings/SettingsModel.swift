@@ -8,7 +8,7 @@
 import Foundation
 
 enum TabViews: Int, Identifiable {
-    case pos=1, kds, settings
+    case pos=1, kds, settings, orders
     var id: Self { self }
 }
 

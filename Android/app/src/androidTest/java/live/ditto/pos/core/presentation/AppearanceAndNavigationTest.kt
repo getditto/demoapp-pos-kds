@@ -84,6 +84,7 @@ class AppearanceAndNavigationTest {
                                 var draft by rememberSaveable { mutableStateOf("") }
                                 TextField(draft, onValueChange = { draft = it }, label = { Text("Draft") })
                             },
+                            orders = { Text("Orders content") },
                             kds = { Text("Kitchen content") }, tools = { Text("Tools destination") }
                         )
                     }
