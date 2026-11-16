@@ -50,7 +50,7 @@ fun TicketGrid(ticketItems: List<TicketItemUi>, onAdvance: (orderId: String) -> 
                 StageCount("Ready", ready.size, tablet, Modifier.then(if (tablet) Modifier.weight(1f) else Modifier), ready = true)
             }
             if (preparing.isEmpty() && ready.isEmpty()) {
-                AppEmptyState("No active orders", "Orders with items appear here.", live.ditto.ui.R.drawable.phosphor_check_circle, prominent = true)
+                AppEmptyState("No active orders", "Orders with items appear here.", live.ditto.ui.R.drawable.phosphor_check_circle, style = live.ditto.ui.AppEmptyStateStyle.SUCCESS)
             } else if (tablet) {
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     StageColumn(preparing, "No orders preparing", now, onAdvance, Modifier.weight(1f))

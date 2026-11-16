@@ -57,7 +57,7 @@ struct KitchenBoard: View {
                 }.font(AppTypography.body.weight(.medium)).frame(minHeight: 32)
             }
             if isEmpty {
-                AppEmptyState("No active orders", message: "Orders with items appear here.", icon: "check-circle", prominent: true)
+                AppEmptyState("No active orders", message: "Orders with items appear here.", icon: "check-circle", style: .success)
             } else if sizeClass == .regular {
                 HStack(alignment: .top, spacing: 24) {
                     stageColumn(preparing, emptyMessage: "No orders preparing")

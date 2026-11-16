@@ -66,26 +66,45 @@ import Foundation
     }
 
     func observeKitchenOrders(_ locationId: String) -> AnyPublisher<[Order], Never> {
-        store.observePublisher(
+        observeOrders(
             query: KitchenOrders.query,
-            arguments: ["locationId": locationId],
-            mapTo: Order.self
+            arguments: ["locationId": locationId]
         )
+    }
+
+    // MARK: Orders history observation
+
+    func observeHistoryPage(locationId: String, pageIndex: Int) -> AnyPublisher<[Order], Never> {
+        observeOrders(
+            query: OrdersHistoryQuery.page,
+            arguments: ["locationId": locationId, "offset": pageIndex * OrdersHistoryQuery.pageSize]
+        )
+    }
+
+    func observeHistoryCount(locationId: String) -> AnyPublisher<Int, Never> {
+        store.observePublisher(
+            query: OrdersHistoryQuery.count,
+            arguments: ["locationId": locationId],
+            mapTo: OrdersHistoryQuery.Count.self
+        ).map { $0.first?.total ?? 0 }.eraseToAnyPublisher()
     }
 
     // MARK: Selected POS order observation
 
     func observeOrder(_ id: DocumentID) -> AnyPublisher<Order?, Never> {
-        store.observePublisher(
+        observeOrders(
             query: """
                 SELECT * FROM \(Order.collectionName)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
-            arguments: ["id": id.id, "locationId": id.locationId],
-            mapTo: Order.self
+            arguments: ["id": id.id, "locationId": id.locationId]
         )
         .map(\.first)
         .eraseToAnyPublisher()
+    }
+
+    private func observeOrders(query: String, arguments: [String: Any?]) -> AnyPublisher<[Order], Never> {
+        store.observePublisher(query: query, arguments: arguments, mapTo: Order.self)
     }
 
     // MARK: Mutations

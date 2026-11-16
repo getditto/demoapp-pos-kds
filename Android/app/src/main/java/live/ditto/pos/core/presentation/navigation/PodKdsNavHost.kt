@@ -21,12 +21,14 @@ fun PosKdsNavHost(
     onLocation: (String, () -> Unit) -> Unit,
     pos: @Composable () -> Unit,
     kds: @Composable () -> Unit,
+    orders: @Composable () -> Unit,
     tools: @Composable (() -> Unit) -> Unit,
     startDestination: String
 ) {
     NavHost(navController = navHostController, startDestination = startDestination) {
         composable(BottomNavItem.PointOfSale.route) { pos() }
         composable(BottomNavItem.KitchenDisplay.route) { kds() }
+        composable(BottomNavItem.Orders.route) { orders() }
         composable(BottomNavItem.Settings.route) {
             SettingsScreen(
                 location = state.currentLocationName,

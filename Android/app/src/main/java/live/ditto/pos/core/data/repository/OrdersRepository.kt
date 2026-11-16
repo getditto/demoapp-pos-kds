@@ -26,6 +26,7 @@ import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrderEviction
+import live.ditto.pos.core.data.orders.OrdersHistoryQuery
 import live.ditto.pos.core.data.orders.cartPathsForUnset
 import live.ditto.pos.core.data.toDittoIsoString
 import javax.inject.Inject
@@ -90,9 +91,9 @@ class OrdersRepository internal constructor(
     }
 
     fun observeKitchenOrders(locationId: String): Flow<List<Order>> =
-        ditto.store.observeAsFlow(
+        observeOrders(
             query = KitchenOrders.query,
-            args = mapOf("locationId" to locationId)
+            arguments = mapOf("locationId" to locationId)
         )
 
     suspend fun upsert(order: Order) {
@@ -111,10 +112,23 @@ class OrdersRepository internal constructor(
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decodeOrSkip<Order>().firstOrNull() }
 
-    fun observeOrder(id: DocumentID): Flow<Order?> = ditto.store.observeAsFlow<Order>(
+    fun observeHistoryPage(locationId: String, pageIndex: Int): Flow<List<Order>> = observeOrders(
+        OrdersHistoryQuery.PAGE,
+        mapOf("locationId" to locationId, "offset" to pageIndex * OrdersHistoryQuery.PAGE_SIZE)
+    )
+
+    fun observeHistoryCount(locationId: String): Flow<Int> = ditto.store.observeAsFlow<OrdersHistoryQuery.Count>(
+        OrdersHistoryQuery.COUNT,
+        mapOf("locationId" to locationId)
+    ).map { it.firstOrNull()?.total ?: 0 }
+
+    fun observeOrder(id: DocumentID): Flow<Order?> = observeOrders(
         CURRENT_ORDER_QUERY,
         mapOf("id" to id.id, "locationId" to id.locationId)
     ).map { it.firstOrNull() }
+
+    private fun observeOrders(query: String, arguments: Map<String, Any>): Flow<List<Order>> =
+        ditto.store.observeAsFlow(query, arguments)
 
     suspend fun clearCart(order: Order) {
         if (order.cart.isEmpty()) return
