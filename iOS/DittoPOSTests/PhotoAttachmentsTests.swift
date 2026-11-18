@@ -53,7 +53,7 @@ import XCTest
             XCTAssertEqual(removed.metadata, renamed)
             XCTAssertEqual(removed.quantity, -2)
             let absent = try await ditto.store.execute(query: "SELECT image FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
-            XCTAssertNil(absent.items.first?.value["image"])
+            XCTAssertFalse(try XCTUnwrap(absent.items.first).value.keys.contains("image"))
         }
     }
 
