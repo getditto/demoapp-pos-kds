@@ -6,7 +6,6 @@ package live.ditto.pos.core.data.demo
 import com.ditto.kotlin.Ditto
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.dittoJsonString
-import live.ditto.pos.core.data.images.PhotoAttachments
 import live.ditto.pos.core.data.locations.Location
 
 class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos) {
@@ -25,7 +24,10 @@ class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos
 
     suspend fun seedSaleItems() {
         for (item in SaleItemSeed.saleItemsForAllLocations()) {
-            PhotoAttachments.importPhoto(photos.bytes(item.documentId.id), "image/png", ditto.store).use { photo ->
+            val photo = photos.open(item.documentId.id).use { stream ->
+                ditto.store.newAttachment(stream, mapOf("mime_type" to "image/png"))
+            }
+            photo.use {
                 ditto.store.execute(
                     """
                         INSERT INTO COLLECTION ${SaleItem.COLLECTION_NAME} (quantity COUNTER, image ATTACHMENT)
