@@ -11,8 +11,8 @@ import kotlinx.serialization.Serializable
 object OrdersHistoryQuery {
     const val PAGE_SIZE = 50
     private const val PREDICATE = "_id.locationId = :locationId AND object_length(cart) > 0"
-    const val PAGE = "SELECT * FROM pos_orders WHERE $PREDICATE ORDER BY createdAt DESC, _id.id ASC LIMIT 50 OFFSET :offset"
-    const val COUNT = "SELECT COUNT(*) AS total FROM pos_orders WHERE $PREDICATE"
+    const val PAGE = "SELECT * FROM ${Order.COLLECTION_NAME} WHERE $PREDICATE ORDER BY createdAt DESC, _id.id ASC LIMIT 50 OFFSET :offset"
+    const val COUNT = "SELECT COUNT(*) AS total FROM ${Order.COLLECTION_NAME} WHERE $PREDICATE"
 
     @Serializable data class Count(val total: Int)
 }
