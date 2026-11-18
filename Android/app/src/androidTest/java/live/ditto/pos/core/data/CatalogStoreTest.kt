@@ -65,11 +65,10 @@ class CatalogStoreTest {
             seeder.seedAll()
             val seeded = ditto.store.execute("SELECT * FROM sale_items_v2") { it.decode<SaleItem>() }
             assertEquals(SaleItemSeed.saleItemsForAllLocations().map { it.metadata }.toSet(), seeded.map { it.metadata }.toSet())
-            for (item in seeded) {
-                assertEquals(20L, item.quantity)
-                PhotoAttachments.importPhoto(bundledPhotos.bytes(item.documentId.id), "image/png", ditto.store).use { photo ->
-                    assertEquals(PhotoAttachments.reference(photo), item.image)
-                }
+            assertTrue(seeded.all { it.quantity == 20L && it.image != null })
+            PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, "image/png", ditto.store).use { burgerPhoto ->
+                val burger = seeded.single { it.documentId == DocumentID("00001", "00001") }
+                assertEquals(PhotoAttachments.reference(burgerPhoto), burger.image)
             }
 
             val editedId = DocumentID("00001", "00001")

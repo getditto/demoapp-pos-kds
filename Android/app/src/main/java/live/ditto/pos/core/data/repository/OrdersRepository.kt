@@ -168,7 +168,7 @@ class OrdersRepository internal constructor(
         timeZone().let { zone -> instant.toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
 
     companion object {
-        private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId"
+        private const val CURRENT_ORDER_QUERY = "SELECT * FROM ${Order.COLLECTION_NAME} WHERE _id.id = :id AND _id.locationId = :locationId"
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }
