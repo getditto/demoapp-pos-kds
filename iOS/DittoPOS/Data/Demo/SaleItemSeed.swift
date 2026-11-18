@@ -15,31 +15,30 @@ enum SaleItemSeed {
     private struct Item {
         let id: String
         let name: String
-        let imageName: String
         let cents: Int
     }
 
     private static let catalog: [Item] = [
-        Item(id: "00001", name: "Burger",        imageName: "burger",       cents: 850),
-        Item(id: "00002", name: "Burrito",       imageName: "burrito",      cents: 650),
-        Item(id: "00003", name: "Fried Chicken", imageName: "chicken",      cents: 800),
-        Item(id: "00004", name: "Potato Chips",  imageName: "chips",        cents: 250),
-        Item(id: "00005", name: "Coffee",        imageName: "coffee",       cents: 195),
-        Item(id: "00006", name: "Cookies",       imageName: "cookies",      cents: 350),
-        Item(id: "00007", name: "Corn",          imageName: "corn",         cents: 350),
-        Item(id: "00008", name: "French Fries",  imageName: "fries",        cents: 350),
-        Item(id: "00009", name: "Fruit Salad",   imageName: "fruit_salad",  cents: 650),
-        Item(id: "00010", name: "Gumbo",         imageName: "gumbo",        cents: 995),
-        Item(id: "00011", name: "Ice Cream",     imageName: "ice_cream",    cents: 250),
-        Item(id: "00012", name: "Milk",          imageName: "milk",         cents: 200),
-        Item(id: "00013", name: "Onion Rings",   imageName: "onion_rings",  cents: 350),
-        Item(id: "00014", name: "Pancakes",      imageName: "pancakes",     cents: 550),
-        Item(id: "00015", name: "Pie",           imageName: "pie",          cents: 450),
-        Item(id: "00016", name: "Salad",         imageName: "salad",        cents: 650),
-        Item(id: "00017", name: "Sandwich",      imageName: "sandwich",     cents: 450),
-        Item(id: "00018", name: "Soft Drink",    imageName: "soft_drink",   cents: 150),
-        Item(id: "00019", name: "Tacos",         imageName: "tacos",        cents: 650),
-        Item(id: "00020", name: "Veggie Plate",  imageName: "veggies",      cents: 750)
+        Item(id: "00001", name: "Burger",        cents: 850),
+        Item(id: "00002", name: "Burrito",       cents: 650),
+        Item(id: "00003", name: "Fried Chicken", cents: 800),
+        Item(id: "00004", name: "Potato Chips",  cents: 250),
+        Item(id: "00005", name: "Coffee",        cents: 195),
+        Item(id: "00006", name: "Cookies",       cents: 350),
+        Item(id: "00007", name: "Corn",          cents: 350),
+        Item(id: "00008", name: "French Fries",  cents: 350),
+        Item(id: "00009", name: "Fruit Salad",   cents: 650),
+        Item(id: "00010", name: "Gumbo",         cents: 995),
+        Item(id: "00011", name: "Ice Cream",     cents: 250),
+        Item(id: "00012", name: "Milk",          cents: 200),
+        Item(id: "00013", name: "Onion Rings",   cents: 350),
+        Item(id: "00014", name: "Pancakes",      cents: 550),
+        Item(id: "00015", name: "Pie",           cents: 450),
+        Item(id: "00016", name: "Salad",         cents: 650),
+        Item(id: "00017", name: "Sandwich",      cents: 450),
+        Item(id: "00018", name: "Soft Drink",    cents: 150),
+        Item(id: "00019", name: "Tacos",         cents: 650),
+        Item(id: "00020", name: "Veggie Plate",  cents: 750)
     ]
 
     private static let menus: [String: [String]] = [
@@ -52,44 +51,18 @@ enum SaleItemSeed {
         "00007": ["00019", "00002", "00007", "00018", "00003", "00011"]                      // Tarra's: tacos/burrito/corn/soda/chicken/ice cream
     ]
 
-    struct InitialDocument: Encodable, Sendable {
-        let documentId: DocumentID
-        let name: String
-        let imageName: String
-        let price: Price
-
-        private enum CodingKeys: String, CodingKey {
-            case documentId = "_id"
-            case name, imageName, price
-        }
-    }
-
-    // INITIAL data must match the legacy operation on every peer; upgrades follow it.
-    // https://docs.ditto.live/dql/insert#insert-with-initial-documents
-    static func initialDocuments() -> [InitialDocument] {
-        LocationSeed.demoLocations.flatMap { location in
-            (menus[location.id] ?? []).compactMap { id in
-                catalog.first { $0.id == id }.map {
-                    InitialDocument(documentId: DocumentID(id: id, locationId: location.id),
-                                    name: $0.name, imageName: $0.imageName, price: Price(cents: $0.cents))
-                }
-            }
-        }
-    }
-
     static func saleItemsForAllLocations() -> [SaleItem] {
-        var out: [SaleItem] = []
-        for location in LocationSeed.demoLocations {
-            for itemId in menus[location.id] ?? [] {
-                guard let item = catalog.first(where: { $0.id == itemId }) else { continue }
-                out.append(SaleItem.seed(
-                    id: item.id,
-                    locationId: location.id,
+        let byId = Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
+        return LocationSeed.demoLocations.flatMap { location in
+            menus[location.id]!.map { itemId in
+                let item = byId[itemId]!
+                return SaleItem(
+                    documentId: DocumentID(id: item.id, locationId: location.id),
                     name: item.name,
-                    cents: item.cents
-                ))
+                    price: Price(cents: item.cents),
+                    quantity: initialQuantity
+                )
             }
         }
-        return out
     }
 }

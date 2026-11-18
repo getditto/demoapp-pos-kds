@@ -93,7 +93,7 @@ import XCTest
             await expect(pos.$currentOrder, matching: { $0?.cart.count == 1 }) { pos.addOrderItem(pos.saleItems[0]) }
             let id = try XCTUnwrap(pos.currentOrder?.documentId)
             _ = try await ditto.store.execute(
-                query: "UPDATE pos_orders SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
+                query: "UPDATE pos_orders_v2 SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
                 arguments: ["date": DittoWireDate.string(from: createdAt), "id": id.id, "locationId": "A"])
             await expect(pos.$currentOrder, matching: { $0?.createdAt == createdAt }) { }
             let stored = try await readOrder(id, from: ditto)
@@ -109,14 +109,14 @@ import XCTest
             await expect(pos.$currentOrder, matching: { $0 == stored }) { pos.setVisible(true) }
             pos.setVisible(false)
             XCTAssertTrue(ditto.store.observers.isEmpty)
-            let subscription = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
+            let subscription = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders_v2") })
             XCTAssertEqual(subscription.queryArguments?["TTL"] as? String, "2026-04-01T00:00:00.000Z")
 
             try await orders.runEvictionIfDue()
             XCTAssertTrue(subscription.isCancelled)
-            let replacement = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders") })
+            let replacement = try XCTUnwrap(ditto.sync.subscriptions.first { $0.queryString.contains("pos_orders_v2") })
             XCTAssertEqual(replacement.queryArguments?["TTL"] as? String, "2026-04-03T00:00:00.000Z")
-            let remaining = try await ditto.store.execute(query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+            let remaining = try await ditto.store.execute(query: "SELECT * FROM pos_orders_v2 WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
             XCTAssertTrue(remaining.items.isEmpty)
             await expect(pos.$currentOrder, matching: { $0 != nil && $0?.documentId != id && $0?.cart.isEmpty == true }) { pos.setVisible(true) }
             let fresh = try await readOrder(XCTUnwrap(pos.currentOrder).documentId, from: ditto)
@@ -153,11 +153,11 @@ import XCTest
                 default: changed = retained
                 }
                 _ = try await ditto.store.execute(
-                    query: "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                    query: "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                     arguments: ["json": try changed.dittoJSONString()])
                 let stored = try await readOrder(outgoing.documentId, from: ditto)
                 XCTAssertEqual(stored.isPaid, state == "paid" || state == "canceled")
-                let stockBefore = try await ditto.store.execute(query: "SELECT * FROM sale_items WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+                let stockBefore = try await ditto.store.execute(query: "SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
                 let originalItems: [SaleItem] = try stockBefore.decode()
                 XCTAssertNil(pos.currentOrder)
 
@@ -168,7 +168,7 @@ import XCTest
                 pos.setVisible(false)
                 let saved = try await readOrder(outgoing.documentId, from: ditto)
                 XCTAssertEqual(saved, stored, state)
-                let stockAfter = try await ditto.store.execute(query: "SELECT * FROM sale_items WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
+                let stockAfter = try await ditto.store.execute(query: "SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", arguments: ["locationId": "A"])
                 let savedItems: [SaleItem] = try stockAfter.decode()
                 XCTAssertEqual(savedItems, originalItems, state)
                 XCTAssertTrue(ditto.store.observers.isEmpty)
@@ -178,7 +178,7 @@ import XCTest
 
     private func readOrder(_ id: DocumentID, from ditto: Ditto) async throws -> Order {
         let result = try await ditto.store.execute(
-            query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": id.id, "locationId": id.locationId])
         let orders: [Order] = try result.decode()
         return try XCTUnwrap(orders.first)
@@ -223,7 +223,7 @@ import XCTest
             await expect(kitchen.$orders, matching: { $0.count == 1 }) { kitchen.setVisible(true) }
             XCTAssertFalse(kitchen.isLoading)
             XCTAssertEqual(ditto.store.observers.count, baseline + 1)
-            XCTAssertFalse(ditto.store.observers.contains { $0.queryString.contains("sale_items") })
+            XCTAssertFalse(ditto.store.observers.contains { $0.queryString.contains("sale_items_v2") })
             let ticket = try XCTUnwrap(kitchen.orders.first)
             await expect(kitchen.$orders, matching: { $0.first?.status == .processed }) { orders.updateStatus(of: ticket, with: .processed) }
             kitchen.setVisible(false)

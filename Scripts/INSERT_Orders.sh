@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Purpose:
-# Simulates order generation for the POS demo app. Inserts a new pos_orders
+# Simulates order generation for the POS demo app. Inserts a new pos_orders_v2
 # document at a configurable interval. Each generated order is in the
 # `inProcess` status (one cart item) so it shows up immediately in the KDS
 # view. Advancing/paying orders must still be done from the iOS or Android app.
@@ -43,7 +43,7 @@ while true; do
     --header "Authorization: $API_KEY" \
     --header "Content-Type: application/json" \
     --data-raw "{
-      \"statement\": \"INSERT INTO pos_orders DOCUMENTS (:new) ON ID CONFLICT DO UPDATE_LOCAL_DIFF\",
+      \"statement\": \"INSERT INTO pos_orders_v2 DOCUMENTS (:new) ON ID CONFLICT DO UPDATE_LOCAL_DIFF\",
       \"args\": {
         \"new\": {
           \"_id\": { \"id\": \"$ORDER_ID\", \"locationId\": \"$LOCATION_ID\" },

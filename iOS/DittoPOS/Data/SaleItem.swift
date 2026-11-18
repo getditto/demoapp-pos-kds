@@ -11,7 +11,7 @@ struct SaleItem: Decodable, Hashable, Sendable {
     let documentId: DocumentID
     let name: String
     let price: Price
-    let quantity: Int64?
+    let quantity: Int64
     let image: PhotoReference?
 
     private enum CodingKeys: String, CodingKey {
@@ -19,7 +19,7 @@ struct SaleItem: Decodable, Hashable, Sendable {
         case name, price, quantity, image
     }
 
-    init(documentId: DocumentID, name: String, price: Price, quantity: Int64? = nil, image: PhotoReference? = nil) {
+    init(documentId: DocumentID, name: String, price: Price, quantity: Int64, image: PhotoReference? = nil) {
         self.documentId = documentId
         self.name = name
         self.price = price
@@ -31,7 +31,7 @@ struct SaleItem: Decodable, Hashable, Sendable {
         SaleItemMetadata(documentId: documentId, name: name, price: price)
     }
 
-    static let collectionName = "sale_items"
+    static let collectionName = "sale_items_v2"
 }
 
 struct SaleItemMetadata: Codable, Hashable, Sendable {
@@ -62,14 +62,4 @@ struct SaleItemCreation: Encodable, Sendable {
 
 extension SaleItem: CustomStringConvertible {
     var description: String { "\(name): \(price.description)" }
-}
-
-extension SaleItem {
-    static func seed(id: String, locationId: String, name: String, cents: Int) -> SaleItem {
-        SaleItem(
-            documentId: DocumentID(id: id, locationId: locationId),
-            name: name,
-            price: Price(cents: cents)
-        )
-    }
 }

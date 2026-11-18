@@ -78,18 +78,18 @@ class VisibleDemoTest {
                                 else -> retained
                             }
                             ditto.store.execute(
-                                "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                                "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                                 mapOf("json" to changed.dittoJsonString())
                             )
                             val stored = read(outgoing.documentId)
                             assertEquals(state == "paid" || state == "canceled", stored.isPaid)
-                            val stockBefore = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
+                            val stockBefore = ditto.store.execute("SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
                             settings.setLocationId("B")
                             collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
                             val destination = states.await { it.currentOrderId.isNotEmpty() && it.currentOrderId != outgoing.documentId.id }
                             assertEquals("B", read(DocumentID(destination.currentOrderId, "B")).documentId.locationId)
                             assertEquals(state, stored, read(outgoing.documentId))
-                            val stockAfter = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
+                            val stockAfter = ditto.store.execute("SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
                             assertEquals(state, stockBefore, stockAfter)
                         } finally {
                             collection.cancelAndJoin()
@@ -240,7 +240,7 @@ class VisibleDemoTest {
                         collection.cancelAndJoin()
                     }
                     awaitObserverCount(0)
-                    val subscription = ditto.sync.subscriptions.single { it.queryString.contains("pos_orders") }
+                    val subscription = ditto.sync.subscriptions.single { it.queryString.contains("pos_orders_v2") }
                     val args = dittoJson.parseToJsonElement(requireNotNull(subscription.queryArgumentsJsonString)).jsonObject
                     assertEquals("2026-03-31T00:00:00.000Z", args.getValue("TTL").jsonPrimitive.content)
                     tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
@@ -322,7 +322,7 @@ class VisibleDemoTest {
                         val preparing = kitchenStates.await { it.tickets.size == 1 }
                         assertFalse(preparing.isLoading)
                         awaitObserverCount(baseline + 1)
-                        assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items") })
+                        assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items_v2") })
                         kitchen.updateTicketStatus(preparing.tickets.single().orderId)
                         kitchenStates.await { it.tickets.singleOrNull()?.orderStatus == OrderStatus.PROCESSED }
                         assertEquals(firstID, settings.currentOrderId())

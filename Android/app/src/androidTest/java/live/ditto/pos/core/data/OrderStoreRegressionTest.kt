@@ -130,7 +130,7 @@ class OrderStoreRegressionTest {
             repository(now).runEvictionIfDue()
 
             val remaining = ditto.store.execute(
-                "SELECT * FROM pos_orders WHERE _id.locationId = :locationId",
+                "SELECT * FROM pos_orders_v2 WHERE _id.locationId = :locationId",
                 mapOf("locationId" to "42")
             ) { it.decode<Order>() }
             assertEquals(listOf("after"), remaining.map { it.documentId.id })
@@ -170,7 +170,7 @@ class OrderStoreRegressionTest {
                     val updatedAt = Instant.parse("2026-04-01T13:00:00.123Z")
                     // Simulate a peer update locally, retaining the same live collection.
                     ditto.store.execute(
-                        "UPDATE pos_orders SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
+                        "UPDATE pos_orders_v2 SET createdAt = :date WHERE _id.id = :id AND _id.locationId = :locationId",
                         mapOf("date" to updatedAt.toDittoIsoString(), "id" to original.documentId.id, "locationId" to "42")
                     )
                     val updated = withTimeout(5_000) { observedOrders.receive() }

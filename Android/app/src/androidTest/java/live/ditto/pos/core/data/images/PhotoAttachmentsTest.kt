@@ -73,7 +73,7 @@ class PhotoAttachmentsTest {
                             assertNull(removed.image)
                             assertEquals(renamed, removed.metadata)
                             assertEquals(-2L, removed.quantity)
-                            ditto.store.execute("SELECT image FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to id.id, "locationId" to id.locationId)) {
+                            ditto.store.execute("SELECT image FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to id.id, "locationId" to id.locationId)) {
                                 assertFalse(it.items.single().value.dictionary.keys.any { key -> key.string == "image" })
                             }
                         } finally {
@@ -86,7 +86,7 @@ class PhotoAttachmentsTest {
     }
 
     private suspend fun TestDitto.readItem(id: DocumentID): SaleItem = ditto.store.execute(
-        "SELECT * FROM COLLECTION sale_items (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM COLLECTION sale_items_v2 (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decodeOrSkip<SaleItem>().single() }
 }

@@ -13,24 +13,13 @@ data class SaleItem(
     @SerialName("_id") val documentId: DocumentID,
     val name: String,
     val price: Price,
-    val quantity: Long? = null,
+    val quantity: Long,
     val image: PhotoReference? = null
 ) {
     val metadata: SaleItemMetadata get() = SaleItemMetadata(documentId, name, price)
 
     companion object {
-        const val COLLECTION_NAME = "sale_items"
-
-        fun seed(
-            id: String,
-            locationId: String,
-            name: String,
-            cents: Int
-        ): SaleItem = SaleItem(
-            documentId = DocumentID(id = id, locationId = locationId),
-            name = name,
-            price = Price(cents)
-        )
+        const val COLLECTION_NAME = "sale_items_v2"
     }
 }
 

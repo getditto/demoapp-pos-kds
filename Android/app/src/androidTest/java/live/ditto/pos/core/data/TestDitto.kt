@@ -41,7 +41,7 @@ internal class TestDitto(
         AppSettings(PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(directory, "ui.preferences_pb") }))
     }
 
-    fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope, bundledPhotos)
+    fun catalog(locationIds: Flow<String> = emptyFlow()): SaleItemsRepository = SaleItemsRepository({ ditto }, locationIds, scope)
     fun locations(updateSyncGroup: suspend (String?) -> Unit): LocationsRepository = LocationsRepository({ ditto }, settings, updateSyncGroup, scope)
 
     fun repository(now: Instant = Instant.parse("2026-04-01T12:00:00.000Z"), locationIds: Flow<String> = emptyFlow(), clock: () -> Instant = { now }): OrdersRepository = OrdersRepository(
@@ -50,19 +50,18 @@ internal class TestDitto(
         preferences = { preferences },
         now = clock,
         timeZone = { TimeZone.UTC },
-        repoScope = scope,
-        bundledPhotos = bundledPhotos
+        repoScope = scope
     )
 
     suspend fun insert(order: Order) {
         ditto.store.execute(
-            "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json))",
+            "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json))",
             mapOf("json" to order.dittoJsonString())
         )
     }
 
     suspend fun read(id: DocumentID): Order = ditto.store.execute(
-        "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decode<Order>().single() }
 

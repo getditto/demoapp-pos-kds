@@ -89,7 +89,7 @@ class OrderPhotosTest {
                 val paid = read(order.documentId)
                 assertEquals(order.addingPayment(payment, "payment`new").appendingStatus(OrderStatus.PROCESSED, date), paid)
                 assertEquals(other, read(other.documentId))
-                ditto.store.execute("DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to saleId.id, "locationId" to saleId.locationId))
+                ditto.store.execute("DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to saleId.id, "locationId" to saleId.locationId))
                 assertEquals(paid, read(order.documentId))
                 // Historical lines render from their own references without originalAttachment catalog document.
                 kotlinx.coroutines.coroutineScope {
@@ -148,7 +148,7 @@ class OrderPhotosTest {
     }
 
     private suspend fun TestDitto.sale(id: DocumentID): SaleItem = ditto.store.execute(
-        "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decode<SaleItem>().single() }
 }

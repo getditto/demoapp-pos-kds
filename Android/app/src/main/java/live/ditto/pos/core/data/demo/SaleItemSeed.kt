@@ -2,12 +2,9 @@ package live.ditto.pos.core.data.demo
 
 // Demo-only data.
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.SaleItem
-import live.ditto.pos.core.data.dittoJsonString
 
 object SaleItemSeed {
     const val INITIAL_QUANTITY = 20L
@@ -15,31 +12,30 @@ object SaleItemSeed {
     private data class Item(
         val id: String,
         val name: String,
-        val imageName: String,
         val cents: Int
     )
 
     private val catalog: List<Item> = listOf(
-        Item("00001", "Burger", "burger", 850),
-        Item("00002", "Burrito", "burrito", 650),
-        Item("00003", "Fried Chicken", "chicken", 800),
-        Item("00004", "Potato Chips", "chips", 250),
-        Item("00005", "Coffee", "coffee", 195),
-        Item("00006", "Cookies", "cookies", 350),
-        Item("00007", "Corn", "corn", 350),
-        Item("00008", "French Fries", "fries", 350),
-        Item("00009", "Fruit Salad", "fruit_salad", 650),
-        Item("00010", "Gumbo", "gumbo", 995),
-        Item("00011", "Ice Cream", "ice_cream", 250),
-        Item("00012", "Milk", "milk", 200),
-        Item("00013", "Onion Rings", "onion_rings", 350),
-        Item("00014", "Pancakes", "pancakes", 550),
-        Item("00015", "Pie", "pie", 450),
-        Item("00016", "Salad", "salad", 650),
-        Item("00017", "Sandwich", "sandwich", 450),
-        Item("00018", "Soft Drink", "soft_drink", 150),
-        Item("00019", "Tacos", "tacos", 650),
-        Item("00020", "Veggie Plate", "veggies", 750)
+        Item("00001", "Burger", 850),
+        Item("00002", "Burrito", 650),
+        Item("00003", "Fried Chicken", 800),
+        Item("00004", "Potato Chips", 250),
+        Item("00005", "Coffee", 195),
+        Item("00006", "Cookies", 350),
+        Item("00007", "Corn", 350),
+        Item("00008", "French Fries", 350),
+        Item("00009", "Fruit Salad", 650),
+        Item("00010", "Gumbo", 995),
+        Item("00011", "Ice Cream", 250),
+        Item("00012", "Milk", 200),
+        Item("00013", "Onion Rings", 350),
+        Item("00014", "Pancakes", 550),
+        Item("00015", "Pie", 450),
+        Item("00016", "Salad", 650),
+        Item("00017", "Sandwich", 450),
+        Item("00018", "Soft Drink", 150),
+        Item("00019", "Tacos", 650),
+        Item("00020", "Veggie Plate", 750)
     )
 
     private val menus: Map<String, List<String>> = mapOf(
@@ -52,35 +48,13 @@ object SaleItemSeed {
         "00007" to listOf("00019", "00002", "00007", "00018", "00003", "00011")
     )
 
-    internal fun initialItems(): List<InitialSaleItem> {
+    fun saleItemsForAllLocations(): List<SaleItem> {
         val byId = catalog.associateBy { it.id }
         return LocationSeed.demoLocations.flatMap { location ->
-            (menus[location.id] ?: emptyList()).mapNotNull { itemId ->
-                byId[itemId]?.let { item ->
-                    InitialSaleItem(
-                        documentId = DocumentID(item.id, location.id),
-                        name = item.name,
-                        imageName = item.imageName,
-                        price = Price(item.cents)
-                    )
-                }
+            menus.getValue(location.id).map { itemId ->
+                val item = byId.getValue(itemId)
+                SaleItem(DocumentID(item.id, location.id), item.name, Price(item.cents), quantity = INITIAL_QUANTITY)
             }
         }
     }
-    fun saleItemsForAllLocations(): List<SaleItem> = initialItems().map {
-        SaleItem(it.documentId, it.name, it.price)
-    }
-
-    internal fun contains(id: DocumentID): Boolean = id.id in menus[id.locationId].orEmpty()
-    internal fun initialDocuments(): List<String> = initialItems().map { it.dittoJsonString() }
 }
-
-// INITIAL must keep the same payload as installations that still seed these IDs.
-// https://docs.ditto.live/dql/insert#insert-with-initial-documents
-@Serializable
-internal data class InitialSaleItem(
-    @SerialName("_id") val documentId: DocumentID,
-    val name: String,
-    val imageName: String,
-    val price: Price
-)
