@@ -11,13 +11,8 @@ import kotlinx.coroutines.withTimeout
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.TestDitto
-import live.ditto.pos.core.data.images.PhotoAttachments
-import live.ditto.pos.core.data.images.PhotoTestImages
 import live.ditto.pos.core.data.orders.OrdersHistory
 import live.ditto.pos.core.data.orders.OrdersHistoryState
-import live.ditto.pos.legacy.LegacyCartLineItem
-import live.ditto.pos.legacy.LegacyOrder
-import live.ditto.pos.legacy.write
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -25,36 +20,6 @@ import org.junit.Test
 import kotlin.time.Instant
 
 class OrdersHistoryStoreTest {
-    @Test
-    fun historyPreparesALegacyOrderArrivingAfterObservationStarts() = runBlocking {
-        TestDitto.withInstance {
-            val repository = repository()
-            withContext(Dispatchers.Main) {
-                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-                val history = OrdersHistory(scope, repository::observeHistoryPage, repository::observeHistoryCount)
-                try {
-                    history.setLocation("00001")
-                    history.setVisible(true)
-                    history.await { total == 0 && orders.isEmpty() }
-
-                    val legacyLine = LegacyCartLineItem("00001", "Historical burger", "milk", Price(100), qty = 2)
-                    val legacyOrder = LegacyOrder.new("00001").addingCartLineItem(legacyLine, "burger-line")
-                    legacyOrder.write(ditto.store)
-                    PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, "image/png", ditto.store).use { bundledAttachment ->
-                        history.await { total == 1 && orders.firstOrNull()?.cart?.get("burger-line")?.image?.id == bundledAttachment.id }
-                    }
-                    val preparedLine = history.state.value.orders.single().cart.getValue("burger-line")
-                    assertEquals(legacyLine.name, preparedLine.name)
-                    assertEquals(legacyLine.price, preparedLine.price)
-                    assertEquals(legacyLine.qty, preparedLine.qty)
-                } finally {
-                    history.setVisible(false)
-                    scope.cancel()
-                }
-            }
-        }
-    }
-
     @Test
     fun localPagesExcludeOtherLocationsAndEmptyCartsAndRepageAfterCleanup() = runBlocking {
         TestDitto.withInstance {
@@ -100,7 +65,7 @@ class OrdersHistoryStoreTest {
                     history.await { pageIndex == 2 && orders.map { it.documentId.id } == listOf("00000049") }
                     assertFalse(history.state.value.canNext)
                     assertEquals(old, history.state.value.orders.single().createdAt)
-                    ditto.store.execute("DELETE FROM pos_orders WHERE _id.locationId = :locationId AND _id.id = :id", mapOf("locationId" to "A", "id" to "00000049"))
+                    ditto.store.execute("DELETE FROM pos_orders_v2 WHERE _id.locationId = :locationId AND _id.id = :id", mapOf("locationId" to "A", "id" to "00000049"))
                     history.await { total == 100 && pageIndex == 1 && orders.size == 50 }
                     insert(order(101))
                     history.await { total == 101 && pageIndex == 1 && canNext }

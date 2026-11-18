@@ -3,29 +3,6 @@ import DittoSwift
 import XCTest
 
 @MainActor final class OrdersHistoryTests: XCTestCase {
-    func testHistoryPreparesALegacyOrderArrivingAfterObservationStarts() async throws {
-        try await TestDitto.withInstance { ditto in
-            let repository = OrdersRepository(ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher())
-            let history = OrdersHistory(repository: repository)
-            history.setLocation("00001")
-            history.setVisible(true)
-            defer { history.setVisible(false) }
-            await expect(history) { $0.total == 0 && $0.orders.isEmpty }
-
-            let legacyLine = CartLineItem(saleItemId: "00001", name: "Historical burger", price: Price(cents: 100), qty: 2)
-            let legacyOrder = Order.new(locationId: "00001").addingCartLineItem(legacyLine, lineItemId: "burger-line")
-            try await LegacyOrderWriter.insert(legacyOrder, imageName: "milk", store: ditto.store)
-            let bundledAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, mimeType: "image/png", store: ditto.store)
-            await expect(history) {
-                $0.total == 1 && $0.orders.first?.cart["burger-line"]?.image?.id == bundledAttachment.id
-            }
-            let preparedLine = try XCTUnwrap(history.state.orders.first?.cart["burger-line"])
-            XCTAssertEqual(preparedLine.name, legacyLine.name)
-            XCTAssertEqual(preparedLine.price, legacyLine.price)
-            XCTAssertEqual(preparedLine.qty, legacyLine.qty)
-        }
-    }
-
     func testEachProductionQueryFiltersBeforeCountingAndPaging() async throws {
         try await TestDitto.withInstance { ditto in
             let repository = OrdersRepository(ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher())
@@ -88,7 +65,7 @@ import XCTest
             await expect(history) { $0.pageIndex == 2 && $0.orders.map(\.documentId.id) == ["00000049"] }
             XCTAssertFalse(history.state.canNext)
             XCTAssertTrue(history.state.orders[0].createdAt < current)
-            _ = try await ditto.store.execute(query: "DELETE FROM pos_orders WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000049"])
+            _ = try await ditto.store.execute(query: "DELETE FROM pos_orders_v2 WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000049"])
             await expect(history) { $0.total == 100 && $0.pageIndex == 1 && $0.orders.count == 50 }
             try await repository.add(order: order(101))
             await expect(history) { $0.total == 101 && $0.pageIndex == 1 && $0.canNext }
