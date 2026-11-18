@@ -23,7 +23,7 @@ import com.ditto.kotlin.DittoStore
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.presentation.images.ProductPhoto
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
-import live.ditto.ui.DittoPhoto
+import live.ditto.ui.AppPhoto
 
 @Composable
 fun LazyGridItemScope.SaleItem(
@@ -47,7 +47,7 @@ fun LazyGridItemScope.SaleItem(
             if (photoStore != null) {
                 ProductPhoto(saleItemUiModel.image, DocumentID(saleItemUiModel.id, saleItemUiModel.locationId), photoStore, Modifier.fillMaxSize())
             } else {
-                DittoPhoto(null, Modifier.fillMaxSize())
+                AppPhoto(null, Modifier.fillMaxSize())
             }
         }
         Text(
