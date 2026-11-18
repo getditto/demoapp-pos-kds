@@ -18,7 +18,7 @@ object OrderCommands {
         // https://docs.ditto.live/sdk/latest/crud/transactions
         store.transaction { transaction ->
             transaction.execute(
-                "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                "INSERT INTO ${Order.COLLECTION_NAME} DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                 mapOf("json" to metadata.dittoJsonString())
             )
             for ((lineItemId, line) in order.cart.toSortedMap()) {
@@ -30,7 +30,7 @@ object OrderCommands {
 
     suspend fun addPayment(payment: Payment, paymentId: String, id: DocumentID, store: DittoStore) {
         store.execute(
-            "UPDATE pos_orders_v2 SET payments.${dqlIdentifier(paymentId)} = deserialize_json(:payment) WHERE _id.id = :id AND _id.locationId = :locationId",
+            "UPDATE ${Order.COLLECTION_NAME} SET payments.${dqlIdentifier(paymentId)} = deserialize_json(:payment) WHERE _id.id = :id AND _id.locationId = :locationId",
             mapOf("payment" to payment.dittoJsonString(), "id" to id.id, "locationId" to id.locationId)
         )
     }
@@ -40,7 +40,7 @@ object OrderCommands {
         // Map entries need explicit removal; omitting them in an upsert retains them.
         // https://docs.ditto.live/dql/update
         store.execute(
-            "UPDATE pos_orders_v2 UNSET ${order.cartPathsForUnset()} WHERE _id.id = :id AND _id.locationId = :locationId",
+            "UPDATE ${Order.COLLECTION_NAME} UNSET ${order.cartPathsForUnset()} WHERE _id.id = :id AND _id.locationId = :locationId",
             mapOf("id" to order.documentId.id, "locationId" to order.documentId.locationId)
         )
     }
@@ -48,7 +48,7 @@ object OrderCommands {
     suspend fun updateStatus(status: OrderStatus, id: DocumentID, store: DittoStore, at: Instant = Clock.System.now()) {
         val (timestamp, value) = StatusLogDerivation.entry(status, at)
         store.execute(
-            "UPDATE pos_orders_v2 SET status_log.${dqlIdentifier(timestamp)} = :status WHERE _id.id = :id AND _id.locationId = :locationId",
+            "UPDATE ${Order.COLLECTION_NAME} SET status_log.${dqlIdentifier(timestamp)} = :status WHERE _id.id = :id AND _id.locationId = :locationId",
             mapOf("status" to value, "id" to id.id, "locationId" to id.locationId)
         )
     }

@@ -43,7 +43,7 @@ import DittoSwift
     }
 
     nonisolated static let catalogQuery = """
-        SELECT * FROM sale_items_v2
+        SELECT * FROM \(SaleItem.collectionName)
         WHERE _id.locationId = :locationId
         ORDER BY name, _id.id
         """

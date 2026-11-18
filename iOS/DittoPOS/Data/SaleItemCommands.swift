@@ -4,7 +4,7 @@ import Foundation
 enum SaleItemCommands {
     // Stock deltas from different peers must compose.
     // https://docs.ditto.live/dql/types-and-definitions#counter-settable-counter
-    static let creationCollection = "COLLECTION sale_items_v2 (quantity COUNTER)"
+    static let creationCollection = "COLLECTION \(SaleItem.collectionName) (quantity COUNTER)"
 
     static func create(_ payload: SaleItemCreation, store: DittoStore) async throws {
         guard payload.initialQuantity >= 0 else { throw Validation.negativeQuantity }
@@ -17,7 +17,7 @@ enum SaleItemCommands {
     static func updateMetadata(_ metadata: SaleItemMetadata, store: DittoStore) async throws {
         _ = try await store.execute(
             query: """
-                UPDATE sale_items_v2
+                UPDATE \(SaleItem.collectionName)
                 SET name = :name, price = deserialize_json(:price)
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
@@ -41,7 +41,7 @@ enum SaleItemCommands {
     private static func counter(_ operation: String, value: Int64, id: DocumentID, store: DittoStore) async throws {
         _ = try await store.execute(
             query: """
-                UPDATE sale_items_v2 APPLY quantity \(operation) :value
+                UPDATE \(SaleItem.collectionName) APPLY quantity \(operation) :value
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
             arguments: ["value": value, "id": id.id, "locationId": id.locationId]

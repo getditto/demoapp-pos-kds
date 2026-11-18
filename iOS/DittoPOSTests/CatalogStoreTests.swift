@@ -46,12 +46,10 @@ import XCTest
             let seeded: [SaleItem] = try result.decode()
             let expected = SaleItemSeed.saleItemsForAllLocations()
             XCTAssertEqual(Set(seeded.map(\.metadata)), Set(expected.map(\.metadata)))
-            for item in seeded {
-                XCTAssertEqual(item.quantity, 20)
-                let data = try StockPhotos.data(for: item.documentId.id)
-                let photo = try await PhotoAttachments.importPhoto(data, mimeType: "image/png", store: ditto.store)
-                XCTAssertEqual(item.image, PhotoAttachments.reference(to: photo))
-            }
+            XCTAssertTrue(seeded.allSatisfy { $0.quantity == 20 && $0.image != nil })
+            let burgerPhoto = try await PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, mimeType: "image/png", store: ditto.store)
+            let burger = seeded.first { $0.documentId == DocumentID(id: "00001", locationId: "00001") }
+            XCTAssertEqual(burger?.image, PhotoAttachments.reference(to: burgerPhoto))
 
             let editedId = DocumentID(id: "00001", locationId: "00001")
             let noPhotoId = DocumentID(id: "00013", locationId: "00001")

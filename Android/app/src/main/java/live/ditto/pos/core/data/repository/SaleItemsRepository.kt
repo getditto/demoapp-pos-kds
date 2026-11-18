@@ -57,7 +57,7 @@ class SaleItemsRepository internal constructor(
     }
 
     private val catalogQuery = """
-        SELECT * FROM sale_items_v2
+        SELECT * FROM ${SaleItem.COLLECTION_NAME}
         WHERE _id.locationId = :locationId
         ORDER BY name, _id.id
     """.trimIndent()
