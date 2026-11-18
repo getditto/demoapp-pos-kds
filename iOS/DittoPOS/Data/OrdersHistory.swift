@@ -4,8 +4,8 @@ import Foundation
 enum OrdersHistoryQuery {
     static let pageSize = 50
     private static let predicate = "_id.locationId = :locationId AND object_length(cart) > 0"
-    static let page = "SELECT * FROM pos_orders WHERE \(predicate) ORDER BY createdAt DESC, _id.id ASC LIMIT 50 OFFSET :offset"
-    static let count = "SELECT COUNT(*) AS total FROM pos_orders WHERE \(predicate)"
+    static let page = "SELECT * FROM \(Order.collectionName) WHERE \(predicate) ORDER BY createdAt DESC, _id.id ASC LIMIT 50 OFFSET :offset"
+    static let count = "SELECT COUNT(*) AS total FROM \(Order.collectionName) WHERE \(predicate)"
     struct Count: Decodable, Sendable { let total: Int }
 }
 
