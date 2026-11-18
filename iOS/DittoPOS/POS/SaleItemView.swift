@@ -23,7 +23,7 @@ struct SaleItemView: View {
                 .scaledToFit()
 
             Text(item.name)
-                .font(DittoTypography.body)
+                .font(AppTypography.body)
         }
         .lineLimit(1)
         .padding(0)

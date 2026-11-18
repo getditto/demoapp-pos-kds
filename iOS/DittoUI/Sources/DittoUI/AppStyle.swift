@@ -1,6 +1,6 @@
 import SwiftUI
 
-public enum DittoColors {
+public enum AppColors {
     public static let background = adaptive(0xFAFAFA, 0x171717)
     public static let surface = adaptive(0xFFFFFF, 0x262626)
     public static let text = adaptive(0x0A0A0A, 0xFAFAFA)
@@ -23,7 +23,7 @@ public enum DittoColors {
     }
 }
 
-public enum DittoLayout {
+public enum AppLayout {
     public static let gap: CGFloat = 8
     public static let padding: CGFloat = 16
     public static let radius: CGFloat = 16
@@ -31,13 +31,13 @@ public enum DittoLayout {
     public static let controlHeight: CGFloat = 48
 }
 
-public struct DittoTheme<Content: View>: View {
+public struct BrandTheme<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.font(DittoTypography.body)
-            .foregroundStyle(DittoColors.text)
-            .tint(DittoColors.text)
-            .background(DittoColors.background.ignoresSafeArea())
+        content.font(AppTypography.body)
+            .foregroundStyle(AppColors.text)
+            .tint(AppColors.text)
+            .background(AppColors.background.ignoresSafeArea())
     }
 }

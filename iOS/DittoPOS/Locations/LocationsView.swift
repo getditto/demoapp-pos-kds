@@ -13,11 +13,11 @@ struct LocationsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DittoHeader("Select location", location: viewModel.selectedLocation?.name)
+            AppHeader("Select location", location: viewModel.selectedLocation?.name)
             if viewModel.isLoading {
                 ProgressView("Loading locations…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.locations.isEmpty {
-                DittoEmptyState("No locations available", message: "Demo locations will appear here.", icon: "map-pin")
+                AppEmptyState("No locations available", message: "Demo locations will appear here.", icon: "map-pin")
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
@@ -26,17 +26,17 @@ struct LocationsView: View {
                                 onSelect(location.id)
                                 dismiss()
                             } label: {
-                                DittoRow(location.name, icon: "map-pin", outlined: true) {
-                                    if viewModel.selectedLocation?.id == location.id { DittoIcon("check") }
-                                    else { DittoIcon("caret-right") }
+                                AppRow(location.name, icon: "map-pin", outlined: true) {
+                                    if viewModel.selectedLocation?.id == location.id { AppIcon("check") }
+                                    else { AppIcon("caret-right") }
                                 }
                             }.buttonStyle(.plain)
                         }
-                    }.padding(DittoLayout.padding)
+                    }.padding(AppLayout.padding)
                 }
             }
         }
-        .background(DittoColors.background)
+        .background(AppColors.background)
         .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
     }

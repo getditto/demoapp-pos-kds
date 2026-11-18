@@ -63,7 +63,7 @@ fun TicketGrid(
 
 @Composable
 private fun EmptyTicketsState() {
-    live.ditto.ui.DittoEmptyState(
+    live.ditto.ui.AppEmptyState(
         stringResource(R.string.kds_empty_title),
         stringResource(R.string.kds_empty_description),
         live.ditto.ui.R.drawable.phosphor_cooking_pot

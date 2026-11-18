@@ -21,31 +21,31 @@ import androidx.compose.ui.unit.dp
 fun ComponentCatalog(dark: Boolean = false) {
     var text by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(true) }
-    DittoTheme(dark) {
+    BrandTheme(dark) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            DittoHeader("Components", location = "Ham's Burgers")
+            AppHeader("Components", location = "Ham's Burgers")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                DittoButton("PRIMARY", {})
-                DittoButton("DISABLED", {}, enabled = false)
+                AppButton("PRIMARY", {})
+                AppButton("DISABLED", {}, enabled = false)
             }
-            DittoButton("SECONDARY", {}, secondary = true)
-            DittoTextButton("TEXT ACTION", {})
-            DittoField("Name", error = "Enter a name.") { BasicTextField(text, onValueChange = { text = it }) }
-            DittoRow("Ditto Tools", onClick = {})
-            DittoChoiceRow("Selected option", selected, { selected = !selected })
+            AppButton("SECONDARY", {}, secondary = true)
+            AppTextButton("TEXT ACTION", {})
+            AppField("Name", error = "Enter a name.") { BasicTextField(text, onValueChange = { text = it }) }
+            AppRow("Ditto Tools", onClick = {})
+            AppChoiceRow("Selected option", selected, { selected = !selected })
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                DittoWell(Modifier.weight(1f)) { DittoEmptyState("No orders preparing", "New orders will appear here.", R.drawable.phosphor_cooking_pot) }
-                DittoSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = DittoTypography.action)
+                AppWell(Modifier.weight(1f)) { AppEmptyState("No orders preparing", "New orders will appear here.", R.drawable.phosphor_cooking_pot) }
+                AppSurface(Modifier.weight(1f)) {
+                    Text("#32B9A42D", style = AppTypography.action)
                     Text("2 × Burger")
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                DittoSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = DittoTypography.action)
+                AppSurface(Modifier.weight(1f)) {
+                    Text("#32B9A42D", style = AppTypography.action)
                     Text("2 × Burger")
                 }
-                DittoWell(Modifier.weight(1f)) { DittoEmptyState("No orders ready", "Completed orders will appear here.", R.drawable.phosphor_cooking_pot) }
+                AppWell(Modifier.weight(1f)) { AppEmptyState("No orders ready", "Completed orders will appear here.", R.drawable.phosphor_cooking_pot) }
             }
         }
     }

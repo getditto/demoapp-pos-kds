@@ -12,13 +12,13 @@ struct BrandResourcesPreview: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Chakra Petch · Regular 400").font(.caption)
-            Text("Inventory").font(DittoTypography.pageTitle)
+            Text("Inventory").font(AppTypography.pageTitle)
             Text("Geist · Regular 400").font(.caption)
             Text("Burger, coffee and café au lait.\nÀé ñ · $0.00 · $19.95")
-                .font(DittoTypography.body)
+                .font(AppTypography.body)
             Text("Geist Mono · Regular 400").font(.caption)
             Text("NEW ITEM   0123456789   + −")
-                .font(DittoTypography.action)
+                .font(AppTypography.action)
             Text("Phosphor · Regular").font(.caption)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 40))], spacing: 16) {
                 ForEach(icons, id: \.self) { name in

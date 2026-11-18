@@ -14,19 +14,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-object DittoColors {
+object AppColors {
     val actionFill = Color(0xFFE7EE00)
     val onAction = Color.Black
 }
 
-object DittoLayout {
+object AppLayout {
     val gap = 8.dp
     val padding = 16.dp
     val radius = 16.dp
     val controlHeight = 48.dp
 }
 
-object DittoTypography {
+object AppTypography {
     private val bodyFont = FontFamily(Font(R.font.geist))
     private val monoFont = FontFamily(Font(R.font.geist_mono))
     val pageTitle = TextStyle(fontFamily = FontFamily(Font(R.font.chakra_petch_regular)), fontWeight = FontWeight.Normal, fontSize = 28.sp, lineHeight = 34.sp)
@@ -74,6 +74,6 @@ private val darkColors = darkColorScheme(
 )
 
 @Composable
-fun DittoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (darkTheme) darkColors else lightColors, typography = DittoTypography.styles, content = content)
+fun BrandTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    MaterialTheme(colorScheme = if (darkTheme) darkColors else lightColors, typography = AppTypography.styles, content = content)
 }

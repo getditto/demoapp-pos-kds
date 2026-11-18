@@ -31,7 +31,7 @@ private struct PresentationFixture: View {
         AppShell(selectedTab: $selectedTab, needsLocation: false, location: "Ham's Burgers") {
             DraftPage()
         } kds: {
-            DittoEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
+            AppEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
         } settings: {
             SettingsContent(location: "Ham's Burgers", appearance: $appearance.selection,
                             version: "1.1.0", build: "9999", sdkVersion: "5.2.0", onLocation: {}, onTools: {})

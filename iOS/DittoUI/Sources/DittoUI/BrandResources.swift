@@ -12,7 +12,7 @@ public enum BrandResources {
     }()
 }
 
-public enum DittoTypography {
+public enum AppTypography {
     public static var pageTitle: Font { font("ChakraPetch-Regular", size: 34, relativeTo: .largeTitle) }
     public static var body: Font { font("Geist-Regular", size: 17, relativeTo: .body) }
     public static var heading: Font { font("Geist-Regular", size: 20, relativeTo: .title3) }
@@ -26,7 +26,7 @@ public enum DittoTypography {
     }
 }
 
-public struct DittoIcon: View {
+public struct AppIcon: View {
     private let name: String
     private let size: CGFloat
     public init(_ name: String, size: CGFloat = 24) { self.name = name; self.size = size }

@@ -26,13 +26,13 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
                     locations
                 } else {
                     VStack(spacing: 0) {
-                        DittoHeader(title, location: location)
+                        AppHeader(title, location: location)
                         TabView(selection: $selectedTab) {
-                            pos.tabItem { Label { Text("POS") } icon: { DittoIcon("cash-register") } }.tag(TabViews.pos)
-                            kds.tabItem { Label { Text("KDS") } icon: { DittoIcon("cooking-pot") } }.tag(TabViews.kds)
-                            settings.tabItem { Label { Text("Settings") } icon: { DittoIcon("gear") } }.tag(TabViews.settings)
+                            pos.tabItem { Label { Text("POS") } icon: { AppIcon("cash-register") } }.tag(TabViews.pos)
+                            kds.tabItem { Label { Text("KDS") } icon: { AppIcon("cooking-pot") } }.tag(TabViews.kds)
+                            settings.tabItem { Label { Text("Settings") } icon: { AppIcon("gear") } }.tag(TabViews.settings)
                         }
-                        .toolbarBackground(DittoColors.surface, for: .tabBar)
+                        .toolbarBackground(AppColors.surface, for: .tabBar)
                         .toolbarBackground(.visible, for: .tabBar)
                     }
                 }

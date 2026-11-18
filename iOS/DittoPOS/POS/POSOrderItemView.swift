@@ -24,7 +24,7 @@ struct POSOrderItemView: View, Identifiable {
             Spacer()
             Text(item.price.description)
         }
-        .font(DittoTypography.body)
+        .font(AppTypography.body)
     }
 }
 

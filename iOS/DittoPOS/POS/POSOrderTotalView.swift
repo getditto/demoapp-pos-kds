@@ -14,30 +14,30 @@ struct POSOrderTotalView: View {
     var body: some View {
         VStack(spacing: 12) {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .bottom, spacing: DittoLayout.gap) {
+                HStack(alignment: .bottom, spacing: AppLayout.gap) {
                     Text("Total")
                     Spacer()
                     Text(viewModel.orderTotalDisplay)
                 }
-                VStack(alignment: .leading, spacing: DittoLayout.gap) {
+                VStack(alignment: .leading, spacing: AppLayout.gap) {
                     Text("Total")
                     Text(viewModel.orderTotalDisplay).frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-            .font(DittoTypography.body)
+            .font(AppTypography.body)
             .frame(minHeight: 40)
 
             payButton
             clearButton
         }
-        .padding(DittoLayout.padding)
+        .padding(AppLayout.padding)
     }
 
     private var clearButton: some View {
         Button(action: viewModel.clearCurrentOrderCart) {
             Text("Clear cart").frame(maxWidth: .infinity)
         }
-        .buttonStyle(DittoButtonStyle(.text))
+        .buttonStyle(AppButtonStyle(.text))
         .disabled(viewModel.actionsDisabled)
     }
 
@@ -45,7 +45,7 @@ struct POSOrderTotalView: View {
         Button(action: viewModel.payCurrentOrder) {
             Text("\(viewModel.payButtonLabel) \(viewModel.orderTotalDisplay)").frame(maxWidth: .infinity)
         }
-        .buttonStyle(DittoButtonStyle())
+        .buttonStyle(AppButtonStyle())
         .disabled(viewModel.actionsDisabled)
     }
 }

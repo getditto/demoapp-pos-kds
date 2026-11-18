@@ -40,7 +40,7 @@ struct AppTheme<Content: View>: View {
     }
 
     var body: some View {
-        DittoTheme { content }
+        BrandTheme { content }
             .preferredColorScheme(appearance.selection.colorScheme)
     }
 }

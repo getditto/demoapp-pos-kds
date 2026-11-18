@@ -1,39 +1,39 @@
 #if DEBUG
 import SwiftUI
 
-public struct DittoComponentCatalog: View {
+public struct ComponentCatalog: View {
     @State private var text = ""
     @State private var selected = true
     public init() {}
     public var body: some View {
-        DittoTheme {
+        BrandTheme {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    DittoHeader("Components", location: "Ham's Burgers")
-                    HStack(spacing: DittoLayout.gap) {
-                        Button("Primary") {}.buttonStyle(DittoButtonStyle())
-                        Button("Disabled") {}.buttonStyle(DittoButtonStyle()).disabled(true)
+                    AppHeader("Components", location: "Ham's Burgers")
+                    HStack(spacing: AppLayout.gap) {
+                        Button("Primary") {}.buttonStyle(AppButtonStyle())
+                        Button("Disabled") {}.buttonStyle(AppButtonStyle()).disabled(true)
                     }
-                    Button("Secondary") {}.buttonStyle(DittoButtonStyle(.secondary))
-                    Button("Text action") {}.buttonStyle(DittoButtonStyle(.text))
-                    DittoField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
-                    DittoRow("Ditto Tools") { DittoIcon("caret-right") }
-                    DittoChoiceRow("Selected option", selected: selected) { selected.toggle() }
+                    Button("Secondary") {}.buttonStyle(AppButtonStyle(.secondary))
+                    Button("Text action") {}.buttonStyle(AppButtonStyle(.text))
+                    AppField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
+                    AppRow("Ditto Tools") { AppIcon("caret-right") }
+                    AppChoiceRow("Selected option", selected: selected) { selected.toggle() }
                     HStack(alignment: .top, spacing: 16) {
-                        DittoWell { DittoEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
-                        DittoSurface { Text("#32B9A42D").font(DittoTypography.action); Text("2 × Burger") }
+                        AppWell { AppEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
+                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
                     }.frame(minHeight: 260)
                     HStack(alignment: .top, spacing: 16) {
-                        DittoSurface { Text("#32B9A42D").font(DittoTypography.action); Text("2 × Burger") }
-                        DittoWell { DittoEmptyState("No orders ready", message: "Completed orders will appear here.", icon: "cooking-pot") }
+                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
+                        AppWell { AppEmptyState("No orders ready", message: "Completed orders will appear here.", icon: "cooking-pot") }
                     }.frame(minHeight: 260)
-                }.padding(DittoLayout.padding)
+                }.padding(AppLayout.padding)
             }
         }
     }
 }
 
-#Preview("Components · Light") { DittoComponentCatalog().environment(\.colorScheme, .light) }
-#Preview("Components · Dark") { DittoComponentCatalog().environment(\.colorScheme, .dark) }
-#Preview("Components · Large type") { DittoComponentCatalog().dynamicTypeSize(.accessibility2) }
+#Preview("Components · Light") { ComponentCatalog().environment(\.colorScheme, .light) }
+#Preview("Components · Dark") { ComponentCatalog().environment(\.colorScheme, .dark) }
+#Preview("Components · Large type") { ComponentCatalog().dynamicTypeSize(.accessibility2) }
 #endif

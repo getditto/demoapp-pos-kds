@@ -21,7 +21,7 @@ struct POSOrderView: View {
     private var orderContent: some View {
         VStack(spacing: 0) {
             Text(viewModel.orderTitle)
-                .font(DittoTypography.body)
+                .font(AppTypography.body)
                 .padding(.bottom, 8)
             divider()
                 .padding(.bottom, 8)
