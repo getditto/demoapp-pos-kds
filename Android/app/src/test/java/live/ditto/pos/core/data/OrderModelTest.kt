@@ -1,8 +1,6 @@
 package live.ditto.pos.core.data
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
 import live.ditto.pos.core.data.orders.Order
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,9 +32,7 @@ class OrderModelTest {
         assertEquals("Coffee \"iced\"", order.cart["line-1"]?.name)
         assertEquals(OrderStatus.IN_PROCESS, order.status)
         assertTrue(order.isPaid)
-        val original = Json.parseToJsonElement(OrderFixture.text()).jsonObject
-        val cart = original.getValue("cart").jsonObject.mapValues { (_, line) -> JsonObject(line.jsonObject - "imageName") }
-        assertEquals(JsonObject(original + ("cart" to JsonObject(cart))), Json.parseToJsonElement(order.dittoJsonString()))
+        assertEquals(Json.parseToJsonElement(OrderFixture.text()), Json.parseToJsonElement(order.dittoJsonString()))
     }
 
     @Test
@@ -89,7 +85,7 @@ class OrderModelTest {
 
     @Test
     fun `order line retains original catalog details after replacement`() {
-        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", Price(199))
+        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", Price(199), quantity = 20)
         val line = CartLineItem.from(catalog, qty = 3)
         catalog = catalog.copy(name = "Renamed", price = Price(999))
         assertEquals("Original", line.name)

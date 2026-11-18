@@ -170,11 +170,11 @@ import XCTest
     private func receive(_ reference: PhotoReference, store: DittoStore) async throws {
         // A received document introduces the token before its separately transferred file.
         try await store.execute(
-            query: "INSERT INTO sale_items INITIAL DOCUMENTS (:document)",
+            query: "INSERT INTO sale_items_v2 INITIAL DOCUMENTS (:document)",
             arguments: ["document": ["_id": ["id": owner.id, "locationId": owner.locationId]]]
         )
         try await store.execute(
-            query: "UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "UPDATE COLLECTION sale_items_v2 (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": owner.id, "locationId": owner.locationId, "image": reference.token]
         )
     }

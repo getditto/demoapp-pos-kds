@@ -34,10 +34,7 @@ final class OrderModelTests: XCTestCase {
         XCTAssertEqual(order.status, .inProcess)
         XCTAssertTrue(order.isPaid)
         let encoded = try JSONEncoder.ditto.encode(order)
-        var expected = try XCTUnwrap(JSONSerialization.jsonObject(with: OrderFixture.data()) as? [String: Any])
-        var cart = try XCTUnwrap(expected["cart"] as? [String: [String: Any]])
-        for key in cart.keys { cart[key]?.removeValue(forKey: "imageName") }
-        expected["cart"] = cart
+        let expected = try XCTUnwrap(JSONSerialization.jsonObject(with: OrderFixture.data()) as? [String: Any])
         let actual = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? NSDictionary)
         XCTAssertEqual(actual, expected as NSDictionary)
     }
@@ -89,9 +86,9 @@ final class OrderModelTests: XCTestCase {
     }
 
     func testOrderLineRetainsOriginalDetailsAfterCatalogReplacement() {
-        var catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Original", cents: 199)
+        var catalog = SaleItem(documentId: DocumentID(id: "coffee", locationId: "42"), name: "Original", price: Price(cents: 199), quantity: 20)
         let line = CartLineItem(from: catalog, qty: 3)
-        catalog = SaleItem.seed(id: "coffee", locationId: "42", name: "Renamed", cents: 999)
+        catalog = SaleItem(documentId: DocumentID(id: "coffee", locationId: "42"), name: "Renamed", price: Price(cents: 999), quantity: 20)
         XCTAssertEqual(line.name, "Original")
         XCTAssertEqual(line.price.amount, 199)
         XCTAssertEqual(line.qty, 3)

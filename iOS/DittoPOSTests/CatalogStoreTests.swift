@@ -37,72 +37,97 @@ import XCTest
         }
     }
 
-    func testExactOldAndNewInitialSeedersPreserveEditsDeletionAndFreeformItemsInEitherArrivalOrder() async throws {
-        for oldFirst in [true, false] {
-            try await TestDitto.withInstance { ditto in
-                let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-                let observedItems = CurrentValueSubject<[SaleItem]?, Never>(nil)
-                let observation = repository.observeLocationSaleItems("00001").sink(
-                    receiveValue: { observedItems.send($0) })
-                defer { observation.cancel() }
-                _ = try await waitForItems(from: observedItems, matching: { $0.isEmpty })
-                let old = LegacyDemoSeeder(store: ditto.store)
-                let current = DemoSeeder(store: ditto.store)
-                if oldFirst { await old.seedAll() }
-                await current.seedAll()
-                await old.seedAll()
-                let first = DocumentID(id: "00001", locationId: "00001")
-                let initial = try await read(first, from: ditto)
-                XCTAssertEqual(initial.quantity, 20)
-                let all = try await ditto.store.execute(query: "SELECT * FROM sale_items")
-                let rows: [SaleItem] = try all.decode()
-                XCTAssertEqual(Set(rows.map(\.documentId)), Set(LegacySaleItemSeed.saleItemsForAllLocations().map(\.documentId)))
-                for legacy in LegacySaleItemSeed.saleItemsForAllLocations() {
-                    XCTAssertEqual(rows.first { $0.documentId == legacy.documentId }?.metadata,
-                                   SaleItemMetadata(documentId: legacy.documentId, name: legacy.name, price: legacy.price))
-                }
-                let expectedIDs = Set(LegacySaleItemSeed.saleItemsForAllLocations().filter { $0.documentId.locationId == "00001" }.map(\.documentId))
-                let visible = try await waitForItems(from: observedItems, matching: { Set($0.map(\.documentId)) == expectedIDs })
-                XCTAssertEqual(visible.first { $0.documentId == first }?.quantity, 20)
-
-                let zero = DocumentID(id: "00013", locationId: "00001")
-                let positive = DocumentID(id: "00018", locationId: "00001")
-                try await repository.restart(0, id: zero)
-                try await repository.restart(11, id: positive)
-
-                try await repository.restart(0, id: first)
-                try await repository.increment(-2, id: first)
-                try await repository.updateMetadata(SaleItemMetadata(documentId: first, name: "Edited", price: Price(cents: 0)))
-                let deleted = DocumentID(id: "00008", locationId: "00001")
-                _ = try await ditto.store.execute(query: "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
-                                                  arguments: ["id": deleted.id, "locationId": deleted.locationId])
-                let custom = SaleItemMetadata(documentId: DocumentID(id: "95f203b6-0251-4ed8-8ae2-bbcb808bf356", locationId: "00001"), name: "Custom", price: Price(cents: 0))
-                try await repository.create(SaleItemCreation(metadata: custom, initialQuantity: 3))
-
-                await current.seedAll()
-                await old.seedAll()
-                await current.seedAll()
-                let edited = try await read(first, from: ditto)
-                XCTAssertEqual(edited.quantity, -2)
-                XCTAssertEqual(edited.name, "Edited")
-                XCTAssertEqual(edited.price.amount, 0)
-                let retainedZero = try await read(zero, from: ditto)
-                let retainedPositive = try await read(positive, from: ditto)
-                XCTAssertEqual(retainedZero.quantity, 0)
-                XCTAssertEqual(retainedPositive.quantity, 11)
-                let retained = try await read(custom.documentId, from: ditto)
-                XCTAssertEqual(retained.metadata, custom)
-                XCTAssertEqual(retained.quantity, 3)
-                let removed = try await ditto.store.execute(query: "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
-                                                          arguments: ["id": deleted.id, "locationId": deleted.locationId])
-                let visibleDeletedItems: [SaleItem] = removed.decodeOrSkip()
-                XCTAssertTrue(visibleDeletedItems.isEmpty)
-                _ = try await waitForItems(from: observedItems, matching: { items in
-                    !items.contains { $0.documentId == deleted }
-                        && items.contains { $0.documentId == custom.documentId && $0.quantity == 3 }
-                        && items.contains { $0.documentId == first && $0.name == "Edited" && $0.quantity == -2 }
-                })
+    func testStarterAttachmentsAndReseedingPreserveCatalogChanges() async throws {
+        try await TestDitto.withInstance { ditto in
+            let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
+            let seeder = DemoSeeder(store: ditto.store)
+            await seeder.seedAll()
+            let result = try await ditto.store.execute(query: "SELECT * FROM sale_items_v2")
+            let seeded: [SaleItem] = try result.decode()
+            let expected = SaleItemSeed.saleItemsForAllLocations()
+            XCTAssertEqual(Set(seeded.map(\.metadata)), Set(expected.map(\.metadata)))
+            for item in seeded {
+                XCTAssertEqual(item.quantity, 20)
+                let data = try StockPhotos.data(for: item.documentId.id)
+                let photo = try await PhotoAttachments.importPhoto(data, mimeType: "image/png", store: ditto.store)
+                XCTAssertEqual(item.image, PhotoAttachments.reference(to: photo))
             }
+
+            let editedId = DocumentID(id: "00001", locationId: "00001")
+            let noPhotoId = DocumentID(id: "00013", locationId: "00001")
+            let deletedId = DocumentID(id: "00008", locationId: "00001")
+            let changedPhoto = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
+            try await repository.increment(-22, id: editedId)
+            try await repository.updateMetadata(SaleItemMetadata(documentId: editedId, name: "Edited", price: Price(cents: 0)))
+            try await PhotoAttachments.replace(changedPhoto, for: editedId, executor: ditto.store)
+            try await repository.restart(0, id: noPhotoId)
+            try await PhotoAttachments.remove(for: noPhotoId, executor: ditto.store)
+            _ = try await ditto.store.execute(
+                query: "DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
+                arguments: ["id": deletedId.id, "locationId": deletedId.locationId])
+            let custom = SaleItemMetadata(documentId: DocumentID(id: "custom", locationId: "00001"), name: "Custom", price: Price(cents: 0))
+            try await repository.create(SaleItemCreation(metadata: custom, initialQuantity: 3))
+            let observedItems = CurrentValueSubject<[SaleItem]?, Never>(nil)
+            let observation = repository.observeLocationSaleItems("00001").sink { observedItems.send($0) }
+            defer { observation.cancel() }
+            await seeder.seedAll()
+            await seeder.seedAll()
+
+            let edited = try await read(editedId, from: ditto)
+            XCTAssertEqual(edited.quantity, -2)
+            XCTAssertEqual(edited.name, "Edited")
+            XCTAssertEqual(edited.price.amount, 0)
+            XCTAssertEqual(edited.image, PhotoAttachments.reference(to: changedPhoto))
+            let noPhoto = try await read(noPhotoId, from: ditto)
+            XCTAssertEqual(noPhoto.quantity, 0)
+            XCTAssertNil(noPhoto.image)
+            let retainedCustom = try await read(custom.documentId, from: ditto)
+            XCTAssertEqual(retainedCustom.metadata, custom)
+            XCTAssertEqual(retainedCustom.quantity, 3)
+            XCTAssertNil(retainedCustom.image)
+            let visible = try await waitForItems(from: observedItems, matching: { items in
+                !items.contains { $0.documentId == deletedId }
+                    && items.contains { $0.documentId == custom.documentId }
+            })
+            XCTAssertEqual(visible.count, 7)
+            XCTAssertTrue(visible.allSatisfy { $0.documentId.locationId == "00001" })
+        }
+    }
+
+    func testCutoverIgnoresOldCollectionsAndLeavesTheirDocumentsUntouched() async throws {
+        try await TestDitto.withInstance { ditto in
+            let order = try OrderFixture.load()
+            let oldOrderJSON = try order.dittoJSONString()
+            _ = try await ditto.store.execute(query: "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json))", arguments: ["json": oldOrderJSON])
+            _ = try await ditto.store.execute(query: """
+                INSERT INTO sale_items DOCUMENTS ({"_id": {"id": "00001", "locationId": "00001"}, "name": "Old item", "quantity": 99})
+                """)
+            await DemoSeeder(store: ditto.store).seedAll()
+            let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
+            let observedItems = CurrentValueSubject<[SaleItem]?, Never>(nil)
+            let catalogObservation = catalog.observeLocationSaleItems("00001").sink { observedItems.send($0) }
+            defer { catalogObservation.cancel() }
+            let items = try await waitForItems(from: observedItems, matching: { !$0.isEmpty })
+            XCTAssertEqual(items.first { $0.documentId.id == "00001" }?.name, "Burger")
+            let orders = OrdersRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
+            let absent = expectation(description: "An old saved order ID is absent from the new collection")
+            let orderObservation = orders.observeOrder(order.documentId).prefix(1).sink {
+                XCTAssertNil($0)
+                absent.fulfill()
+            }
+            await fulfillment(of: [absent], timeout: 5)
+            orderObservation.cancel()
+            try await orders.add(order: order)
+            let current = try await ditto.store.execute(query: "SELECT * FROM pos_orders_v2")
+            let currentOrders: [Order] = try current.decode()
+            XCTAssertEqual(currentOrders, [order])
+            try await catalog.increment(-1, id: DocumentID(id: "00001", locationId: "00001"))
+            let oldItem = try await ditto.store.execute(query: "SELECT name, quantity FROM sale_items")
+            XCTAssertEqual(oldItem.items.first?.value["name"] as? String, "Old item")
+            XCTAssertEqual(oldItem.items.first?.value["quantity"] as? Int, 99)
+            let oldOrders = try await ditto.store.execute(query: "SELECT * FROM pos_orders")
+            let untouched: [Order] = try oldOrders.decode()
+            XCTAssertEqual(untouched, [order])
         }
     }
 
@@ -120,7 +145,7 @@ import XCTest
 
     private func read(_ id: DocumentID, from ditto: Ditto) async throws -> SaleItem {
         let result = try await ditto.store.execute(
-            query: "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": id.id, "locationId": id.locationId])
         let items: [SaleItem] = try result.decode()
         return try XCTUnwrap(items.first)

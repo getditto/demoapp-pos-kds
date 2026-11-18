@@ -113,7 +113,7 @@ import XCTest
             XCTAssertEqual(local.value?.payments, original.payments)
             XCTAssertEqual(local.value?.documentId, original.documentId)
             XCTAssertEqual(other.value?.cart, foreign.cart)
-            let result = try await ditto.store.execute(query: "SELECT * FROM pos_orders")
+            let result = try await ditto.store.execute(query: "SELECT * FROM pos_orders_v2")
             XCTAssertEqual(result.items.count, 3)
         }
     }

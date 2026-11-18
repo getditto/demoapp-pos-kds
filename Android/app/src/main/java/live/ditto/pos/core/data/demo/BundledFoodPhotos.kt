@@ -3,19 +3,13 @@ package live.ditto.pos.core.data.demo
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import live.ditto.pos.R
-import live.ditto.pos.core.data.DocumentID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BundledFoodPhotos @Inject constructor(@ApplicationContext private val context: Context) {
-    internal fun bytes(id: DocumentID): ByteArray? = resource(id)?.let { resource ->
+    internal fun bytes(itemId: String): ByteArray = resources.getValue(itemId).let { resource ->
         context.resources.openRawResource(resource).use { it.readBytes() }
-    }
-
-    private fun resource(id: DocumentID): Int? {
-        if (!SaleItemSeed.contains(id)) return null
-        return resources[id.id]
     }
 
     companion object {

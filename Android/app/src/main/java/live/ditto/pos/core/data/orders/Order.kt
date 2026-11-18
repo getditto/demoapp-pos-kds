@@ -56,7 +56,7 @@ data class Order(
     }
 
     companion object {
-        const val COLLECTION_NAME = "pos_orders"
+        const val COLLECTION_NAME = "pos_orders_v2"
 
         fun new(
             locationId: String,

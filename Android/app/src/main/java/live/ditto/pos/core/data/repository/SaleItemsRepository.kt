@@ -2,31 +2,19 @@ package live.ditto.pos.core.data.repository
 
 import com.ditto.kotlin.Ditto
 import com.ditto.kotlin.DittoSyncSubscription
-import com.ditto.kotlin.DittoTransaction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.SaleItemCommands
 import live.ditto.pos.core.data.SaleItemCreation
 import live.ditto.pos.core.data.SaleItemMetadata
-import live.ditto.pos.core.data.decodeOrSkip
-import live.ditto.pos.core.data.demo.BundledFoodPhotos
-import live.ditto.pos.core.data.demo.SeedImageMigration
-import live.ditto.pos.core.data.demo.SeedStockMigration
-import live.ditto.pos.core.data.demo.hasLegacyCatalogInput
-import live.ditto.pos.core.data.dittoJson
 import live.ditto.pos.core.data.observeAsFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,14 +23,12 @@ import javax.inject.Singleton
 class SaleItemsRepository internal constructor(
     private val dittoProvider: () -> Ditto,
     locationIds: Flow<String>,
-    repoScope: CoroutineScope,
-    private val bundledPhotos: BundledFoodPhotos
+    repoScope: CoroutineScope
 ) {
-    @Inject constructor(dittoManager: DittoManager, locationsRepository: LocationsRepository, bundledPhotos: BundledFoodPhotos) : this(
+    @Inject constructor(dittoManager: DittoManager, locationsRepository: LocationsRepository) : this(
         dittoProvider = dittoManager::requireDitto,
         locationIds = locationsRepository.locationIdFlow(),
-        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-        bundledPhotos = bundledPhotos
+        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     )
 
     private val ditto: Ditto get() = dittoProvider()
@@ -71,29 +57,13 @@ class SaleItemsRepository internal constructor(
     }
 
     private val catalogQuery = """
-        SELECT * FROM sale_items
+        SELECT * FROM sale_items_v2
         WHERE _id.locationId = :locationId
         ORDER BY name, _id.id
     """.trimIndent()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =
-        ditto.store.observeAsFlow<JsonObject>(catalogQuery, mapOf("locationId" to locationId))
-            .mapLatest { rows ->
-                val items = rows.mapNotNull { runCatching { dittoJson.decodeFromJsonElement<SaleItem>(it) }.getOrNull() }
-                val stock = SeedStockMigration.mayNeedUpgrade(items)
-                val photos = rows.hasLegacyCatalogInput()
-                if (!stock && !photos) return@mapLatest items
-                if (stock) {
-                    ditto.store.transaction { transaction ->
-                        SeedStockMigration.upgrade(locationId, transaction)
-                        DittoTransaction.Result.Commit()
-                    }
-                }
-                if (photos) SeedImageMigration(ditto.store, bundledPhotos).upgradeCatalog(locationId)
-                ditto.store.execute(catalogQuery, mapOf("locationId" to locationId)) { it.decodeOrSkip<SaleItem>() }
-            }
-            .flowOn(Dispatchers.IO)
+        ditto.store.observeAsFlow(catalogQuery, mapOf("locationId" to locationId))
 
     val photoStore get() = ditto.store
 

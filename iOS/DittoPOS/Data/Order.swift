@@ -30,7 +30,7 @@ struct Order: Hashable, Codable, Sendable {
         status == .canceled || !payments.isEmpty
     }
 
-    static let collectionName = "pos_orders"
+    static let collectionName = "pos_orders_v2"
 }
 
 // MARK: - Construction

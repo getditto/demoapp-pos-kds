@@ -6,6 +6,7 @@ package live.ditto.pos.core.data.demo
 import com.ditto.kotlin.Ditto
 import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.dittoJsonString
+import live.ditto.pos.core.data.images.PhotoAttachments
 import live.ditto.pos.core.data.locations.Location
 
 class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos) {
@@ -23,12 +24,25 @@ class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos
     }
 
     suspend fun seedSaleItems() {
-        bulkInitialInsert(
-            collectionName = SaleItem.COLLECTION_NAME,
-            documents = SaleItemSeed.initialDocuments()
-        )
-        SeedStockMigration.upgradeAll(ditto.store)
-        SeedImageMigration(ditto.store, photos).upgradeAll()
+        for (item in SaleItemSeed.saleItemsForAllLocations()) {
+            PhotoAttachments.importPhoto(photos.bytes(item.documentId.id), "image/png", ditto.store).use { photo ->
+                ditto.store.execute(
+                    """
+                        INSERT INTO COLLECTION ${SaleItem.COLLECTION_NAME} (quantity COUNTER, image ATTACHMENT)
+                        INITIAL DOCUMENTS (:item)
+                    """.trimIndent(),
+                    mapOf(
+                        "item" to mapOf(
+                            "_id" to mapOf("id" to item.documentId.id, "locationId" to item.documentId.locationId),
+                            "name" to item.name,
+                            "price" to mapOf("amount" to item.price.amount, "currency" to "usd"),
+                            "quantity" to item.quantity,
+                            "image" to photo
+                        )
+                    )
+                )
+            }
+        }
     }
 
     private suspend fun bulkInitialInsert(

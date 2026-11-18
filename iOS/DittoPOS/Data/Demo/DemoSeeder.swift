@@ -28,12 +28,23 @@ struct DemoSeeder {
     }
 
     func seedSaleItems() async {
-        await bulkInitialInsert(
-            into: SaleItem.collectionName,
-            documents: SaleItemSeed.initialDocuments()
-        )
-        try! await SeedStockMigration.upgradeAll(store: store)
-        try! await SeedImageMigration.upgradeAll(store: store)
+        for item in SaleItemSeed.saleItemsForAllLocations() {
+            let data = try! StockPhotos.data(for: item.documentId.id)
+            let photo = try! await PhotoAttachments.importPhoto(data, mimeType: "image/png", store: store)
+            _ = try! await store.execute(
+                query: """
+                    INSERT INTO COLLECTION \(SaleItem.collectionName) (quantity COUNTER, image ATTACHMENT)
+                    INITIAL DOCUMENTS (:item)
+                    """,
+                arguments: ["item": [
+                    "_id": ["id": item.documentId.id, "locationId": item.documentId.locationId],
+                    "name": item.name,
+                    "price": ["amount": item.price.amount, "currency": item.price.currency.rawValue],
+                    "quantity": item.quantity,
+                    "image": photo
+                ]]
+            )
+        }
     }
 
     private func bulkInitialInsert<T: Encodable>(

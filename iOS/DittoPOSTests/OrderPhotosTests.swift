@@ -77,7 +77,7 @@ import XCTest
             XCTAssertEqual(paid, order.addingPayment(payment, paymentId: "payment`new").appendingStatus(.processed, at: date))
             let unchanged = try await read(other.documentId, store: ditto.store)
             XCTAssertEqual(unchanged, other)
-            try await ditto.store.execute(query: "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": saleID.id, "locationId": saleID.locationId])
+            try await ditto.store.execute(query: "DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": saleID.id, "locationId": saleID.locationId])
             let historical = try await read(order.documentId, store: ditto.store)
             XCTAssertEqual(historical, paid)
             // Historical lines render from their own references without originalAttachment catalog document.
@@ -174,13 +174,13 @@ import XCTest
     }
 
     private func read(_ id: DocumentID, store: DittoStore) async throws -> Order {
-        let result = try await store.execute(query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+        let result = try await store.execute(query: "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
         let orders: [Order] = try result.decode()
         return try XCTUnwrap(orders.first)
     }
 
     private func sale(_ id: DocumentID, store: DittoStore) async throws -> SaleItem {
-        let result = try await store.execute(query: "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+        let result = try await store.execute(query: "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
         let items: [SaleItem] = try result.decode()
         return try XCTUnwrap(items.first)
     }

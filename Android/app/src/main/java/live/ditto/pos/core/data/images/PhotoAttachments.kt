@@ -21,7 +21,7 @@ object PhotoAttachments {
     suspend fun replace(attachment: DittoAttachment, id: DocumentID, store: DittoStore) {
         store.execute(
             """
-                UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image
+                UPDATE COLLECTION sale_items_v2 (image ATTACHMENT) SET image = :image
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf("image" to attachment, "id" to id.id, "locationId" to id.locationId)
@@ -31,7 +31,7 @@ object PhotoAttachments {
     suspend fun remove(id: DocumentID, store: DittoStore) {
         store.execute(
             """
-                UPDATE COLLECTION sale_items (image ATTACHMENT) UNSET image
+                UPDATE COLLECTION sale_items_v2 (image ATTACHMENT) UNSET image
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),
             mapOf("id" to id.id, "locationId" to id.locationId)
@@ -42,7 +42,7 @@ object PhotoAttachments {
         val line = dqlIdentifier(lineItemId)
         transaction.execute(
             """
-                UPDATE COLLECTION pos_orders (cart MAP($line MAP(image ATTACHMENT)))
+                UPDATE COLLECTION pos_orders_v2 (cart MAP($line MAP(image ATTACHMENT)))
                 SET cart.$line.image = :image
                 WHERE _id.id = :id AND _id.locationId = :locationId
             """.trimIndent(),

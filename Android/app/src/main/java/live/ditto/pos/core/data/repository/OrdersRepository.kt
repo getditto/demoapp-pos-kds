@@ -7,32 +7,22 @@ import com.ditto.kotlin.DittoSyncSubscription
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.OrderStatus
 import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.decodeOrSkip
-import live.ditto.pos.core.data.demo.BundledFoodPhotos
-import live.ditto.pos.core.data.demo.SeedImageMigration
-import live.ditto.pos.core.data.demo.documentId
-import live.ditto.pos.core.data.demo.hasLegacyOrderInput
-import live.ditto.pos.core.data.dittoJson
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
@@ -52,22 +42,19 @@ class OrdersRepository internal constructor(
     private val preferences: () -> SharedPreferences,
     private val now: () -> Instant,
     private val timeZone: () -> TimeZone,
-    repoScope: CoroutineScope,
-    private val bundledPhotos: BundledFoodPhotos
+    repoScope: CoroutineScope
 ) {
     @Inject constructor(
         @ApplicationContext context: Context,
         dittoManager: DittoManager,
-        locationsRepository: LocationsRepository,
-        bundledPhotos: BundledFoodPhotos
+        locationsRepository: LocationsRepository
     ) : this(
         dittoProvider = dittoManager::requireDitto,
         locationIds = locationsRepository.locationIdFlow(),
         preferences = { context.getSharedPreferences(EVICTION_PREFS, Context.MODE_PRIVATE) },
         now = { Clock.System.now() },
         timeZone = TimeZone::currentSystemDefault,
-        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-        bundledPhotos = bundledPhotos
+        repoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     )
 
     private val ditto: Ditto get() = dittoProvider()
@@ -122,12 +109,10 @@ class OrdersRepository internal constructor(
         OrderCommands.updateStatus(status, id, ditto.store)
     }
 
-    suspend fun findOrder(id: DocumentID): Order? {
-        SeedImageMigration(ditto.store, bundledPhotos).upgradeOrders(listOf(id))
-        return ditto.store.execute(CURRENT_ORDER_QUERY, mapOf("id" to id.id, "locationId" to id.locationId)) {
+    suspend fun findOrder(id: DocumentID): Order? =
+        ditto.store.execute(CURRENT_ORDER_QUERY, mapOf("id" to id.id, "locationId" to id.locationId)) {
             it.decodeOrSkip<Order>().firstOrNull()
         }
-    }
 
     fun observeHistoryPage(locationId: String, pageIndex: Int): Flow<List<Order>> = observeOrders(
         OrdersHistoryQuery.PAGE,
@@ -183,7 +168,7 @@ class OrdersRepository internal constructor(
         timeZone().let { zone -> instant.toLocalDateTime(zone).date.atStartOfDayIn(zone).toDittoIsoString() }
 
     companion object {
-        private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId"
+        private const val CURRENT_ORDER_QUERY = "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId"
         private const val EVICTION_PREFS = "ditto_pos_eviction"
         private const val LAST_EVICTION_KEY = "v2.lastEvictionAt"
     }
