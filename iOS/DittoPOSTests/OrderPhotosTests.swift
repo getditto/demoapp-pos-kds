@@ -11,10 +11,10 @@ import XCTest
             let id = DocumentID(id: "coffee", locationId: "A")
             let metadata = SaleItemMetadata(documentId: id, name: "Original", imageName: "coffee", price: Price(cents: 199))
             try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
-            let a = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
-            let b = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
+            let originalAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
+            let replacementAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
             let withoutPhoto = CartLineItem(from: try await sale(id, store: ditto.store), qty: 1)
-            try await PhotoAttachments.replace(a, for: id, executor: ditto.store)
+            try await PhotoAttachments.replace(originalAttachment, for: id, executor: ditto.store)
             let captured = CartLineItem(from: try await sale(id, store: ditto.store), qty: 1)
             var order = Order.new(locationId: "A").addingCartLineItem(captured, lineItemId: "line`photo")
                 .addingCartLineItem(withoutPhoto, lineItemId: "no-photo")
@@ -25,7 +25,7 @@ import XCTest
             order = saved
 
             try await catalog.updateMetadata(SaleItemMetadata(documentId: id, name: "Renamed", imageName: "milk", price: Price(cents: 250)))
-            try await PhotoAttachments.replace(b, for: id, executor: ditto.store)
+            try await PhotoAttachments.replace(replacementAttachment, for: id, executor: ditto.store)
             try await catalog.increment(-4, id: id)
             let current = try await sale(id, store: ditto.store)
             order = order.addingCartLineItem(CartLineItem(from: current, qty: 3), lineItemId: "line`photo")
@@ -50,7 +50,7 @@ import XCTest
             XCTAssertEqual(savedReadd.cart["line`photo"]?.price, readded.price)
             XCTAssertEqual(savedReadd.cart["line`photo"]?.image, readded.image)
             XCTAssertEqual(savedReadd.cart["line`photo"].map { DittoWireDate.string(from: $0.createdAt) }, DittoWireDate.string(from: readded.createdAt))
-            XCTAssertEqual(readded.image, PhotoAttachments.reference(to: b))
+            XCTAssertEqual(readded.image, PhotoAttachments.reference(to: replacementAttachment))
         }
     }
 
@@ -80,7 +80,7 @@ import XCTest
             try await ditto.store.execute(query: "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": saleID.id, "locationId": saleID.locationId])
             let historical = try await read(order.documentId, store: ditto.store)
             XCTAssertEqual(historical, paid)
-            // Historical lines render from their own references without a catalog document.
+            // Historical lines render from their own references without originalAttachment catalog document.
             let loader = PhotoLoader(store: ditto.store)
             defer { loader.stop() }
             let loaded = expectation(description: "The frozen receipt image is available")
@@ -152,7 +152,7 @@ import XCTest
             let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
             let root = try XCTUnwrap(scene.windows.first { $0.isKeyWindow }?.rootViewController)
             root.addChild(host)
-            host.view.frame = CGRect(x: 0, y: 0, width: 56, height: 56)
+            host.view.frame = CGRect(origin: root.view.safeAreaLayoutGuide.layoutFrame.origin, size: CGSize(width: 56, height: 56))
             root.view.addSubview(host.view)
             host.didMove(toParent: root)
             defer {
