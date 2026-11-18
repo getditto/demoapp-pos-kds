@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.ditto.kotlin.DittoStore
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.images.PhotoReference
-import live.ditto.ui.DittoPhoto
+import live.ditto.ui.AppPhoto
 
 @Composable
 fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, store: DittoStore, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
@@ -29,5 +29,5 @@ internal fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, loader:
     val image = loader.image.collectAsState().value
     LaunchedEffect(loader, owner, reference?.id) { loader.update(reference, owner)?.join() }
     DisposableEffect(loader) { onDispose { loader.stop() } }
-    DittoPhoto(if (loader.matches(reference)) image?.asImageBitmap() else null, modifier, contentScale, cornerRadius)
+    AppPhoto(if (loader.matches(reference)) image?.asImageBitmap() else null, modifier, contentScale, cornerRadius)
 }
