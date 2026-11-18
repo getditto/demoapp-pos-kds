@@ -2,7 +2,8 @@
 
 ## Running tests
 
-Run the native test commands from the repository root. Platform build/setup instructions remain in [iOS](../iOS/README.md) and [Android](../Android/README.md).
+Run the native test commands from the repository root. Platform build/setup
+instructions remain in [iOS](../iOS/README.md) and [Android](../Android/README.md).
 
 ```sh
 xcodebuild test -project iOS/DittoPOS.xcodeproj -scheme DittoPOS \
@@ -34,8 +35,8 @@ That host has no Ditto SDK, repositories or demo startup. Android uses JVM logic
 tests and emulator-based repository/UI tests whose runner substitutes a plain
 `Application`, bypassing the demo's Hilt startup, seeding and sync. Both platforms
 load the same independently authored order JSON from `Tests/Fixtures` for store
-tests. `.ci/build.env` supplies placeholder constants for Android app compilation
-only. These commands never launch the real demo apps and need no Ditto
+tests. `.ci/build.env` supplies unusable compiler constants for native app builds;
+it never initializes a test store. The automated test commands above never launch the real demo apps and need no Ditto
 authentication or app-store signing credentials. Add production logic to the
 standalone target's Sources phase when extending its coverage; do not copy it.
 
