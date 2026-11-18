@@ -22,7 +22,7 @@ struct ProductPhotoView: View {
     }
 
     var body: some View {
-        DittoPhoto(image: loader.image(matching: reference).map(Image.init(uiImage:)), contentMode: contentMode, cornerRadius: cornerRadius)
+        AppPhoto(image: loader.image(matching: reference).map(Image.init(uiImage:)), contentMode: contentMode, cornerRadius: cornerRadius)
             .task(id: Input(owner: owner, referenceID: reference?.id)) {
                 guard !Task.isCancelled else { return }
                 loader.update(reference, owner: owner)

@@ -94,21 +94,21 @@ class ProductPhotoTest {
                     ProductPhoto(items.firstOrNull()?.image, owner, loader, Modifier.size(40.dp))
                 }
             }
-            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED), "image/png", ditto.store).use { a ->
-                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { b ->
-                    PhotoAttachments.replace(a, id, ditto.store)
+            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED), "image/png", ditto.store).use { originalAttachment ->
+                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { replacementAttachment ->
+                    PhotoAttachments.replace(originalAttachment, id, ditto.store)
                     compose.waitUntil { requests.size == 1 }
-                    assertEquals(a.id, requests.first().id)
+                    assertEquals(originalAttachment.id, requests.first().id)
                     repository.increment(1, id)
                     compose.waitUntil { observedQuantity.get() == 3L }
                     assertEquals(1, requests.size)
-                    PhotoAttachments.replace(b, id, ditto.store)
+                    PhotoAttachments.replace(replacementAttachment, id, ditto.store)
                     compose.waitUntil { requests.size == 2 }
-                    assertEquals(b.id, requests.last().id)
+                    assertEquals(replacementAttachment.id, requests.last().id)
                     assertEquals(listOf(0), canceled.toList())
                     PhotoAttachments.remove(id, ditto.store)
                     compose.waitUntil { canceled.toList() == listOf(0, 1) }
-                    PhotoAttachments.replace(a, id, ditto.store)
+                    PhotoAttachments.replace(originalAttachment, id, ditto.store)
                     compose.waitUntil { requests.size == 3 }
                     compose.runOnIdle { owner = id.copy(locationId = "B") }
                     compose.waitUntil { requests.size == 4 }
