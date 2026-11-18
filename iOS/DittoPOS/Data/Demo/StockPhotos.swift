@@ -11,9 +11,8 @@ enum StockPhotos {
         "00017": "sandwich", "00018": "soft-drink", "00019": "tacos", "00020": "veggies"
     ]
 
-    static func data(for itemId: String) throws -> Data {
+    static func url(for itemId: String) -> URL {
         let resource = resources[itemId]!
-        let url = Bundle(for: StockPhotoBundle.self).url(forResource: resource, withExtension: "png", subdirectory: "StarterImages")!
-        return try Data(contentsOf: url)
+        return Bundle(for: StockPhotoBundle.self).url(forResource: resource, withExtension: "png", subdirectory: "StarterImages")!
     }
 }

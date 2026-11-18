@@ -29,8 +29,10 @@ struct DemoSeeder {
 
     func seedSaleItems() async {
         for item in SaleItemSeed.saleItemsForAllLocations() {
-            let data = try! StockPhotos.data(for: item.documentId.id)
-            let photo = try! await PhotoAttachments.importPhoto(data, mimeType: "image/png", store: store)
+            let photo = try! await store.newAttachment(
+                path: StockPhotos.url(for: item.documentId.id).path,
+                metadata: ["mime_type": "image/png"]
+            )
             _ = try! await store.execute(
                 query: """
                     INSERT INTO COLLECTION \(SaleItem.collectionName) (quantity COUNTER, image ATTACHMENT)

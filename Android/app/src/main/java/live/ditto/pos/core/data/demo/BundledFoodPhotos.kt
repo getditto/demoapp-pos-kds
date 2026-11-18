@@ -3,14 +3,13 @@ package live.ditto.pos.core.data.demo
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import live.ditto.pos.R
+import java.io.InputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BundledFoodPhotos @Inject constructor(@ApplicationContext private val context: Context) {
-    internal fun bytes(itemId: String): ByteArray = resources.getValue(itemId).let { resource ->
-        context.resources.openRawResource(resource).use { it.readBytes() }
-    }
+    internal fun open(itemId: String): InputStream = context.resources.openRawResource(resources.getValue(itemId))
 
     companion object {
         private val resources = mapOf(
