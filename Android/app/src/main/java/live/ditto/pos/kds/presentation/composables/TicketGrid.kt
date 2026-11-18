@@ -27,9 +27,9 @@ import live.ditto.pos.kds.TicketItemUi
 import live.ditto.ui.AppColors
 import live.ditto.ui.AppEmptyState
 import live.ditto.ui.AppHeader
-import live.ditto.ui.BrandTheme
 import live.ditto.ui.AppTicket
 import live.ditto.ui.AppWell
+import live.ditto.ui.BrandTheme
 import kotlin.time.Clock
 
 @Composable
