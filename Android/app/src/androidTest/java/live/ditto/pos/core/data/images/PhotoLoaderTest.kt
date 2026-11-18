@@ -25,8 +25,8 @@ import org.junit.Test
 
 class PhotoLoaderTest {
     private val owner = DocumentID("coffee", "A")
-    private val a = PhotoReference("A", 1uL, emptyMap())
-    private val b = PhotoReference("B", 1uL, emptyMap())
+    private val originalReference = PhotoReference("A", 1uL, emptyMap())
+    private val replacementReference = PhotoReference("B", 1uL, emptyMap())
 
     @Test
     fun referenceAndOwnerChangesCancelAndRejectObsoleteCompletions() = runBlocking {
@@ -35,24 +35,24 @@ class PhotoLoaderTest {
                 val source = ControlledPhotos()
                 val loader = PhotoLoader(this, PhotoImageCache(), source::fetch)
                 try {
-                    loader.update(a, owner)
+                    loader.update(originalReference, owner)
                     val first = source.next()
-                    loader.update(a, owner)
+                    loader.update(originalReference, owner)
                     assertEquals(1, source.requests)
-                    loader.update(b, owner)
+                    loader.update(replacementReference, owner)
                     val second = source.next()
                     assertEquals(1, source.canceled)
                     second.data.complete(PhotoTestImages.png(Color.BLUE))
                     val current = withTimeout(5_000) { loader.image.first { it != null } }
-                    assertFalse(loader.matches(a))
-                    assertTrue(loader.matches(b))
+                    assertFalse(loader.matches(originalReference))
+                    assertTrue(loader.matches(replacementReference))
                     first.data.complete(PhotoTestImages.png(Color.RED))
                     assertSame(current, loader.image.value)
                     loader.update(null, owner)
                     assertNull(loader.image.value)
-                    loader.update(a, owner)
+                    loader.update(originalReference, owner)
                     val third = source.next()
-                    loader.update(a, owner.copy(locationId = "B"))
+                    loader.update(originalReference, owner.copy(locationId = "B"))
                     val fourth = source.next()
                     assertEquals(2, source.canceled)
                     third.data.complete(PhotoTestImages.png(Color.RED))
@@ -74,20 +74,20 @@ class PhotoLoaderTest {
                 val source = ControlledPhotos()
                 val loader = PhotoLoader(this, PhotoImageCache(), source::fetch)
                 try {
-                    loader.update(a, owner)
+                    loader.update(originalReference, owner)
                     source.next().data.complete(PhotoTestImages.png(Color.RED))
                     val cached = withTimeout(5_000) { loader.image.first { it != null } }
                     loader.stop()
-                    loader.update(a, DocumentID("other", "B"))
+                    loader.update(originalReference, DocumentID("other", "B"))
                     assertSame(cached, loader.image.value)
                     assertEquals(1, source.requests)
-                    val pending = loader.update(b, owner)
+                    val pending = loader.update(replacementReference, owner)
                     assertNull(loader.image.value)
                     val corrupt = source.next()
                     corrupt.data.complete("corrupt".toByteArray())
                     pending?.join()
                     assertNull(loader.image.value)
-                    loader.update(a, owner)
+                    loader.update(originalReference, owner)
                     assertSame(cached, loader.image.value)
                 } finally {
                     loader.stop()

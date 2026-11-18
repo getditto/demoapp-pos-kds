@@ -34,28 +34,24 @@ class PhotoAttachmentsTest {
             repository.create(SaleItemCreation(metadata, 2))
             repository.create(SaleItemCreation(SaleItemMetadata(other, "Other", "milk", Price(250)), 7))
             repository.increment(-4, id)
-            PhotoAttachments.configure(ditto.store)
-            ditto.store.execute("SHOW attachments_auto_fetch") { result ->
-                assertEquals(true, result.items.single().value["attachments_auto_fetch"].boolean)
-            }
 
-            val aData = PhotoTestImages.stockPhoto
-            PhotoAttachments.importPhoto(aData, "image/png", ditto.store).use { a ->
-                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { b ->
+            val stockPhotoData = PhotoTestImages.stockPhoto
+            PhotoAttachments.importPhoto(stockPhotoData, "image/png", ditto.store).use { originalAttachment ->
+                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { replacementAttachment ->
                     coroutineScope {
                         val ready = CompletableDeferred<Unit>()
                         val observedReplacement = CompletableDeferred<SaleItem>()
                         val observation = launch {
                             val items = repository.observeLocationSaleItems(id.locationId).onEach { ready.complete(Unit) }
-                                .first { rows -> rows.any { it.documentId == id && it.image?.id == b.id } }
+                                .first { rows -> rows.any { it.documentId == id && it.image?.id == replacementAttachment.id } }
                             observedReplacement.complete(items.single { it.documentId == id })
                         }
                         ready.await()
                         try {
-                            PhotoAttachments.replace(a, id, ditto.store)
+                            PhotoAttachments.replace(originalAttachment, id, ditto.store)
                             val photo = readItem(id)
-                            assertEquals(PhotoAttachments.reference(a), photo.image)
-                            assertArrayEquals(aData, a.getData())
+                            assertEquals(PhotoAttachments.reference(originalAttachment), photo.image)
+                            assertArrayEquals(stockPhotoData, originalAttachment.getData())
                             assertEquals(metadata, photo.metadata)
                             assertEquals(-2L, photo.quantity)
                             val foreign = readItem(other)
@@ -67,10 +63,10 @@ class PhotoAttachmentsTest {
                             val updated = readItem(id)
                             assertEquals(photo.image, updated.image)
                             assertEquals(-2L, updated.quantity)
-                            PhotoAttachments.replace(b, id, ditto.store)
+                            PhotoAttachments.replace(replacementAttachment, id, ditto.store)
                             assertEquals(-2L, withTimeout(5_000) { observedReplacement.await() }.quantity)
                             val replaced = readItem(id)
-                            assertEquals(PhotoAttachments.reference(b), replaced.image)
+                            assertEquals(PhotoAttachments.reference(replacementAttachment), replaced.image)
                             assertNotEquals(photo.image?.id, replaced.image?.id)
                             PhotoAttachments.remove(id, ditto.store)
                             val removed = readItem(id)

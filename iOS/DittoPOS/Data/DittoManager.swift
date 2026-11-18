@@ -15,7 +15,6 @@ import Foundation
 @MainActor final class DittoManager: ObservableObject {
     static let shared = DittoManager()
     let ditto: Ditto
-    private var attachmentsConfigured = false
 
     private init() {
         let directory: FileManager.SearchPathDirectory = .documentDirectory
@@ -39,7 +38,8 @@ import Foundation
         let config = DittoConfig(
             databaseID: Env.DITTO_DATABASE_ID,
             connect: .server(url: serverURL),
-            persistenceDirectory: persistenceDirURL
+            persistenceDirectory: persistenceDirURL,
+            systemParameters: ["attachments_auto_fetch": true]
         )
 
         do {
@@ -62,8 +62,6 @@ import Foundation
             let isPreview: Bool = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
             if !isPreview {
                 do {
-                    try await PhotoAttachments.configure(store: ditto.store)
-                    attachmentsConfigured = true
                     try ditto.sync.start()
                 } catch {
                     print("ERROR: starting sync failed: \(error)")
@@ -77,8 +75,6 @@ import Foundation
     func applySyncGroup(locationId: String) {
         ditto.sync.stop()
         setSyncGroup(locationId: locationId)
-        // Location callbacks can arrive before asynchronous startup configuration finishes.
-        guard attachmentsConfigured else { return }
         do { try ditto.sync.start() } catch {
             print("Failed to restart sync: \(error)")
         }
@@ -103,7 +99,6 @@ import Foundation
         ditto.updateTransportConfig { config in
             config.global.syncGroup = 0
         }
-        guard attachmentsConfigured else { return }
         do { try ditto.sync.start() } catch {
             print("Failed to restart sync: \(error)")
         }

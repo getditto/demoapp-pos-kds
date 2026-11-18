@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct DittoPhoto: View {
+public struct AppPhoto: View {
     private let image: Image?
     private let contentMode: ContentMode
     private let cornerRadius: CGFloat
@@ -16,12 +16,12 @@ public struct DittoPhoto: View {
     public var body: some View {
         GeometryReader { geometry in
             ZStack {
-                DittoColors.surface
+                AppColors.surface
                 if let image {
                     image.resizable().aspectRatio(contentMode: contentMode)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                 } else {
-                    DittoIcon("image", size: iconSize).foregroundStyle(DittoColors.secondaryText)
+                    AppIcon("image", size: iconSize).foregroundStyle(AppColors.secondaryText)
                 }
             }
         }

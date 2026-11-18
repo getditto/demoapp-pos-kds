@@ -14,26 +14,23 @@ import XCTest
             try await repository.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
             try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: other, name: "Other", imageName: "milk", price: Price(cents: 250)), initialQuantity: 7))
             try await repository.increment(-4, id: id)
-            try await PhotoAttachments.configure(store: ditto.store)
-            let configuration = try await ditto.store.execute(query: "SHOW attachments_auto_fetch")
-            XCTAssertEqual(configuration.items.first?.value["attachments_auto_fetch"] as? Bool, true)
 
-            let aData = try PhotoTestImages.stockPhoto
-            let a = try await PhotoAttachments.importPhoto(aData, mimeType: "image/png", store: ditto.store)
-            let b = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
+            let stockPhotoData = try PhotoTestImages.stockPhoto
+            let originalAttachment = try await PhotoAttachments.importPhoto(stockPhotoData, mimeType: "image/png", store: ditto.store)
+            let replacementAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
             let observedReplacement = expectation(description: "The active catalog observer receives the replacement photo")
             let observation = repository.observeLocationSaleItems(id.locationId)
-                .filter { $0.first(where: { $0.documentId == id })?.image?.id == b.id }
+                .filter { $0.first(where: { $0.documentId == id })?.image?.id == replacementAttachment.id }
                 .prefix(1)
                 .sink { items in
                     XCTAssertEqual(items.first(where: { $0.documentId == id })?.quantity, -2)
                     observedReplacement.fulfill()
                 }
             defer { observation.cancel() }
-            try await PhotoAttachments.replace(a, for: id, executor: ditto.store)
+            try await PhotoAttachments.replace(originalAttachment, for: id, executor: ditto.store)
             let photo = try await read(id, store: ditto.store)
-            XCTAssertEqual(photo.image, PhotoAttachments.reference(to: a))
-            XCTAssertEqual(try a.data(), aData)
+            XCTAssertEqual(photo.image, PhotoAttachments.reference(to: originalAttachment))
+            XCTAssertEqual(try originalAttachment.data(), stockPhotoData)
             XCTAssertEqual(photo.metadata, metadata)
             XCTAssertEqual(photo.quantity, -2)
             let foreign = try await read(other, store: ditto.store)
@@ -45,10 +42,10 @@ import XCTest
             let updated = try await read(id, store: ditto.store)
             XCTAssertEqual(updated.image, photo.image)
             XCTAssertEqual(updated.quantity, -2)
-            try await PhotoAttachments.replace(b, for: id, executor: ditto.store)
+            try await PhotoAttachments.replace(replacementAttachment, for: id, executor: ditto.store)
             await fulfillment(of: [observedReplacement], timeout: 5)
             let replaced = try await read(id, store: ditto.store)
-            XCTAssertEqual(replaced.image, PhotoAttachments.reference(to: b))
+            XCTAssertEqual(replaced.image, PhotoAttachments.reference(to: replacementAttachment))
             XCTAssertNotEqual(replaced.image?.id, photo.image?.id)
             try await PhotoAttachments.remove(for: id, executor: ditto.store)
             let removed = try await read(id, store: ditto.store)

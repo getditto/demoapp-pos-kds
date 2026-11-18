@@ -7,29 +7,29 @@ import XCTest
 
 @MainActor final class PhotoLoaderTests: XCTestCase {
     private let owner = DocumentID(id: "coffee", locationId: "A")
-    private let a = PhotoReference(id: "A", len: 1, metadata: [:])
-    private let b = PhotoReference(id: "B", len: 1, metadata: [:])
+    private let originalReference = PhotoReference(id: "A", len: 1, metadata: [:])
+    private let replacementReference = PhotoReference(id: "B", len: 1, metadata: [:])
 
     func testReferenceAndOwnerChangesCancelAndRejectObsoleteCompletions() {
         let source = ControlledPhotos()
         let loader = PhotoLoader(cache: PhotoImageCache(), fetch: source.fetch)
-        loader.update(a, owner: owner)
-        loader.update(a, owner: owner)
+        loader.update(originalReference, owner: owner)
+        loader.update(originalReference, owner: owner)
         XCTAssertEqual(source.requests.count, 1)
-        loader.update(b, owner: owner)
+        loader.update(replacementReference, owner: owner)
         XCTAssertEqual(source.canceled, [0])
         source.requests[1].complete(PhotoTestImages.png(.blue))
         let current = loader.image
         XCTAssertNotNil(current)
-        XCTAssertNil(loader.image(matching: a))
-        XCTAssertTrue(loader.image(matching: b) === current)
+        XCTAssertNil(loader.image(matching: originalReference))
+        XCTAssertTrue(loader.image(matching: replacementReference) === current)
         source.requests[0].complete(PhotoTestImages.png(.red))
         XCTAssertTrue(loader.image === current)
         loader.update(nil, owner: owner)
         XCTAssertNil(loader.image)
         XCTAssertEqual(source.canceled, [0, 1])
-        loader.update(a, owner: owner)
-        loader.update(a, owner: DocumentID(id: owner.id, locationId: "B"))
+        loader.update(originalReference, owner: owner)
+        loader.update(originalReference, owner: DocumentID(id: owner.id, locationId: "B"))
         XCTAssertEqual(source.canceled, [0, 1, 2])
         source.requests[2].complete(PhotoTestImages.png(.red))
         XCTAssertNil(loader.image)
@@ -42,20 +42,20 @@ import XCTest
     func testCachedImagesSurviveOfflineReuseAndCorruptDataUsesThePlaceholder() {
         let source = ControlledPhotos()
         let loader = PhotoLoader(cache: PhotoImageCache(), fetch: source.fetch)
-        loader.update(a, owner: owner)
+        loader.update(originalReference, owner: owner)
         source.requests[0].complete(PhotoTestImages.png(.red))
         let cached = loader.image
         loader.stop()
-        loader.update(a, owner: DocumentID(id: "other", locationId: "B"))
+        loader.update(originalReference, owner: DocumentID(id: "other", locationId: "B"))
         XCTAssertTrue(loader.image === cached)
         XCTAssertEqual(source.requests.count, 1)
-        loader.update(b, owner: owner)
+        loader.update(replacementReference, owner: owner)
         XCTAssertNil(loader.image)
         source.requests[1].complete(Data("corrupt".utf8))
         XCTAssertNil(loader.image)
         source.requests[1].complete(nil)
         XCTAssertNil(loader.image)
-        loader.update(a, owner: owner)
+        loader.update(originalReference, owner: owner)
         XCTAssertTrue(loader.image === cached)
         loader.stop()
     }
@@ -88,25 +88,25 @@ import XCTest
             try await waitForView(host.view) { scene.activationState == .foregroundActive }
             try await waitForView(host.view) { state.appeared }
 
-            let a = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
-            let b = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
-            try await PhotoAttachments.replace(a, for: owner, executor: ditto.store)
-            try await waitForView(host.view) { state.item?.image?.id == a.id }
-            try await waitForView(host.view) { state.renderedReference == a.id }
+            let originalAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
+            let replacementAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
+            try await PhotoAttachments.replace(originalAttachment, for: owner, executor: ditto.store)
+            try await waitForView(host.view) { state.item?.image?.id == originalAttachment.id }
+            try await waitForView(host.view) { state.renderedReference == originalAttachment.id }
             try await waitForView(host.view) { !source.requests.isEmpty }
             XCTAssertEqual(source.requests.count, 1)
-            XCTAssertEqual(source.requests.first?.reference.id, a.id)
+            XCTAssertEqual(source.requests.first?.reference.id, originalAttachment.id)
             try await repository.increment(1, id: owner)
             try await waitForView(host.view) { state.item?.quantity == 3 }
             XCTAssertEqual(source.requests.count, 1)
-            try await PhotoAttachments.replace(b, for: owner, executor: ditto.store)
+            try await PhotoAttachments.replace(replacementAttachment, for: owner, executor: ditto.store)
             try await waitForView(host.view) { source.requests.count == 2 }
-            XCTAssertEqual(source.requests.last?.reference.id, b.id)
+            XCTAssertEqual(source.requests.last?.reference.id, replacementAttachment.id)
             XCTAssertEqual(source.canceled, [0])
             try await PhotoAttachments.remove(for: owner, executor: ditto.store)
             try await waitForView(host.view) { source.canceled == [0, 1] }
             XCTAssertNil(loader.image)
-            try await PhotoAttachments.replace(a, for: owner, executor: ditto.store)
+            try await PhotoAttachments.replace(originalAttachment, for: owner, executor: ditto.store)
             try await waitForView(host.view) { source.requests.count == 3 }
             state.owner = DocumentID(id: owner.id, locationId: "B")
             try await waitForView(host.view) { source.requests.count == 4 }

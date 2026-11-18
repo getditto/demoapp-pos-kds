@@ -18,13 +18,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun DittoPhoto(image: ImageBitmap?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp, iconSize: Dp = 24.dp) {
+fun AppPhoto(image: ImageBitmap?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp, iconSize: Dp = 24.dp) {
     Box(modifier.clip(RoundedCornerShape(cornerRadius)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
         if (image != null) {
             Image(image, null, Modifier.fillMaxSize(), contentScale = contentScale)
         } else {
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                DittoIcon(R.drawable.phosphor_image, description = null, size = iconSize)
+                AppIcon(R.drawable.phosphor_image, description = null, size = iconSize)
             }
         }
     }
