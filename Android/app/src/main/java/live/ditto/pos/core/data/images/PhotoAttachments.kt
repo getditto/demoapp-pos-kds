@@ -4,6 +4,7 @@ import com.ditto.kotlin.DittoAttachment
 import com.ditto.kotlin.DittoStore
 import com.ditto.kotlin.DittoTransaction
 import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.dqlIdentifier
 import java.io.ByteArrayInputStream
