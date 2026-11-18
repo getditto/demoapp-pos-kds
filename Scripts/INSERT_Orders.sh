@@ -26,7 +26,6 @@ INTERVAL=1  # seconds between inserts
 # Hand-picked sale item from the seed catalog (id 00012 = Milk, $2.00).
 SALE_ITEM_ID="00012"
 SALE_ITEM_NAME="Milk"
-SALE_ITEM_IMAGE="milk"
 SALE_ITEM_CENTS=200
 
 # ----- Helpers -----
@@ -51,7 +50,6 @@ while true; do
             \"$LINE_ITEM_ID\": {
               \"saleItemId\": \"$SALE_ITEM_ID\",
               \"name\": \"$SALE_ITEM_NAME\",
-              \"imageName\": \"$SALE_ITEM_IMAGE\",
               \"price\": { \"amount\": $SALE_ITEM_CENTS, \"currency\": \"usd\" },
               \"qty\": 1,
               \"createdAt\": \"$NOW\"
