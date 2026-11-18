@@ -24,10 +24,10 @@ class OrderPhotosTest {
             val id = DocumentID("coffee", "A")
             val metadata = SaleItemMetadata(id, "Original", "coffee", Price(199))
             catalog.create(SaleItemCreation(metadata, 2))
-            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED), "image/png", ditto.store).use { a ->
-                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { b ->
+            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED), "image/png", ditto.store).use { originalAttachment ->
+                PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { replacementAttachment ->
                     val withoutPhoto = CartLineItem.from(sale(id), 1)
-                    PhotoAttachments.replace(a, id, ditto.store)
+                    PhotoAttachments.replace(originalAttachment, id, ditto.store)
                     val captured = CartLineItem.from(sale(id), 1)
                     var order = Order.new("A").addingCartLineItem(captured, "line`photo")
                         .addingCartLineItem(withoutPhoto, "no-photo")
@@ -38,7 +38,7 @@ class OrderPhotosTest {
                     order = saved
 
                     catalog.updateMetadata(metadata.copy(name = "Renamed", imageName = "milk", price = Price(250)))
-                    PhotoAttachments.replace(b, id, ditto.store)
+                    PhotoAttachments.replace(replacementAttachment, id, ditto.store)
                     catalog.increment(-4, id)
                     val current = sale(id)
                     order = order.addingCartLineItem(CartLineItem.from(current, 3), "line`photo")
@@ -60,7 +60,7 @@ class OrderPhotosTest {
                     assertEquals(readded.price, savedReadd?.price)
                     assertEquals(readded.image, savedReadd?.image)
                     assertEquals(readded.createdAt.toDittoIsoString(), savedReadd?.createdAt?.toDittoIsoString())
-                    assertEquals(PhotoAttachments.reference(b), readded.image)
+                    assertEquals(PhotoAttachments.reference(replacementAttachment), readded.image)
                 }
             }
         }
@@ -91,7 +91,7 @@ class OrderPhotosTest {
                 assertEquals(other, read(other.documentId))
                 ditto.store.execute("DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to saleId.id, "locationId" to saleId.locationId))
                 assertEquals(paid, read(order.documentId))
-                // Historical lines render from their own references without a catalog document.
+                // Historical lines render from their own references without originalAttachment catalog document.
                 kotlinx.coroutines.coroutineScope {
                     val loader = PhotoLoader.from(ditto.store, this)
                     try {
