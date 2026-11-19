@@ -1,4 +1,4 @@
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View {

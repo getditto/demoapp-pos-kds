@@ -1,13 +1,13 @@
-import DittoUI
+import AppUI
 import SwiftUI
 
 // This host exercises the real presentation layer without the demo or its database.
 @main
-struct DittoUIHost: App {
+struct AppUIHost: App {
     @StateObject private var appearance: AppearanceSettings
 
     init() {
-        let suite = ProcessInfo.processInfo.environment["UI_TEST_SETTINGS_SUITE"] ?? "DittoUIHost"
+        let suite = ProcessInfo.processInfo.environment["UI_TEST_SETTINGS_SUITE"] ?? "AppUIHost"
         let defaults = UserDefaults(suiteName: suite)!
         if ProcessInfo.processInfo.arguments.contains("--reset-settings") { defaults.removePersistentDomain(forName: suite) }
         _appearance = StateObject(wrappedValue: AppearanceSettings(defaults: defaults))

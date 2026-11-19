@@ -1,5 +1,5 @@
 import Combine
-import DittoUI
+import AppUI
 import SwiftUI
 
 enum AppAppearance: String, CaseIterable, Identifiable {

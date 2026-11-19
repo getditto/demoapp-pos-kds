@@ -1,4 +1,4 @@
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct SettingsContent: View {

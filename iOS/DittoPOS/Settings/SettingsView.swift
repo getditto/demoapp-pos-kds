@@ -1,6 +1,6 @@
 import DittoAllToolsMenu
 import DittoSwift
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct SettingsView: View {
