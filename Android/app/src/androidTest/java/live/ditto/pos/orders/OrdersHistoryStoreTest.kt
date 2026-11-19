@@ -11,6 +11,7 @@ import kotlinx.coroutines.withTimeout
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.TestDitto
+import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrdersHistory
 import live.ditto.pos.core.data.orders.OrdersHistoryState
 import org.junit.Assert.assertEquals
@@ -65,7 +66,7 @@ class OrdersHistoryStoreTest {
                     history.await { pageIndex == 2 && orders.map { it.documentId.id } == listOf("00000049") }
                     assertFalse(history.state.value.canNext)
                     assertEquals(old, history.state.value.orders.single().createdAt)
-                    ditto.store.execute("DELETE FROM pos_orders_v2 WHERE _id.locationId = :locationId AND _id.id = :id", mapOf("locationId" to "A", "id" to "00000049"))
+                    ditto.store.execute("DELETE FROM ${Order.COLLECTION_NAME} WHERE _id.locationId = :locationId AND _id.id = :id", mapOf("locationId" to "A", "id" to "00000049"))
                     history.await { total == 100 && pageIndex == 1 && orders.size == 50 }
                     insert(order(101))
                     history.await { total == 101 && pageIndex == 1 && canNext }

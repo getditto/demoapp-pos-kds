@@ -65,7 +65,7 @@ import XCTest
             await expect(history) { $0.pageIndex == 2 && $0.orders.map(\.documentId.id) == ["00000049"] }
             XCTAssertFalse(history.state.canNext)
             XCTAssertTrue(history.state.orders[0].createdAt < current)
-            _ = try await ditto.store.execute(query: "DELETE FROM pos_orders_v2 WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000049"])
+            _ = try await ditto.store.execute(query: "DELETE FROM \(Order.collectionName) WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000049"])
             await expect(history) { $0.total == 100 && $0.pageIndex == 1 && $0.orders.count == 50 }
             try await repository.add(order: order(101))
             await expect(history) { $0.total == 101 && $0.pageIndex == 1 && $0.canNext }
