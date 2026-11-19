@@ -22,9 +22,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import live.ditto.pos.settings.AppAppearance
-import live.ditto.ui.DittoChoiceRow
-import live.ditto.ui.DittoRow
-import live.ditto.ui.DittoSurface
+import live.ditto.ui.AppChoiceRow
+import live.ditto.ui.AppRow
+import live.ditto.ui.AppSurface
 
 @Composable
 fun SettingsScreen(location: String, appearance: AppAppearance, version: String, build: String, sdkVersion: String, onAppearance: (AppAppearance) -> Unit, onLocation: () -> Unit, onTools: () -> Unit) {
@@ -37,14 +37,14 @@ fun SettingsScreen(location: String, appearance: AppAppearance, version: String,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(if (tablet) 16.dp else 12.dp)) {
-                DittoRow(location, onClick = onLocation, eyebrow = "Location")
-                DittoSurface(Modifier.fillMaxWidth()) {
+                AppRow(location, onClick = onLocation, eyebrow = "Location")
+                AppSurface(Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Appearance", style = MaterialTheme.typography.bodyMedium)
                         Text("System follows this device’s setting.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             AppAppearance.entries.forEach { item ->
-                                DittoChoiceRow(
+                                AppChoiceRow(
                                     when (item) {
                                         AppAppearance.SYSTEM -> "System"
                                         AppAppearance.LIGHT -> "Light"
@@ -57,7 +57,7 @@ fun SettingsScreen(location: String, appearance: AppAppearance, version: String,
                         }
                     }
                 }
-                DittoRow("Ditto Tools", onClick = onTools)
+                AppRow("Ditto Tools", onClick = onTools)
             }
             Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Build $version ($build)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)

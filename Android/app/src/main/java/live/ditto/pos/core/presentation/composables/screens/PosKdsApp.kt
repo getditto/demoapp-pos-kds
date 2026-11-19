@@ -34,8 +34,8 @@ import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 import live.ditto.pos.settings.AppAppearance
-import live.ditto.ui.DittoHeader
-import live.ditto.ui.DittoIcon
+import live.ditto.ui.AppHeader
+import live.ditto.ui.AppIcon
 import live.ditto.ui.R
 
 @Composable
@@ -99,9 +99,9 @@ fun PosKdsShell(
             Column {
                 if (!onTools) {
                     if (selecting) {
-                        IconButton(onClick = { controller.popBackStack() }) { DittoIcon(R.drawable.phosphor_arrow_left, description = "Back") }
+                        IconButton(onClick = { controller.popBackStack() }) { AppIcon(R.drawable.phosphor_arrow_left, description = "Back") }
                     }
-                    DittoHeader(title, location = state.currentLocationName, tablet = LocalConfiguration.current.screenWidthDp >= 600)
+                    AppHeader(title, location = state.currentLocationName, tablet = LocalConfiguration.current.screenWidthDp >= 600)
                 }
                 if (needsLocation) {
                     if (state.isLoading) {

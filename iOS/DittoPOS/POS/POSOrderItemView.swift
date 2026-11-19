@@ -5,7 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct POSOrderItemView: View, Identifiable {
@@ -24,7 +24,7 @@ struct POSOrderItemView: View, Identifiable {
             Spacer()
             Text(item.price.description)
         }
-        .font(DittoTypography.body)
+        .font(AppTypography.body)
     }
 }
 

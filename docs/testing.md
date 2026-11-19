@@ -29,8 +29,8 @@ Simulate peer-originated changes with sequenced DQL writes to the local test sto
 Real peer convergence and file transfer have separate manual acceptance checks.
 
 The standalone iOS `DittoPOSTests` bundle compiles production logic directly,
-without the demo app or its `.env`. `DittoUIPresentationTests` uses XCUITest and a
-small `DittoUIHost` to exercise the real theme, shell and Settings presentation.
+without the demo app or its `.env`. `AppUIPresentationTests` uses XCUITest and a
+small `AppUIHost` to exercise the real theme, shell and Settings presentation.
 That host has no Ditto SDK, repositories or demo startup. Android uses JVM logic
 tests and emulator-based repository/UI tests whose runner substitutes a plain
 `Application`, bypassing the demo's Hilt startup, seeding and sync. Both platforms
@@ -47,7 +47,7 @@ marketing version or allocate a shipping number.
 
 ## Native UI libraries
 
-`iOS/DittoUI` is a local Swift package; `Android/ditto-ui` is a Compose library.
+`iOS/AppUI` is a local Swift package; `Android/app-ui` is a Compose library.
 They own semantic styling, shared presentation components and bundled brand
 resources, with no Ditto, navigation or app-state dependencies. App code supplies
 values, bindings, callbacks and content. Package publication is separate work.

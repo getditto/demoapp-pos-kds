@@ -1,13 +1,13 @@
-import DittoUI
+import AppUI
 import SwiftUI
 
 // This host exercises the real presentation layer without the demo or its database.
 @main
-struct DittoUIHost: App {
+struct AppUIHost: App {
     @StateObject private var appearance: AppearanceSettings
 
     init() {
-        let suite = ProcessInfo.processInfo.environment["UI_TEST_SETTINGS_SUITE"] ?? "DittoUIHost"
+        let suite = ProcessInfo.processInfo.environment["UI_TEST_SETTINGS_SUITE"] ?? "AppUIHost"
         let defaults = UserDefaults(suiteName: suite)!
         if ProcessInfo.processInfo.arguments.contains("--reset-settings") { defaults.removePersistentDomain(forName: suite) }
         _appearance = StateObject(wrappedValue: AppearanceSettings(defaults: defaults))
@@ -31,7 +31,7 @@ private struct PresentationFixture: View {
         AppShell(selectedTab: $selectedTab, needsLocation: false, location: "Ham's Burgers") {
             DraftPage()
         } kds: {
-            DittoEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
+            AppEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
         } settings: {
             SettingsContent(location: "Ham's Burgers", appearance: $appearance.selection,
                             version: "1.1.0", build: "9999", sdkVersion: "5.2.0", onLocation: {}, onTools: {})

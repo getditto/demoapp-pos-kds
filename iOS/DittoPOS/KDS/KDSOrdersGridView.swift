@@ -5,7 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct KDSOrdersGridView: View {
@@ -39,13 +39,13 @@ struct KDSOrdersGridView: View {
                 }
             }
         }
-        .background(DittoColors.background)
+        .background(AppColors.background)
         .onAppear { viewModel.setVisible(isActive) }
         .onChange(of: isActive) { viewModel.setVisible($0) }
         .onDisappear { viewModel.setVisible(false) }
     }
 
     private var emptyState: some View {
-        DittoEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
+        AppEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
     }
 }

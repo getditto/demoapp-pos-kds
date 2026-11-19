@@ -7,7 +7,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import live.ditto.pos.core.presentation.navigation.BottomNavItem
-import live.ditto.ui.DittoIcon
+import live.ditto.ui.AppIcon
 
 @Composable
 fun PosKdsNavigationBar(selectedRoute: String?, onItemClick: (BottomNavItem) -> Unit) {
@@ -16,7 +16,7 @@ fun PosKdsNavigationBar(selectedRoute: String?, onItemClick: (BottomNavItem) -> 
             NavigationBarItem(
                 selected = selectedRoute == item.route || (item == BottomNavItem.Settings && selectedRoute?.startsWith("settings/") == true),
                 onClick = { onItemClick(item) },
-                icon = { DittoIcon(item.icon) },
+                icon = { AppIcon(item.icon) },
                 label = { Text(item.label) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.onSurface,

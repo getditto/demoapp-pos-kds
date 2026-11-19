@@ -5,7 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct POSOrderView: View {
@@ -21,7 +21,7 @@ struct POSOrderView: View {
     private var orderContent: some View {
         VStack(spacing: 0) {
             Text(viewModel.orderTitle)
-                .font(DittoTypography.body)
+                .font(AppTypography.body)
                 .padding(.bottom, 8)
             divider()
                 .padding(.bottom, 8)

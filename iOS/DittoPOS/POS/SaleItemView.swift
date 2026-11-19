@@ -5,7 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
-import DittoUI
+import AppUI
 import SwiftUI
 
 struct SaleItemView: View {
@@ -23,7 +23,7 @@ struct SaleItemView: View {
                 .scaledToFit()
 
             Text(item.name)
-                .font(DittoTypography.body)
+                .font(AppTypography.body)
         }
         .lineLimit(1)
         .padding(0)
