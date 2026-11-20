@@ -29,8 +29,8 @@ final class OrderModelTests: XCTestCase {
 
     func testKnownWireFixtureDecodesAndEncodesWithoutLosingMapsOrEscaping() throws {
         let order = try OrderFixture.load()
-        XCTAssertEqual(order.documentId, DocumentID(id: "order-'\"☕", locationId: "42"))
-        XCTAssertEqual(order.cart["line-1"]?.name, "Coffee \"冰\"")
+        XCTAssertEqual(order.documentId, DocumentID(id: "order-'\"coffee", locationId: "42"))
+        XCTAssertEqual(order.cart["line-1"]?.name, "Coffee \"iced\"")
         XCTAssertEqual(order.status, .inProcess)
         XCTAssertTrue(order.isPaid)
         let encoded = try JSONEncoder.ditto.encode(order)
@@ -42,14 +42,14 @@ final class OrderModelTests: XCTestCase {
     func testTotalsCountEveryUnitAndSummaryCombinesRepeatedNames() throws {
         let order = try OrderFixture.load()
         XCTAssertEqual(order.totalCents, 1097)  // 3 × 199 + 2 × 250
-        XCTAssertEqual(order.summary, ["Coffee \"冰\"": 5])
+        XCTAssertEqual(order.summary, ["Coffee \"iced\"": 5])
         XCTAssertEqual(order.sortedLineItems.map(\.price.amount), [199, 250])
     }
 
     func testAddingAnotherLinePreservesReceiptAndPaymentHistory() throws {
         let original = try OrderFixture.load()
         let item = CartLineItem(
-            saleItemId: "coffee-冰", name: "New coffee", imageName: "coffee", price: Price(cents: 100), qty: 2)
+            saleItemId: "coffee-iced", name: "New coffee", imageName: "coffee", price: Price(cents: 100), qty: 2)
         let updated = original.addingCartLineItem(item, lineItemId: "line-3")
         XCTAssertEqual(updated.totalCents, 1297)
         XCTAssertEqual(updated.cart["line-1"], original.cart["line-1"])

@@ -48,8 +48,8 @@ import Foundation
     }
 
     private func updateObservation() {
-        observation.set(isVisible ? locationId : nil, observe: ordersRepository.observeLocationOrders) { [weak self] orders in
-            self?.orders = KitchenOrders.select(from: orders)
+        observation.set(isVisible ? locationId : nil, observe: ordersRepository.observeKitchenOrders) { [weak self] orders in
+            self?.orders = orders
             self?.isLoading = false
         }
     }

@@ -20,9 +20,6 @@ import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.settings.AppSettings
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 import kotlin.time.Instant
 
@@ -36,16 +33,12 @@ constructor(
     private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
 
-    companion object {
-        private const val OUTPUT_DATE_FORMAT = "h:mm a"
-    }
-
     private var latestOrders: List<Order> = emptyList()
 
     val uiState: StateFlow<KdsUiState> = appSettings.locationIdFlow()
         .flatMapLatest { locationId ->
             if (locationId.isEmpty()) return@flatMapLatest flowOf(emptyList<Order>())
-            ordersRepository.observeLocationOrders(locationId).map { KitchenOrders.select(it) as List<Order>? }
+            ordersRepository.observeKitchenOrders(locationId).map { it as List<Order>? }
                 .onStart { emit(null) }
         }
         .onEach { orders ->
@@ -60,26 +53,17 @@ constructor(
             val order = latestOrders.firstOrNull { it.documentId.id == orderId } ?: return@launch
             val nextStatus = KitchenOrders.nextStatus(order.status) ?: return@launch
             ordersRepository.upsert(order.appendingStatus(nextStatus))
-
-            if (nextStatus == OrderStatus.PROCESSED && appSettings.currentOrderId() == order.documentId.id) {
-                appSettings.setCurrentOrderId("")
-            }
         }
     }
 
     private fun toTicketUi(order: Order): TicketItemUi = TicketItemUi(
-        time = generateOrderTime(order.createdAt),
+        createdAt = order.createdAt,
         shortOrderId = order.title,
         items = HashMap(order.summary),
         isPaid = order.isPaid,
         orderStatus = order.status,
         orderId = order.documentId.id
     )
-
-    private fun generateOrderTime(instant: Instant): String {
-        val outputFormat = SimpleDateFormat(OUTPUT_DATE_FORMAT, Locale.getDefault())
-        return outputFormat.format(Date(instant.toEpochMilliseconds()))
-    }
 }
 
 data class KdsUiState(
@@ -88,7 +72,7 @@ data class KdsUiState(
 )
 
 data class TicketItemUi(
-    val time: String,
+    val createdAt: Instant,
     val shortOrderId: String,
     val items: HashMap<String, Int>,
     val isPaid: Boolean,

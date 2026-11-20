@@ -34,18 +34,12 @@ fun ComponentCatalog(dark: Boolean = false) {
             AppRow("Ditto Tools", onClick = {})
             AppChoiceRow("Selected option", selected, { selected = !selected })
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AppWell(Modifier.weight(1f)) { AppEmptyState("No orders preparing", "New orders will appear here.", R.drawable.phosphor_cooking_pot) }
-                AppSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = AppTypography.action)
-                    Text("2 × Burger")
-                }
+                AppWell(Modifier.weight(1f)) { Text("No orders preparing") }
+                AppTicket("#32B9A42D", listOf("2 × Burger"), true, "2 min ago", true, {}, Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AppSurface(Modifier.weight(1f)) {
-                    Text("#32B9A42D", style = AppTypography.action)
-                    Text("2 × Burger")
-                }
-                AppWell(Modifier.weight(1f)) { AppEmptyState("No orders ready", "Completed orders will appear here.", R.drawable.phosphor_cooking_pot) }
+                AppTicket("#32B9A42D", listOf("2 × Burger"), false, "2 min ago", false, {}, Modifier.weight(1f))
+                AppWell(Modifier.weight(1f)) { Text("No orders ready") }
             }
         }
     }
