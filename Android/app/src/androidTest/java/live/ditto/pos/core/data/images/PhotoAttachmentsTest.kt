@@ -27,7 +27,7 @@ class PhotoAttachmentsTest {
     @Test
     fun optionalPhotosPreserveStockMetadataAndLocationIdentity() = runBlocking {
         TestDitto.withInstance {
-            val id = DocumentID("coffee'冰", "A")
+            val id = DocumentID("coffee'iced", "A")
             val other = id.copy(locationId = "B")
             val repository = catalog()
             val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
