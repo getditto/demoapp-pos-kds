@@ -41,6 +41,9 @@ fun ComponentCatalog(dark: Boolean = false) {
                 AppTicket("#32B9A42D", listOf("2 × Burger"), false, "2 min ago", false, {}, Modifier.weight(1f))
                 AppWell(Modifier.weight(1f)) { Text("No orders ready") }
             }
+            AppOrderSummary("Order #1234ABCD", "2 × Burger · 1 × Coffee", "Preparing", AppStatusTone.ACTIVE, "Oct 29, 14:48", "$18.95", expanded = false)
+            AppOrderSummary("Order #5678ABCD", "1 × Coffee", "Delivered", AppStatusTone.SUCCESS, "Oct 29, 14:47", "$1.95", expanded = false)
+            AppPagination("Page 1 of 2", canPrevious = false, canNext = true, previous = {}, next = {})
         }
     }
 }

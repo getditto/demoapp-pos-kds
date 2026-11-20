@@ -20,6 +20,9 @@ struct MainView: View {
         } kds: {
             KDSView(ordersRepository: ordersRepository,
                     isActive: scenePhase == .active && viewModel.selectedTab == .kds)
+        } orders: {
+            OrdersView(repository: ordersRepository,
+                       isActive: scenePhase == .active && viewModel.selectedTab == .orders)
         } settings: {
             SettingsView(onSelectLocation: viewModel.selectLocation)
         } locations: {
