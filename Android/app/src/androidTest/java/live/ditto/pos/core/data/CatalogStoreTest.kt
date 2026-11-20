@@ -1,16 +1,24 @@
 package live.ditto.pos.core.data
 
+import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import live.ditto.pos.core.data.demo.DemoSeeder
-import live.ditto.pos.legacy.LegacyDemoSeeder
-import live.ditto.pos.legacy.LegacySaleItemSeed
+import live.ditto.pos.core.data.demo.SaleItemSeed
+import live.ditto.pos.core.data.images.PhotoAttachments
+import live.ditto.pos.core.data.images.PhotoTestImages
+import live.ditto.pos.core.data.orders.Order
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -24,11 +32,11 @@ class CatalogStoreTest {
             val repository = catalog()
             val id = DocumentID("coffee-'\"iced", "A")
             val other = id.copy(locationId = "B")
-            val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
+            val metadata = SaleItemMetadata(id, "Coffee", Price(199))
             repository.create(SaleItemCreation(metadata, 2))
             repository.create(SaleItemCreation(metadata.copy(documentId = other, name = "Other", price = Price(250)), 7))
             repository.increment(-3, id)
-            val replacement = metadata.copy(name = "Renamed \"iced\"", imageName = "milk", price = Price(0))
+            val replacement = metadata.copy(name = "Renamed \"iced\"", price = Price(0))
             repository.updateMetadata(replacement)
             val edited = readItem(id)
             assertEquals(-1L, edited.quantity)
@@ -50,72 +58,94 @@ class CatalogStoreTest {
     }
 
     @Test
-    fun exactOldAndNewInitialSeedersPreserveEditsVisibleDeletionAndFreeformItemsInEitherArrivalOrder() = runBlocking {
-        for (oldFirst in listOf(true, false)) {
-            TestDitto.withInstance {
+    fun starterAttachmentsAndReseedingPreserveCatalogChanges() = runBlocking {
+        TestDitto.withInstance {
+            val repository = catalog()
+            val seeder = DemoSeeder(ditto, bundledPhotos)
+            seeder.seedAll()
+            val seeded = ditto.store.execute("SELECT * FROM sale_items_v2") { it.decode<SaleItem>() }
+            assertEquals(SaleItemSeed.saleItemsForAllLocations().map { it.metadata }.toSet(), seeded.map { it.metadata }.toSet())
+            assertTrue(seeded.all { it.quantity == 20L && it.image != null })
+            PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, "image/png", ditto.store).use { burgerPhoto ->
+                val burger = seeded.single { it.documentId == DocumentID("00001", "00001") }
+                assertEquals(PhotoAttachments.reference(burgerPhoto), burger.image)
+            }
+
+            val editedId = DocumentID("00001", "00001")
+            val noPhotoId = DocumentID("00013", "00001")
+            val deletedId = DocumentID("00008", "00001")
+            PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { changedPhoto ->
+                repository.increment(-22, editedId)
+                repository.updateMetadata(SaleItemMetadata(editedId, "Edited", Price(0)))
+                PhotoAttachments.replace(changedPhoto, editedId, ditto.store)
+                repository.restart(0, noPhotoId)
+                PhotoAttachments.remove(noPhotoId, ditto.store)
+                ditto.store.execute(
+                    "DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
+                    mapOf("id" to deletedId.id, "locationId" to deletedId.locationId)
+                )
+                val custom = SaleItemMetadata(DocumentID("custom", "00001"), "Custom", Price(0))
+                repository.create(SaleItemCreation(custom, 3))
                 coroutineScope {
-                    val repository = catalog()
                     val observedItems = Channel<List<SaleItem>>(Channel.UNLIMITED)
                     val observation = launch { repository.observeLocationSaleItems("00001").collect { observedItems.send(it) } }
                     try {
-                        observedItems.await { it.isEmpty() }
-                        val old = LegacyDemoSeeder(ditto)
-                        val current = DemoSeeder(ditto)
-                        if (oldFirst) old.seedAll()
-                        current.seedAll()
-                        old.seedAll()
-                        val id = DocumentID("00001", "00001")
-                        assertEquals(20L, readItem(id).quantity)
-                        val rows = ditto.store.execute("SELECT * FROM sale_items") { it.decode<SaleItem>() }
-                        assertEquals(LegacySaleItemSeed.saleItemsForAllLocations().map { it.documentId }.toSet(), rows.map { it.documentId }.toSet())
-                        for (legacy in LegacySaleItemSeed.saleItemsForAllLocations()) {
-                            assertEquals(SaleItemMetadata(legacy.documentId, legacy.name, legacy.imageName, legacy.price), rows.single { it.documentId == legacy.documentId }.metadata)
-                        }
-                        val expectedIDs = LegacySaleItemSeed.saleItemsForAllLocations().filter { it.documentId.locationId == "00001" }.map { it.documentId }.toSet()
-                        val visible = observedItems.await { it.map { item -> item.documentId }.toSet() == expectedIDs }
-                        assertEquals(20L, visible.single { it.documentId == id }.quantity)
-                        val zero = DocumentID("00013", "00001")
-                        val positive = DocumentID("00018", "00001")
-                        repository.restart(0, zero)
-                        repository.restart(11, positive)
-                        repository.restart(0, id)
-                        repository.increment(-2, id)
-                        repository.updateMetadata(SaleItemMetadata(id, "Edited", "milk", Price(0)))
-                        val removed = DocumentID("00008", "00001")
-                        ditto.store.execute(
-                            "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
-                            mapOf("id" to removed.id, "locationId" to removed.locationId)
-                        )
-                        val custom = SaleItemMetadata(DocumentID("95f203b6-0251-4ed8-8ae2-bbcb808bf356", "00001"), "Custom", "coffee", Price(0))
-                        repository.create(SaleItemCreation(custom, 3))
-                        current.seedAll()
-                        old.seedAll()
-                        current.seedAll()
-
-                        val edited = readItem(id)
+                        seeder.seedAll()
+                        seeder.seedAll()
+                        val edited = readItem(editedId)
                         assertEquals(-2L, edited.quantity)
                         assertEquals("Edited", edited.name)
                         assertEquals(0, edited.price.amount)
-                        assertEquals(0L, readItem(zero).quantity)
-                        assertEquals(11L, readItem(positive).quantity)
-                        assertEquals(custom, readItem(custom.documentId).metadata)
-                        assertEquals(3L, readItem(custom.documentId).quantity)
-                        val deletedVisibleItems = ditto.store.execute(
-                            "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
-                            mapOf("id" to removed.id, "locationId" to removed.locationId)
-                        ) { it.decodeOrSkip<SaleItem>() }
-                        assertTrue(deletedVisibleItems.isEmpty())
-                        observedItems.await { items ->
-                            items.none { it.documentId == removed } &&
-                                items.any { it.documentId == custom.documentId && it.quantity == 3L } &&
-                                items.any { it.documentId == id && it.name == "Edited" && it.quantity == -2L }
+                        assertEquals(PhotoAttachments.reference(changedPhoto), edited.image)
+                        val noPhoto = readItem(noPhotoId)
+                        assertEquals(0L, noPhoto.quantity)
+                        assertNull(noPhoto.image)
+                        val retainedCustom = readItem(custom.documentId)
+                        assertEquals(custom, retainedCustom.metadata)
+                        assertEquals(3L, retainedCustom.quantity)
+                        assertNull(retainedCustom.image)
+                        val visible = observedItems.await { items ->
+                            items.none { it.documentId == deletedId } && items.any { it.documentId == custom.documentId }
                         }
+                        assertEquals(7, visible.size)
+                        assertTrue(visible.all { it.documentId.locationId == "00001" })
                     } finally {
                         observation.cancelAndJoin()
                         observedItems.close()
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun cutoverIgnoresOldCollectionsAndLeavesTheirDocumentsUntouched() = runBlocking {
+        TestDitto.withInstance {
+            val order = TestDitto.fixture()
+            ditto.store.execute("INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json))", mapOf("json" to order.dittoJsonString()))
+            ditto.store.execute(
+                """
+                    INSERT INTO sale_items DOCUMENTS ({"_id": {"id": "00001", "locationId": "00001"}, "name": "Old item", "quantity": 99})
+                """.trimIndent()
+            )
+            DemoSeeder(ditto, bundledPhotos).seedAll()
+            val catalog = catalog()
+            val items = withTimeout(5_000) { catalog.observeLocationSaleItems("00001").first() }
+            assertEquals("Burger", items.single { it.documentId.id == "00001" }.name)
+            val orders = repository()
+            assertNull(orders.findOrder(order.documentId))
+            assertNull(withTimeout(5_000) { orders.observeOrder(order.documentId).first() })
+            orders.upsert(order)
+            val current = ditto.store.execute("SELECT * FROM pos_orders_v2") { it.decode<Order>() }
+            assertEquals(listOf(order), current)
+            catalog.increment(-1, DocumentID("00001", "00001"))
+            ditto.store.execute("SELECT name, quantity FROM sale_items") {
+                val oldItem = dittoJson.parseToJsonElement(it.items.single().jsonString()).jsonObject
+                assertEquals("Old item", oldItem.getValue("name").jsonPrimitive.content)
+                assertEquals(99, oldItem.getValue("quantity").jsonPrimitive.int)
+            }
+            val untouched = ditto.store.execute("SELECT * FROM pos_orders") { it.decode<Order>() }
+            assertEquals(listOf(order), untouched)
         }
     }
 
@@ -126,7 +156,7 @@ class CatalogStoreTest {
     }
 
     private suspend fun TestDitto.readItem(id: DocumentID): SaleItem = ditto.store.execute(
-        "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decode<SaleItem>().single() }
 }

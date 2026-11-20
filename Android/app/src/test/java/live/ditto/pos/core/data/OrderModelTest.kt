@@ -46,7 +46,7 @@ class OrderModelTest {
     @Test
     fun `adding repeated product lines preserves receipt payment and status history`() {
         val original = OrderFixture.load()
-        val item = CartLineItem("coffee-iced", "New coffee", "coffee", Price(100), qty = 2)
+        val item = CartLineItem("coffee-iced", "New coffee", Price(100), qty = 2)
         val updated = original.addingCartLineItem(item, "line-3")
         assertEquals(1297, updated.totalCents)
         assertEquals(original.cart["line-1"], updated.cart["line-1"])
@@ -75,7 +75,7 @@ class OrderModelTest {
 
     @Test
     fun `zero dollar cart still needs a payment entry and canceled is terminal`() {
-        val item = CartLineItem("free", "Free sample", "", Price(0), qty = 2)
+        val item = CartLineItem("free", "Free sample", Price(0), qty = 2)
         val order = Order.new("42").addingCartLineItem(item, "free-1")
         assertEquals(0, order.totalCents)
         assertFalse(order.isPaid)
@@ -85,12 +85,11 @@ class OrderModelTest {
 
     @Test
     fun `order line retains original catalog details after replacement`() {
-        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", "coffee", Price(199))
+        var catalog = SaleItem(DocumentID("coffee", "42"), "Original", Price(199), quantity = 20)
         val line = CartLineItem.from(catalog, qty = 3)
-        catalog = catalog.copy(name = "Renamed", imageName = "tea", price = Price(999))
+        catalog = catalog.copy(name = "Renamed", price = Price(999))
         assertEquals("Original", line.name)
         assertEquals(199, line.price.amount)
-        assertEquals("coffee", line.imageName)
         assertEquals(3, line.qty)
         assertEquals(999, CartLineItem.from(catalog).price.amount)
     }

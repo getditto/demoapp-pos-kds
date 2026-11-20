@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Purpose:
-# Simulates order generation for the POS demo app. Inserts a new pos_orders
+# Simulates order generation for the POS demo app. Inserts a new pos_orders_v2
 # document at a configurable interval. Each generated order is in the
 # `inProcess` status (one cart item) so it shows up immediately in the KDS
 # view. Advancing/paying orders must still be done from the iOS or Android app.
@@ -26,7 +26,6 @@ INTERVAL=1  # seconds between inserts
 # Hand-picked sale item from the seed catalog (id 00012 = Milk, $2.00).
 SALE_ITEM_ID="00012"
 SALE_ITEM_NAME="Milk"
-SALE_ITEM_IMAGE="milk"
 SALE_ITEM_CENTS=200
 
 # ----- Helpers -----
@@ -43,7 +42,7 @@ while true; do
     --header "Authorization: $API_KEY" \
     --header "Content-Type: application/json" \
     --data-raw "{
-      \"statement\": \"INSERT INTO pos_orders DOCUMENTS (:new) ON ID CONFLICT DO UPDATE_LOCAL_DIFF\",
+      \"statement\": \"INSERT INTO pos_orders_v2 DOCUMENTS (:new) ON ID CONFLICT DO UPDATE_LOCAL_DIFF\",
       \"args\": {
         \"new\": {
           \"_id\": { \"id\": \"$ORDER_ID\", \"locationId\": \"$LOCATION_ID\" },
@@ -51,7 +50,6 @@ while true; do
             \"$LINE_ITEM_ID\": {
               \"saleItemId\": \"$SALE_ITEM_ID\",
               \"name\": \"$SALE_ITEM_NAME\",
-              \"imageName\": \"$SALE_ITEM_IMAGE\",
               \"price\": { \"amount\": $SALE_ITEM_CENTS, \"currency\": \"usd\" },
               \"qty\": 1,
               \"createdAt\": \"$NOW\"

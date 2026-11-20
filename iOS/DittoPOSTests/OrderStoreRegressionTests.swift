@@ -49,7 +49,7 @@ import XCTest
                 ditto: ditto, locationPublisher: Just<String?>(nil).eraseToAnyPublisher(), now: { now }, defaults: defaults, calendar: calendar)
             try await repository.runEvictionIfDue()
             let result = try await ditto.store.execute(
-                query: "SELECT * FROM pos_orders WHERE _id.locationId = :locationId", arguments: ["locationId": "42"])
+                query: "SELECT * FROM pos_orders_v2 WHERE _id.locationId = :locationId", arguments: ["locationId": "42"])
             let remaining: [Order] = try result.decode()
             XCTAssertEqual(remaining.map(\.documentId.id), ["after"])
             XCTAssertEqual(defaults.double(forKey: "v2.lastEvictionAt"), now.timeIntervalSince1970)
@@ -58,13 +58,13 @@ import XCTest
 
     private func insert(_ order: Order, into ditto: Ditto) async throws {
         _ = try await ditto.store.execute(
-            query: "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json))",
+            query: "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json))",
             arguments: ["json": try order.dittoJSONString()])
     }
 
     private func read(_ id: DocumentID, from ditto: Ditto) async throws -> Order {
         let result = try await ditto.store.execute(
-            query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": id.id, "locationId": id.locationId]
         )
         let orders: [Order] = try result.decode()
@@ -77,7 +77,7 @@ import XCTest
         let changed = expectation(description: "Observed order change")
         changed.assertForOverFulfill = false
         let observer = try ditto.store.registerObserver(
-            query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": order.documentId.id, "locationId": order.documentId.locationId],
             deliverOn: .main,
             handler: { result in

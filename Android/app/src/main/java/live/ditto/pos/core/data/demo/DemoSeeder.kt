@@ -4,12 +4,11 @@ package live.ditto.pos.core.data.demo
 // https://docs.ditto.live/dql/insert#insert-with-initial-documents
 
 import com.ditto.kotlin.Ditto
-import live.ditto.pos.core.data.SaleItemCommands
-import live.ditto.pos.core.data.SaleItemCreation
+import live.ditto.pos.core.data.SaleItem
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.locations.Location
 
-class DemoSeeder(private val ditto: Ditto) {
+class DemoSeeder(private val ditto: Ditto, private val photos: BundledFoodPhotos) {
 
     suspend fun seedAll() {
         seedLocations()
@@ -24,11 +23,28 @@ class DemoSeeder(private val ditto: Ditto) {
     }
 
     suspend fun seedSaleItems() {
-        bulkInitialInsert(
-            collectionName = SaleItemCommands.CREATION_COLLECTION,
-            documents = SaleItemSeed.saleItemsForAllLocations().map { SaleItemCreation(it.metadata, SaleItemSeed.INITIAL_QUANTITY).json() }
-        )
-        SeedStockMigration.upgradeAll(ditto.store)
+        for (item in SaleItemSeed.saleItemsForAllLocations()) {
+            val photo = photos.open(item.documentId.id).use { stream ->
+                ditto.store.newAttachment(stream, mapOf("mime_type" to "image/png"))
+            }
+            photo.use {
+                ditto.store.execute(
+                    """
+                        INSERT INTO COLLECTION ${SaleItem.COLLECTION_NAME} (quantity COUNTER, image ATTACHMENT)
+                        INITIAL DOCUMENTS (:item)
+                    """.trimIndent(),
+                    mapOf(
+                        "item" to mapOf(
+                            "_id" to mapOf("id" to item.documentId.id, "locationId" to item.documentId.locationId),
+                            "name" to item.name,
+                            "price" to mapOf("amount" to item.price.amount, "currency" to "usd"),
+                            "quantity" to item.quantity,
+                            "image" to photo
+                        )
+                    )
+                )
+            }
+        }
     }
 
     private suspend fun bulkInitialInsert(

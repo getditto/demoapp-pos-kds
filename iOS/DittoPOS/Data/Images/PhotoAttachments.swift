@@ -14,7 +14,7 @@ enum PhotoAttachments {
     static func replace(_ attachment: DittoAttachment, for id: DocumentID, executor: any DittoQueryExecuting & Sendable) async throws {
         try await executor.execute(
             query: """
-                UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image
+                UPDATE COLLECTION \(SaleItem.collectionName) (image ATTACHMENT) SET image = :image
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
             arguments: ["image": attachment, "id": id.id, "locationId": id.locationId]
@@ -24,7 +24,7 @@ enum PhotoAttachments {
     static func remove(for id: DocumentID, executor: any DittoQueryExecuting & Sendable) async throws {
         try await executor.execute(
             query: """
-                UPDATE COLLECTION sale_items (image ATTACHMENT) UNSET image
+                UPDATE COLLECTION \(SaleItem.collectionName) (image ATTACHMENT) UNSET image
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,
             arguments: ["id": id.id, "locationId": id.locationId]
@@ -35,7 +35,7 @@ enum PhotoAttachments {
         let line = dqlIdentifier(lineItemId)
         try await executor.execute(
             query: """
-                UPDATE COLLECTION pos_orders (cart MAP(\(line) MAP(image ATTACHMENT)))
+                UPDATE COLLECTION \(Order.collectionName) (cart MAP(\(line) MAP(image ATTACHMENT)))
                 SET cart.\(line).image = :image
                 WHERE _id.id = :id AND _id.locationId = :locationId
                 """,

@@ -20,14 +20,8 @@ final class SaleItemSeedTests: XCTestCase {
         }
     }
 
-    func testCompositeIdsAreUniqueAcrossAllSeededItems() {
-        let items = SaleItemSeed.saleItemsForAllLocations()
-        let keys = items.map { "\($0.documentId.id)|\($0.documentId.locationId)" }
-        XCTAssertEqual(
-            keys.count,
-            Set(keys).count,
-            "Duplicate (id, locationId) pairs detected in seed data"
-        )
+    func testCompositeIDsAreUniqueAcrossSeededItems() {
+        let ids = SaleItemSeed.saleItemsForAllLocations().map(\.documentId)
+        XCTAssertEqual(ids.count, Set(ids).count)
     }
-
 }

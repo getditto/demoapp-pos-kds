@@ -64,12 +64,12 @@ eviction policies; it does not fetch older history.
 
 The demo follows current Ditto guidance for denormalized documents and
 read-time conflict resolution. The whole order — cart, payments, status
-history — lives in a single `pos_orders` document, which avoids cross-document
+history — lives in a single `pos_orders_v2` document, which avoids cross-document
 joins and lets Ditto's map-merge semantics resolve concurrent edits cleanly.
 
 Collections:
 
-- **`pos_orders`** — one document per order. Embedded fields:
+- **`pos_orders_v2`** — one document per order. Embedded fields:
   - `cart: Map<String, CartLineItem>` — line items keyed by a stable
     line-item id so adds and removes from different devices don't conflict.
   - `payments: Map<String, Payment>` — payments keyed by payment id.
@@ -83,25 +83,41 @@ Collections:
   - `createdAt: ISO 8601 string` — used for the per-location TTL subscription
     and launch-time eviction.
 
-- **`sale_items`** — synced menu items, one document per item per location.
-  Hand-curated demo data is seeded once on first launch via
-  `INSERT INTO ... INITIAL DOCUMENTS (...)` (idempotent, peer-safe).
-  The optional `image` attachment is prepared for the image migration; current
-  menu seeding and display still use `imageName` until that cutover. Missing or
-  pending attachment files use a generic photo placeholder in the new renderer.
+- **`sale_items_v2`** — synced menu items, one document per item per location.
+  Every peer seeds identical starter documents with typed `COUNTER` quantity
+  initialized to 20 and typed photo attachments using
+  [INITIAL DOCUMENTS](https://docs.ditto.live/dql/insert#insert-with-initial-documents).
+  Repeated seeding preserves edits, deletions and intentionally removed photos.
+  Quantity changes use typed counter commands; metadata edits leave stock alone.
+  The UI reads photos only from the optional `image` attachment. Missing or
+  pending files use a generic photo placeholder.
 
 - **`locations`** — one document per location.
 
-Documents in `pos_orders` and `sale_items` use a composite `_id` of
+Documents in `pos_orders_v2` and `sale_items_v2` use a composite `_id` of
 `{ id, locationId }`. Putting `locationId` inside `_id` lets Ditto use it as
 the document's natural key for sync grouping/routing, and lets DQL filter by
 `_id.locationId` without a secondary index. See the
 `DocumentID` type in either platform's source.
 
-### Schema migration
+### Version 2.0 data boundary
 
-Current orders use the `pos_orders` collection. Legacy `orders` and
-`transactions` documents are no longer read or written by the app.
+Version 2.0 starts with fresh catalog and order collections. Update every device
+participating in a demo. Earlier catalog, inventory, carts and order history stay
+in their old collections and are neither read nor converted. Locations, Settings
+preferences, database configuration and the existing order-retention policy remain.
+
+Bundled food PNGs are initialization inputs only. The seeder imports them as Ditto
+attachments; every app view loads the optional attachment and uses a generic
+placeholder while a file is unavailable. Cart lines retain their own optional
+photo reference so catalog edits and deletions cannot change the recorded image.
+
+Native POS previews with attachment-backed menu and recorded cart photos:
+
+| iOS | Android |
+| --- | --- |
+| <img src="docs/screenshots/image-migration/ios-expanded-after.png" alt="iOS POS with attachment photos" width="500"> | <img src="docs/screenshots/image-migration/android-expanded-after.png" alt="Android POS with attachment photos" width="500"> |
+
 
 ## App features
 
