@@ -38,7 +38,7 @@ constructor(
     val uiState: StateFlow<KdsUiState> = appSettings.locationIdFlow()
         .flatMapLatest { locationId ->
             if (locationId.isEmpty()) return@flatMapLatest flowOf(emptyList<Order>())
-            ordersRepository.observeLocationOrders(locationId).map { KitchenOrders.select(it) as List<Order>? }
+            ordersRepository.observeKitchenOrders(locationId).map { it as List<Order>? }
                 .onStart { emit(null) }
         }
         .onEach { orders ->
