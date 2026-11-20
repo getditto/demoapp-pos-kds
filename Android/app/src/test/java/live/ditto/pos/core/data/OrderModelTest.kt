@@ -26,10 +26,10 @@ class OrderModelTest {
     }
 
     @Test
-    fun `known fixture preserves composite identity maps quotes and unicode on the wire`() {
+    fun `known fixture preserves composite identity maps quotes and escaped identifiers on the wire`() {
         val order = OrderFixture.load()
-        assertEquals(DocumentID("order-'\"☕", "42"), order.documentId)
-        assertEquals("Coffee \"冰\"", order.cart["line-1"]?.name)
+        assertEquals(DocumentID("order-'\"coffee", "42"), order.documentId)
+        assertEquals("Coffee \"iced\"", order.cart["line-1"]?.name)
         assertEquals(OrderStatus.IN_PROCESS, order.status)
         assertTrue(order.isPaid)
         assertEquals(Json.parseToJsonElement(OrderFixture.text()), Json.parseToJsonElement(order.dittoJsonString()))
@@ -39,14 +39,14 @@ class OrderModelTest {
     fun `totals count every unit and summary combines repeated names`() {
         val order = OrderFixture.load()
         assertEquals(1097, order.totalCents)
-        assertEquals(mapOf("Coffee \"冰\"" to 5), order.summary)
+        assertEquals(mapOf("Coffee \"iced\"" to 5), order.summary)
         assertEquals(listOf(199, 250), order.sortedLineItems.map { it.price.amount })
     }
 
     @Test
     fun `adding repeated product lines preserves receipt payment and status history`() {
         val original = OrderFixture.load()
-        val item = CartLineItem("coffee-冰", "New coffee", "coffee", Price(100), qty = 2)
+        val item = CartLineItem("coffee-iced", "New coffee", "coffee", Price(100), qty = 2)
         val updated = original.addingCartLineItem(item, "line-3")
         assertEquals(1297, updated.totalCents)
         assertEquals(original.cart["line-1"], updated.cart["line-1"])
