@@ -1,0 +1,101 @@
+[
+  {
+    "name": "landscape",
+    "width": 1200,
+    "height": 800,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 1,
+    "left": 200,
+    "top": 0,
+    "side": 800
+  },
+  {
+    "name": "portrait",
+    "width": 800,
+    "height": 1200,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 1,
+    "left": 0,
+    "top": 200,
+    "side": 800
+  },
+  {
+    "name": "zoom",
+    "width": 1200,
+    "height": 800,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 2,
+    "left": 400,
+    "top": 200,
+    "side": 400
+  },
+  {
+    "name": "pan beyond left and bottom",
+    "width": 1200,
+    "height": 800,
+    "centerX": -1,
+    "centerY": 2,
+    "zoom": 2,
+    "left": 0,
+    "top": 400,
+    "side": 400
+  },
+  {
+    "name": "pan beyond right and top",
+    "width": 1200,
+    "height": 800,
+    "centerX": 2,
+    "centerY": -1,
+    "zoom": 2,
+    "left": 800,
+    "top": 0,
+    "side": 400
+  },
+  {
+    "name": "small source",
+    "width": 48,
+    "height": 30,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 1,
+    "left": 9,
+    "top": 0,
+    "side": 30
+  },
+  {
+    "name": "odd dimensions",
+    "width": 31,
+    "height": 21,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 1,
+    "left": 5,
+    "top": 0,
+    "side": 21
+  },
+  {
+    "name": "zoomed detail",
+    "width": 1200,
+    "height": 800,
+    "centerX": 0.5,
+    "centerY": 0.5,
+    "zoom": 5,
+    "left": 520,
+    "top": 320,
+    "side": 160
+  },
+  {
+    "name": "clamped portrait",
+    "width": 200,
+    "height": 100,
+    "centerX": 0,
+    "centerY": 1,
+    "zoom": 2,
+    "left": 0,
+    "top": 50,
+    "side": 50
+  }
+]

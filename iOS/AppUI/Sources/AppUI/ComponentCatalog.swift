@@ -19,6 +19,10 @@ public struct ComponentCatalog: View {
                     AppField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
                     AppRow("Ditto Tools") { AppIcon("caret-right") }
                     AppChoiceRow("Selected option", selected: selected) { selected.toggle() }
+                    HStack(spacing: AppLayout.padding) {
+                        AppPhoto(image: nil).frame(width: 40, height: 40)
+                        AppPhoto(image: nil).frame(width: 112, height: 112)
+                    }
                     HStack(alignment: .top, spacing: 24) {
                         AppWell { Text("No orders preparing").foregroundStyle(AppColors.secondaryText) }
                         AppTicket(title: "#32B9A42D", lines: ["2 × Burger"], isPaid: true, elapsed: "2 min ago", isReady: true) {}

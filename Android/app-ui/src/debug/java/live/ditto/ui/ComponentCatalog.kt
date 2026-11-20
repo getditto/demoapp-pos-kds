@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -33,6 +34,10 @@ fun ComponentCatalog(dark: Boolean = false) {
             AppField("Name", error = "Enter a name.") { BasicTextField(text, onValueChange = { text = it }) }
             AppRow("Ditto Tools", onClick = {})
             AppChoiceRow("Selected option", selected, { selected = !selected })
+            Row(horizontalArrangement = Arrangement.spacedBy(AppLayout.padding)) {
+                AppPhoto(null, Modifier.size(40.dp))
+                AppPhoto(null, Modifier.size(112.dp))
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 AppWell(Modifier.weight(1f)) { Text("No orders preparing") }
                 AppTicket("#32B9A42D", listOf("2 × Burger"), true, "2 min ago", true, {}, Modifier.weight(1f))

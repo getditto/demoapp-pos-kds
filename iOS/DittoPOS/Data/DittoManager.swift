@@ -38,7 +38,8 @@ import Foundation
         let config = DittoConfig(
             databaseID: Env.DITTO_DATABASE_ID,
             connect: .server(url: serverURL),
-            persistenceDirectory: persistenceDirURL
+            persistenceDirectory: persistenceDirURL,
+            systemParameters: ["attachments_auto_fetch": true]
         )
 
         do {

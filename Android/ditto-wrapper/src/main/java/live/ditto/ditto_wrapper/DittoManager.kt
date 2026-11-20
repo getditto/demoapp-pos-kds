@@ -45,7 +45,8 @@ class DittoManager(
             // https://docs.ditto.live/sdk/latest/ditto-config
             val config = DittoConfig(
                 databaseId = dittoDatabaseId,
-                connect = DittoConfig.Connect.Server(dittoServerUrl)
+                connect = DittoConfig.Connect.Server(dittoServerUrl),
+                systemParameters = mapOf("attachments_auto_fetch" to true)
             )
 
             DittoFactory.create(config).apply {
