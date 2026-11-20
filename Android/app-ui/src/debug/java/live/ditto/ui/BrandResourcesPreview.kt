@@ -47,7 +47,7 @@ internal fun BrandResourcesPreview(darkTheme: Boolean = false) {
                 Text("Inventory", fontFamily = FontFamily(Font(R.font.chakra_petch_regular)), fontSize = 28.sp)
                 Text("Geist · Regular 400", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    "Burger, coffee and café au lait.\nÀé ñ · $0.00 · $19.95",
+                    "Burger, coffee and iced tea.\nAa Bb Cc · $0.00 · $19.95",
                     fontFamily = FontFamily(Font(R.font.geist)),
                     fontSize = 17.sp
                 )

@@ -14,7 +14,7 @@ struct BrandResourcesPreview: View {
             Text("Chakra Petch · Regular 400").font(.caption)
             Text("Inventory").font(AppTypography.pageTitle)
             Text("Geist · Regular 400").font(.caption)
-            Text("Burger, coffee and café au lait.\nÀé ñ · $0.00 · $19.95")
+            Text("Burger, coffee and iced tea.\nAa Bb Cc · $0.00 · $19.95")
                 .font(AppTypography.body)
             Text("Geist Mono · Regular 400").font(.caption)
             Text("NEW ITEM   0123456789   + −")
