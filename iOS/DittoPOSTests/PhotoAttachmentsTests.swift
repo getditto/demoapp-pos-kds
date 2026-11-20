@@ -7,7 +7,7 @@ import XCTest
 @MainActor final class PhotoAttachmentsTests: XCTestCase {
     func testOptionalPhotosPreserveStockMetadataAndLocationIdentity() async throws {
         try await TestDitto.withInstance { ditto in
-            let id = DocumentID(id: "coffee'冰", locationId: "A")
+            let id = DocumentID(id: "coffee'iced", locationId: "A")
             let other = DocumentID(id: id.id, locationId: "B")
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
             let metadata = SaleItemMetadata(documentId: id, name: "Coffee", imageName: "coffee", price: Price(cents: 199))
