@@ -10,10 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -52,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -155,10 +157,10 @@ private fun QuantityControl(item: SaleItem, row: InventoryRowViewModel, inventor
     val color = row.textColor
     val border = row.borderColor
     val width = AppQuantityFieldViewModel(text, LocalDensity.current.fontScale).width
-    val modifier = Modifier.size(width, AppLayout.controlHeight).testTag("quantity-${item.documentId.id}").semantics { contentDescription = "${item.name} quantity" }
+    val modifier = Modifier.width(width).heightIn(min = AppLayout.controlHeight).testTag("quantity-${item.documentId.id}").semantics { contentDescription = "${item.name} quantity" }
     if (edit == null) {
         Surface({ inventory.beginEditing(item.documentId) }, modifier, enabled = row.canEdit, shape = RoundedCornerShape(AppLayout.buttonRadius), color = MaterialTheme.colorScheme.surface, border = BorderStroke(row.borderWidth, border)) {
-            Box(contentAlignment = Alignment.Center) { Text(text, style = AppTypography.quantity, color = color, textAlign = TextAlign.Center) }
+            Box(contentAlignment = Alignment.Center) { Text(text, style = AppTypography.quantity, color = color, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     } else {
         val scope = rememberCoroutineScope()

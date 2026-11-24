@@ -20,11 +20,12 @@ public enum AppTypography {
     public static var caption: Font { font("Geist-Regular", size: 12, relativeTo: .caption) }
     public static var footnote: Font { font("Geist-Regular", size: 13, relativeTo: .footnote) }
     public static var action: Font { font("GeistMono-Regular", size: 14, relativeTo: .callout) }
-    public static var quantity: Font { font("GeistMono-Regular", size: 17, relativeTo: .body).weight(.medium) }
+    public static let quantitySize: CGFloat = 17
+    public static var quantity: Font { font("GeistMono-Regular", size: quantitySize, relativeTo: .body).weight(.medium) }
 
-    public static var quantityInputFont: UIFont {
+    public static func quantityInputFont(size: CGFloat) -> UIFont {
         _ = BrandResources.registeredFonts
-        return UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont(name: "GeistMono-Regular", size: 17)!)
+        return UIFont(name: "GeistMono-Regular", size: size)!
     }
 
     private static func font(_ name: String, size: CGFloat, relativeTo style: Font.TextStyle) -> Font {

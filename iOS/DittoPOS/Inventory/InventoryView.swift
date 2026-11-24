@@ -79,13 +79,14 @@ struct InventoryContent<Photo: View>: View {
                                    onCancel: { inventory.cancelEditing() }, onFocus: { focusedItem = item.documentId })
                 } else {
                     Button { inventory.beginEditing(item.documentId) } label: {
-                        Text(row.text).frame(maxWidth: .infinity, minHeight: AppLayout.controlHeight)
+                        Text(row.text).lineLimit(1).truncationMode(.tail).frame(maxWidth: .infinity, minHeight: AppLayout.controlHeight)
                     }.buttonStyle(.plain).disabled(!row.canEdit)
                 }
             }
             .font(AppTypography.quantity).multilineTextAlignment(.center)
             .foregroundStyle(row.textColor)
-            .frame(width: AppQuantityFieldViewModel(text: row.text, scaledDigitWidth: digitWidth).width, height: AppLayout.controlHeight)
+            .frame(width: AppQuantityFieldViewModel(text: row.text, scaledDigitWidth: digitWidth).width)
+            .frame(minHeight: AppLayout.controlHeight)
             .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.buttonRadius))
             .overlay(RoundedRectangle(cornerRadius: AppLayout.buttonRadius).strokeBorder(row.borderColor, lineWidth: row.borderWidth))
             .accessibilityLabel("\(item.name) quantity")

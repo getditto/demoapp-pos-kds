@@ -2,6 +2,7 @@ import SwiftUI
 
 // numberPad has no return key. The native accessory and Escape share the caller's draft actions.
 public struct AppNumberField: UIViewRepresentable {
+    @ScaledMetric(relativeTo: .body) private var fontSize = AppTypography.quantitySize
     @Binding private var text: String
     private let isValid: Bool
     private let onDone: () -> Void
@@ -16,8 +17,7 @@ public struct AppNumberField: UIViewRepresentable {
         let field = CancelableNumberField()
         field.keyboardType = .numberPad
         field.textAlignment = .center
-        field.adjustsFontForContentSizeCategory = true
-        field.font = AppTypography.quantityInputFont
+        field.font = AppTypography.quantityInputFont(size: fontSize)
         field.delegate = context.coordinator
         field.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
         field.cancel = { context.coordinator.parent.onCancel() }
@@ -29,6 +29,7 @@ public struct AppNumberField: UIViewRepresentable {
     }
     public func updateUIView(_ field: UITextField, context: Context) {
         context.coordinator.parent = self
+        field.font = AppTypography.quantityInputFont(size: fontSize)
         if field.text != text { field.text = text }
         field.textColor = UIColor(isValid ? AppColors.text : AppColors.critical)
         context.coordinator.doneButton.isEnabled = isValid
