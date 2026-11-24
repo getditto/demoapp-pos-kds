@@ -18,7 +18,7 @@ import kotlin.time.Instant
 @RunWith(AndroidJUnit4::class)
 class OrderStoreRegressionTest {
     @Test
-    fun kitchenQueryOrdersActiveTicketsAndReactsToPeerTransitions() = runBlocking {
+    fun kitchenObservationFiltersDerivedStatusAndReactsToPeerTransitions() = runBlocking {
         TestDitto.withInstance {
             val template = TestDitto.fixture()
             fun order(id: String, stage: OrderStatus, seconds: Long, paid: Boolean = false) = template.copy(
@@ -52,8 +52,8 @@ class OrderStoreRegressionTest {
                 val collection = launch { repository().observeKitchenOrders("42").collect { observed.send(it) } }
                 try {
                     val initial = withTimeout(5_000) { observed.receive() }
-                    assertEquals(listOf("preparing-new-a", "preparing-new-b", "preparing-old", "ready-new", "ready-old"), initial.map { it.documentId.id })
-                    assertEquals(listOf(false, false, false, true, false), initial.map { it.isPaid })
+                    assertEquals(listOf("preparing-new-a", "preparing-new-b", "ready-new", "preparing-old", "ready-old"), initial.map { it.documentId.id })
+                    assertEquals(listOf(false, false, true, false, false), initial.map { it.isPaid })
                     assertEquals(setOf("42"), initial.map { it.documentId.locationId }.toSet())
 
                     // Peer-originated writes are local mutations in this offline regression.
@@ -62,20 +62,20 @@ class OrderStoreRegressionTest {
                         mapOf("id" to "preparing-new-a", "locationId" to "42")
                     )
                     val advanced = withTimeout(5_000) { observed.receive() }
-                    assertEquals(listOf("preparing-new-b", "preparing-old", "preparing-new-a", "ready-new", "ready-old"), advanced.map { it.documentId.id })
+                    assertEquals(listOf("preparing-new-a", "preparing-new-b", "ready-new", "preparing-old", "ready-old"), advanced.map { it.documentId.id })
                     assertEquals(OrderStatus.PROCESSED, advanced.single { it.documentId.id == "preparing-new-a" }.status)
 
                     ditto.store.execute(
                         "UPDATE ${Order.COLLECTION_NAME} SET status_log.`2026-04-01T13:00:01.000Z` = 'delivered' WHERE _id.id = :id AND _id.locationId = :locationId",
                         mapOf("id" to "ready-new", "locationId" to "42")
                     )
-                    assertEquals(listOf("preparing-new-b", "preparing-old", "preparing-new-a", "ready-old"), withTimeout(5_000) { observed.receive() }.map { it.documentId.id })
+                    assertEquals(listOf("preparing-new-a", "preparing-new-b", "preparing-old", "ready-old"), withTimeout(5_000) { observed.receive() }.map { it.documentId.id })
 
                     ditto.store.execute(
                         "UPDATE ${Order.COLLECTION_NAME} UNSET cart.`line-1`, cart.`line-2` WHERE _id.id = :id AND _id.locationId = :locationId",
                         mapOf("id" to "preparing-old", "locationId" to "42")
                     )
-                    assertEquals(listOf("preparing-new-b", "preparing-new-a", "ready-old"), withTimeout(5_000) { observed.receive() }.map { it.documentId.id })
+                    assertEquals(listOf("preparing-new-a", "preparing-new-b", "ready-old"), withTimeout(5_000) { observed.receive() }.map { it.documentId.id })
                 } finally {
                     collection.cancelAndJoin()
                     observed.close()

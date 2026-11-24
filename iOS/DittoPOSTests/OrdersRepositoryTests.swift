@@ -3,7 +3,7 @@ import DittoSwift
 import XCTest
 
 @MainActor final class OrdersRepositoryTests: XCTestCase {
-    func testKitchenQueryOrdersActiveTicketsAndReactsToPeerTransitions() async throws {
+    func testKitchenObservationFiltersDerivedStatusAndReactsToPeerTransitions() async throws {
         try await TestDitto.withInstance { ditto in
             let repository = OrdersRepository(ditto: ditto, locationPublisher: Just<String?>("42").eraseToAnyPublisher())
             let template = try OrderFixture.load()
@@ -40,8 +40,8 @@ import XCTest
             defer { observation.cancel() }
             await expect(observed, matching: { $0 != nil }) { }
             let initial = try XCTUnwrap(observed.value)
-            XCTAssertEqual(initial.map(\.documentId.id), ["preparing-new-a", "preparing-new-b", "preparing-old", "ready-new", "ready-old"])
-            XCTAssertEqual(initial.map(\.isPaid), [false, false, false, true, false])
+            XCTAssertEqual(initial.map(\.documentId.id), ["preparing-new-a", "preparing-new-b", "ready-new", "preparing-old", "ready-old"])
+            XCTAssertEqual(initial.map(\.isPaid), [false, false, true, false, false])
             XCTAssertTrue(initial.allSatisfy { $0.documentId.locationId == "42" })
 
             // Peer-originated writes are local mutations in this offline regression.
@@ -49,19 +49,19 @@ import XCTest
                 query: "UPDATE \(Order.collectionName) SET status_log.`2026-04-01T13:00:00.000Z` = 'processed' WHERE _id.id = :id AND _id.locationId = :locationId",
                 arguments: ["id": "preparing-new-a", "locationId": "42"])
             await expect(observed, matching: { $0?.first { $0.documentId.id == "preparing-new-a" }?.status == .processed }) { }
-            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-b", "preparing-old", "preparing-new-a", "ready-new", "ready-old"])
+            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-a", "preparing-new-b", "ready-new", "preparing-old", "ready-old"])
 
             try await ditto.store.execute(
                 query: "UPDATE \(Order.collectionName) SET status_log.`2026-04-01T13:00:01.000Z` = 'delivered' WHERE _id.id = :id AND _id.locationId = :locationId",
                 arguments: ["id": "ready-new", "locationId": "42"])
             await expect(observed, matching: { $0?.contains { $0.documentId.id == "ready-new" } == false }) { }
-            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-b", "preparing-old", "preparing-new-a", "ready-old"])
+            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-a", "preparing-new-b", "preparing-old", "ready-old"])
 
             try await ditto.store.execute(
                 query: "UPDATE \(Order.collectionName) UNSET cart.`line-1`, cart.`line-2` WHERE _id.id = :id AND _id.locationId = :locationId",
                 arguments: ["id": "preparing-old", "locationId": "42"])
             await expect(observed, matching: { $0?.contains { $0.documentId.id == "preparing-old" } == false }) { }
-            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-b", "preparing-new-a", "ready-old"])
+            XCTAssertEqual(observed.value?.map(\.documentId.id), ["preparing-new-a", "preparing-new-b", "ready-old"])
         }
     }
 

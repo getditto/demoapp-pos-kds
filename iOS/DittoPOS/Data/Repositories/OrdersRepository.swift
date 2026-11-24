@@ -71,6 +71,8 @@ import Foundation
             arguments: ["locationId": locationId],
             mapTo: Order.self
         )
+        .map(KitchenOrders.active)
+        .eraseToAnyPublisher()
     }
 
     // MARK: Selected POS order observation

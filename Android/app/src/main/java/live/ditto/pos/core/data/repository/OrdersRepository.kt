@@ -90,10 +90,10 @@ class OrdersRepository internal constructor(
     }
 
     fun observeKitchenOrders(locationId: String): Flow<List<Order>> =
-        ditto.store.observeAsFlow(
+        ditto.store.observeAsFlow<Order>(
             query = KitchenOrders.query,
             args = mapOf("locationId" to locationId)
-        )
+        ).map(KitchenOrders::active)
 
     suspend fun upsert(order: Order) {
         ditto.store.execute(
