@@ -20,29 +20,29 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
 import live.ditto.pos.settings.AppAppearance
 import live.ditto.ui.AppChoiceRow
+import live.ditto.ui.AppLayout
 import live.ditto.ui.AppRow
 import live.ditto.ui.AppSurface
+import live.ditto.ui.AppWindowLayout
 
 @Composable
 fun SettingsScreen(location: String, appearance: AppAppearance, version: String, build: String, sdkVersion: String, onAppearance: (AppAppearance) -> Unit, onLocation: () -> Unit, onTools: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    val tablet = LocalConfiguration.current.screenWidthDp >= 600
-    val inset = if (tablet) 24.dp else 16.dp
+    val layout = AppWindowLayout(LocalConfiguration.current.screenWidthDp.toFloat())
     BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = inset, vertical = 16.dp),
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = layout.horizontalPadding, vertical = AppLayout.padding),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(if (tablet) 16.dp else 12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(layout.sectionSpacing)) {
                 AppRow(location, onClick = onLocation, eyebrow = "Location")
                 AppSurface(Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                         Text("Appearance", style = MaterialTheme.typography.bodyMedium)
                         Text("System follows this device’s setting.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                             AppAppearance.entries.forEach { item ->
                                 AppChoiceRow(
                                     when (item) {
@@ -59,7 +59,7 @@ fun SettingsScreen(location: String, appearance: AppAppearance, version: String,
                 }
                 AppRow("Ditto Tools", onClick = onTools)
             }
-            Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.fillMaxWidth().padding(top = AppLayout.sectionGap), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(AppLayout.smallGap)) {
                 Text("Build $version ($build)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 Text("Powered by Ditto Edge SDK $sdkVersion", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 TextButton(onClick = { uriHandler.openUri("https://ditto.com") }, modifier = Modifier.fillMaxWidth()) {

@@ -11,16 +11,18 @@ struct SettingsContent: View {
     let onLocation: () -> Void
     let onTools: () -> Void
 
+    private var layout: AppWindowLayout { AppWindowLayout(sizeClass: sizeClass) }
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: sizeClass == .regular ? 16 : 12) {
+                    VStack(alignment: .leading, spacing: layout.sectionSpacing) {
                         Button(action: onLocation) {
                             AppRow(location, eyebrow: "Location") { AppIcon("caret-right") }
                         }.buttonStyle(.plain)
                         AppSurface {
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: AppLayout.gap) {
                                 Text("Appearance").font(AppTypography.body.weight(.medium))
                                 Text("System follows this device’s setting.")
                                     .font(AppTypography.footnote).foregroundStyle(AppColors.secondaryText)
@@ -33,18 +35,18 @@ struct SettingsContent: View {
                             AppRow("Ditto Tools") { AppIcon("caret-right") }
                         }.buttonStyle(.plain)
                     }
-                    Spacer(minLength: 24)
-                    VStack(spacing: 4) {
+                    Spacer(minLength: AppLayout.sectionGap)
+                    VStack(spacing: AppLayout.smallGap) {
                         Text("Build \(version) (\(build))")
                         Text("Powered by Ditto Edge SDK \(sdkVersion)")
                         Link("ditto.com", destination: URL(string: "https://ditto.com")!)
-                            .underline().frame(maxWidth: .infinity, minHeight: 44)
+                            .underline().frame(maxWidth: .infinity, minHeight: AppLayout.linkHeight)
                     }
                     .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                     .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 }
-                .frame(minHeight: max(0, geometry.size.height - 32), alignment: .top)
-                .padding(.horizontal, sizeClass == .regular ? 20 : AppLayout.padding)
+                .frame(minHeight: layout.contentHeight(in: geometry.size.height), alignment: .top)
+                .padding(.horizontal, layout.horizontalPadding)
                 .padding(.vertical, AppLayout.padding)
             }
         }
@@ -55,7 +57,7 @@ struct SettingsContent: View {
 #Preview("Settings") {
     BrandTheme {
         VStack(spacing: 0) {
-            AppHeader("Settings", location: "Ham's Burgers")
+            LocationHeader(title: "Settings", location: "Ham's Burgers")
             SettingsContent(location: "Ham's Burgers", appearance: .constant(.system), version: "1.1.0", build: "9999", sdkVersion: "5.2.0", onLocation: {}, onTools: {})
         }
     }

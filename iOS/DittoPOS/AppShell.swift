@@ -26,7 +26,7 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
                     locations
                 } else {
                     VStack(spacing: 0) {
-                        AppHeader(title, location: location)
+                        LocationHeader(title: title, location: location)
                         TabView(selection: $selectedTab) {
                             pos.tabItem { Label { Text("POS") } icon: { AppIcon("cash-register") } }.tag(TabViews.pos)
                             kds.tabItem { Label { Text("KDS") } icon: { AppIcon("cooking-pot") } }.tag(TabViews.kds)
@@ -46,6 +46,21 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
         case .pos: return "POS"
         case .kds: return "Kitchen"
         case .settings: return "Settings"
+        }
+    }
+}
+
+struct LocationHeader: View {
+    let title: String
+    let location: String?
+    var body: some View {
+        AppHeader(title) {
+            if let location, !location.isEmpty {
+                HStack(spacing: AppLayout.accessoryGap) {
+                    AppIcon("map-pin", size: AppLayout.secondaryIconSize)
+                    Text(location).font(AppTypography.footnote)
+                }.foregroundStyle(AppColors.secondaryText)
+            }
         }
     }
 }

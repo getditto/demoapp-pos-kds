@@ -9,6 +9,9 @@ public enum AppColors {
     public static let accent = adaptive(0xE7EE00, 0xECF238)
     public static let onAccent = Color.black
     public static let selection = adaptive(0xFCFCDD, 0x454800)
+    public static let success = adaptive(0x007A50, 0x6EE7B7)
+    public static let brandText = adaptive(0x6C7000, 0xECF238)
+    public static let subtleBorder = adaptive(0xE5E5E5, 0x525252)
     public static let critical = adaptive(0xC10007, 0xFF6467)
     public static let disabled = adaptive(0xE5E5E5, 0x404040)
     public static let disabledText = adaptive(0x737373, 0xA1A1A1)
@@ -21,14 +24,6 @@ public enum AppColors {
                            blue: CGFloat(value & 255) / 255, alpha: 1)
         })
     }
-}
-
-public enum AppLayout {
-    public static let gap: CGFloat = 8
-    public static let padding: CGFloat = 16
-    public static let radius: CGFloat = 16
-    public static let buttonRadius: CGFloat = 12
-    public static let controlHeight: CGFloat = 48
 }
 
 public struct BrandTheme<Content: View>: View {

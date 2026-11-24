@@ -8,8 +8,8 @@ public struct ComponentCatalog: View {
     public var body: some View {
         BrandTheme {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    AppHeader("Components", location: "Ham's Burgers")
+                VStack(alignment: .leading, spacing: AppLayout.sectionGap) {
+                    AppHeader("Components") { Text("Context").font(AppTypography.footnote) }
                     HStack(spacing: AppLayout.gap) {
                         Button("Primary") {}.buttonStyle(AppButtonStyle())
                         Button("Disabled") {}.buttonStyle(AppButtonStyle()).disabled(true)
@@ -17,16 +17,12 @@ public struct ComponentCatalog: View {
                     Button("Secondary") {}.buttonStyle(AppButtonStyle(.secondary))
                     Button("Text action") {}.buttonStyle(AppButtonStyle(.text))
                     AppField("Name", error: "Enter a name.") { TextField("Name", text: $text) }
-                    AppRow("Ditto Tools") { AppIcon("caret-right") }
+                    AppRow("Navigation row") { AppIcon("caret-right") }
                     AppChoiceRow("Selected option", selected: selected) { selected.toggle() }
-                    HStack(alignment: .top, spacing: 16) {
-                        AppWell { AppEmptyState("No orders preparing", message: "New orders will appear here.", icon: "cooking-pot") }
-                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
-                    }.frame(minHeight: 260)
-                    HStack(alignment: .top, spacing: 16) {
-                        AppSurface { Text("#32B9A42D").font(AppTypography.action); Text("2 × Burger") }
-                        AppWell { AppEmptyState("No orders ready", message: "Completed orders will appear here.", icon: "cooking-pot") }
-                    }.frame(minHeight: 260)
+                    AppSurface { Text("Surface content").font(AppTypography.body) }
+                    AppSurface(style: .outlined) { Text("Outlined surface").font(AppTypography.body) }
+                    AppSurface(style: .compact) { Text("Compact surface").font(AppTypography.body) }
+                    AppWell { Text("Empty region").foregroundStyle(AppColors.secondaryText) }
                 }.padding(AppLayout.padding)
             }
         }

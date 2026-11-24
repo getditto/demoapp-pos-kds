@@ -13,14 +13,14 @@ struct LocationsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader("Select location", location: viewModel.selectedLocation?.name)
+            LocationHeader(title: "Select location", location: viewModel.selectedLocation?.name)
             if viewModel.isLoading {
                 ProgressView("Loading locations…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.locations.isEmpty {
                 AppEmptyState("No locations available", message: "Demo locations will appear here.", icon: "map-pin")
             } else {
                 ScrollView {
-                    VStack(spacing: 12) {
+                    VStack(spacing: AppLayout.mediumGap) {
                         ForEach(viewModel.locations, id: \.id) { location in
                             Button {
                                 onSelect(location.id)

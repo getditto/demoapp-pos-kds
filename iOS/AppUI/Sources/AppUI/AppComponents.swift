@@ -16,18 +16,31 @@ public struct AppButtonStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: AppLayout.buttonRadius)
                 .strokeBorder(kind == .secondary ? AppColors.border : .clear))
             .contentShape(RoundedRectangle(cornerRadius: AppLayout.buttonRadius))
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .opacity(configuration.isPressed ? AppLayout.pressedOpacity : 1)
     }
     private var foreground: Color { kind == .primary ? AppColors.onAccent : kind == .destructive ? AppColors.critical : AppColors.text }
     private var background: Color { kind == .primary ? AppColors.accent : kind == .text ? .clear : AppColors.surface }
 }
 
+public enum AppSurfaceStyle {
+    case standard, outlined, compact
+    var cornerRadius: CGFloat { self == .compact ? AppLayout.buttonRadius : AppLayout.radius }
+    var borderColor: Color { self == .outlined ? AppColors.subtleBorder : .clear }
+}
+
 public struct AppSurface<Content: View>: View {
+    private let style: AppSurfaceStyle
+    private let contentPadding: EdgeInsets
     private let content: Content
-    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+    public init(style: AppSurfaceStyle = .standard,
+                contentPadding: EdgeInsets = EdgeInsets(top: AppLayout.padding, leading: AppLayout.padding, bottom: AppLayout.padding, trailing: AppLayout.padding),
+                @ViewBuilder content: () -> Content) {
+        self.style = style; self.contentPadding = contentPadding; self.content = content()
+    }
     public var body: some View {
-        content.padding(AppLayout.padding).frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.radius))
+        content.padding(contentPadding).frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: style.cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: style.cornerRadius).strokeBorder(style.borderColor, lineWidth: AppLayout.borderWidth))
     }
 }
 
@@ -42,17 +55,17 @@ public struct AppRow<Trailing: View>: View {
         self.title = title; self.eyebrow = eyebrow; self.detail = detail; self.icon = icon; self.outlined = outlined; self.trailing = trailing()
     }
     public var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppLayout.mediumGap) {
             if let icon { AppIcon(icon) }
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: AppLayout.smallGap) {
                 if let eyebrow { Text(eyebrow).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText) }
                 Text(title).font(AppTypography.body)
                 if let detail { Text(detail).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText) }
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: AppLayout.gap)
             trailing
         }
-        .frame(minHeight: eyebrow == nil ? 32 : AppLayout.controlHeight)
+        .frame(minHeight: AppRowLayout(eyebrow: eyebrow).minimumHeight)
         .padding(AppLayout.padding)
         .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.radius))
         .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(outlined ? AppColors.border : .clear))
@@ -69,14 +82,14 @@ public struct AppChoiceRow: View {
     }
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: AppLayout.mediumGap) {
                 Text(title).font(AppTypography.body)
-                Spacer(minLength: 8)
-                if selected { AppIcon("check", size: 22) }
+                Spacer(minLength: AppLayout.gap)
+                if selected { AppIcon("check", size: AppLayout.actionIconSize) }
             }
-            .padding(.horizontal, 12).padding(.vertical, 8)
+            .padding(.horizontal, AppLayout.mediumGap).padding(.vertical, AppLayout.gap)
             .frame(minHeight: AppLayout.controlHeight)
-            .background(selected ? AppColors.selection : .clear, in: RoundedRectangle(cornerRadius: 8))
+            .background(selected ? AppColors.selection : .clear, in: RoundedRectangle(cornerRadius: AppLayout.smallRadius))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -94,40 +107,38 @@ public struct AppField<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: AppLayout.gap) {
             Text(label).font(AppTypography.caption)
-            content.padding(12).frame(minHeight: AppLayout.controlHeight)
-                .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(error == nil ? AppColors.border : AppColors.critical))
+            content.padding(AppLayout.mediumGap).frame(minHeight: AppLayout.controlHeight)
+                .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.buttonRadius))
+                .overlay(RoundedRectangle(cornerRadius: AppLayout.buttonRadius).strokeBorder(error == nil ? AppColors.border : AppColors.critical))
             if let error { Text(error).font(AppTypography.caption).foregroundStyle(AppColors.critical).accessibilityLabel("Error: \(error)") }
         }
     }
 }
 
-public struct AppHeader: View {
+public struct AppHeader<Trailing: View>: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @ScaledMetric(relativeTo: .largeTitle) private var titleLineHeight = 41
+    @ScaledMetric(relativeTo: .largeTitle) private var titleLineHeight = AppLayout.titleLineHeight
     private let title: String
-    private let location: String?
-    public init(_ title: String, location: String? = nil) { self.title = title; self.location = location }
+    private let trailing: Trailing
+    public init(_ title: String, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title; self.trailing = trailing()
+    }
+    private var layout: AppHeaderLayout { AppHeaderLayout(sizeClass: sizeClass) }
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 16) {
+            HStack(spacing: AppLayout.padding) {
                 Image("ditto-symbol", bundle: .module).resizable().scaledToFit()
-                    .frame(width: sizeClass == .regular ? 28 : 24.5, height: sizeClass == .regular ? 32 : 28)
+                    .frame(width: layout.symbolWidth, height: layout.symbolHeight)
                     .accessibilityLabel("Ditto")
-                if sizeClass == .regular { titleText }
-                Spacer(minLength: 8)
-                if let location, !location.isEmpty {
-                    HStack(spacing: 6) {
-                        AppIcon("map-pin", size: 18)
-                        Text(location).font(AppTypography.footnote)
-                    }.foregroundStyle(AppColors.secondaryText)
-                }
-            }.frame(minHeight: sizeClass == .regular ? 56 : 48)
-            if sizeClass != .regular { titleText.frame(minHeight: 64, alignment: .leading) }
+                if layout.expanded { titleText }
+                Spacer(minLength: AppLayout.gap)
+                trailing
+            }.frame(minHeight: layout.height)
+            if !layout.expanded { titleText.frame(minHeight: AppLayout.pageTitleHeight, alignment: .leading) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, sizeClass == .regular ? 20 : AppLayout.padding)
-        .padding(.vertical, sizeClass == .regular ? AppLayout.padding : 0)
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.verticalPadding)
         .background(AppColors.background)
     }
     private var titleText: some View {
@@ -137,18 +148,22 @@ public struct AppHeader: View {
     }
 }
 
+public extension AppHeader where Trailing == EmptyView {
+    init(_ title: String) { self.init(title) { EmptyView() } }
+}
+
 public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
     public init(_ title: String, message: String, icon: String) { self.title = title; self.message = message; self.icon = icon }
     public var body: some View {
-        VStack(spacing: 12) {
-            AppIcon(icon, size: 56).foregroundStyle(AppColors.secondaryText)
+        VStack(spacing: AppLayout.mediumGap) {
+            AppIcon(icon, size: AppLayout.emptyIconSize).foregroundStyle(AppColors.secondaryText)
             Text(title).font(AppTypography.heading)
             Text(message).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
         }
-        .multilineTextAlignment(.center).padding(24)
+        .multilineTextAlignment(.center).padding(AppLayout.sectionGap)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -157,7 +172,7 @@ public struct AppWell<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.frame(maxWidth: .infinity, minHeight: 240)
+        content.frame(maxWidth: .infinity, minHeight: AppLayout.wellHeight)
             .background(AppColors.disabled.opacity(0.4), in: RoundedRectangle(cornerRadius: AppLayout.radius))
             .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
     }
