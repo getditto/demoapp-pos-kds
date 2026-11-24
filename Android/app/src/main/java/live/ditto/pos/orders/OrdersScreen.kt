@@ -20,25 +20,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import live.ditto.pos.core.data.OrderStatus
-import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrdersHistoryState
 import live.ditto.ui.AppEmptyState
 import live.ditto.ui.AppEmptyStateStyle
 import live.ditto.ui.AppLayout
 import live.ditto.ui.AppOrderSummary
+import live.ditto.ui.AppOrderSummaryViewModel
 import live.ditto.ui.AppPagination
-import live.ditto.ui.AppStatusTone
 import live.ditto.ui.R
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun OrdersScreen(viewModel: OrdersViewModel = hiltViewModel()) {
@@ -61,8 +55,8 @@ fun OrdersContent(state: OrdersHistoryState, previous: () -> Unit, next: () -> U
     val listState = rememberLazyListState()
     LaunchedEffect(state.pageIndex) { listState.scrollToItem(0) }
     BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = AppLayout.padding, vertical = AppLayout.padding)) {
-        val expanded = maxWidth >= 760.dp
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val expanded = AppOrderSummaryViewModel.supportsColumns(maxWidth.value)
+        Column(verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
             if (state.isLoading) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else if (state.orders.isEmpty()) {
@@ -73,10 +67,10 @@ fun OrdersContent(state: OrdersHistoryState, previous: () -> Unit, next: () -> U
                     }
                 }
             } else {
-                LazyColumn(Modifier.weight(1f), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(Modifier.weight(1f), state = listState, verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                     items(state.orders, key = { it.documentId.id }) { order ->
-                        val (status, tone) = order.historyStatus()
-                        AppOrderSummary("Order #${order.title}", order.summary.toSortedMap().entries.joinToString(" · ") { "${it.value} × ${it.key}" }, status, tone, order.historyDate(), order.total.formatted(), expanded)
+                        val row = OrderHistoryRowViewModel(order)
+                        AppOrderSummary(row.title, row.summary, row.status, row.tone, row.date, row.total, expanded)
                     }
                 }
             }
@@ -86,14 +80,3 @@ fun OrdersContent(state: OrdersHistoryState, previous: () -> Unit, next: () -> U
         }
     }
 }
-
-internal fun Order.historyStatus(): Pair<String, AppStatusTone> = when (status) {
-    OrderStatus.OPEN -> "Open" to AppStatusTone.SECONDARY
-    OrderStatus.IN_PROCESS -> "Preparing" to AppStatusTone.ACTIVE
-    OrderStatus.PROCESSED -> "Ready" to AppStatusTone.SUCCESS
-    OrderStatus.DELIVERED -> "Delivered" to AppStatusTone.SUCCESS
-    OrderStatus.CANCELED -> "Canceled" to AppStatusTone.SECONDARY
-}
-
-private fun Order.historyDate(): String = DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale.getDefault())
-    .withZone(ZoneId.systemDefault()).format(java.time.Instant.ofEpochMilli(createdAt.toEpochMilliseconds()))

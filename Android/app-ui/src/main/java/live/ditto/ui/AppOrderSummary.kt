@@ -21,33 +21,28 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 
 enum class AppStatusTone { SECONDARY, ACTIVE, SUCCESS }
 
 @Composable
 fun AppOrderSummary(title: String, summary: String, status: String, tone: AppStatusTone, date: String, total: String, expanded: Boolean, modifier: Modifier = Modifier) {
-    val statusColor = when (tone) {
-        AppStatusTone.ACTIVE -> AppColors.brandText
-        AppStatusTone.SUCCESS -> AppColors.success
-        AppStatusTone.SECONDARY -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Surface(modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface) {
-        if (expanded && LocalDensity.current.fontScale < 1.5f) {
-            Row(Modifier.padding(AppLayout.padding).heightIn(min = 40.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(title, Modifier.width(168.dp), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+    val viewModel = AppOrderSummaryViewModel(expanded, LocalDensity.current.fontScale)
+    Surface(modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, shape = RoundedCornerShape(AppLayout.buttonRadius), color = MaterialTheme.colorScheme.surface) {
+        if (viewModel.usesColumns) {
+            Row(Modifier.padding(AppLayout.padding).heightIn(min = AppLayout.contentRowHeight), horizontalArrangement = Arrangement.spacedBy(AppLayout.gap), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, Modifier.width(AppOrderLayout.titleWidth), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 Text(summary, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                Text(status, Modifier.width(100.dp), style = MaterialTheme.typography.bodyMedium, color = statusColor)
-                Text(date, Modifier.width(150.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(total, Modifier.width(80.dp), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Text(status, Modifier.width(AppOrderLayout.statusWidth), style = MaterialTheme.typography.bodyMedium, color = tone.color)
+                Text(date, Modifier.width(AppOrderLayout.dateWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(total, Modifier.width(AppOrderLayout.totalWidth), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             }
         } else {
-            Column(Modifier.padding(AppLayout.padding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(AppLayout.padding), verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                     Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                    Text(status, style = MaterialTheme.typography.bodyMedium, color = statusColor)
+                    Text(status, style = MaterialTheme.typography.bodyMedium, color = tone.color)
                 }
-                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                     Text(summary, style = MaterialTheme.typography.bodyLarge)
                     Text(total, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 }
@@ -60,9 +55,9 @@ fun AppOrderSummary(title: String, summary: String, status: String, tone: AppSta
 @Composable
 fun AppPagination(label: String, canPrevious: Boolean, canNext: Boolean, previous: () -> Unit, next: () -> Unit, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val stacked = maxWidth < 340.dp || LocalDensity.current.fontScale >= 1.5f
-        if (stacked) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val viewModel = AppPaginationViewModel(maxWidth.value, LocalDensity.current.fontScale)
+        if (viewModel.stacked) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
                 Text(label, Modifier.fillMaxWidth(), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     AppButton("PREVIOUS", previous, enabled = canPrevious, secondary = true)
@@ -70,10 +65,10 @@ fun AppPagination(label: String, canPrevious: Boolean, canNext: Boolean, previou
                 }
             }
         } else {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AppButton("PREVIOUS", previous, Modifier.widthIn(min = 120.dp), enabled = canPrevious, secondary = true)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
+                AppButton("PREVIOUS", previous, Modifier.widthIn(min = AppOrderLayout.paginationButtonWidth), enabled = canPrevious, secondary = true)
                 Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                AppButton("NEXT", next, Modifier.widthIn(min = 120.dp), enabled = canNext, secondary = true)
+                AppButton("NEXT", next, Modifier.widthIn(min = AppOrderLayout.paginationButtonWidth), enabled = canNext, secondary = true)
             }
         }
     }

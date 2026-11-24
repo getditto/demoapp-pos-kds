@@ -18,24 +18,25 @@ public struct AppOrderSummary: View {
     }
 
     public var body: some View {
+        let viewModel = AppOrderSummaryViewModel(expanded: expanded, accessibilityText: typeSize.isAccessibilitySize)
         Group {
-            if expanded && !typeSize.isAccessibilitySize {
-                HStack(spacing: 8) {
-                    titleText.frame(width: 168, alignment: .leading)
+            if viewModel.usesColumns {
+                HStack(spacing: AppLayout.gap) {
+                    titleText.frame(width: AppOrderLayout.titleWidth, alignment: .leading)
                     summaryText.frame(maxWidth: .infinity, alignment: .leading)
-                    statusText.frame(width: 100, alignment: .leading)
-                    dateText.frame(width: 150, alignment: .leading)
-                    totalText.frame(width: 80, alignment: .leading)
-                }.frame(minHeight: 40)
+                    statusText.frame(width: AppOrderLayout.statusWidth, alignment: .leading)
+                    dateText.frame(width: AppOrderLayout.dateWidth, alignment: .leading)
+                    totalText.frame(width: AppOrderLayout.totalWidth, alignment: .leading)
+                }.frame(minHeight: AppLayout.contentRowHeight)
             } else {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: AppLayout.gap) {
                     ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline) { titleText; Spacer(minLength: 8); statusText.fixedSize() }
-                        VStack(alignment: .leading, spacing: 8) { titleText; statusText }
+                        HStack(alignment: .firstTextBaseline) { titleText; Spacer(minLength: AppLayout.gap); statusText.fixedSize() }
+                        VStack(alignment: .leading, spacing: AppLayout.gap) { titleText; statusText }
                     }
                     ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline) { summaryText; Spacer(minLength: 8); totalText.fixedSize() }
-                        VStack(alignment: .leading, spacing: 8) { summaryText; totalText }
+                        HStack(alignment: .firstTextBaseline) { summaryText; Spacer(minLength: AppLayout.gap); totalText.fixedSize() }
+                        VStack(alignment: .leading, spacing: AppLayout.gap) { summaryText; totalText }
                     }
                     dateText
                 }
@@ -43,7 +44,7 @@ public struct AppOrderSummary: View {
         }
         .padding(AppLayout.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 12))
+        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.buttonRadius))
         .accessibilityElement(children: .combine)
     }
 
@@ -53,7 +54,7 @@ public struct AppOrderSummary: View {
     private var dateText: some View { Text(date).font(AppTypography.footnote).foregroundStyle(AppColors.secondaryText) }
     private var statusText: some View {
         Text(status).font(AppTypography.footnote)
-            .foregroundStyle(tone == .active ? AppColors.brandText : tone == .success ? AppColors.success : AppColors.secondaryText)
+            .foregroundStyle(tone.color)
     }
 }
 
@@ -69,18 +70,18 @@ public struct AppPagination: View {
     }
     public var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) { previousButton; pageLabel.frame(maxWidth: .infinity); nextButton }
-            VStack(spacing: 12) { pageLabel; HStack { previousButton; Spacer(); nextButton } }
+            HStack(spacing: AppLayout.mediumGap) { previousButton; pageLabel.frame(maxWidth: .infinity); nextButton }
+            VStack(spacing: AppLayout.mediumGap) { pageLabel; HStack { previousButton; Spacer(); nextButton } }
         }
     }
     private var pageLabel: some View { Text(label).font(AppTypography.body.weight(.medium)).foregroundStyle(AppColors.secondaryText).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true) }
-    private var previousButton: some View { Button(action: previous) { Text("Previous").frame(minWidth: 78) }.buttonStyle(AppButtonStyle(.secondary)).disabled(!canPrevious) }
-    private var nextButton: some View { Button(action: next) { Text("Next").frame(minWidth: 78) }.buttonStyle(AppButtonStyle(.secondary)).disabled(!canNext) }
+    private var previousButton: some View { Button(action: previous) { Text("Previous").frame(minWidth: AppOrderLayout.paginationLabelWidth) }.buttonStyle(AppButtonStyle(.secondary)).disabled(!canPrevious) }
+    private var nextButton: some View { Button(action: next) { Text("Next").frame(minWidth: AppOrderLayout.paginationLabelWidth) }.buttonStyle(AppButtonStyle(.secondary)).disabled(!canNext) }
 }
 
 #Preview("Orders") {
     BrandTheme {
-        VStack(spacing: 8) {
+        VStack(spacing: AppLayout.gap) {
             AppOrderSummary(title: "Order #1234ABCD", summary: "2 × Burger · 1 × Coffee", status: "Preparing", tone: .active, date: "Oct 29, 14:48", total: "$18.95")
             AppOrderSummary(title: "Order #5678ABCD", summary: "1 × Coffee", status: "Delivered", tone: .success, date: "Oct 29, 14:47", total: "$1.95")
             AppPagination(label: "Page 1 of 2", canPrevious: false, canNext: true, previous: {}, next: {})

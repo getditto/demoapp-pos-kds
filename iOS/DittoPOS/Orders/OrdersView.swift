@@ -23,7 +23,7 @@ struct OrdersContent: View {
     let next: () -> Void
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 12) {
+            VStack(spacing: AppLayout.mediumGap) {
                 if state.isLoading {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if state.orders.isEmpty {
@@ -36,14 +36,13 @@ struct OrdersContent: View {
                 } else {
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack(spacing: 8) {
+                            LazyVStack(spacing: AppLayout.gap) {
                                 Color.clear.frame(height: 0).id("top")
                                 ForEach(state.orders, id: \.documentId) { order in
-                                    AppOrderSummary(
-                                        title: "Order #\(order.title)", summary: order.summary.keys.sorted().map { "\(order.summary[$0]!) × \($0)" }.joined(separator: " · "),
-                                        status: order.historyStatusTitle, tone: order.historyStatusTone,
-                                        date: order.createdAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()),
-                                        total: order.total.description, expanded: geometry.size.width >= 760)
+                                    let row = OrderHistoryRowViewModel(order: order)
+                                    AppOrderSummary(title: row.title, summary: row.summary, status: row.status, tone: row.tone,
+                                                    date: row.date, total: row.total,
+                                                    expanded: AppOrderSummaryViewModel.supportsColumns(availableWidth: geometry.size.width))
                                 }
                             }
                         }.onChange(of: state.pageIndex) { _ in proxy.scrollTo("top", anchor: .top) }
@@ -53,27 +52,8 @@ struct OrdersContent: View {
                     AppPagination(label: "Page \(state.pageIndex + 1) of \(state.totalPages)", canPrevious: state.canPrevious, canNext: state.canNext, previous: previous, next: next)
                 }
             }
-            .padding(.horizontal, sizeClass == .regular ? 20 : AppLayout.padding)
+            .padding(.horizontal, AppWindowViewModel(sizeClass: sizeClass).horizontalPadding)
             .padding(.vertical, AppLayout.padding)
         }.background(AppColors.background)
-    }
-}
-
-extension Order {
-    var historyStatusTitle: String {
-        switch status {
-        case .open: return "Open"
-        case .inProcess: return "Preparing"
-        case .processed: return "Ready"
-        case .delivered: return "Delivered"
-        case .canceled: return "Canceled"
-        }
-    }
-    var historyStatusTone: AppStatusTone {
-        switch status {
-        case .inProcess: return .active
-        case .processed, .delivered: return .success
-        case .open, .canceled: return .secondary
-        }
     }
 }
