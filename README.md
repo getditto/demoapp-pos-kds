@@ -6,13 +6,15 @@ A demo Point-of-Sale + Kitchen Display System for a quick service restaurant
 chain. Customer orders are entered in the POS view and appear in real time on
 the KDS view as they move through the kitchen workflow.
 
-The UI has four tabs:
+The UI has five tabs:
 
 - **POS** — order entry and payment for the currently selected location.
 - **KDS** — orders the kitchen is currently preparing (`inProcess`) or has
   finished (`processed`) for the currently selected location.
 - **Orders** — a live, paginated list of nonempty orders stored on this device
   for the currently selected location.
+- **Inventory**: live menu quantities with manual one-unit adjustments and
+  direct quantity editing for the currently selected location.
 - **Settings** — location selection, System/Light/Dark appearance and Ditto Tools.
 
 The app runs on iOS and Android and the two platforms sync with each other
@@ -59,6 +61,19 @@ eviction policies; it does not fetch older history.
 
 <img src="docs/screenshots/orders/ios-phone-light.png" width="260" alt="iOS Orders with workflow state and pagination" />
 <img src="docs/screenshots/orders/android-phone-light.png" width="260" alt="Android Orders with workflow state and pagination" />
+
+## Inventory
+
+Use **minus/plus** for one-unit stock adjustments, or tap a quantity to enter an
+absolute value with the system numeric keyboard. **Done** commits the value;
+dismissing the keyboard cancels. Zero is valid. Negative counts received from
+other devices remain visible in red, with minus disabled.
+
+Inventory adjustments are independent of POS checkout at this stage. The list
+uses the shared menu and optional photo attachments, and updates while visible.
+
+<img src="docs/screenshots/inventory/ios-phone-light.png" width="260" alt="iOS Inventory with editable quantities and one-unit controls" />
+<img src="docs/screenshots/inventory/android-phone-light.png" width="260" alt="Android Inventory with editable quantities and one-unit controls" />
 
 ## Data model
 

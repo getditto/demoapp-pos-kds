@@ -23,6 +23,9 @@ struct MainView: View {
         } orders: {
             OrdersView(repository: ordersRepository,
                        isActive: scenePhase == .active && viewModel.selectedTab == .orders)
+        } inventory: {
+            InventoryView(repository: saleItemsRepository, locations: locationsRepository,
+                          isActive: scenePhase == .active && viewModel.selectedTab == .inventory)
         } settings: {
             SettingsView(onSelectLocation: viewModel.selectLocation)
         } locations: {

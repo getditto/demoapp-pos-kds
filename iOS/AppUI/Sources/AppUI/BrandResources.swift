@@ -20,6 +20,7 @@ public enum AppTypography {
     public static var caption: Font { font("Geist-Regular", size: 12, relativeTo: .caption) }
     public static var footnote: Font { font("Geist-Regular", size: 13, relativeTo: .footnote) }
     public static var action: Font { font("GeistMono-Regular", size: 14, relativeTo: .callout) }
+    public static var quantity: Font { font("GeistMono-Regular", size: 17, relativeTo: .body).weight(.medium) }
 
     private static func font(_ name: String, size: CGFloat, relativeTo style: Font.TextStyle) -> Font {
         _ = BrandResources.registeredFonts

@@ -85,6 +85,7 @@ class AppearanceAndNavigationTest {
                                 TextField(draft, onValueChange = { draft = it }, label = { Text("Draft") })
                             },
                             orders = { Text("Orders content") },
+                            inventory = { Text("Inventory content") },
                             kds = { Text("Kitchen content") }, tools = { Text("Tools destination") }
                         )
                     }

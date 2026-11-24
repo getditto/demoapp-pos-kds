@@ -36,6 +36,7 @@ object AppTypography {
     private val monoFont = FontFamily(Font(R.font.geist_mono))
     val pageTitle = TextStyle(fontFamily = FontFamily(Font(R.font.chakra_petch_regular)), fontWeight = FontWeight.Normal, fontSize = 28.sp, lineHeight = 34.sp)
     val action = TextStyle(fontFamily = monoFont, fontSize = 14.sp, lineHeight = 20.sp)
+    val quantity = TextStyle(fontFamily = monoFont, fontSize = 17.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
     val styles = Typography(
         displayLarge = pageTitle, displayMedium = pageTitle, displaySmall = pageTitle,
         headlineLarge = pageTitle, headlineMedium = pageTitle, headlineSmall = pageTitle,

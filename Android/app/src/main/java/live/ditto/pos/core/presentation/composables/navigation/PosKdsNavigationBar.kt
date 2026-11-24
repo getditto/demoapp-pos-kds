@@ -14,7 +14,7 @@ import live.ditto.ui.AppIcon
 @Composable
 fun PosKdsNavigationBar(selectedRoute: String?, onItemClick: (BottomNavItem) -> Unit) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        listOf(BottomNavItem.PointOfSale, BottomNavItem.KitchenDisplay, BottomNavItem.Orders, BottomNavItem.Settings).forEach { item ->
+        listOf(BottomNavItem.PointOfSale, BottomNavItem.KitchenDisplay, BottomNavItem.Orders, BottomNavItem.Inventory, BottomNavItem.Settings).forEach { item ->
             NavigationBarItem(
                 selected = selectedRoute == item.route || (item == BottomNavItem.Settings && selectedRoute?.startsWith("settings/") == true),
                 onClick = { onItemClick(item) },

@@ -51,7 +51,7 @@ class OrdersLiveViewTest {
                             state = AppState("Ham's Burgers", emptyList(), currentLocationId = "A"), needsLocation = false,
                             appearance = AppAppearance.LIGHT, version = "1", build = "9999", sdkVersion = "5.2.0",
                             onAppearance = {}, onLocation = { _, done -> done() },
-                            pos = {}, kds = {}, orders = { OrdersContent(state, history::previous, history::next) }, tools = {},
+                            pos = {}, kds = {}, orders = { OrdersContent(state, history::previous, history::next) }, inventory = {}, tools = {},
                             startDestination = "orders"
                         )
                     }
