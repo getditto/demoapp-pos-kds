@@ -20,14 +20,15 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import live.ditto.ditto_wrapper.DittoManager
 import live.ditto.pos.core.data.DocumentID
+import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.data.Payment
 import live.ditto.pos.core.data.decodeOrSkip
-import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
 import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
+import live.ditto.pos.core.data.orders.OrderCommands
 import live.ditto.pos.core.data.orders.OrderEviction
 import live.ditto.pos.core.data.orders.OrdersHistoryQuery
-import live.ditto.pos.core.data.orders.cartPathsForUnset
 import live.ditto.pos.core.data.toDittoIsoString
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -97,14 +98,15 @@ class OrdersRepository internal constructor(
         ).map(KitchenOrders::active)
 
     suspend fun upsert(order: Order) {
-        ditto.store.execute(
-            """
-                INSERT INTO ${Order.COLLECTION_NAME}
-                DOCUMENTS (deserialize_json(:json))
-                ON ID CONFLICT DO UPDATE_LOCAL_DIFF
-            """.trimIndent(),
-            mapOf("json" to order.dittoJsonString())
-        )
+        OrderCommands.upsert(order, ditto.store)
+    }
+
+    suspend fun addPayment(payment: Payment, paymentId: String, id: DocumentID) {
+        OrderCommands.addPayment(payment, paymentId, id, ditto.store)
+    }
+
+    suspend fun updateStatus(status: OrderStatus, id: DocumentID) {
+        OrderCommands.updateStatus(status, id, ditto.store)
     }
 
     suspend fun findOrder(id: DocumentID): Order? = ditto.store.execute(
@@ -131,18 +133,7 @@ class OrdersRepository internal constructor(
         ditto.store.observeAsFlow(query, arguments)
 
     suspend fun clearCart(order: Order) {
-        if (order.cart.isEmpty()) return
-        // App-generated UUID paths need quoted identifiers, not DQL value arguments.
-        // https://docs.ditto.live/dql/update
-        val unsetList = order.cartPathsForUnset()
-        ditto.store.execute(
-            """
-                UPDATE ${Order.COLLECTION_NAME}
-                UNSET $unsetList
-                WHERE _id.id = :id AND _id.locationId = :locationId
-            """.trimIndent(),
-            mapOf("id" to order.documentId.id, "locationId" to order.documentId.locationId)
-        )
+        OrderCommands.clearCart(order, ditto.store)
     }
 
     suspend fun runEvictionIfDue() {
