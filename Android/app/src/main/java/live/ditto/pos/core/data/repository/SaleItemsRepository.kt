@@ -59,7 +59,7 @@ class SaleItemsRepository internal constructor(
     private val catalogQuery = """
         SELECT * FROM ${SaleItem.COLLECTION_NAME}
         WHERE _id.locationId = :locationId
-        ORDER BY name, _id.id
+        ORDER BY name
     """.trimIndent()
 
     fun observeLocationSaleItems(locationId: String): Flow<List<SaleItem>> =

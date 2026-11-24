@@ -45,7 +45,7 @@ import DittoSwift
     nonisolated static let catalogQuery = """
         SELECT * FROM \(SaleItem.collectionName)
         WHERE _id.locationId = :locationId
-        ORDER BY name, _id.id
+        ORDER BY name
         """
 
     func observeLocationSaleItems(_ locationId: String) -> AnyPublisher<[SaleItem], Never> {
