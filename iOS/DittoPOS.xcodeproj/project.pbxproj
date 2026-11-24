@@ -141,9 +141,11 @@
 		C1530000000000000000B001 /* OrdersHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1530000000000000000A001; };
 		C1530000000000000000C001 /* OrdersHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1530000000000000000A001; };
 		C1530000000000000000B002 /* OrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1530000000000000000A002; };
-		C1600000000000000000B001 /* OrdersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A001; };
+		C1600000000000000000B001 /* OrderSummaryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A001; };
 		C1530000000000000000C002 /* OrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1530000000000000000A002; };
-		C1600000000000000000C001 /* OrdersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A001; };
+		C1600000000000000000C001 /* OrderSummaryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A001; };
+		C1600000000000000000B002 /* OrderSummaryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A002; };
+		C1600000000000000000C002 /* OrderSummaryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -231,7 +233,8 @@
 		};
 		C1530000000000000000A001 /* OrdersHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Data/OrdersHistory.swift; sourceTree = SOURCE_ROOT; };
 		C1530000000000000000A002 /* OrdersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Orders/OrdersView.swift; sourceTree = SOURCE_ROOT; };
-		C1600000000000000000A001 /* OrdersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Orders/OrdersViewModel.swift; sourceTree = SOURCE_ROOT; };
+		C1600000000000000000A001 /* OrderSummaryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Orders/OrderSummaryViewModel.swift; sourceTree = SOURCE_ROOT; };
+		C1600000000000000000A002 /* OrderSummaryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Orders/OrderSummaryRow.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -334,7 +337,8 @@
 				14CD51AF2A2FE2D50018DE87 /* DittoPOS */,
 				C1530000000000000000A001 /* OrdersHistory.swift */,
 				C1530000000000000000A002 /* OrdersView.swift */,
-				C1600000000000000000A001 /* OrdersViewModel.swift */,
+				C1600000000000000000A001 /* OrderSummaryViewModel.swift */,
+				C1600000000000000000A002 /* OrderSummaryRow.swift */,
 				A48472EA2FA4DF71004A821E /* DittoPOSTests */,
 				C1460000000000000000A100 /* Fixtures */,
 				14CD51AE2A2FE2D50018DE87 /* Products */,
@@ -657,7 +661,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C1530000000000000000B002 /* OrdersView.swift in Sources */,
-				C1600000000000000000B001 /* OrdersViewModel.swift in Sources */,
+				C1600000000000000000B001 /* OrderSummaryViewModel.swift in Sources */,
+				C1600000000000000000B002 /* OrderSummaryRow.swift in Sources */,
 				C1530000000000000000B001 /* OrdersHistory.swift in Sources */,
 				C1460000000000000000B001 /* OrderEviction.swift in Sources */,
 				C1460000000000000000B002 /* KitchenOrders.swift in Sources */,
@@ -715,7 +720,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C1530000000000000000C002 /* OrdersView.swift in Sources */,
-				C1600000000000000000C001 /* OrdersViewModel.swift in Sources */,
+				C1600000000000000000C001 /* OrderSummaryViewModel.swift in Sources */,
+				C1600000000000000000C002 /* OrderSummaryRow.swift in Sources */,
 				C1530000000000000000C001 /* OrdersHistory.swift in Sources */,
 				C1330000000000000000B004 /* AppAppearance.swift in Sources */,
 				C1330000000000000000B008 /* AppShell.swift in Sources */,

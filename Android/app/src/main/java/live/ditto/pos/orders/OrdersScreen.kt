@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -29,8 +30,6 @@ import live.ditto.pos.core.data.orders.OrdersHistoryState
 import live.ditto.ui.AppEmptyState
 import live.ditto.ui.AppEmptyStateStyle
 import live.ditto.ui.AppLayout
-import live.ditto.ui.AppOrderSummary
-import live.ditto.ui.AppOrderSummaryViewModel
 import live.ditto.ui.AppPagination
 import live.ditto.ui.R
 
@@ -55,7 +54,8 @@ fun OrdersContent(state: OrdersHistoryState, previous: () -> Unit, next: () -> U
     val listState = rememberLazyListState()
     LaunchedEffect(state.pageIndex) { listState.scrollToItem(0) }
     BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = AppLayout.padding, vertical = AppLayout.padding)) {
-        val expanded = AppOrderSummaryViewModel.supportsColumns(maxWidth.value)
+        val availableWidth = maxWidth.value
+        val fontScale = LocalDensity.current.fontScale
         Column(verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
             if (state.isLoading) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -69,8 +69,7 @@ fun OrdersContent(state: OrdersHistoryState, previous: () -> Unit, next: () -> U
             } else {
                 LazyColumn(Modifier.weight(1f), state = listState, verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                     items(state.orders, key = { it.documentId.id }) { order ->
-                        val row = OrderHistoryRowViewModel(order)
-                        AppOrderSummary(row.title, row.summary, row.status, row.tone, row.date, row.total, expanded)
+                        OrderSummaryRow(OrderSummaryViewModel(order, availableWidth, fontScale))
                     }
                 }
             }

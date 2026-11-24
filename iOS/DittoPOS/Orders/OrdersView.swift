@@ -18,6 +18,7 @@ struct OrdersView: View {
 
 struct OrdersContent: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     let state: OrdersHistoryState
     let previous: () -> Void
     let next: () -> Void
@@ -39,10 +40,7 @@ struct OrdersContent: View {
                             LazyVStack(spacing: AppLayout.gap) {
                                 Color.clear.frame(height: 0).id("top")
                                 ForEach(state.orders, id: \.documentId) { order in
-                                    let row = OrderHistoryRowViewModel(order: order)
-                                    AppOrderSummary(title: row.title, summary: row.summary, status: row.status, tone: row.tone,
-                                                    date: row.date, total: row.total,
-                                                    expanded: AppOrderSummaryViewModel.supportsColumns(availableWidth: geometry.size.width))
+                                    OrderSummaryRow(viewModel: OrderSummaryViewModel(order: order, availableWidth: geometry.size.width, accessibilityText: typeSize.isAccessibilitySize))
                                 }
                             }
                         }.onChange(of: state.pageIndex) { _ in proxy.scrollTo("top", anchor: .top) }
@@ -52,7 +50,7 @@ struct OrdersContent: View {
                     AppPagination(label: "Page \(state.pageIndex + 1) of \(state.totalPages)", canPrevious: state.canPrevious, canNext: state.canNext, previous: previous, next: next)
                 }
             }
-            .padding(.horizontal, AppWindowViewModel(sizeClass: sizeClass).horizontalPadding)
+            .padding(.horizontal, AppWindowLayout(sizeClass: sizeClass).horizontalPadding)
             .padding(.vertical, AppLayout.padding)
         }.background(AppColors.background)
     }
