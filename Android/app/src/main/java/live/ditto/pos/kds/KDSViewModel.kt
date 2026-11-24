@@ -3,6 +3,7 @@ package live.ditto.pos.kds
 import android.text.format.DateUtils
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,8 +25,9 @@ import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.settings.AppSettings
+import live.ditto.ui.AppColors
 import live.ditto.ui.AppLayout
-import live.ditto.ui.AppWindowViewModel
+import live.ditto.ui.AppWindowLayout
 import javax.inject.Inject
 import kotlin.time.Instant
 
@@ -87,7 +89,7 @@ data class TicketItemUi(
 )
 
 class KitchenBoardViewModel(tickets: List<TicketItemUi>, availableWidth: Float) {
-    val expanded = AppWindowViewModel(availableWidth).expanded
+    val expanded = AppWindowLayout(availableWidth).expanded
     val preparing = tickets.filter { it.orderStatus == OrderStatus.IN_PROCESS }
     val ready = tickets.filter { it.orderStatus == OrderStatus.PROCESSED }
     val phoneTickets = preparing + ready
@@ -105,7 +107,17 @@ class KitchenBoardViewModel(tickets: List<TicketItemUi>, availableWidth: Float) 
 class KitchenTicketViewModel(ticket: TicketItemUi, now: Long) {
     val title = "#${ticket.shortOrderId}"
     val lines = ticket.items.toSortedMap().map { (name, count) -> "$count × $name" }
-    val isPaid = ticket.isPaid
-    val isReady = ticket.orderStatus == OrderStatus.PROCESSED
     val elapsed = DateUtils.getRelativeTimeSpanString(ticket.createdAt.toEpochMilliseconds(), now, DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
+    private val paid = ticket.isPaid
+    private val ready = ticket.orderStatus == OrderStatus.PROCESSED
+    val paymentTitle = if (paid) "Paid" else "Unpaid"
+    val stageTitle = if (ready) "Ready" else "Preparing"
+    val actionTitle = if (ready) "Complete order" else "Mark ready"
+    val buttonTitle = actionTitle.uppercase()
+    val actionLabel = "$actionTitle, $title"
+    val secondaryAction = ready
+    val paymentColor: Color
+        @Composable get() = if (paid) AppColors.success else MaterialTheme.colorScheme.onSurfaceVariant
+    val stageColor: Color
+        @Composable get() = if (ready) AppColors.success else AppColors.brandText
 }

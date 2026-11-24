@@ -22,14 +22,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.delay
 import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.presentation.composables.LocationHeader
 import live.ditto.pos.kds.KitchenBoardViewModel
 import live.ditto.pos.kds.KitchenTicketViewModel
 import live.ditto.pos.kds.TicketItemUi
 import live.ditto.ui.AppColors
 import live.ditto.ui.AppEmptyState
-import live.ditto.ui.AppHeader
 import live.ditto.ui.AppLayout
-import live.ditto.ui.AppTicket
 import live.ditto.ui.AppWell
 import live.ditto.ui.BrandTheme
 import kotlin.time.Clock
@@ -50,7 +49,7 @@ fun TicketGrid(ticketItems: List<TicketItemUi>, onAdvance: (orderId: String) -> 
                 StageCount(viewModel.countTitle("Ready", viewModel.ready.size), viewModel, Modifier.then(if (viewModel.expanded) Modifier.weight(1f) else Modifier), ready = true)
             }
             if (viewModel.isEmpty) {
-                AppEmptyState("No active orders", "Orders with items appear here.", live.ditto.ui.R.drawable.phosphor_check_circle, prominent = true)
+                AppEmptyState("No active orders", "Orders with items appear here.", live.ditto.ui.R.drawable.phosphor_check_circle, style = live.ditto.ui.AppEmptyStateStyle.SUCCESS)
             } else if (viewModel.expanded) {
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(AppLayout.sectionGap)) {
                     StageColumn(viewModel.preparing, viewModel.showPreparingWell, "No orders preparing", now, onAdvance, Modifier.weight(1f))
@@ -84,14 +83,7 @@ private fun StageColumn(tickets: List<TicketItemUi>, showWell: Boolean, emptyMes
 @Composable
 private fun TicketItem(ticket: TicketItemUi, now: Long, onAdvance: (String) -> Unit) {
     val viewModel = KitchenTicketViewModel(ticket, now)
-    AppTicket(
-        title = viewModel.title,
-        lines = viewModel.lines,
-        isPaid = viewModel.isPaid,
-        elapsed = viewModel.elapsed,
-        isReady = viewModel.isReady,
-        onAdvance = { onAdvance(ticket.orderId) }
-    )
+    KitchenTicketCard(viewModel, onAdvance = { onAdvance(ticket.orderId) })
 }
 
 @Preview(widthDp = 1024, heightDp = 748)
@@ -100,7 +92,7 @@ private fun TicketItem(ticket: TicketItemUi, now: Long, onAdvance: (String) -> U
 private fun KitchenPreview() {
     BrandTheme {
         Column {
-            AppHeader("Kitchen display", location = "Ham's Burgers")
+            LocationHeader("Kitchen display", location = "Ham's Burgers", expanded = false)
             TicketGrid(listOf(TicketItemUi(Clock.System.now(), "1042ABCD", hashMapOf("Burger" to 2, "Coffee" to 1), false, OrderStatus.IN_PROCESS, "1042ABCD"))) {}
         }
     }

@@ -54,7 +54,7 @@ struct KitchenBoard: View {
                 }.font(AppTypography.body.weight(.medium)).frame(minHeight: AppLayout.compactRowHeight)
             }
             if viewModel.isEmpty {
-                AppEmptyState("No active orders", message: "Orders with items appear here.", icon: "check-circle", prominent: true)
+                AppEmptyState("No active orders", message: "Orders with items appear here.", icon: "check-circle", style: .success)
             } else if viewModel.expanded {
                 HStack(alignment: .top, spacing: AppLayout.sectionGap) {
                     stageColumn(viewModel.preparing, showWell: viewModel.showPreparingWell, emptyMessage: "No orders preparing")
@@ -90,7 +90,7 @@ struct KitchenBoard: View {
 
     private func tickets(_ orders: [Order]) -> some View {
         ForEach(orders, id: \.documentId) { order in
-            KDSOrderView(order: order, now: now) { onAdvance(order) }
+            KitchenTicketCard(viewModel: KitchenTicketViewModel(order: order, now: now)) { onAdvance(order) }
         }
     }
 }

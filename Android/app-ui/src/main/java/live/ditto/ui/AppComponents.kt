@@ -152,15 +152,14 @@ fun AppHeader(title: String, modifier: Modifier = Modifier, expanded: Boolean = 
 }
 
 @Composable
-fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, prominent: Boolean = false) {
-    val viewModel = AppEmptyStateViewModel(prominent)
+fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, style: AppEmptyStateStyle = AppEmptyStateStyle.STANDARD) {
     Box(modifier.fillMaxSize().padding(AppLayout.sectionGap), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(viewModel.spacing)) {
-            CompositionLocalProvider(LocalContentColor provides viewModel.iconColor) {
-                AppIcon(icon, size = viewModel.iconSize)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(style.spacing)) {
+            CompositionLocalProvider(LocalContentColor provides style.iconColor) {
+                AppIcon(icon, size = style.iconSize)
             }
-            Text(title, style = viewModel.titleStyle, textAlign = TextAlign.Center)
-            Text(message, style = viewModel.messageStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text(title, style = style.titleStyle, textAlign = TextAlign.Center)
+            Text(message, style = style.messageStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }

@@ -73,7 +73,7 @@ struct KitchenBoardViewModel {
     init(orders: [Order], sizeClass: UserInterfaceSizeClass?) {
         preparing = orders.filter { $0.status == .inProcess }
         ready = orders.filter { $0.status == .processed }
-        expanded = AppWindowViewModel(sizeClass: sizeClass).expanded
+        expanded = AppWindowLayout(sizeClass: sizeClass).expanded
         contentPadding = expanded ? AppLayout.sectionGap : AppLayout.padding
         headerSpacing = expanded ? AppLayout.padding : AppLayout.mediumGap
     }
@@ -86,16 +86,28 @@ struct KitchenBoardViewModel {
 @MainActor struct KitchenTicketViewModel {
     let title: String
     let lines: [String]
-    let isPaid: Bool
     let elapsed: String
-    let isReady: Bool
+    let paymentTitle: String
+    let paymentColor: Color
+    let stageTitle: String
+    let stageColor: Color
+    let actionTitle: String
+    let actionLabel: String
+    let actionKind: AppButtonStyle.Kind
 
     init(order: Order, now: Date) {
         title = "#\(order.title)"
         lines = order.summary.sorted(by: { $0.key < $1.key }).map { "\($0.value) × \($0.key)" }
-        isPaid = order.isPaid
         elapsed = Self.elapsedFormatter.localizedString(for: order.createdAt, relativeTo: now)
-        isReady = order.status == .processed
+        let paid = order.isPaid
+        let ready = order.status == .processed
+        paymentTitle = paid ? "Paid" : "Unpaid"
+        paymentColor = paid ? AppColors.success : AppColors.secondaryText
+        stageTitle = ready ? "Ready" : "Preparing"
+        stageColor = ready ? AppColors.success : AppColors.brandText
+        actionTitle = ready ? "Complete order" : "Mark ready"
+        actionLabel = "\(actionTitle), \(title)"
+        actionKind = ready ? .secondary : .primary
     }
 
     private static let elapsedFormatter: RelativeDateTimeFormatter = {

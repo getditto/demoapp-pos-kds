@@ -156,15 +156,15 @@ public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    private let viewModel: AppEmptyStateViewModel
-    public init(_ title: String, message: String, icon: String, prominent: Bool = false) {
-        self.title = title; self.message = message; self.icon = icon; viewModel = AppEmptyStateViewModel(prominent: prominent)
+    private let style: AppEmptyStateStyle
+    public init(_ title: String, message: String, icon: String, style: AppEmptyStateStyle = .standard) {
+        self.title = title; self.message = message; self.icon = icon; self.style = style
     }
     public var body: some View {
-        VStack(spacing: viewModel.spacing) {
-            AppIcon(icon, size: viewModel.iconSize).foregroundStyle(viewModel.iconColor)
-            Text(title).font(viewModel.titleFont)
-            Text(message).font(viewModel.messageFont).foregroundStyle(AppColors.secondaryText)
+        VStack(spacing: style.spacing) {
+            AppIcon(icon, size: style.iconSize).foregroundStyle(style.iconColor)
+            Text(title).font(style.titleFont)
+            Text(message).font(style.messageFont).foregroundStyle(AppColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(AppLayout.sectionGap)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
