@@ -7,7 +7,7 @@ internal object KitchenOrders {
         SELECT * FROM ${Order.COLLECTION_NAME}
         WHERE _id.locationId = :locationId
             AND object_length(cart) > 0
-        ORDER BY createdAt DESC, _id.id
+        ORDER BY createdAt DESC
     """.trimIndent()
 
     fun active(orders: List<Order>): List<Order> = orders.filter {

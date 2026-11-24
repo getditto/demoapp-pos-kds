@@ -38,7 +38,7 @@ class OrderStoreRegressionTest {
             )
             for (ticket in listOf(
                 ready, order("preparing-old", OrderStatus.IN_PROCESS, 11), delivered, order("ready-old", OrderStatus.PROCESSED, 10),
-                order("preparing-new-b", OrderStatus.IN_PROCESS, 21), order("preparing-new-a", OrderStatus.IN_PROCESS, 21),
+                order("preparing-new-b", OrderStatus.IN_PROCESS, 21), order("preparing-new-a", OrderStatus.IN_PROCESS, 22),
                 canceled, order("open", OrderStatus.OPEN, 50),
                 order("empty", OrderStatus.IN_PROCESS, 60).copy(cart = emptyMap()),
                 order("unknown", OrderStatus.OPEN, 70).copy(statusLog = mapOf("2026-04-01T12:00:00.000Z" to "future-status")),

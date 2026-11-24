@@ -3,7 +3,7 @@ enum KitchenOrders {
         SELECT * FROM \(Order.collectionName)
         WHERE _id.locationId = :locationId
             AND object_length(cart) > 0
-        ORDER BY createdAt DESC, _id.id
+        ORDER BY createdAt DESC
         """
 
     static func active(from orders: [Order]) -> [Order] {

@@ -30,7 +30,7 @@ import XCTest
                 payments: [:], statusLog: template.statusLog, createdAt: Date(timeIntervalSince1970: 90))
             for ticket in [
                 ready, order("preparing-old", .inProcess, 11), delivered, order("ready-old", .processed, 10),
-                order("preparing-new-b", .inProcess, 21), order("preparing-new-a", .inProcess, 21),
+                order("preparing-new-b", .inProcess, 21), order("preparing-new-a", .inProcess, 22),
                 canceled, order("open", .open, 50), empty, unknown, unstarted, foreign,
             ] {
                 try await repository.add(order: ticket)
