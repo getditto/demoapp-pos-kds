@@ -116,7 +116,7 @@ Native POS previews with attachment-backed menu and recorded cart photos:
 
 | iOS | Android |
 | --- | --- |
-| <img src="docs/screenshots/image-migration/ios-expanded-after.png" alt="iOS POS with attachment photos" width="500"> | <img src="docs/screenshots/image-migration/android-expanded-after.png" alt="Android POS with attachment photos" width="500"> |
+| <img src="docs/screenshots/pos/ios-tablet.png" alt="iOS POS with attachment photos" width="500"> | <img src="docs/screenshots/pos/android-tablet.png" alt="Android POS with attachment photos" width="500"> |
 
 
 ## App features
