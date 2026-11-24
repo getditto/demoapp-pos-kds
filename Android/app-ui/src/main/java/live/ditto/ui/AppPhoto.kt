@@ -15,10 +15,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
-fun AppPhoto(image: ImageBitmap?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp, iconSize: Dp = 24.dp) {
+fun AppPhoto(image: ImageBitmap?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = AppLayout.smallRadius, iconSize: Dp = AppLayout.iconSize) {
     Box(modifier.clip(RoundedCornerShape(cornerRadius)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
         if (image != null) {
             Image(image, null, Modifier.fillMaxSize(), contentScale = contentScale)

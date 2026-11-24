@@ -6,7 +6,7 @@ public struct AppPhoto: View {
     private let cornerRadius: CGFloat
     private let iconSize: CGFloat
 
-    public init(image: Image?, contentMode: ContentMode = .fit, cornerRadius: CGFloat = 8, iconSize: CGFloat = 24) {
+    public init(image: Image?, contentMode: ContentMode = .fit, cornerRadius: CGFloat = AppLayout.smallRadius, iconSize: CGFloat = AppLayout.iconSize) {
         self.image = image
         self.contentMode = contentMode
         self.cornerRadius = cornerRadius

@@ -10,21 +10,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.ditto.kotlin.DittoStore
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.images.PhotoReference
+import live.ditto.ui.AppLayout
 import live.ditto.ui.AppPhoto
 
 @Composable
-fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, store: DittoStore, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
+fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, store: DittoStore, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = AppLayout.smallRadius) {
     val scope = rememberCoroutineScope()
     val loader = remember(store) { PhotoLoader.from(store, scope) }
     ProductPhoto(reference, owner, loader, modifier, contentScale, cornerRadius)
 }
 
 @Composable
-internal fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = 8.dp) {
+internal fun ProductPhoto(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit, cornerRadius: Dp = AppLayout.smallRadius) {
     // File arrival must redraw the placeholder without another document update.
     val image = loader.image.collectAsState().value
     LaunchedEffect(loader, owner, reference?.id) { loader.update(reference, owner)?.join() }

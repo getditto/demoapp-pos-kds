@@ -6,14 +6,14 @@ struct ProductPhotoView: View {
     let reference: PhotoReference?
     let owner: DocumentID
     var contentMode: ContentMode = .fit
-    var cornerRadius: CGFloat = 8
+    var cornerRadius: CGFloat = AppLayout.smallRadius
     @StateObject private var loader: PhotoLoader
 
-    init(reference: PhotoReference?, owner: DocumentID, store: DittoStore, contentMode: ContentMode = .fit, cornerRadius: CGFloat = 8) {
+    init(reference: PhotoReference?, owner: DocumentID, store: DittoStore, contentMode: ContentMode = .fit, cornerRadius: CGFloat = AppLayout.smallRadius) {
         self.init(reference: reference, owner: owner, loader: PhotoLoader(store: store), contentMode: contentMode, cornerRadius: cornerRadius)
     }
 
-    init(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, contentMode: ContentMode = .fit, cornerRadius: CGFloat = 8) {
+    init(reference: PhotoReference?, owner: DocumentID, loader: PhotoLoader, contentMode: ContentMode = .fit, cornerRadius: CGFloat = AppLayout.smallRadius) {
         self.reference = reference
         self.owner = owner
         self.contentMode = contentMode
