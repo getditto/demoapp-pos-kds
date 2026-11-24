@@ -43,8 +43,8 @@ columns, with a bounded empty state only when the other stage has tickets.
 Use **Mark ready** and **Complete order** to advance tickets; payment is shown
 separately and does not gate the kitchen workflow.
 
-<img src="docs/screenshots/kds/kds-after-ios-phone-light-active.png" width="260" alt="iOS kitchen tickets and stage actions" />
-<img src="docs/screenshots/kds/kds-after-android-phone-light-active.png" width="260" alt="Android kitchen tickets and stage actions" />
+<img src="docs/screenshots/kds/ios-phone.png" width="260" alt="iOS kitchen tickets and stage actions" />
+<img src="docs/screenshots/kds/android-phone.png" width="260" alt="Android kitchen tickets and stage actions" />
 
 ## Data model
 
