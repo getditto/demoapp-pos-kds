@@ -5,7 +5,7 @@ public enum AppLayout {
     public static let gap: CGFloat = 8
     public static let mediumGap: CGFloat = 12
     public static let sectionGap: CGFloat = 24
-    public static let locationGap: CGFloat = 6
+    public static let accessoryGap: CGFloat = 6
     public static let padding: CGFloat = 16
     public static let expandedPadding: CGFloat = 20
     public static let radius: CGFloat = 16

@@ -7,7 +7,7 @@ object AppLayout {
     val gap = 8.dp
     val mediumGap = 12.dp
     val sectionGap = 24.dp
-    val locationGap = 6.dp
+    val accessoryGap = 6.dp
     val padding = 16.dp
     val expandedPadding = 24.dp
     val radius = 16.dp

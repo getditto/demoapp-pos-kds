@@ -27,6 +27,7 @@ import live.ditto.pos.BuildConfig
 import live.ditto.pos.LocalActivity
 import live.ditto.pos.core.domain.usecase.AppConfigurationStateUseCase.AppConfigurationState
 import live.ditto.pos.core.presentation.composables.DemoLocationsList
+import live.ditto.pos.core.presentation.composables.LocationHeader
 import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationBar
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
@@ -34,9 +35,8 @@ import live.ditto.pos.core.presentation.viewmodel.MainViewModel
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 import live.ditto.pos.settings.AppAppearance
-import live.ditto.ui.AppHeader
 import live.ditto.ui.AppIcon
-import live.ditto.ui.AppWindowViewModel
+import live.ditto.ui.AppWindowLayout
 import live.ditto.ui.R
 
 @Composable
@@ -102,7 +102,7 @@ fun PosKdsShell(
                     if (selecting) {
                         IconButton(onClick = { controller.popBackStack() }) { AppIcon(R.drawable.phosphor_arrow_left, description = "Back") }
                     }
-                    AppHeader(title, location = state.currentLocationName, tablet = AppWindowViewModel(LocalConfiguration.current.screenWidthDp.toFloat()).expanded)
+                    LocationHeader(title, location = state.currentLocationName, expanded = AppWindowLayout(LocalConfiguration.current.screenWidthDp.toFloat()).expanded)
                 }
                 if (needsLocation) {
                     if (state.isLoading) {

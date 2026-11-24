@@ -25,18 +25,18 @@ import live.ditto.ui.AppChoiceRow
 import live.ditto.ui.AppLayout
 import live.ditto.ui.AppRow
 import live.ditto.ui.AppSurface
-import live.ditto.ui.AppWindowViewModel
+import live.ditto.ui.AppWindowLayout
 
 @Composable
 fun SettingsScreen(location: String, appearance: AppAppearance, version: String, build: String, sdkVersion: String, onAppearance: (AppAppearance) -> Unit, onLocation: () -> Unit, onTools: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    val viewModel = AppWindowViewModel(LocalConfiguration.current.screenWidthDp.toFloat())
+    val layout = AppWindowLayout(LocalConfiguration.current.screenWidthDp.toFloat())
     BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = viewModel.horizontalPadding, vertical = AppLayout.padding),
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = layout.horizontalPadding, vertical = AppLayout.padding),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(viewModel.sectionSpacing)) {
+            Column(verticalArrangement = Arrangement.spacedBy(layout.sectionSpacing)) {
                 AppRow(location, onClick = onLocation, eyebrow = "Location")
                 AppSurface(Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {

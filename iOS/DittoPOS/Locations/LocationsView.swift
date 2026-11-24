@@ -13,7 +13,7 @@ struct LocationsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader("Select location", location: viewModel.selectedLocation?.name)
+            LocationHeader(title: "Select location", location: viewModel.selectedLocation?.name)
             if viewModel.isLoading {
                 ProgressView("Loading locations…").frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.locations.isEmpty {

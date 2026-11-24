@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct AppWindowViewModel {
+public struct AppWindowLayout {
     public let expanded: Bool
     public let horizontalPadding: CGFloat
     public let sectionSpacing: CGFloat
@@ -17,7 +17,7 @@ public struct AppWindowViewModel {
     }
 }
 
-struct AppHeaderViewModel {
+struct AppHeaderLayout {
     let expanded: Bool
     let horizontalPadding: CGFloat
     let verticalPadding: CGFloat
@@ -26,7 +26,7 @@ struct AppHeaderViewModel {
     let symbolHeight: CGFloat
 
     init(sizeClass: UserInterfaceSizeClass?) {
-        let window = AppWindowViewModel(sizeClass: sizeClass)
+        let window = AppWindowLayout(sizeClass: sizeClass)
         let expanded = window.expanded
         self.expanded = expanded
         horizontalPadding = window.horizontalPadding
@@ -37,7 +37,7 @@ struct AppHeaderViewModel {
     }
 }
 
-struct AppRowViewModel {
+struct AppRowLayout {
     let minimumHeight: CGFloat
     init(eyebrow: String?) {
         minimumHeight = eyebrow != nil ? AppLayout.controlHeight : AppLayout.compactRowHeight

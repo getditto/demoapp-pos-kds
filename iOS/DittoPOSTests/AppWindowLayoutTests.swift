@@ -2,10 +2,10 @@ import AppUI
 import SwiftUI
 import XCTest
 
-final class AppWindowViewModelTests: XCTestCase {
+final class AppWindowLayoutTests: XCTestCase {
     func testWindowChangesSelectTheCurrentLayoutAndKeepShortContentFramesNonnegative() {
         let windows = [UserInterfaceSizeClass.compact, .regular, .compact]
-            .map { AppWindowViewModel(sizeClass: $0) }
+            .map { AppWindowLayout(sizeClass: $0) }
         XCTAssertEqual(windows.map(\.expanded), [false, true, false])
 
         let compact = windows[0]

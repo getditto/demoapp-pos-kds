@@ -22,12 +22,25 @@ public struct AppButtonStyle: ButtonStyle {
     private var background: Color { kind == .primary ? AppColors.accent : kind == .text ? .clear : AppColors.surface }
 }
 
+public enum AppSurfaceStyle {
+    case standard, outlined, compact
+    var cornerRadius: CGFloat { self == .compact ? AppLayout.buttonRadius : AppLayout.radius }
+    var borderColor: Color { self == .outlined ? AppColors.subtleBorder : .clear }
+}
+
 public struct AppSurface<Content: View>: View {
+    private let style: AppSurfaceStyle
+    private let contentPadding: EdgeInsets
     private let content: Content
-    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+    public init(style: AppSurfaceStyle = .standard,
+                contentPadding: EdgeInsets = EdgeInsets(top: AppLayout.padding, leading: AppLayout.padding, bottom: AppLayout.padding, trailing: AppLayout.padding),
+                @ViewBuilder content: () -> Content) {
+        self.style = style; self.contentPadding = contentPadding; self.content = content()
+    }
     public var body: some View {
-        content.padding(AppLayout.padding).frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.radius))
+        content.padding(contentPadding).frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: style.cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: style.cornerRadius).strokeBorder(style.borderColor, lineWidth: AppLayout.borderWidth))
     }
 }
 
@@ -52,7 +65,7 @@ public struct AppRow<Trailing: View>: View {
             Spacer(minLength: AppLayout.gap)
             trailing
         }
-        .frame(minHeight: AppRowViewModel(eyebrow: eyebrow).minimumHeight)
+        .frame(minHeight: AppRowLayout(eyebrow: eyebrow).minimumHeight)
         .padding(AppLayout.padding)
         .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.radius))
         .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(outlined ? AppColors.border : .clear))
@@ -102,33 +115,30 @@ public struct AppField<Content: View>: View {
     }
 }
 
-public struct AppHeader: View {
+public struct AppHeader<Trailing: View>: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @ScaledMetric(relativeTo: .largeTitle) private var titleLineHeight = AppLayout.titleLineHeight
     private let title: String
-    private let location: String?
-    public init(_ title: String, location: String? = nil) { self.title = title; self.location = location }
-    private var viewModel: AppHeaderViewModel { AppHeaderViewModel(sizeClass: sizeClass) }
+    private let trailing: Trailing
+    public init(_ title: String, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title; self.trailing = trailing()
+    }
+    private var layout: AppHeaderLayout { AppHeaderLayout(sizeClass: sizeClass) }
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: AppLayout.padding) {
                 Image("ditto-symbol", bundle: .module).resizable().scaledToFit()
-                    .frame(width: viewModel.symbolWidth, height: viewModel.symbolHeight)
+                    .frame(width: layout.symbolWidth, height: layout.symbolHeight)
                     .accessibilityLabel("Ditto")
-                if viewModel.expanded { titleText }
+                if layout.expanded { titleText }
                 Spacer(minLength: AppLayout.gap)
-                if let location, !location.isEmpty {
-                    HStack(spacing: AppLayout.locationGap) {
-                        AppIcon("map-pin", size: AppLayout.secondaryIconSize)
-                        Text(location).font(AppTypography.footnote)
-                    }.foregroundStyle(AppColors.secondaryText)
-                }
-            }.frame(minHeight: viewModel.height)
-            if !viewModel.expanded { titleText.frame(minHeight: AppLayout.pageTitleHeight, alignment: .leading) }
+                trailing
+            }.frame(minHeight: layout.height)
+            if !layout.expanded { titleText.frame(minHeight: AppLayout.pageTitleHeight, alignment: .leading) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, viewModel.horizontalPadding)
-        .padding(.vertical, viewModel.verticalPadding)
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.verticalPadding)
         .background(AppColors.background)
     }
     private var titleText: some View {
@@ -136,6 +146,10 @@ public struct AppHeader: View {
             .frame(minHeight: titleLineHeight, alignment: .leading)
             .accessibilityAddTraits(.isHeader)
     }
+}
+
+public extension AppHeader where Trailing == EmptyView {
+    init(_ title: String) { self.init(title) { EmptyView() } }
 }
 
 public struct AppEmptyState: View {

@@ -72,10 +72,20 @@ fun AppTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
     ) { Text(text, style = AppTypography.action, textAlign = TextAlign.Center) }
 }
 
+enum class AppSurfaceStyle { STANDARD, OUTLINED, COMPACT }
+
+private val AppSurfaceStyle.cornerRadius: Dp
+    get() = if (this == AppSurfaceStyle.COMPACT) AppLayout.buttonRadius else AppLayout.radius
+
 @Composable
-fun AppSurface(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Surface(modifier, shape = RoundedCornerShape(AppLayout.radius), color = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.padding(AppLayout.padding), content = content)
+fun AppSurface(modifier: Modifier = Modifier, style: AppSurfaceStyle = AppSurfaceStyle.STANDARD, contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(AppLayout.padding), content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier,
+        shape = RoundedCornerShape(style.cornerRadius),
+        color = MaterialTheme.colorScheme.surface,
+        border = if (style == AppSurfaceStyle.OUTLINED) BorderStroke(AppLayout.borderWidth, AppColors.subtleBorder) else null
+    ) {
+        Column(Modifier.padding(contentPadding), content = content)
     }
 }
 
@@ -88,7 +98,7 @@ fun AppRow(title: String, @DrawableRes icon: Int? = null, onClick: () -> Unit, m
         color = MaterialTheme.colorScheme.surface,
         border = if (outlined) BorderStroke(AppLayout.borderWidth, MaterialTheme.colorScheme.outlineVariant) else null
     ) {
-        Row(Modifier.padding(AppLayout.padding).heightIn(min = AppRowViewModel(eyebrow).minimumHeight), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
+        Row(Modifier.padding(AppLayout.padding).heightIn(min = AppRowLayout(eyebrow).minimumHeight), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
             icon?.let { AppIcon(it) }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AppLayout.smallGap)) {
                 eyebrow?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -125,20 +135,15 @@ fun AppChoiceRow(title: String, selected: Boolean, onClick: () -> Unit, modifier
 }
 
 @Composable
-fun AppHeader(title: String, modifier: Modifier = Modifier, location: String = "", tablet: Boolean = false) {
-    val viewModel = AppHeaderViewModel(tablet)
-    Column(modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = viewModel.horizontalPadding, vertical = viewModel.verticalPadding)) {
-        Row(Modifier.fillMaxWidth().heightIn(min = viewModel.height), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.padding)) {
-            Icon(painterResource(R.drawable.ditto_symbol), "Ditto", Modifier.size(viewModel.symbolWidth, viewModel.symbolHeight))
-            if (viewModel.expanded) Text(title, style = AppTypography.pageTitle)
-            if (location.isNotEmpty()) {
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.locationGap, Alignment.End)) {
-                    AppIcon(R.drawable.phosphor_map_pin, size = AppLayout.secondaryIconSize)
-                    Text(location, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+fun AppHeader(title: String, modifier: Modifier = Modifier, expanded: Boolean = false, trailing: @Composable RowScope.() -> Unit = {}) {
+    val layout = AppHeaderLayout(expanded)
+    Column(modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = layout.horizontalPadding, vertical = layout.verticalPadding)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = layout.height), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.padding)) {
+            Icon(painterResource(R.drawable.ditto_symbol), "Ditto", Modifier.size(layout.symbolWidth, layout.symbolHeight))
+            if (layout.expanded) Text(title, style = AppTypography.pageTitle)
+            trailing()
         }
-        if (!viewModel.expanded) {
+        if (!layout.expanded) {
             Box(Modifier.heightIn(min = AppLayout.pageTitleHeight), contentAlignment = Alignment.CenterStart) { Text(title, style = AppTypography.pageTitle) }
         }
     }
