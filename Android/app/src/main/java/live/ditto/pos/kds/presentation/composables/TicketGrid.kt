@@ -1,121 +1,63 @@
 package live.ditto.pos.kds.presentation.composables
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import live.ditto.pos.R
+import kotlinx.coroutines.delay
 import live.ditto.pos.core.data.OrderStatus
+import live.ditto.pos.core.presentation.composables.LocationHeader
+import live.ditto.pos.kds.KitchenBoardViewModel
+import live.ditto.pos.kds.KitchenTicketViewModel
 import live.ditto.pos.kds.TicketItemUi
-import live.ditto.pos.ui.theme.CanceledStatusTicketColor
-import live.ditto.pos.ui.theme.DeliveredStatusTicketColor
-import live.ditto.pos.ui.theme.InProcessStatusTicketColor
-import live.ditto.pos.ui.theme.OpenStatusTicketColor
-import live.ditto.pos.ui.theme.ProcessedStatusTicketColor
+import live.ditto.ui.AppColors
+import live.ditto.ui.AppEmptyState
+import live.ditto.ui.AppLayout
+import live.ditto.ui.AppWell
+import live.ditto.ui.BrandTheme
+import kotlin.time.Clock
 
 @Composable
-fun TicketGrid(
-    ticketItems: List<TicketItemUi>,
-    onTicketClicked: (orderId: String) -> Unit
-) {
-    if (ticketItems.isEmpty()) {
-        EmptyTicketsState()
-        return
-    }
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(200.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
-    ) {
-        items(ticketItems) { ticketItem ->
-            TicketItem(
-                ticketItemUi = ticketItem,
-                onTicketClicked = onTicketClicked
-            )
+fun TicketGrid(ticketItems: List<TicketItemUi>, onAdvance: (orderId: String) -> Unit) {
+    val now by produceState(System.currentTimeMillis()) {
+        while (true) {
+            value = System.currentTimeMillis()
+            delay(DateUtils.MINUTE_IN_MILLIS)
         }
     }
-}
-
-@Composable
-private fun EmptyTicketsState() {
-    live.ditto.ui.AppEmptyState(
-        stringResource(R.string.kds_empty_title),
-        stringResource(R.string.kds_empty_description),
-        live.ditto.ui.R.drawable.phosphor_cooking_pot
-    )
-}
-
-@Composable
-fun TicketItem(
-    ticketItemUi: TicketItemUi,
-    onTicketClicked: (orderId: String) -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        onClick = { onTicketClicked(ticketItemUi.orderId) }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            val ticketColor = when (ticketItemUi.orderStatus) {
-                OrderStatus.OPEN -> OpenStatusTicketColor
-                OrderStatus.IN_PROCESS -> InProcessStatusTicketColor
-                OrderStatus.PROCESSED -> ProcessedStatusTicketColor
-                OrderStatus.DELIVERED -> DeliveredStatusTicketColor
-                OrderStatus.CANCELED -> CanceledStatusTicketColor
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val viewModel = KitchenBoardViewModel(ticketItems, maxWidth.value)
+        Column(Modifier.fillMaxSize().padding(viewModel.contentPadding), verticalArrangement = Arrangement.spacedBy(viewModel.headerSpacing)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = AppLayout.compactRowHeight), horizontalArrangement = if (viewModel.expanded) Arrangement.spacedBy(AppLayout.sectionGap) else Arrangement.SpaceBetween) {
+                StageCount(viewModel.countTitle("Preparing", viewModel.preparing.size), viewModel, Modifier.then(if (viewModel.expanded) Modifier.weight(1f) else Modifier))
+                StageCount(viewModel.countTitle("Ready", viewModel.ready.size), viewModel, Modifier.then(if (viewModel.expanded) Modifier.weight(1f) else Modifier), ready = true)
             }
-            TicketHeader(
-                headerText = stringResource(
-                    R.string.kds_ticket_header,
-                    ticketItemUi.time,
-                    ticketItemUi.shortOrderId
-                ),
-                ticketColor = ticketColor
-            )
-            TicketItems(ticketItemUi.items)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(28.dp)
-                    .background(color = ticketColor)
-            ) {
-                if (ticketItemUi.isPaid) {
-                    val icon = Icons.Outlined.CheckCircle
-                    Image(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .align(Alignment.CenterEnd),
-                        imageVector = icon,
-                        contentDescription = stringResource(R.string.ticket_paid_description)
-                    )
+            if (viewModel.isEmpty) {
+                AppEmptyState("No active orders", "Orders with items appear here.", live.ditto.ui.R.drawable.phosphor_check_circle, style = live.ditto.ui.AppEmptyStateStyle.SUCCESS)
+            } else if (viewModel.expanded) {
+                Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(AppLayout.sectionGap)) {
+                    StageColumn(viewModel.preparing, viewModel.showPreparingWell, "No orders preparing", now, onAdvance, Modifier.weight(1f))
+                    StageColumn(viewModel.ready, viewModel.showReadyWell, "No orders ready", now, onAdvance, Modifier.weight(1f))
+                }
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
+                    items(viewModel.phoneTickets, key = { it.orderId }) { ticket -> TicketItem(ticket, now, onAdvance) }
                 }
             }
         }
@@ -123,102 +65,35 @@ fun TicketItem(
 }
 
 @Composable
-private fun TicketItems(itemsMap: HashMap<String, Int>) {
-    Column(modifier = Modifier.padding(4.dp)) {
-        itemsMap.keys.forEachIndexed { index, name ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = name,
-                    textAlign = TextAlign.Left
-                )
-                Text(
-                    text = itemsMap[name].toString(),
-                    textAlign = TextAlign.Right
-                )
-            }
-            if (index != itemsMap.keys.size - 1) {
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+private fun StageCount(title: String, viewModel: KitchenBoardViewModel, modifier: Modifier = Modifier, ready: Boolean = false) {
+    Text(title, modifier.semantics { heading() }, style = viewModel.headerStyle, color = if (ready) AppColors.success else MaterialTheme.colorScheme.onSurface)
+}
+
+@Composable
+private fun StageColumn(tickets: List<TicketItemUi>, showWell: Boolean, emptyMessage: String, now: Long, onAdvance: (String) -> Unit, modifier: Modifier) {
+    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
+        if (showWell) {
+            item { AppWell { Text(emptyMessage, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+        } else {
+            items(tickets, key = { it.orderId }) { ticket -> TicketItem(ticket, now, onAdvance) }
         }
     }
 }
 
 @Composable
-private fun TicketHeader(
-    headerText: String,
-    ticketColor: Color
-) {
-    Box(modifier = Modifier.background(color = ticketColor)) {
-        Text(
-            text = headerText,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            textAlign = TextAlign.Center
-        )
+private fun TicketItem(ticket: TicketItemUi, now: Long, onAdvance: (String) -> Unit) {
+    val viewModel = KitchenTicketViewModel(ticket, now)
+    KitchenTicketCard(viewModel, onAdvance = { onAdvance(ticket.orderId) })
+}
+
+@Preview(widthDp = 1024, heightDp = 748)
+@Preview(widthDp = 393, heightDp = 800)
+@Composable
+private fun KitchenPreview() {
+    BrandTheme {
+        Column {
+            LocationHeader("Kitchen display", location = "Ham's Burgers", expanded = false)
+            TicketGrid(listOf(TicketItemUi(Clock.System.now(), "1042ABCD", hashMapOf("Burger" to 2, "Coffee" to 1), false, OrderStatus.IN_PROCESS, "1042ABCD"))) {}
+        }
     }
-}
-
-private val previewTickets = listOf(
-    TicketItemUi(
-        time = "9:59 AM",
-        shortOrderId = "e893j3",
-        items = hashMapOf("Burger" to 1, "Coffee" to 1, "Milk" to 3),
-        isPaid = true,
-        orderStatus = OrderStatus.PROCESSED,
-        orderId = ""
-    ),
-    TicketItemUi(
-        time = "4:29 PM",
-        shortOrderId = "08n3iuo48",
-        items = hashMapOf("Fruit Salad" to 2, "Coffee" to 1, "Corn" to 1),
-        isPaid = false,
-        orderStatus = OrderStatus.IN_PROCESS,
-        orderId = ""
-    )
-)
-
-@Preview
-@Composable
-private fun TicketItemsPreview() {
-    TicketItems(itemsMap = previewTickets.first().items)
-}
-
-@Preview
-@Composable
-private fun TicketHeaderPreview() {
-    TicketHeader(headerText = "Header Text", OpenStatusTicketColor)
-}
-
-@Preview
-@Composable
-private fun TicketItemPreview() {
-    TicketItem(
-        ticketItemUi = previewTickets.first(),
-        onTicketClicked = {}
-    )
-}
-
-@Preview
-@Composable
-private fun TicketGridPreview() {
-    TicketGrid(
-        ticketItems = previewTickets,
-        onTicketClicked = {}
-    )
-}
-
-@Preview
-@Composable
-private fun EmptyTicketGridPreview() {
-    TicketGrid(
-        ticketItems = emptyList(),
-        onTicketClicked = {}
-    )
 }

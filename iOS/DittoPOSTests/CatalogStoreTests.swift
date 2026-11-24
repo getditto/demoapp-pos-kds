@@ -6,7 +6,7 @@ import XCTest
     func testCatalogCommandsPreserveStockAndMetadataByLocation() async throws {
         try await TestDitto.withInstance { ditto in
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            let id = DocumentID(id: "coffee-'\"冰", locationId: "A")
+            let id = DocumentID(id: "coffee-'\"iced", locationId: "A")
             let other = DocumentID(id: id.id, locationId: "B")
             let metadata = SaleItemMetadata(documentId: id, name: "Coffee", imageName: "coffee", price: Price(cents: 199))
             try await repository.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
@@ -14,7 +14,7 @@ import XCTest
                 metadata: SaleItemMetadata(documentId: other, name: "Other", imageName: "coffee", price: Price(cents: 250)),
                 initialQuantity: 7))
             try await repository.increment(-3, id: id)
-            let replacement = SaleItemMetadata(documentId: id, name: "Renamed \"冰\"", imageName: "milk", price: Price(cents: 0))
+            let replacement = SaleItemMetadata(documentId: id, name: "Renamed \"iced\"", imageName: "milk", price: Price(cents: 0))
             try await repository.updateMetadata(replacement)
             let edited = try await read(id, from: ditto)
             XCTAssertEqual(edited.quantity, -1)

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -28,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -150,12 +152,14 @@ fun AppHeader(title: String, modifier: Modifier = Modifier, expanded: Boolean = 
 }
 
 @Composable
-fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier) {
+fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, style: AppEmptyStateStyle = AppEmptyStateStyle.STANDARD) {
     Box(modifier.fillMaxSize().padding(AppLayout.sectionGap), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
-            AppIcon(icon, size = AppLayout.emptyIconSize)
-            Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-            Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(style.spacing)) {
+            CompositionLocalProvider(LocalContentColor provides style.iconColor) {
+                AppIcon(icon, size = style.iconSize)
+            }
+            Text(title, style = style.titleStyle, textAlign = TextAlign.Center)
+            Text(message, style = style.messageStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }
@@ -165,8 +169,7 @@ fun AppWell(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
         modifier.heightIn(min = AppLayout.wellHeight),
         shape = RoundedCornerShape(AppLayout.radius),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(AppLayout.borderWidth, MaterialTheme.colorScheme.outlineVariant),
-        content = content
-    )
+        color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(AppLayout.borderWidth, AppColors.subtleBorder)
+    ) { Box(Modifier.fillMaxWidth().padding(AppLayout.sectionGap), contentAlignment = Alignment.Center) { content() } }
 }

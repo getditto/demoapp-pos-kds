@@ -1,11 +1,15 @@
-import Foundation
-
 enum KitchenOrders {
-    static func select(from orders: [Order]) -> [Order] {
-        orders.filter { ($0.status == .inProcess || $0.status == .processed) && !$0.cart.isEmpty }
-            .sorted { lhs, rhs in
-                if lhs.status == rhs.status { return lhs.createdAt > rhs.createdAt }
-                return lhs.status.rank < rhs.status.rank
-            }
+    static let query = """
+        SELECT * FROM \(Order.collectionName)
+        WHERE _id.locationId = :locationId
+            AND object_length(cart) > 0
+        ORDER BY createdAt DESC
+        """
+
+    static func active(from orders: [Order]) -> [Order] {
+        orders.filter {
+            let status = $0.status
+            return status == .inProcess || status == .processed
+        }
     }
 }

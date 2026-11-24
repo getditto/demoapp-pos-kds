@@ -156,12 +156,15 @@ public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    public init(_ title: String, message: String, icon: String) { self.title = title; self.message = message; self.icon = icon }
+    private let style: AppEmptyStateStyle
+    public init(_ title: String, message: String, icon: String, style: AppEmptyStateStyle = .standard) {
+        self.title = title; self.message = message; self.icon = icon; self.style = style
+    }
     public var body: some View {
-        VStack(spacing: AppLayout.mediumGap) {
-            AppIcon(icon, size: AppLayout.emptyIconSize).foregroundStyle(AppColors.secondaryText)
-            Text(title).font(AppTypography.heading)
-            Text(message).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+        VStack(spacing: style.spacing) {
+            AppIcon(icon, size: style.iconSize).foregroundStyle(style.iconColor)
+            Text(title).font(style.titleFont)
+            Text(message).font(style.messageFont).foregroundStyle(AppColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(AppLayout.sectionGap)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -172,8 +175,8 @@ public struct AppWell<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.frame(maxWidth: .infinity, minHeight: AppLayout.wellHeight)
-            .background(AppColors.disabled.opacity(0.4), in: RoundedRectangle(cornerRadius: AppLayout.radius))
-            .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.border, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+        content.padding(AppLayout.sectionGap).frame(maxWidth: .infinity, minHeight: AppLayout.wellHeight)
+            .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppLayout.radius))
+            .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.subtleBorder))
     }
 }

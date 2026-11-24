@@ -23,6 +23,7 @@ import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.decodeOrSkip
 import live.ditto.pos.core.data.dittoJsonString
 import live.ditto.pos.core.data.observeAsFlow
+import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.orders.OrderEviction
 import live.ditto.pos.core.data.orders.cartPathsForUnset
@@ -88,14 +89,11 @@ class OrdersRepository internal constructor(
         )
     }
 
-    fun observeLocationOrders(locationId: String): Flow<List<Order>> =
-        ditto.store.observeAsFlow(
-            query = """
-                SELECT * FROM ${Order.COLLECTION_NAME}
-                WHERE _id.locationId = :locationId
-            """.trimIndent(),
+    fun observeKitchenOrders(locationId: String): Flow<List<Order>> =
+        ditto.store.observeAsFlow<Order>(
+            query = KitchenOrders.query,
             args = mapOf("locationId" to locationId)
-        )
+        ).map(KitchenOrders::active)
 
     suspend fun upsert(order: Order) {
         ditto.store.execute(

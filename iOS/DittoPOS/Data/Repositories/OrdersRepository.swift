@@ -65,15 +65,14 @@ import Foundation
         )
     }
 
-    func observeLocationOrders(_ locationId: String) -> AnyPublisher<[Order], Never> {
+    func observeKitchenOrders(_ locationId: String) -> AnyPublisher<[Order], Never> {
         store.observePublisher(
-            query: """
-                SELECT * FROM \(Order.collectionName)
-                WHERE _id.locationId = :locationId
-                """,
+            query: KitchenOrders.query,
             arguments: ["locationId": locationId],
             mapTo: Order.self
         )
+        .map(KitchenOrders.active)
+        .eraseToAnyPublisher()
     }
 
     // MARK: Selected POS order observation

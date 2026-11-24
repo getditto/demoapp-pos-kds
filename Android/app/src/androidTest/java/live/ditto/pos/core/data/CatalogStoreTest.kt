@@ -22,13 +22,13 @@ class CatalogStoreTest {
     fun catalogCommandsPreserveStockAndMetadataByLocation() = runBlocking {
         TestDitto.withInstance {
             val repository = catalog()
-            val id = DocumentID("coffee-'\"冰", "A")
+            val id = DocumentID("coffee-'\"iced", "A")
             val other = id.copy(locationId = "B")
             val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
             repository.create(SaleItemCreation(metadata, 2))
             repository.create(SaleItemCreation(metadata.copy(documentId = other, name = "Other", price = Price(250)), 7))
             repository.increment(-3, id)
-            val replacement = metadata.copy(name = "Renamed \"冰\"", imageName = "milk", price = Price(0))
+            val replacement = metadata.copy(name = "Renamed \"iced\"", imageName = "milk", price = Price(0))
             repository.updateMetadata(replacement)
             val edited = readItem(id)
             assertEquals(-1L, edited.quantity)

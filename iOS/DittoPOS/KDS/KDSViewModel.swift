@@ -5,6 +5,8 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
+import AppUI
+import SwiftUI
 import Combine
 import DittoSwift
 import Foundation
@@ -48,9 +50,69 @@ import Foundation
     }
 
     private func updateObservation() {
-        observation.set(isVisible ? locationId : nil, observe: ordersRepository.observeLocationOrders) { [weak self] orders in
-            self?.orders = KitchenOrders.select(from: orders)
+        observation.set(isVisible ? locationId : nil, observe: ordersRepository.observeKitchenOrders) { [weak self] orders in
+            self?.orders = orders
             self?.isLoading = false
         }
     }
+}
+
+struct KitchenBoardViewModel {
+    static let relativeTimeRefreshInterval: TimeInterval = 60
+    let preparing: [Order]
+    let ready: [Order]
+    let expanded: Bool
+    let contentPadding: CGFloat
+    let headerSpacing: CGFloat
+    var phoneOrders: [Order] { preparing + ready }
+    var isEmpty: Bool { preparing.isEmpty && ready.isEmpty }
+    var showPreparingWell: Bool { expanded && !isEmpty && preparing.isEmpty }
+    var showReadyWell: Bool { expanded && !isEmpty && ready.isEmpty }
+    var headerFont: Font { expanded ? AppTypography.title : AppTypography.body.weight(.medium) }
+
+    init(orders: [Order], sizeClass: UserInterfaceSizeClass?) {
+        preparing = orders.filter { $0.status == .inProcess }
+        ready = orders.filter { $0.status == .processed }
+        expanded = AppWindowLayout(sizeClass: sizeClass).expanded
+        contentPadding = expanded ? AppLayout.sectionGap : AppLayout.padding
+        headerSpacing = expanded ? AppLayout.padding : AppLayout.mediumGap
+    }
+
+    func countTitle(_ title: String, count: Int) -> String {
+        expanded ? "\(title) · \(count)" : "\(title) \(count)"
+    }
+}
+
+@MainActor struct KitchenTicketViewModel {
+    let title: String
+    let lines: [String]
+    let elapsed: String
+    let paymentTitle: String
+    let paymentColor: Color
+    let stageTitle: String
+    let stageColor: Color
+    let actionTitle: String
+    let actionLabel: String
+    let actionKind: AppButtonStyle.Kind
+
+    init(order: Order, now: Date) {
+        title = "#\(order.title)"
+        lines = order.summary.sorted(by: { $0.key < $1.key }).map { "\($0.value) × \($0.key)" }
+        elapsed = Self.elapsedFormatter.localizedString(for: order.createdAt, relativeTo: now)
+        let paid = order.isPaid
+        let ready = order.status == .processed
+        paymentTitle = paid ? "Paid" : "Unpaid"
+        paymentColor = paid ? AppColors.success : AppColors.secondaryText
+        stageTitle = ready ? "Ready" : "Preparing"
+        stageColor = ready ? AppColors.success : AppColors.brandText
+        actionTitle = ready ? "Complete order" : "Mark ready"
+        actionLabel = "\(actionTitle), \(title)"
+        actionKind = ready ? .secondary : .primary
+    }
+
+    private static let elapsedFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
 }
