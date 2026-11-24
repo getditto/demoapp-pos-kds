@@ -5,6 +5,7 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
+import AppUI
 import Combine
 import DittoSwift
 import SwiftUI
@@ -163,5 +164,18 @@ import SwiftUI
             selectedOrderId = order.documentId
             updateObservations()
         }
+    }
+}
+
+struct POSGridViewModel {
+    private static let compactItemSide: CGFloat = 100
+    private static let expandedItemSide: CGFloat = 160
+    let itemSide: CGFloat
+    let itemHeight: CGFloat
+    var columns: [GridItem] { [GridItem(.adaptive(minimum: itemSide), alignment: .top)] }
+
+    init(sizeClass: UserInterfaceSizeClass?) {
+        itemSide = sizeClass == .compact ? Self.compactItemSide : Self.expandedItemSide
+        itemHeight = itemSide + AppLayout.gap
     }
 }

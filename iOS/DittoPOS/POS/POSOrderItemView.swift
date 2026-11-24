@@ -26,7 +26,7 @@ struct POSOrderItemView: View, Identifiable {
             }
             HStack {
                 photo
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: AppLayout.smallGap) {
                     Text(item.name)
                     Text(item.price.description).fixedSize()
                 }
@@ -38,6 +38,6 @@ struct POSOrderItemView: View, Identifiable {
 
     private var photo: some View {
         OrderLinePhotoView(line: item, orderID: orderID, store: store)
-            .frame(width: 40, height: 40)
+            .frame(width: AppLayout.thumbnailSize, height: AppLayout.thumbnailSize)
     }
 }

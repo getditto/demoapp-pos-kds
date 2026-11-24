@@ -9,16 +9,6 @@
 import Combine
 import SwiftUI
 
-enum POSGridLayout {
-    static func itemSide(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
-        sizeClass == .compact ? 100 : 160
-    }
-
-    static func gridColumns(for sizeClass: UserInterfaceSizeClass?) -> [GridItem] {
-        [GridItem(.adaptive(minimum: itemSide(for: sizeClass)), alignment: .top)]
-    }
-}
-
 struct POSView: View {
     @StateObject private var viewModel: POSViewModel
     let isActive: Bool

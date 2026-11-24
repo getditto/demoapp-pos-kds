@@ -19,11 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.ditto.kotlin.DittoStore
 import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.presentation.images.ProductPhoto
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.ui.AppLayout
 import live.ditto.ui.AppPhoto
 
 @Composable
@@ -56,7 +56,7 @@ fun LazyGridItemScope.SaleItem(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier
-                .padding(8.dp)
+                .padding(AppLayout.gap)
                 .fillMaxWidth()
         )
     }
@@ -71,7 +71,7 @@ private fun SaleItemPreview() {
             label = "Tasty Burger"
         )
     )
-    LazyVerticalGrid(columns = GridCells.Adaptive(120.dp)) {
+    LazyVerticalGrid(columns = GridCells.Adaptive(AppLayout.productMinimumWidth)) {
         items(saleItems) { saleItem ->
             SaleItem(
                 saleItemUiModel = saleItem,

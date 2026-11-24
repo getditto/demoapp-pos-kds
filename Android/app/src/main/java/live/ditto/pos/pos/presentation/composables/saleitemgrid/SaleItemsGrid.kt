@@ -7,9 +7,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.ditto.kotlin.DittoStore
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.ui.AppLayout
 
 @Composable
 fun SaleItemsGrid(
@@ -18,10 +18,10 @@ fun SaleItemsGrid(
     photoStore: DittoStore? = null
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(120.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
+        columns = GridCells.Adaptive(AppLayout.productMinimumWidth),
+        horizontalArrangement = Arrangement.spacedBy(AppLayout.gap),
+        verticalArrangement = Arrangement.spacedBy(AppLayout.gap),
+        contentPadding = PaddingValues(AppLayout.gap)
     ) {
         items(saleItems, key = { it.id }) { saleItem ->
             SaleItem(

@@ -17,10 +17,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.ditto.kotlin.DittoStore
 import live.ditto.pos.core.presentation.images.OrderLinePhoto
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
+import live.ditto.ui.AppLayout
 import live.ditto.ui.AppPhoto
 
 @Composable
@@ -51,13 +51,13 @@ fun ColumnScope.OrderItemsList(
 fun OrderItem(orderItem: OrderItemUiModel, photoStore: DittoStore? = null) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(AppLayout.gap),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (photoStore != null && orderItem.line != null && orderItem.orderId != null) {
-            OrderLinePhoto(orderItem.line, orderItem.orderId, photoStore, Modifier.size(40.dp))
+            OrderLinePhoto(orderItem.line, orderItem.orderId, photoStore, Modifier.size(AppLayout.thumbnailSize))
         } else {
-            AppPhoto(null, Modifier.size(40.dp))
+            AppPhoto(null, Modifier.size(AppLayout.thumbnailSize))
         }
         Text(text = orderItem.name, modifier = Modifier.weight(1f))
         Text(text = orderItem.price)
