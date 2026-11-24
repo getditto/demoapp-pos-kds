@@ -107,6 +107,7 @@ import Foundation
 
     private func observeOrders(query: String, arguments: [String: Any?]) -> AnyPublisher<[Order], Never> {
         store.observePublisher(query: query, arguments: arguments, mapTo: Order.self)
+
     }
 
     // MARK: Mutations

@@ -28,13 +28,25 @@ struct DemoSeeder {
     }
 
     func seedSaleItems() async {
-        await bulkInitialInsert(
-            into: SaleItemCommands.creationCollection,
-            documents: SaleItemSeed.saleItemsForAllLocations().map {
-                SaleItemCreation(metadata: $0.metadata, initialQuantity: SaleItemSeed.initialQuantity)
-            }
-        )
-        try! await SeedStockMigration.upgradeAll(store: store)
+        for item in SaleItemSeed.saleItemsForAllLocations() {
+            let photo = try! await store.newAttachment(
+                path: StockPhotos.url(for: item.documentId.id).path,
+                metadata: ["mime_type": "image/png"]
+            )
+            _ = try! await store.execute(
+                query: """
+                    INSERT INTO COLLECTION \(SaleItem.collectionName) (quantity COUNTER, image ATTACHMENT)
+                    INITIAL DOCUMENTS (:item)
+                    """,
+                arguments: ["item": [
+                    "_id": ["id": item.documentId.id, "locationId": item.documentId.locationId],
+                    "name": item.name,
+                    "price": ["amount": item.price.amount, "currency": item.price.currency.rawValue],
+                    "quantity": item.quantity,
+                    "image": photo
+                ]]
+            )
+        }
     }
 
     private func bulkInitialInsert<T: Encodable>(

@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.ditto.kotlin.DittoStore
 import live.ditto.pos.R
 import live.ditto.pos.pos.presentation.uimodel.OrderItemUiModel
 
@@ -18,7 +19,8 @@ fun CurrentOrder(
     orderItems: List<OrderItemUiModel>,
     orderTotal: String,
     onPayButtonClicked: () -> Unit,
-    onCancelButtonClicked: () -> Unit
+    onCancelButtonClicked: () -> Unit,
+    photoStore: DittoStore? = null
 ) {
     Column(
         modifier = Modifier
@@ -28,7 +30,8 @@ fun CurrentOrder(
         Text(text = stringResource(R.string.current_order_id, orderTitle))
         HorizontalDivider()
         OrderItemsList(
-            orderItems = orderItems
+            orderItems = orderItems,
+            photoStore = photoStore
         )
         CheckoutSection(
             orderTotal = orderTotal,

@@ -8,24 +8,27 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import live.ditto.pos.R
+import com.ditto.kotlin.DittoStore
 import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.ui.AppLayout
 
 @Composable
 fun SaleItemsGrid(
     saleItems: List<SaleItemUiModel>,
-    onSaleItemClicked: (SaleItemUiModel) -> Unit
+    onSaleItemClicked: (SaleItemUiModel) -> Unit,
+    photoStore: DittoStore? = null
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(120.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
+        columns = GridCells.Adaptive(SaleItemsGridLayout.minimumItemWidth),
+        horizontalArrangement = Arrangement.spacedBy(AppLayout.gap),
+        verticalArrangement = Arrangement.spacedBy(AppLayout.gap),
+        contentPadding = PaddingValues(AppLayout.gap)
     ) {
-        items(saleItems) { saleItem ->
+        items(saleItems, key = { it.id }) { saleItem ->
             SaleItem(
                 saleItemUiModel = saleItem,
-                onClick = { onSaleItemClicked(saleItem) }
+                onClick = { onSaleItemClicked(saleItem) },
+                photoStore = photoStore
             )
         }
     }
@@ -39,7 +42,6 @@ private fun SaleItemsGridPreview() {
             add(
                 SaleItemUiModel(
                     id = "$it",
-                    imageResource = R.drawable.burrito,
                     label = "Burrito #${it + 1}"
                 )
             )
@@ -49,4 +51,8 @@ private fun SaleItemsGridPreview() {
         saleItems = saleItemsPreviewData,
         onSaleItemClicked = { }
     )
+}
+
+internal object SaleItemsGridLayout {
+    val minimumItemWidth = 120.dp
 }

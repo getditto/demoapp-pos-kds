@@ -12,7 +12,7 @@ import XCTest
                 try await repository.add(order: Order(documentId: DocumentID(id: "paid", locationId: "other-\(index)"), cart: fixture.cart, payments: fixture.payments, statusLog: fixture.statusLog, createdAt: .distantFuture))
             }
             for id in ["zero-unpaid", "paid"] {
-                let cart = fixture.cart.mapValues { CartLineItem(saleItemId: $0.saleItemId, name: $0.name, imageName: $0.imageName, price: Price(cents: 0), qty: $0.qty, createdAt: $0.createdAt) }
+                let cart = fixture.cart.mapValues { CartLineItem(saleItemId: $0.saleItemId, name: $0.name, price: Price(cents: 0), qty: $0.qty, createdAt: $0.createdAt, image: $0.image) }
                 try await repository.add(order: Order(documentId: DocumentID(id: id, locationId: "A"), cart: cart, payments: id == "paid" ? fixture.payments : [:], statusLog: fixture.statusLog, createdAt: fixture.createdAt))
             }
             let page = try await ditto.store.execute(query: OrdersHistoryQuery.page, arguments: ["locationId": "A", "offset": 0])
@@ -35,8 +35,8 @@ import XCTest
             func order(_ index: Int, location: String = "A", empty: Bool = false) -> Order {
                 Order(documentId: DocumentID(id: String(format: "%08d", index), locationId: location),
                       cart: empty ? [:] : fixture.cart.mapValues { line in
-                          CartLineItem(saleItemId: line.saleItemId, name: line.name, imageName: line.imageName,
-                                       price: index == 0 ? Price(cents: 0) : line.price, qty: line.qty, createdAt: line.createdAt)
+                          CartLineItem(saleItemId: line.saleItemId, name: line.name,
+                                       price: index == 0 ? Price(cents: 0) : line.price, qty: line.qty, createdAt: line.createdAt, image: line.image)
                       }, payments: index % 2 == 0 ? fixture.payments : [:],
                       statusLog: fixture.statusLog, createdAt: (index < 50 ? old : current).addingTimeInterval(TimeInterval(index)))
             }

@@ -9,7 +9,7 @@ import XCTest
         try await TestDitto.withInstance { ditto in
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
             let id = DocumentID(id: "coffee", locationId: "A")
-            let metadata = SaleItemMetadata(documentId: id, name: "Original", imageName: "coffee", price: Price(cents: 199))
+            let metadata = SaleItemMetadata(documentId: id, name: "Original", price: Price(cents: 199))
             try await catalog.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
             let originalAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red), mimeType: "image/png", store: ditto.store)
             let replacementAttachment = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.blue), mimeType: "image/png", store: ditto.store)
@@ -24,7 +24,7 @@ import XCTest
             XCTAssertNil(saved.cart["no-photo"]?.image)
             order = saved
 
-            try await catalog.updateMetadata(SaleItemMetadata(documentId: id, name: "Renamed", imageName: "milk", price: Price(cents: 250)))
+            try await catalog.updateMetadata(SaleItemMetadata(documentId: id, name: "Renamed", price: Price(cents: 250)))
             try await PhotoAttachments.replace(replacementAttachment, for: id, executor: ditto.store)
             try await catalog.increment(-4, id: id)
             let current = try await sale(id, store: ditto.store)
@@ -60,14 +60,14 @@ import XCTest
             let data = try PhotoTestImages.stockPhoto
             let attachment = try await PhotoAttachments.importPhoto(data, mimeType: "image/png", store: ditto.store)
             let old = try XCTUnwrap(order.cart.values.first)
-            let line = CartLineItem(saleItemId: old.saleItemId, name: old.name, imageName: old.imageName, price: old.price, qty: old.qty, createdAt: old.createdAt, image: PhotoAttachments.reference(to: attachment))
+            let line = CartLineItem(saleItemId: old.saleItemId, name: old.name, price: old.price, qty: old.qty, createdAt: old.createdAt, image: PhotoAttachments.reference(to: attachment))
             order.cart = ["line`photo": line]
             let other = Order(documentId: DocumentID(id: order.documentId.id, locationId: "B"), cart: order.cart, payments: order.payments, statusLog: order.statusLog, createdAt: order.createdAt)
             try await OrderCommands.upsert(order, store: ditto.store)
             try await OrderCommands.upsert(other, store: ditto.store)
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
             let saleID = DocumentID(id: line.saleItemId, locationId: order.documentId.locationId)
-            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: saleID, name: line.name, imageName: "coffee", price: line.price), initialQuantity: 1))
+            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: saleID, name: line.name, price: line.price), initialQuantity: 1))
             try await PhotoAttachments.replace(attachment, for: saleID, executor: ditto.store)
             let payment = Payment(type: .cash, amount: order.total, createdAt: order.createdAt)
             let date = order.createdAt.addingTimeInterval(100)
@@ -77,7 +77,7 @@ import XCTest
             XCTAssertEqual(paid, order.addingPayment(payment, paymentId: "payment`new").appendingStatus(.processed, at: date))
             let unchanged = try await read(other.documentId, store: ditto.store)
             XCTAssertEqual(unchanged, other)
-            try await ditto.store.execute(query: "DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": saleID.id, "locationId": saleID.locationId])
+            try await ditto.store.execute(query: "DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": saleID.id, "locationId": saleID.locationId])
             let historical = try await read(order.documentId, store: ditto.store)
             XCTAssertEqual(historical, paid)
             // Historical lines render from their own references without originalAttachment catalog document.
@@ -116,7 +116,6 @@ import XCTest
                 try await OrderCommands.upsert(order, store: receiver.store)
                 let received = try await read(order.documentId, store: receiver.store)
                 XCTAssertEqual(received.cart["line"]?.image, reference)
-                XCTAssertNil(received.cart["line"]?.imageName)
                 XCTAssertFalse(try order.dittoJSONString().contains("imageName"))
                 XCTAssertTrue(receiver.store.attachmentFetchers.isEmpty)
                 let loader = PhotoLoader(store: receiver.store)
@@ -139,7 +138,7 @@ import XCTest
         try await TestDitto.withInstance { ditto in
             let id = DocumentID(id: "coffee", locationId: "A")
             let catalog = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: id, name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 1))
+            try await catalog.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: id, name: "Coffee", price: Price(cents: 199)), initialQuantity: 1))
             let red = try await PhotoAttachments.importPhoto(PhotoTestImages.png(.red, width: 63, height: 63), mimeType: "image/png", store: ditto.store)
             try await PhotoAttachments.replace(red, for: id, executor: ditto.store)
             let order = Order.new(locationId: "A").addingCartLineItem(CartLineItem(from: try await sale(id, store: ditto.store)), lineItemId: "line")
@@ -175,13 +174,13 @@ import XCTest
     }
 
     private func read(_ id: DocumentID, store: DittoStore) async throws -> Order {
-        let result = try await store.execute(query: "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+        let result = try await store.execute(query: "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
         let orders: [Order] = try result.decode()
         return try XCTUnwrap(orders.first)
     }
 
     private func sale(_ id: DocumentID, store: DittoStore) async throws -> SaleItem {
-        let result = try await store.execute(query: "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+        let result = try await store.execute(query: "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
         let items: [SaleItem] = try result.decode()
         return try XCTUnwrap(items.first)
     }

@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import live.ditto.pos.R
 import live.ditto.ui.AppButton
 import live.ditto.ui.AppLayout
@@ -19,8 +18,8 @@ import live.ditto.ui.AppTextButton
 
 @Composable
 fun CheckoutSection(orderTotal: String, isPayButtonEnabled: Boolean, onPayButtonClicked: () -> Unit, onCancelButtonClicked: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(AppLayout.padding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        FlowRow(Modifier.fillMaxWidth().heightIn(min = 40.dp), horizontalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
+    Column(Modifier.fillMaxWidth().padding(AppLayout.padding), verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
+        FlowRow(Modifier.fillMaxWidth().heightIn(min = AppLayout.contentRowHeight), horizontalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
             Text(stringResource(R.string.label_total))
             Text(orderTotal, Modifier.weight(1f), textAlign = TextAlign.End)
         }

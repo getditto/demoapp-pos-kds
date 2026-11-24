@@ -30,9 +30,9 @@ class PhotoAttachmentsTest {
             val id = DocumentID("coffee'iced", "A")
             val other = id.copy(locationId = "B")
             val repository = catalog()
-            val metadata = SaleItemMetadata(id, "Coffee", "coffee", Price(199))
+            val metadata = SaleItemMetadata(id, "Coffee", Price(199))
             repository.create(SaleItemCreation(metadata, 2))
-            repository.create(SaleItemCreation(SaleItemMetadata(other, "Other", "milk", Price(250)), 7))
+            repository.create(SaleItemCreation(SaleItemMetadata(other, "Other", Price(250)), 7))
             repository.increment(-4, id)
 
             val stockPhotoData = PhotoTestImages.stockPhoto
@@ -73,7 +73,7 @@ class PhotoAttachmentsTest {
                             assertNull(removed.image)
                             assertEquals(renamed, removed.metadata)
                             assertEquals(-2L, removed.quantity)
-                            ditto.store.execute("SELECT image FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to id.id, "locationId" to id.locationId)) {
+                            ditto.store.execute("SELECT image FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to id.id, "locationId" to id.locationId)) {
                                 assertFalse(it.items.single().value.dictionary.keys.any { key -> key.string == "image" })
                             }
                         } finally {
@@ -86,7 +86,7 @@ class PhotoAttachmentsTest {
     }
 
     private suspend fun TestDitto.readItem(id: DocumentID): SaleItem = ditto.store.execute(
-        "SELECT * FROM COLLECTION sale_items (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM COLLECTION sale_items_v2 (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decodeOrSkip<SaleItem>().single() }
 }

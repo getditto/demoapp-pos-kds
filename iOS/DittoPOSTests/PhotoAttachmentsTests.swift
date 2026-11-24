@@ -10,9 +10,9 @@ import XCTest
             let id = DocumentID(id: "coffee'iced", locationId: "A")
             let other = DocumentID(id: id.id, locationId: "B")
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            let metadata = SaleItemMetadata(documentId: id, name: "Coffee", imageName: "coffee", price: Price(cents: 199))
+            let metadata = SaleItemMetadata(documentId: id, name: "Coffee", price: Price(cents: 199))
             try await repository.create(SaleItemCreation(metadata: metadata, initialQuantity: 2))
-            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: other, name: "Other", imageName: "milk", price: Price(cents: 250)), initialQuantity: 7))
+            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: other, name: "Other", price: Price(cents: 250)), initialQuantity: 7))
             try await repository.increment(-4, id: id)
 
             let stockPhotoData = try PhotoTestImages.stockPhoto
@@ -37,7 +37,7 @@ import XCTest
             XCTAssertNil(foreign.image)
             XCTAssertEqual(foreign.quantity, 7)
 
-            let renamed = SaleItemMetadata(documentId: id, name: "Renamed", imageName: "coffee", price: Price(cents: 0))
+            let renamed = SaleItemMetadata(documentId: id, name: "Renamed", price: Price(cents: 0))
             try await repository.updateMetadata(renamed)
             let updated = try await read(id, store: ditto.store)
             XCTAssertEqual(updated.image, photo.image)
@@ -52,13 +52,13 @@ import XCTest
             XCTAssertNil(removed.image)
             XCTAssertEqual(removed.metadata, renamed)
             XCTAssertEqual(removed.quantity, -2)
-            let absent = try await ditto.store.execute(query: "SELECT image FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
-            XCTAssertNil(absent.items.first?.value["image"])
+            let absent = try await ditto.store.execute(query: "SELECT image FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+            XCTAssertFalse(try XCTUnwrap(absent.items.first).value.keys.contains("image"))
         }
     }
 
     private func read(_ id: DocumentID, store: DittoStore) async throws -> SaleItem {
-        let result = try await store.execute(query: "SELECT * FROM COLLECTION sale_items (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
+        let result = try await store.execute(query: "SELECT * FROM COLLECTION sale_items_v2 (image ATTACHMENT) WHERE _id.id = :id AND _id.locationId = :locationId", arguments: ["id": id.id, "locationId": id.locationId])
         let items: [SaleItem] = result.decodeOrSkip()
         return try XCTUnwrap(items.first)
     }

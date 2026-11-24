@@ -45,6 +45,8 @@ constructor(
     private val dispatcherIO: CoroutineDispatcher
 ) : ViewModel() {
 
+    val photoStore get() = saleItemsRepository.photoStore
+
     private var latestOrder: Order? = null
     private var latestSaleItems: List<SaleItem> = emptyList()
 
@@ -91,7 +93,7 @@ constructor(
         PosUiState(
             currentOrderId = order.documentId.id,
             currentOrderTitle = order.title,
-            orderItems = order.sortedLineItems.map(OrderItemUiModel::from),
+            orderItems = order.sortedLineItems.map { OrderItemUiModel.from(it, order.documentId) },
             orderTotal = order.total.formatted(),
             saleItems = items.map(SaleItemUiModel::from)
         )

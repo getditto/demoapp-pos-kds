@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.job
 import kotlinx.datetime.TimeZone
+import live.ditto.pos.core.data.demo.BundledFoodPhotos
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.LocationsRepository
 import live.ditto.pos.core.data.repository.OrdersRepository
@@ -34,6 +35,8 @@ internal class TestDitto(
     private val scope: CoroutineScope,
     private val directory: File
 ) {
+    val bundledPhotos = BundledFoodPhotos(InstrumentationRegistry.getInstrumentation().targetContext)
+
     val settings: AppSettings by lazy {
         AppSettings(PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(directory, "ui.preferences_pb") }))
     }
@@ -52,13 +55,13 @@ internal class TestDitto(
 
     suspend fun insert(order: Order) {
         ditto.store.execute(
-            "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json))",
+            "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json))",
             mapOf("json" to order.dittoJsonString())
         )
     }
 
     suspend fun read(id: DocumentID): Order = ditto.store.execute(
-        "SELECT * FROM pos_orders WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM pos_orders_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decode<Order>().single() }
 

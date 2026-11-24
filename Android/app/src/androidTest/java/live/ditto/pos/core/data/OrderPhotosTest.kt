@@ -22,7 +22,7 @@ class OrderPhotosTest {
             val catalog = catalog()
             val orders = repository()
             val id = DocumentID("coffee", "A")
-            val metadata = SaleItemMetadata(id, "Original", "coffee", Price(199))
+            val metadata = SaleItemMetadata(id, "Original", Price(199))
             catalog.create(SaleItemCreation(metadata, 2))
             PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED), "image/png", ditto.store).use { originalAttachment ->
                 PhotoAttachments.importPhoto(PhotoTestImages.png(Color.BLUE), "image/png", ditto.store).use { replacementAttachment ->
@@ -37,7 +37,7 @@ class OrderPhotosTest {
                     assertNull(saved.cart["no-photo"]?.image)
                     order = saved
 
-                    catalog.updateMetadata(metadata.copy(name = "Renamed", imageName = "milk", price = Price(250)))
+                    catalog.updateMetadata(metadata.copy(name = "Renamed", price = Price(250)))
                     PhotoAttachments.replace(replacementAttachment, id, ditto.store)
                     catalog.increment(-4, id)
                     val current = sale(id)
@@ -80,7 +80,7 @@ class OrderPhotosTest {
                 orders.upsert(other)
                 val catalog = catalog()
                 val saleId = DocumentID(line.saleItemId, order.documentId.locationId)
-                catalog.create(SaleItemCreation(SaleItemMetadata(saleId, line.name, "coffee", line.price), 1))
+                catalog.create(SaleItemCreation(SaleItemMetadata(saleId, line.name, line.price), 1))
                 PhotoAttachments.replace(attachment, saleId, ditto.store)
                 val payment = Payment(PaymentType.CASH, order.total, createdAt = order.createdAt)
                 val date = order.createdAt + kotlin.time.Duration.parse("100s")
@@ -89,7 +89,7 @@ class OrderPhotosTest {
                 val paid = read(order.documentId)
                 assertEquals(order.addingPayment(payment, "payment`new").appendingStatus(OrderStatus.PROCESSED, date), paid)
                 assertEquals(other, read(other.documentId))
-                ditto.store.execute("DELETE FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to saleId.id, "locationId" to saleId.locationId))
+                ditto.store.execute("DELETE FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId", mapOf("id" to saleId.id, "locationId" to saleId.locationId))
                 assertEquals(paid, read(order.documentId))
                 // Historical lines render from their own references without originalAttachment catalog document.
                 kotlinx.coroutines.coroutineScope {
@@ -125,7 +125,6 @@ class OrderPhotosTest {
                     repository().upsert(order)
                     val received = read(order.documentId)
                     assertEquals(reference, received.cart["line"]?.image)
-                    assertNull(received.cart["line"]?.imageName)
                     assertFalse(order.dittoJsonString().contains("imageName"))
                     assertTrue(ditto.store.attachmentFetchers.isEmpty())
                     kotlinx.coroutines.coroutineScope {
@@ -149,7 +148,7 @@ class OrderPhotosTest {
     }
 
     private suspend fun TestDitto.sale(id: DocumentID): SaleItem = ditto.store.execute(
-        "SELECT * FROM sale_items WHERE _id.id = :id AND _id.locationId = :locationId",
+        "SELECT * FROM sale_items_v2 WHERE _id.id = :id AND _id.locationId = :locationId",
         mapOf("id" to id.id, "locationId" to id.locationId)
     ) { it.decode<SaleItem>().single() }
 }

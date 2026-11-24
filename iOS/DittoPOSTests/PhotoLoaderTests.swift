@@ -66,7 +66,7 @@ import XCTest
             let loader = PhotoLoader(cache: PhotoImageCache(), fetch: source.fetch)
             let state = PhotoViewState(owner: owner)
             let repository = SaleItemsRepository(ditto: ditto, locationPublisher: Just(nil).eraseToAnyPublisher())
-            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: owner, name: "Coffee", imageName: "coffee", price: Price(cents: 199)), initialQuantity: 2))
+            try await repository.create(SaleItemCreation(metadata: SaleItemMetadata(documentId: owner, name: "Coffee", price: Price(cents: 199)), initialQuantity: 2))
             let observation = repository.observeLocationSaleItems(owner.locationId).sink { state.item = $0.first }
             defer { observation.cancel() }
             let host = UIHostingController(rootView: ObservedPhoto(state: state, loader: loader))
@@ -170,11 +170,11 @@ import XCTest
     private func receive(_ reference: PhotoReference, store: DittoStore) async throws {
         // A received document introduces the token before its separately transferred file.
         try await store.execute(
-            query: "INSERT INTO sale_items INITIAL DOCUMENTS (:document)",
+            query: "INSERT INTO sale_items_v2 INITIAL DOCUMENTS (:document)",
             arguments: ["document": ["_id": ["id": owner.id, "locationId": owner.locationId]]]
         )
         try await store.execute(
-            query: "UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
+            query: "UPDATE COLLECTION sale_items_v2 (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
             arguments: ["id": owner.id, "locationId": owner.locationId, "image": reference.token]
         )
     }

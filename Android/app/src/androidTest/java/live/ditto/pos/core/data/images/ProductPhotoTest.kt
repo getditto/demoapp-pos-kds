@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
@@ -30,6 +31,9 @@ import live.ditto.pos.core.data.TestDitto
 import live.ditto.pos.core.presentation.images.PhotoImageCache
 import live.ditto.pos.core.presentation.images.PhotoLoader
 import live.ditto.pos.core.presentation.images.ProductPhoto
+import live.ditto.pos.pos.presentation.composables.saleitemgrid.SaleItemsGrid
+import live.ditto.pos.pos.presentation.uimodel.SaleItemUiModel
+import live.ditto.ui.BrandTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -40,11 +44,42 @@ class ProductPhotoTest {
     @get:Rule val compose = createComposeRule()
 
     @Test
+    fun catalogPhotoArrivalKeepsCardAndFollowingRowPositions() = runBlocking {
+        TestDitto.withInstance {
+            val id = DocumentID("burger", "A")
+            val repository = catalog()
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Burger", Price(850)), 20))
+            repository.create(SaleItemCreation(SaleItemMetadata(DocumentID("pie", "A"), "Pie", Price(450)), 20))
+            compose.setContent {
+                val items by remember(repository) { repository.observeLocationSaleItems(id.locationId) }.collectAsState(initial = emptyList())
+                BrandTheme(darkTheme = false) {
+                    Box(Modifier.size(width = 160.dp, height = 420.dp).testTag("catalog")) {
+                        SaleItemsGrid(items.map(SaleItemUiModel::from), onSaleItemClicked = {}, photoStore = ditto.store)
+                    }
+                }
+            }
+            compose.waitUntil { compose.onAllNodes(androidx.compose.ui.test.hasText("Pie")).fetchSemanticsNodes().isNotEmpty() }
+            val initialCard = compose.onNodeWithText("Burger").fetchSemanticsNode().boundsInRoot
+            val initialFollowingRow = compose.onNodeWithText("Pie").fetchSemanticsNode().boundsInRoot
+            PhotoAttachments.importPhoto(PhotoTestImages.stockPhoto, "image/png", ditto.store).use { photo ->
+                PhotoAttachments.replace(photo, id, ditto.store)
+                compose.waitUntil(5_000) {
+                    val pixels = compose.onNodeWithText("Burger").captureToImage().toPixelMap()
+                    val pixel = pixels[pixels.width / 2, pixels.height / 3]
+                    pixel.red > pixel.green + 0.1f && pixel.green > pixel.blue + 0.05f
+                }
+                assertEquals(initialCard, compose.onNodeWithText("Burger").fetchSemanticsNode().boundsInRoot)
+                assertEquals(initialFollowingRow, compose.onNodeWithText("Pie").fetchSemanticsNode().boundsInRoot)
+            }
+        }
+    }
+
+    @Test
     fun completedAttachmentRendersWithoutAnotherParentUpdate() = runBlocking {
         TestDitto.withInstance {
             val id = DocumentID("coffee", "A")
             val repository = catalog()
-            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 2))
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", Price(199)), 2))
             PhotoAttachments.importPhoto(PhotoTestImages.png(Color.RED, 63, 63), "image/png", ditto.store).use { imported ->
                 PhotoAttachments.replace(imported, id, ditto.store)
                 val reference = repository.observeLocationSaleItems(id.locationId).first { it.singleOrNull()?.image != null }.single().image
@@ -69,7 +104,7 @@ class ProductPhotoTest {
         TestDitto.withInstance {
             val id = DocumentID("coffee", "A")
             val repository = catalog()
-            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", "coffee", Price(199)), 2))
+            repository.create(SaleItemCreation(SaleItemMetadata(id, "Coffee", Price(199)), 2))
             val requests = CopyOnWriteArrayList<PhotoReference>()
             val canceled = CopyOnWriteArrayList<Int>()
             val observedQuantity = AtomicLong()

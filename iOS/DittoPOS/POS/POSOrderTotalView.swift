@@ -12,7 +12,7 @@ struct POSOrderTotalView: View {
     @EnvironmentObject var viewModel: POSViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppLayout.mediumGap) {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .bottom, spacing: AppLayout.gap) {
                     Text("Total")
@@ -25,7 +25,7 @@ struct POSOrderTotalView: View {
                 }
             }
             .font(AppTypography.body)
-            .frame(minHeight: 40)
+            .frame(minHeight: AppLayout.contentRowHeight)
 
             payButton
             clearButton

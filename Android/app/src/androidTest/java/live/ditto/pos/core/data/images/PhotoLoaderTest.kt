@@ -140,11 +140,11 @@ class PhotoLoaderTest {
     private suspend fun receive(reference: PhotoReference, store: DittoStore) {
         // A received document introduces the token before its separately transferred file.
         store.execute(
-            "INSERT INTO sale_items INITIAL DOCUMENTS (:document)",
+            "INSERT INTO sale_items_v2 INITIAL DOCUMENTS (:document)",
             mapOf("document" to mapOf("_id" to mapOf("id" to owner.id, "locationId" to owner.locationId)))
         )
         store.execute(
-            "UPDATE COLLECTION sale_items (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
+            "UPDATE COLLECTION sale_items_v2 (image ATTACHMENT) SET image = :image WHERE _id.id = :id AND _id.locationId = :locationId",
             mapOf("id" to owner.id, "locationId" to owner.locationId, "image" to reference.token())
         )
     }

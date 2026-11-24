@@ -45,7 +45,7 @@ class VisibleDemoTest {
                 settings.setLocationId("A")
                 val orders = repository(locationIds = settings.locationIdFlow())
                 val catalog = catalog(settings.locationIdFlow())
-                catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", "coffee", Price(199)), 2))
+                catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", Price(199)), 2))
                 val owner = object : ViewModelStoreOwner {
                     override val viewModelStore = ViewModelStore()
                 }
@@ -78,18 +78,18 @@ class VisibleDemoTest {
                                 else -> retained
                             }
                             ditto.store.execute(
-                                "INSERT INTO pos_orders DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
+                                "INSERT INTO pos_orders_v2 DOCUMENTS (deserialize_json(:json)) ON ID CONFLICT DO UPDATE_LOCAL_DIFF",
                                 mapOf("json" to changed.dittoJsonString())
                             )
                             val stored = read(outgoing.documentId)
                             assertEquals(state == "paid" || state == "canceled", stored.isPaid)
-                            val stockBefore = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
+                            val stockBefore = ditto.store.execute("SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
                             settings.setLocationId("B")
                             collection = launch(Dispatchers.Main) { pos.uiState.collect { states.send(it) } }
                             val destination = states.await { it.currentOrderId.isNotEmpty() && it.currentOrderId != outgoing.documentId.id }
                             assertEquals("B", read(DocumentID(destination.currentOrderId, "B")).documentId.locationId)
                             assertEquals(state, stored, read(outgoing.documentId))
-                            val stockAfter = ditto.store.execute("SELECT * FROM sale_items WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
+                            val stockAfter = ditto.store.execute("SELECT * FROM sale_items_v2 WHERE _id.locationId = :locationId", mapOf("locationId" to "A")) { it.decode<SaleItem>() }
                             assertEquals(state, stockBefore, stockAfter)
                         } finally {
                             collection.cancelAndJoin()
@@ -143,7 +143,7 @@ class VisibleDemoTest {
                     var collection = launch(Dispatchers.Main) { root.uiState.collect { uiStates.send(it) } }
                     try {
                         uiStates.await { !it.isLoading && it.locations.isEmpty() }
-                        DemoSeeder(ditto).seedLocations()
+                        DemoSeeder(ditto, bundledPhotos).seedLocations()
                         uiStates.await { it.locations.size == 7 && it.currentLocationName == "Ham's Burgers" }
                         collection.cancelAndJoin()
                         awaitObserverCount(0)
@@ -197,7 +197,7 @@ class VisibleDemoTest {
             settings.setCurrentOrderId(stored.documentId.id)
             orders.runEvictionIfDue()
             assertEquals(stored, read(stored.documentId))
-            catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", "coffee", Price(199)), 2))
+            catalog.create(SaleItemCreation(SaleItemMetadata(DocumentID("coffee", "A"), "Coffee", Price(199)), 2))
             val owner = object : ViewModelStoreOwner {
                 override val viewModelStore = ViewModelStore()
             }
@@ -240,7 +240,7 @@ class VisibleDemoTest {
                         collection.cancelAndJoin()
                     }
                     awaitObserverCount(0)
-                    val subscription = ditto.sync.subscriptions.single { it.queryString.contains("pos_orders") }
+                    val subscription = ditto.sync.subscriptions.single { it.queryString.contains("pos_orders_v2") }
                     val args = dittoJson.parseToJsonElement(requireNotNull(subscription.queryArgumentsJsonString)).jsonObject
                     assertEquals("2026-03-31T00:00:00.000Z", args.getValue("TTL").jsonPrimitive.content)
                     tickets = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
@@ -275,7 +275,7 @@ class VisibleDemoTest {
             settings.setLocationId("A")
             val orders = repository(Instant.fromEpochMilliseconds(0), settings.locationIdFlow())
             val catalog = catalog(settings.locationIdFlow())
-            val metadata = SaleItemMetadata(DocumentID("coffee", "A"), "Original", "coffee", Price(199))
+            val metadata = SaleItemMetadata(DocumentID("coffee", "A"), "Original", Price(199))
             catalog.create(SaleItemCreation(metadata, 0))
             catalog.create(SaleItemCreation(metadata.copy(documentId = metadata.documentId.copy(locationId = "B"), name = "Other location", price = Price(250)), 7))
             val owner = object : ViewModelStoreOwner {
@@ -307,9 +307,8 @@ class VisibleDemoTest {
                         val cart = posStates.await { it.orderItems.isNotEmpty() }
                         assertEquals(firstID, cart.currentOrderId)
                         val originalCart = read(DocumentID(firstID, "A"))
-                        catalog.updateMetadata(metadata.copy(name = "Live update", imageName = "milk", price = Price(250)))
+                        catalog.updateMetadata(metadata.copy(name = "Live update", price = Price(250)))
                         val live = posStates.await { it.saleItems.singleOrNull()?.label == "Live update" && it.saleItems.single().price == 2.5 }
-                        assertEquals(ImageNameMapping.resourceFor("milk"), live.saleItems.single().imageResource)
                         assertEquals(cart.orderItems, live.orderItems)
                         assertEquals(originalCart, read(DocumentID(firstID, "A")))
                         posCollection.cancelAndJoin()
@@ -318,12 +317,12 @@ class VisibleDemoTest {
                         assertTrue(pos.uiState.value.orderItems.isEmpty())
                         assertTrue(pos.uiState.value.saleItems.isEmpty())
 
-                        catalog.updateMetadata(metadata.copy(name = "Renamed", imageName = "milk", price = Price(0)))
+                        catalog.updateMetadata(metadata.copy(name = "Renamed", price = Price(0)))
                         kitchenCollection = launch(Dispatchers.Main) { kitchen.uiState.collect { kitchenStates.send(it) } }
                         val preparing = kitchenStates.await { it.tickets.size == 1 }
                         assertFalse(preparing.isLoading)
                         awaitObserverCount(baseline + 1)
-                        assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items") })
+                        assertFalse(ditto.store.observers.any { it.queryString.contains("sale_items_v2") })
                         kitchen.updateTicketStatus(preparing.tickets.single().orderId)
                         kitchenStates.await { it.tickets.singleOrNull()?.orderStatus == OrderStatus.PROCESSED }
                         assertEquals(firstID, settings.currentOrderId())
