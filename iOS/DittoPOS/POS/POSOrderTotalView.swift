@@ -25,7 +25,7 @@ struct POSOrderTotalView: View {
                 }
             }
             .font(AppTypography.body)
-            .frame(minHeight: 40)
+            .frame(minHeight: AppLayout.contentRowHeight)
 
             payButton
             clearButton
