@@ -7,19 +7,9 @@ struct KDSOrderView: View {
     let onAdvance: () -> Void
 
     var body: some View {
-        AppTicket(
-            title: "#\(order.title)",
-            lines: order.summary.sorted(by: { $0.key < $1.key }).map { "\($0.value) × \($0.key)" },
-            isPaid: order.isPaid,
-            elapsed: Self.elapsedFormatter.localizedString(for: order.createdAt, relativeTo: now),
-            isReady: order.status == .processed,
-            onAdvance: onAdvance
-        )
+        let viewModel = KitchenTicketViewModel(order: order, now: now)
+        AppTicket(title: viewModel.title, lines: viewModel.lines, isPaid: viewModel.isPaid,
+                  elapsed: viewModel.elapsed, isReady: viewModel.isReady, onAdvance: onAdvance)
     }
 
-    private static let elapsedFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter
-    }()
 }

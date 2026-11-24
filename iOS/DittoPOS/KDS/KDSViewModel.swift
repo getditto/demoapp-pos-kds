@@ -5,6 +5,8 @@
 //  Copyright © 2026 DittoLive Incorporated. All rights reserved.
 //
 
+import AppUI
+import SwiftUI
 import Combine
 import DittoSwift
 import Foundation
@@ -53,4 +55,52 @@ import Foundation
             self?.isLoading = false
         }
     }
+}
+
+struct KitchenBoardViewModel {
+    static let relativeTimeRefreshInterval: TimeInterval = 60
+    let preparing: [Order]
+    let ready: [Order]
+    let expanded: Bool
+    let contentPadding: CGFloat
+    let headerSpacing: CGFloat
+    var phoneOrders: [Order] { preparing + ready }
+    var isEmpty: Bool { preparing.isEmpty && ready.isEmpty }
+    var showPreparingWell: Bool { expanded && !isEmpty && preparing.isEmpty }
+    var showReadyWell: Bool { expanded && !isEmpty && ready.isEmpty }
+    var headerFont: Font { expanded ? AppTypography.title : AppTypography.body.weight(.medium) }
+
+    init(orders: [Order], sizeClass: UserInterfaceSizeClass?) {
+        preparing = orders.filter { $0.status == .inProcess }
+        ready = orders.filter { $0.status == .processed }
+        expanded = AppWindowViewModel(sizeClass: sizeClass).expanded
+        contentPadding = expanded ? AppLayout.sectionGap : AppLayout.padding
+        headerSpacing = expanded ? AppLayout.padding : AppLayout.mediumGap
+    }
+
+    func countTitle(_ title: String, count: Int) -> String {
+        expanded ? "\(title) · \(count)" : "\(title) \(count)"
+    }
+}
+
+@MainActor struct KitchenTicketViewModel {
+    let title: String
+    let lines: [String]
+    let isPaid: Bool
+    let elapsed: String
+    let isReady: Bool
+
+    init(order: Order, now: Date) {
+        title = "#\(order.title)"
+        lines = order.summary.sorted(by: { $0.key < $1.key }).map { "\($0.value) × \($0.key)" }
+        isPaid = order.isPaid
+        elapsed = Self.elapsedFormatter.localizedString(for: order.createdAt, relativeTo: now)
+        isReady = order.status == .processed
+    }
+
+    private static let elapsedFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
 }

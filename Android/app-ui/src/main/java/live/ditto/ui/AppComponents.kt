@@ -36,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppIcon(@DrawableRes icon: Int, modifier: Modifier = Modifier, description: String? = null, size: Dp = AppLayout.iconSize) {
@@ -154,13 +153,14 @@ fun AppHeader(title: String, modifier: Modifier = Modifier, expanded: Boolean = 
 
 @Composable
 fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifier: Modifier = Modifier, prominent: Boolean = false) {
-    Box(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CompositionLocalProvider(LocalContentColor provides if (prominent) AppColors.success else MaterialTheme.colorScheme.onSurfaceVariant) {
-                AppIcon(icon, size = if (prominent) 40.dp else 56.dp)
+    val viewModel = AppEmptyStateViewModel(prominent)
+    Box(modifier.fillMaxSize().padding(AppLayout.sectionGap), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(viewModel.spacing)) {
+            CompositionLocalProvider(LocalContentColor provides viewModel.iconColor) {
+                AppIcon(icon, size = viewModel.iconSize)
             }
-            Text(title, style = if (prominent) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-            Text(message, style = if (prominent) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text(title, style = viewModel.titleStyle, textAlign = TextAlign.Center)
+            Text(message, style = viewModel.messageStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }
@@ -168,9 +168,9 @@ fun AppEmptyState(title: String, message: String, @DrawableRes icon: Int, modifi
 @Composable
 fun AppWell(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
-        modifier.heightIn(min = 160.dp),
+        modifier.heightIn(min = AppLayout.wellHeight),
         shape = RoundedCornerShape(AppLayout.radius),
         color = MaterialTheme.colorScheme.background,
-        border = BorderStroke(1.dp, AppColors.subtleBorder)
-    ) { Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { content() } }
+        border = BorderStroke(AppLayout.borderWidth, AppColors.subtleBorder)
+    ) { Box(Modifier.fillMaxWidth().padding(AppLayout.sectionGap), contentAlignment = Alignment.Center) { content() } }
 }

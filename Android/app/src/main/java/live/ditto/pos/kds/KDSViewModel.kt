@@ -1,5 +1,9 @@
 package live.ditto.pos.kds
 
+import android.text.format.DateUtils
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +24,8 @@ import live.ditto.pos.core.data.orders.KitchenOrders
 import live.ditto.pos.core.data.orders.Order
 import live.ditto.pos.core.data.repository.OrdersRepository
 import live.ditto.pos.settings.AppSettings
+import live.ditto.ui.AppLayout
+import live.ditto.ui.AppWindowViewModel
 import javax.inject.Inject
 import kotlin.time.Instant
 
@@ -79,3 +85,27 @@ data class TicketItemUi(
     val orderStatus: OrderStatus,
     val orderId: String
 )
+
+class KitchenBoardViewModel(tickets: List<TicketItemUi>, availableWidth: Float) {
+    val expanded = AppWindowViewModel(availableWidth).expanded
+    val preparing = tickets.filter { it.orderStatus == OrderStatus.IN_PROCESS }
+    val ready = tickets.filter { it.orderStatus == OrderStatus.PROCESSED }
+    val phoneTickets = preparing + ready
+    val isEmpty = phoneTickets.isEmpty()
+    val showPreparingWell = expanded && !isEmpty && preparing.isEmpty()
+    val showReadyWell = expanded && !isEmpty && ready.isEmpty()
+    val contentPadding = if (expanded) AppLayout.sectionGap else AppLayout.padding
+    val headerSpacing = if (expanded) AppLayout.padding else AppLayout.mediumGap
+    val headerStyle: TextStyle
+        @Composable get() = if (expanded) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium
+
+    fun countTitle(title: String, count: Int): String = if (expanded) "$title · $count" else "$title $count"
+}
+
+class KitchenTicketViewModel(ticket: TicketItemUi, now: Long) {
+    val title = "#${ticket.shortOrderId}"
+    val lines = ticket.items.toSortedMap().map { (name, count) -> "$count × $name" }
+    val isPaid = ticket.isPaid
+    val isReady = ticket.orderStatus == OrderStatus.PROCESSED
+    val elapsed = DateUtils.getRelativeTimeSpanString(ticket.createdAt.toEpochMilliseconds(), now, DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
+}

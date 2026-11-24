@@ -156,15 +156,15 @@ public struct AppEmptyState: View {
     private let title: String
     private let message: String
     private let icon: String
-    private let prominent: Bool
+    private let viewModel: AppEmptyStateViewModel
     public init(_ title: String, message: String, icon: String, prominent: Bool = false) {
-        self.title = title; self.message = message; self.icon = icon; self.prominent = prominent
+        self.title = title; self.message = message; self.icon = icon; viewModel = AppEmptyStateViewModel(prominent: prominent)
     }
     public var body: some View {
-        VStack(spacing: 12) {
-            AppIcon(icon, size: prominent ? 40 : 56).foregroundStyle(prominent ? AppColors.success : AppColors.secondaryText)
-            Text(title).font(prominent ? AppTypography.title : AppTypography.heading)
-            Text(message).font(prominent ? AppTypography.body : AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+        VStack(spacing: viewModel.spacing) {
+            AppIcon(icon, size: viewModel.iconSize).foregroundStyle(viewModel.iconColor)
+            Text(title).font(viewModel.titleFont)
+            Text(message).font(viewModel.messageFont).foregroundStyle(AppColors.secondaryText)
         }
         .multilineTextAlignment(.center).padding(AppLayout.sectionGap)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -175,7 +175,7 @@ public struct AppWell<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
     public var body: some View {
-        content.padding(24).frame(maxWidth: .infinity, minHeight: 160)
+        content.padding(AppLayout.sectionGap).frame(maxWidth: .infinity, minHeight: AppLayout.wellHeight)
             .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppLayout.radius))
             .overlay(RoundedRectangle(cornerRadius: AppLayout.radius).strokeBorder(AppColors.subtleBorder))
     }

@@ -17,7 +17,7 @@ struct KDSOrdersGridView: View {
             if viewModel.isLoading {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                TimelineView(.periodic(from: .now, by: 60)) { context in
+                TimelineView(.periodic(from: .now, by: KitchenBoardViewModel.relativeTimeRefreshInterval)) { context in
                     KitchenBoard(orders: viewModel.orders, now: context.date) { order in
                         guard let next = order.status.next else { return }
                         ordersRepository.updateStatus(of: order, with: next)
@@ -38,51 +38,48 @@ struct KitchenBoard: View {
     let now: Date
     let onAdvance: (Order) -> Void
 
-    private var preparing: [Order] { orders.filter { $0.status == .inProcess } }
-    private var ready: [Order] { orders.filter { $0.status == .processed } }
-    private var isEmpty: Bool { preparing.isEmpty && ready.isEmpty }
-
     var body: some View {
-        VStack(spacing: sizeClass == .regular ? 16 : 12) {
-            if sizeClass == .regular {
-                HStack(spacing: 24) {
-                    stageHeader("Preparing", count: preparing.count)
-                    stageHeader("Ready", count: ready.count, ready: true)
+        let viewModel = KitchenBoardViewModel(orders: orders, sizeClass: sizeClass)
+        VStack(spacing: viewModel.headerSpacing) {
+            if viewModel.expanded {
+                HStack(spacing: AppLayout.sectionGap) {
+                    stageHeader(viewModel.countTitle("Preparing", count: viewModel.preparing.count), font: viewModel.headerFont, color: AppColors.text)
+                    stageHeader(viewModel.countTitle("Ready", count: viewModel.ready.count), font: viewModel.headerFont, color: AppColors.success)
                 }
             } else {
                 HStack {
-                    Text("Preparing \(preparing.count)")
-                    Spacer(minLength: 8)
-                    Text("Ready \(ready.count)").foregroundStyle(AppColors.success)
-                }.font(AppTypography.body.weight(.medium)).frame(minHeight: 32)
+                    Text(viewModel.countTitle("Preparing", count: viewModel.preparing.count))
+                    Spacer(minLength: AppLayout.gap)
+                    Text(viewModel.countTitle("Ready", count: viewModel.ready.count)).foregroundStyle(AppColors.success)
+                }.font(AppTypography.body.weight(.medium)).frame(minHeight: AppLayout.compactRowHeight)
             }
-            if isEmpty {
+            if viewModel.isEmpty {
                 AppEmptyState("No active orders", message: "Orders with items appear here.", icon: "check-circle", prominent: true)
-            } else if sizeClass == .regular {
-                HStack(alignment: .top, spacing: 24) {
-                    stageColumn(preparing, emptyMessage: "No orders preparing")
-                    stageColumn(ready, emptyMessage: "No orders ready")
+            } else if viewModel.expanded {
+                HStack(alignment: .top, spacing: AppLayout.sectionGap) {
+                    stageColumn(viewModel.preparing, showWell: viewModel.showPreparingWell, emptyMessage: "No orders preparing")
+                    stageColumn(viewModel.ready, showWell: viewModel.showReadyWell, emptyMessage: "No orders ready")
                 }
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) { tickets(preparing + ready) }
+                    LazyVStack(spacing: AppLayout.mediumGap) { tickets(viewModel.phoneOrders) }
                 }
             }
         }
-        .padding(sizeClass == .regular ? 24 : AppLayout.padding)
+        .padding(viewModel.contentPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    private func stageHeader(_ title: String, count: Int, ready: Bool = false) -> some View {
-        Text("\(title) · \(count)").font(AppTypography.title)
-            .foregroundStyle(ready ? AppColors.success : AppColors.text)
+    private func stageHeader(_ title: String, font: Font, color: Color) -> some View {
+        Text(title).font(font)
+            .foregroundStyle(color)
             .frame(maxWidth: .infinity, alignment: .leading).accessibilityAddTraits(.isHeader)
     }
 
-    private func stageColumn(_ orders: [Order], emptyMessage: String) -> some View {
+    private func stageColumn(_ orders: [Order], showWell: Bool, emptyMessage: String) -> some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                if orders.isEmpty {
+            LazyVStack(spacing: AppLayout.mediumGap) {
+                if showWell {
                     AppWell { Text(emptyMessage).font(AppTypography.body).foregroundStyle(AppColors.secondaryText) }
                 } else {
                     tickets(orders)
