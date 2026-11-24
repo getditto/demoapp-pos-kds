@@ -36,6 +36,7 @@ fun ComponentCatalog(dark: Boolean = false) {
             AppSurface { Text("Surface content") }
             AppSurface(style = AppSurfaceStyle.OUTLINED) { Text("Outlined surface") }
             AppSurface(style = AppSurfaceStyle.COMPACT) { Text("Compact surface") }
+            AppCounter(canDecrement = true, decrement = {}, increment = {}) { Text("12") }
             AppWell { Text("Empty region") }
             AppPhoto(null, Modifier.size(AppLayout.thumbnailSize))
             AppPagination("Page 1 of 2", canPrevious = false, canNext = true, previous = {}, next = {})
