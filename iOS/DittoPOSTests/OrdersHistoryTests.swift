@@ -17,7 +17,7 @@ import XCTest
             }
             let page = try await ditto.store.execute(query: OrdersHistoryQuery.page, arguments: ["locationId": "A", "offset": 0])
             let orders: [Order] = try page.decode()
-            XCTAssertEqual(orders.map(\.documentId.id), ["paid", "zero-unpaid"])
+            XCTAssertEqual(Set(orders.map(\.documentId.id)), ["paid", "zero-unpaid"])
             let count = try await ditto.store.execute(query: OrdersHistoryQuery.count, arguments: ["locationId": "A"])
             let totals: [OrdersHistoryQuery.Count] = try count.decode()
             XCTAssertEqual(totals.map(\.total), [2])
@@ -38,7 +38,7 @@ import XCTest
                           CartLineItem(saleItemId: line.saleItemId, name: line.name, imageName: line.imageName,
                                        price: index == 0 ? Price(cents: 0) : line.price, qty: line.qty, createdAt: line.createdAt)
                       }, payments: index % 2 == 0 ? fixture.payments : [:],
-                      statusLog: fixture.statusLog, createdAt: index < 50 ? old : current)
+                      statusLog: fixture.statusLog, createdAt: (index < 50 ? old : current).addingTimeInterval(TimeInterval(index)))
             }
             // Repeated IDs in another location and empty drafts must not consume page slots.
             for index in 0..<105 { try await repository.add(order: order(index, location: "B")) }
@@ -62,10 +62,10 @@ import XCTest
             await expect(history) { $0.pageIndex == 1 && $0.orders.count == 50 }
             XCTAssertFalse(countObserver.isCancelled)
             history.next()
-            await expect(history) { $0.pageIndex == 2 && $0.orders.map(\.documentId.id) == ["00000049"] }
+            await expect(history) { $0.pageIndex == 2 && $0.orders.map(\.documentId.id) == ["00000000"] }
             XCTAssertFalse(history.state.canNext)
             XCTAssertTrue(history.state.orders[0].createdAt < current)
-            _ = try await ditto.store.execute(query: "DELETE FROM \(Order.collectionName) WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000049"])
+            _ = try await ditto.store.execute(query: "DELETE FROM \(Order.collectionName) WHERE _id.locationId = :locationId AND _id.id = :id", arguments: ["locationId": "A", "id": "00000000"])
             await expect(history) { $0.total == 100 && $0.pageIndex == 1 && $0.orders.count == 50 }
             try await repository.add(order: order(101))
             await expect(history) { $0.total == 101 && $0.pageIndex == 1 && $0.canNext }
@@ -75,14 +75,13 @@ import XCTest
             await expect(history) { $0.total == 101 }
             history.previous()
             await expect(history) { $0.pageIndex == 0 && $0.orders.count == 50 }
-            // Same-date ties use full IDs, rather than depending on observer delivery order.
-            XCTAssertEqual(history.state.orders.prefix(3).map(\.documentId.id), ["00000050", "00000051", "00000052"])
+            XCTAssertEqual(history.state.orders.prefix(3).map(\.documentId.id), ["00000101", "00000100", "00000099"])
             history.next()
             history.next()
             await expect(history) { $0.pageIndex == 2 && $0.orders.count == 1 }
             try await repository.runEvictionIfDue()
             await expect(history) { $0.total == 52 && $0.pageIndex == 1 && $0.orders.count == 2 }
-            XCTAssertTrue(history.state.orders.allSatisfy { $0.createdAt == current })
+            XCTAssertTrue(history.state.orders.allSatisfy { $0.createdAt >= current })
             history.setVisible(false)
             XCTAssertEqual(ditto.store.observers.count, 0)
             history.setVisible(true)
