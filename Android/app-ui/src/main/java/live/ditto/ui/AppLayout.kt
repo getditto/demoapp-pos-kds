@@ -31,6 +31,5 @@ object AppLayout {
     val emptyIconSize = 56.dp
     val successIconSize = 40.dp
     val wellHeight = 240.dp
-    val productMinimumWidth = 120.dp
     const val EXPANDED_BREAKPOINT_DP = 600f
 }

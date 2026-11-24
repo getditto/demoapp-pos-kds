@@ -30,7 +30,6 @@ public enum AppLayout {
     public static let emptyIconSize: CGFloat = 56
     public static let successIconSize: CGFloat = 40
     public static let wellHeight: CGFloat = 240
-    public static let productMinimumWidth: CGFloat = 120
     public static let linkHeight: CGFloat = 44
     public static let disabledOpacity = 0.38
     public static let pressedOpacity = 0.7
