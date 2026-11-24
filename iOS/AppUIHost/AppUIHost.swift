@@ -32,7 +32,7 @@ private struct PresentationFixture: View {
             DraftPage()
         } kds: {
             AppEmptyState("No active orders", message: "Orders entered in POS will appear here.", icon: "cooking-pot")
-        } orders: { Text("Orders") } settings: {
+        } orders: { Text("Orders") } inventory: { Text("Inventory") } settings: {
             SettingsContent(location: "Ham's Burgers", appearance: $appearance.selection,
                             version: "1.1.0", build: "9999", sdkVersion: "5.2.0", onLocation: {}, onTools: {})
         } locations: {

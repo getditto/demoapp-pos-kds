@@ -2,7 +2,9 @@ package live.ditto.pos.core.presentation.composables.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
@@ -32,6 +34,7 @@ import live.ditto.pos.core.presentation.composables.navigation.PosKdsNavigationB
 import live.ditto.pos.core.presentation.navigation.PosKdsNavHost
 import live.ditto.pos.core.presentation.viewmodel.AppState
 import live.ditto.pos.core.presentation.viewmodel.MainViewModel
+import live.ditto.pos.inventory.InventoryScreen
 import live.ditto.pos.kds.presentation.composables.KdsScreen
 import live.ditto.pos.orders.OrdersScreen
 import live.ditto.pos.pos.presentation.composables.screens.PosScreen
@@ -50,11 +53,12 @@ fun PosKdsApp(viewModel: MainViewModel = hiltViewModel(LocalActivity.current)) {
         appearance = appearance ?: AppAppearance.SYSTEM,
         version = BuildConfig.VERSION_NAME, build = BuildConfig.VERSION_CODE.toString(), sdkVersion = Ditto.VERSION,
         onAppearance = viewModel::setAppearance, onLocation = viewModel::updateCurrentLocation,
-        pos = { PosScreen() }, kds = { KdsScreen() }, orders = { OrdersScreen() },
+        pos = { PosScreen() }, kds = { KdsScreen() }, orders = { OrdersScreen() }, inventory = { InventoryScreen() },
         tools = { onExit -> DittoToolsViewer(ditto = viewModel.requireDitto(), onExitTools = onExit) }
     )
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun PosKdsShell(
     state: AppState,
@@ -68,6 +72,7 @@ fun PosKdsShell(
     pos: @Composable () -> Unit,
     kds: @Composable () -> Unit,
     orders: @Composable () -> Unit,
+    inventory: @Composable () -> Unit,
     tools: @Composable (() -> Unit) -> Unit,
     controller: NavHostController = rememberNavController(),
     startDestination: String = "pos"
@@ -82,13 +87,14 @@ fun PosKdsShell(
         when (route) {
             "kds" -> "Kitchen display"
             "orders" -> "Orders"
+            "inventory" -> "Inventory"
             "settings" -> "Settings"
             else -> "POS"
         }
     }
     Scaffold(
         bottomBar = {
-            if (!needsLocation && !onTools) {
+            if (!needsLocation && !onTools && !WindowInsets.isImeVisible) {
                 PosKdsNavigationBar(selectedRoute = route) { item ->
                     controller.navigate(item.route) {
                         popUpTo(controller.graph.findStartDestination().id) { saveState = true }
@@ -116,7 +122,7 @@ fun PosKdsShell(
                 } else {
                     PosKdsNavHost(
                         controller, state, appearance, version, build, sdkVersion,
-                        onAppearance, onLocation, pos, kds, orders, tools, startDestination
+                        onAppearance, onLocation, pos, kds, orders, inventory, tools, startDestination
                     )
                 }
             }

@@ -22,6 +22,7 @@ public struct ComponentCatalog: View {
                     AppSurface { Text("Surface content").font(AppTypography.body) }
                     AppSurface(style: .outlined) { Text("Outlined surface").font(AppTypography.body) }
                     AppSurface(style: .compact) { Text("Compact surface").font(AppTypography.body) }
+                    AppCounter(canDecrement: true, decrement: {}, increment: {}) { Text("12").font(AppTypography.quantity) }
                     AppWell { Text("Empty region").foregroundStyle(AppColors.secondaryText) }
                     AppPhoto(image: nil).frame(width: AppLayout.thumbnailSize, height: AppLayout.thumbnailSize)
                 }.padding(AppLayout.padding)

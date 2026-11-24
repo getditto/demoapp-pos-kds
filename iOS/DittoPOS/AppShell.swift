@@ -1,23 +1,25 @@
 import AppUI
 import SwiftUI
 
-struct AppShell<POS: View, KDS: View, OrdersPage: View, SettingsPage: View, Locations: View>: View {
+struct AppShell<POS: View, KDS: View, OrdersPage: View, InventoryPage: View, SettingsPage: View, Locations: View>: View {
     @Binding var selectedTab: TabViews
     let needsLocation: Bool
     let location: String?
     private let pos: POS
     private let kds: KDS
     private let orders: OrdersPage
+    private let inventory: InventoryPage
     private let settings: SettingsPage
     private let locations: Locations
 
     init(selectedTab: Binding<TabViews>, needsLocation: Bool, location: String?,
          @ViewBuilder pos: () -> POS, @ViewBuilder kds: () -> KDS,
-         @ViewBuilder orders: () -> OrdersPage, @ViewBuilder settings: () -> SettingsPage, @ViewBuilder locations: () -> Locations) {
+         @ViewBuilder orders: () -> OrdersPage, @ViewBuilder inventory: () -> InventoryPage,
+         @ViewBuilder settings: () -> SettingsPage, @ViewBuilder locations: () -> Locations) {
         _selectedTab = selectedTab
         self.needsLocation = needsLocation
         self.location = location
-        self.pos = pos(); self.kds = kds(); self.orders = orders(); self.settings = settings(); self.locations = locations()
+        self.pos = pos(); self.kds = kds(); self.orders = orders(); self.inventory = inventory(); self.settings = settings(); self.locations = locations()
     }
 
     var body: some View {
@@ -32,6 +34,7 @@ struct AppShell<POS: View, KDS: View, OrdersPage: View, SettingsPage: View, Loca
                             pos.tabItem { Label { Text("POS") } icon: { AppIcon("cash-register") } }.tag(TabViews.pos)
                             kds.tabItem { Label { Text("KDS") } icon: { AppIcon("cooking-pot") } }.tag(TabViews.kds)
                             orders.tabItem { Label { Text("Orders") } icon: { AppIcon("receipt") } }.tag(TabViews.orders)
+                            inventory.tabItem { Label { Text("Inventory") } icon: { AppIcon("package") } }.tag(TabViews.inventory)
                             settings.tabItem { Label { Text("Settings") } icon: { AppIcon("gear") } }.tag(TabViews.settings)
                         }
                         .toolbarBackground(AppColors.surface, for: .tabBar)
@@ -48,6 +51,7 @@ struct AppShell<POS: View, KDS: View, OrdersPage: View, SettingsPage: View, Loca
         case .pos: return "POS"
         case .kds: return "Kitchen display"
         case .orders: return "Orders"
+        case .inventory: return "Inventory"
         case .settings: return "Settings"
         }
     }
