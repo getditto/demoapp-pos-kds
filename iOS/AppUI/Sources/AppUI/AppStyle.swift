@@ -23,14 +23,6 @@ public enum AppColors {
     }
 }
 
-public enum AppLayout {
-    public static let gap: CGFloat = 8
-    public static let padding: CGFloat = 16
-    public static let radius: CGFloat = 16
-    public static let buttonRadius: CGFloat = 12
-    public static let controlHeight: CGFloat = 48
-}
-
 public struct BrandTheme<Content: View>: View {
     private let content: Content
     public init(@ViewBuilder content: () -> Content) { self.content = content() }

@@ -11,19 +11,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object AppColors {
     val actionFill = Color(0xFFE7EE00)
     val onAction = Color.Black
-}
-
-object AppLayout {
-    val gap = 8.dp
-    val padding = 16.dp
-    val radius = 16.dp
-    val controlHeight = 48.dp
 }
 
 object AppTypography {

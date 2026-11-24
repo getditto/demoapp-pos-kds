@@ -29,7 +29,7 @@ public enum AppTypography {
 public struct AppIcon: View {
     private let name: String
     private let size: CGFloat
-    public init(_ name: String, size: CGFloat = 24) { self.name = name; self.size = size }
+    public init(_ name: String, size: CGFloat = AppLayout.iconSize) { self.name = name; self.size = size }
     public var body: some View {
         Image("phosphor-\(name)", bundle: .module)
             .resizable().scaledToFit().frame(width: size, height: size)

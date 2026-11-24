@@ -36,6 +36,7 @@ import live.ditto.pos.pos.presentation.composables.screens.PosScreen
 import live.ditto.pos.settings.AppAppearance
 import live.ditto.ui.AppHeader
 import live.ditto.ui.AppIcon
+import live.ditto.ui.AppWindowViewModel
 import live.ditto.ui.R
 
 @Composable
@@ -101,7 +102,7 @@ fun PosKdsShell(
                     if (selecting) {
                         IconButton(onClick = { controller.popBackStack() }) { AppIcon(R.drawable.phosphor_arrow_left, description = "Back") }
                     }
-                    AppHeader(title, location = state.currentLocationName, tablet = LocalConfiguration.current.screenWidthDp >= 600)
+                    AppHeader(title, location = state.currentLocationName, tablet = AppWindowViewModel(LocalConfiguration.current.screenWidthDp.toFloat()).expanded)
                 }
                 if (needsLocation) {
                     if (state.isLoading) {
