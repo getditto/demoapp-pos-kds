@@ -29,6 +29,7 @@ object AppLayout {
     val expandedHeaderHeight = 56.dp
     val pageTitleHeight = 64.dp
     val emptyIconSize = 56.dp
+    val largeEmptyIconSize = 64.dp
     val successIconSize = 40.dp
     val wellHeight = 160.dp
     const val EXPANDED_BREAKPOINT_DP = 600f

@@ -1,22 +1,23 @@
 import AppUI
 import SwiftUI
 
-struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View {
+struct AppShell<POS: View, KDS: View, OrdersPage: View, SettingsPage: View, Locations: View>: View {
     @Binding var selectedTab: TabViews
     let needsLocation: Bool
     let location: String?
     private let pos: POS
     private let kds: KDS
+    private let orders: OrdersPage
     private let settings: SettingsPage
     private let locations: Locations
 
     init(selectedTab: Binding<TabViews>, needsLocation: Bool, location: String?,
          @ViewBuilder pos: () -> POS, @ViewBuilder kds: () -> KDS,
-         @ViewBuilder settings: () -> SettingsPage, @ViewBuilder locations: () -> Locations) {
+         @ViewBuilder orders: () -> OrdersPage, @ViewBuilder settings: () -> SettingsPage, @ViewBuilder locations: () -> Locations) {
         _selectedTab = selectedTab
         self.needsLocation = needsLocation
         self.location = location
-        self.pos = pos(); self.kds = kds(); self.settings = settings(); self.locations = locations()
+        self.pos = pos(); self.kds = kds(); self.orders = orders(); self.settings = settings(); self.locations = locations()
     }
 
     var body: some View {
@@ -30,6 +31,7 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
                         TabView(selection: $selectedTab) {
                             pos.tabItem { Label { Text("POS") } icon: { AppIcon("cash-register") } }.tag(TabViews.pos)
                             kds.tabItem { Label { Text("KDS") } icon: { AppIcon("cooking-pot") } }.tag(TabViews.kds)
+                            orders.tabItem { Label { Text("Orders") } icon: { AppIcon("receipt") } }.tag(TabViews.orders)
                             settings.tabItem { Label { Text("Settings") } icon: { AppIcon("gear") } }.tag(TabViews.settings)
                         }
                         .toolbarBackground(AppColors.surface, for: .tabBar)
@@ -45,6 +47,7 @@ struct AppShell<POS: View, KDS: View, SettingsPage: View, Locations: View>: View
         switch selectedTab {
         case .pos: return "POS"
         case .kds: return "Kitchen display"
+        case .orders: return "Orders"
         case .settings: return "Settings"
         }
     }

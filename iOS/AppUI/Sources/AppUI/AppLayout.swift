@@ -28,6 +28,7 @@ public enum AppLayout {
     public static let pageTitleHeight: CGFloat = 64
     public static let titleLineHeight: CGFloat = 41
     public static let emptyIconSize: CGFloat = 56
+    public static let largeEmptyIconSize: CGFloat = 64
     public static let successIconSize: CGFloat = 40
     public static let wellHeight: CGFloat = 160
     public static let linkHeight: CGFloat = 44
