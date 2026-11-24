@@ -163,7 +163,9 @@
 		C1350000000000000000B001 /* InventoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1350000000000000000A001; };
 		C1350000000000000000C001 /* InventoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1350000000000000000A001; };
 		C1350000000000000000B002 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1350000000000000000A002; };
+		C1600000000000000000B002 /* InventoryRowViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A002; };
 		C1350000000000000000C002 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1350000000000000000A002; };
+		C1600000000000000000C002 /* InventoryRowViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1600000000000000000A002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -262,6 +264,7 @@
 		C1500000000000000000A100 /* StarterImages */ = {isa = PBXFileReference; lastKnownFileType = folder; path = StarterImages; sourceTree = "<group>"; };
 		C1350000000000000000A001 /* InventoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Inventory/InventoryModel.swift; sourceTree = SOURCE_ROOT; };
 		C1350000000000000000A002 /* InventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Inventory/InventoryView.swift; sourceTree = SOURCE_ROOT; };
+		C1600000000000000000A002 /* InventoryRowViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DittoPOS/Inventory/InventoryRowViewModel.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -365,6 +368,7 @@
 				14CD51AF2A2FE2D50018DE87 /* DittoPOS */,
 				C1350000000000000000A001 /* InventoryModel.swift */,
 				C1350000000000000000A002 /* InventoryView.swift */,
+				C1600000000000000000A002 /* InventoryRowViewModel.swift */,
 				C1530000000000000000A001 /* OrdersHistory.swift */,
 				C1530000000000000000A002 /* OrdersView.swift */,
 				C1600000000000000000A001 /* OrderSummaryViewModel.swift */,
@@ -728,6 +732,7 @@
 				C1530000000000000000B003 /* OrderSummaryRow.swift in Sources */,
 				C1350000000000000000B001 /* InventoryModel.swift in Sources */,
 				C1350000000000000000B002 /* InventoryView.swift in Sources */,
+				C1600000000000000000B002 /* InventoryRowViewModel.swift in Sources */,
 				C1530000000000000000B001 /* OrdersHistory.swift in Sources */,
 				3100C30DC3A697A9C46348CD /* PhotoReference.swift in Sources */,
 				F568D727E3502D6A9AEE92F8 /* PhotoAttachments.swift in Sources */,
@@ -795,6 +800,7 @@
 				C1530000000000000000C003 /* OrderSummaryRow.swift in Sources */,
 				C1350000000000000000C001 /* InventoryModel.swift in Sources */,
 				C1350000000000000000C002 /* InventoryView.swift in Sources */,
+				C1600000000000000000C002 /* InventoryRowViewModel.swift in Sources */,
 				C1530000000000000000C001 /* OrdersHistory.swift in Sources */,
 				3636EB0D281CE95A42762001 /* PhotoReference.swift in Sources */,
 				25E4F2F7CE4DAC00AEEAEAD1 /* PhotoAttachments.swift in Sources */,

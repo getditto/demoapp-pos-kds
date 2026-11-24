@@ -22,6 +22,11 @@ public enum AppTypography {
     public static var action: Font { font("GeistMono-Regular", size: 14, relativeTo: .callout) }
     public static var quantity: Font { font("GeistMono-Regular", size: 17, relativeTo: .body).weight(.medium) }
 
+    public static var quantityInputFont: UIFont {
+        _ = BrandResources.registeredFonts
+        return UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont(name: "GeistMono-Regular", size: 17)!)
+    }
+
     private static func font(_ name: String, size: CGFloat, relativeTo style: Font.TextStyle) -> Font {
         _ = BrandResources.registeredFonts
         return .custom(name, size: size, relativeTo: style)

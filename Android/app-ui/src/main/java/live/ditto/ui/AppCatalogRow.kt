@@ -17,20 +17,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppCatalogRow(name: String, price: String, modifier: Modifier = Modifier, photo: @Composable () -> Unit, controls: @Composable () -> Unit) {
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(AppLayout.radius), color = MaterialTheme.colorScheme.surface) {
-        BoxWithConstraints(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
-            val stacked = maxWidth < 320.dp * LocalDensity.current.fontScale
-            if (stacked) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        BoxWithConstraints(Modifier.padding(horizontal = AppLayout.gap, vertical = AppLayout.mediumGap)) {
+            val viewModel = AppCatalogRowViewModel(maxWidth.value, LocalDensity.current.fontScale)
+            if (viewModel.stacked) {
+                Column(verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap)) {
                     CatalogDetails(name, price, photo)
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { controls() }
                 }
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                     Box(Modifier.weight(1f)) { CatalogDetails(name, price, photo) }
                     controls()
                 }
@@ -41,9 +40,9 @@ fun AppCatalogRow(name: String, price: String, modifier: Modifier = Modifier, ph
 
 @Composable
 private fun CatalogDetails(name: String, price: String, photo: @Composable () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box(Modifier.size(40.dp)) { photo() }
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
+        Box(Modifier.size(AppLayout.thumbnailSize)) { photo() }
+        Column(verticalArrangement = Arrangement.spacedBy(AppLayout.smallGap)) {
             Text(name, style = MaterialTheme.typography.bodyLarge)
             Text(price, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -54,11 +53,11 @@ private fun CatalogDetails(name: String, price: String, photo: @Composable () ->
 fun AppCounter(canDecrement: Boolean, decrement: () -> Unit, increment: () -> Unit, modifier: Modifier = Modifier, canIncrement: Boolean = true, value: @Composable () -> Unit) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
         IconButton(decrement, Modifier.size(AppLayout.controlHeight), enabled = canDecrement) {
-            AppIcon(R.drawable.phosphor_minus, description = "Decrease quantity", size = 22.dp)
+            AppIcon(R.drawable.phosphor_minus, description = "Decrease quantity", size = AppLayout.actionIconSize)
         }
         value()
         IconButton(increment, Modifier.size(AppLayout.controlHeight), enabled = canIncrement) {
-            AppIcon(R.drawable.phosphor_plus, description = "Increase quantity", size = 22.dp)
+            AppIcon(R.drawable.phosphor_plus, description = "Increase quantity", size = AppLayout.actionIconSize)
         }
     }
 }

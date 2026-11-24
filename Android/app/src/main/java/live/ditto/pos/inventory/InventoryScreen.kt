@@ -52,7 +52,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -66,6 +65,7 @@ import live.ditto.ui.AppCounter
 import live.ditto.ui.AppEmptyState
 import live.ditto.ui.AppEmptyStateStyle
 import live.ditto.ui.AppLayout
+import live.ditto.ui.AppQuantityFieldViewModel
 import live.ditto.ui.AppTextButton
 import live.ditto.ui.AppTypography
 import live.ditto.ui.R
@@ -114,21 +114,22 @@ fun InventoryContent(inventory: InventoryModel, modifier: Modifier = Modifier, p
         when {
             state.isLoading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             state.items.isEmpty() -> AppEmptyState("No items yet", "Items for this location will appear here.", R.drawable.phosphor_package, Modifier.weight(1f), AppEmptyStateStyle.LARGE)
-            else -> LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(AppLayout.padding)) {
+            else -> LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AppLayout.mediumGap), contentPadding = androidx.compose.foundation.layout.PaddingValues(AppLayout.padding)) {
                 if (state.edit == null) item { Text("${state.items.size} items", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 items(state.items, key = { it.documentId.id }) { item ->
-                    val edit = state.edit?.takeIf { it.id == item.documentId }
+                    val row = InventoryRowViewModel(item, state.edit)
+                    val edit = row.edit
                     val requester = remember { BringIntoViewRequester() }
                     LaunchedEffect(imeVisible, edit?.id) { if (imeVisible && edit != null) requester.bringIntoView() }
-                    Column(Modifier.bringIntoViewRequester(requester), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.bringIntoViewRequester(requester), verticalArrangement = Arrangement.spacedBy(AppLayout.gap)) {
                         AppCatalogRow(item.name, item.price.formatted(), photo = { photo(item) }, controls = {
                             AppCounter(
-                                canDecrement = item.quantity > 0 && edit == null,
-                                canIncrement = edit == null,
+                                canDecrement = row.canDecrement,
+                                canIncrement = row.canIncrement,
                                 decrement = { scope.launch { inventory.step(-1, item.documentId) } },
                                 increment = { scope.launch { inventory.step(1, item.documentId) } }
                             ) {
-                                QuantityControl(item, edit, state.edit == null, inventory)
+                                QuantityControl(item, row, inventory)
                             }
                         })
                         edit?.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
@@ -148,28 +149,22 @@ fun InventoryContent(inventory: InventoryModel, modifier: Modifier = Modifier, p
 }
 
 @Composable
-private fun QuantityControl(item: SaleItem, edit: QuantityEdit?, canEdit: Boolean, inventory: InventoryModel) {
-    val text = edit?.text ?: item.quantity.toString()
-    val invalid = if (edit != null) edit.error != null else item.quantity < 0
-    val color = if (invalid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-    val border = if (invalid) {
-        MaterialTheme.colorScheme.error
-    } else if (edit != null) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.outlineVariant
-    }
-    val width = (text.length * 11 * LocalDensity.current.fontScale + 16).coerceIn(48f, 144f).dp
+private fun QuantityControl(item: SaleItem, row: InventoryRowViewModel, inventory: InventoryModel) {
+    val edit = row.edit
+    val text = row.text
+    val color = row.textColor
+    val border = row.borderColor
+    val width = AppQuantityFieldViewModel(text, LocalDensity.current.fontScale).width
     val modifier = Modifier.size(width, AppLayout.controlHeight).testTag("quantity-${item.documentId.id}").semantics { contentDescription = "${item.name} quantity" }
     if (edit == null) {
-        Surface({ inventory.beginEditing(item.documentId) }, modifier, enabled = canEdit, shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, border)) {
+        Surface({ inventory.beginEditing(item.documentId) }, modifier, enabled = row.canEdit, shape = RoundedCornerShape(AppLayout.buttonRadius), color = MaterialTheme.colorScheme.surface, border = BorderStroke(row.borderWidth, border)) {
             Box(contentAlignment = Alignment.Center) { Text(text, style = AppTypography.quantity, color = color, textAlign = TextAlign.Center) }
         }
     } else {
         val scope = rememberCoroutineScope()
         val focusRequester = remember { FocusRequester() }
         var hadFocus by remember { mutableStateOf(false) }
-        Surface(modifier, shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(2.dp, border)) {
+        Surface(modifier, shape = RoundedCornerShape(AppLayout.buttonRadius), color = MaterialTheme.colorScheme.surface, border = BorderStroke(row.borderWidth, border)) {
             Box(contentAlignment = Alignment.Center) {
                 BasicTextField(
                     text,

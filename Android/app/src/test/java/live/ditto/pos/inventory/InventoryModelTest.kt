@@ -13,6 +13,7 @@ import live.ditto.pos.core.data.DocumentID
 import live.ditto.pos.core.data.Price
 import live.ditto.pos.core.data.SaleItem
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -84,7 +85,17 @@ class InventoryModelTest {
             observed.value = listOf(item.copy(quantity = -2))
             assertEquals(-2L, model.state.value.items.first().quantity)
             assertEquals("6", model.state.value.edit?.text)
+            val drafting = InventoryRowViewModel(model.state.value.items.first(), model.state.value.edit)
+            assertEquals("6", drafting.text)
+            assertFalse(drafting.invalid)
+            assertFalse(drafting.canDecrement)
+            assertFalse(drafting.canIncrement)
             model.cancelEditing()
+            val observedRow = InventoryRowViewModel(model.state.value.items.first(), model.state.value.edit)
+            assertEquals("-2", observedRow.text)
+            assertTrue(observedRow.invalid)
+            assertFalse(observedRow.canDecrement)
+            assertTrue(observedRow.canIncrement)
             model.step(-1, id)
             model.step(1, id)
             model.step(1, id.copy(locationId = "B"))

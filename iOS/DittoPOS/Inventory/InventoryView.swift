@@ -26,7 +26,7 @@ struct InventoryContent<Photo: View>: View {
     @ObservedObject var inventory: InventoryModel
     let photo: (SaleItem) -> Photo
     @State private var focusedItem: DocumentID?
-    @ScaledMetric(relativeTo: .body) private var digitWidth = 11.0
+    @ScaledMetric(relativeTo: .body) private var digitWidth = AppQuantityFieldViewModel.digitWidth
 
     var body: some View {
         Group {
@@ -37,17 +37,18 @@ struct InventoryContent<Photo: View>: View {
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 12) {
+                        LazyVStack(alignment: .leading, spacing: AppLayout.mediumGap) {
                             if inventory.state.edit == nil {
                                 Text("\(inventory.state.items.count) items").font(AppTypography.footnote)
-                                    .foregroundStyle(AppColors.secondaryText).padding(.bottom, 4)
+                                    .foregroundStyle(AppColors.secondaryText).padding(.bottom, AppLayout.smallGap)
                             }
                             ForEach(inventory.state.items, id: \.documentId) { item in
-                                VStack(alignment: .leading, spacing: 8) {
+                                let row = InventoryRowViewModel(item: item, activeEdit: inventory.state.edit)
+                                VStack(alignment: .leading, spacing: AppLayout.gap) {
                                     AppCatalogRow(name: item.name, price: item.price.description) { photo(item) } controls: {
-                                        counter(item)
+                                        counter(item, row: row)
                                     }
-                                    if inventory.state.edit?.id == item.documentId, let error = inventory.state.edit?.error {
+                                    if let error = row.edit?.error {
                                         Text(error).font(AppTypography.caption).foregroundStyle(AppColors.critical)
                                             .accessibilityLabel("Error: \(error)")
                                     }
@@ -66,30 +67,27 @@ struct InventoryContent<Photo: View>: View {
         .onChange(of: inventory.state.edit?.id) { id in if id == nil { focusedItem = nil } }
     }
 
-    private func counter(_ item: SaleItem) -> some View {
-        let editing = inventory.state.edit?.id == item.documentId
-        let text = editing ? inventory.state.edit!.text : String(item.quantity)
-        let invalid = editing ? inventory.state.edit?.error != nil : item.quantity < 0
-        return AppCounter(canDecrement: item.quantity > 0 && !editing, canIncrement: !editing,
+    private func counter(_ item: SaleItem, row: InventoryRowViewModel) -> some View {
+        return AppCounter(canDecrement: row.canDecrement, canIncrement: row.canIncrement,
                           decrement: { Task { try! await inventory.step(-1, id: item.documentId) } },
                           increment: { Task { try! await inventory.step(1, id: item.documentId) } }) {
             Group {
-                if editing {
+                if row.editing {
                     AppNumberField(text: Binding(get: { inventory.state.edit?.text ?? "" }, set: { inventory.updateText($0) }),
                                    isValid: inventory.state.edit?.value != nil,
                                    onDone: { Task { try! await inventory.submit() } },
                                    onCancel: { inventory.cancelEditing() }, onFocus: { focusedItem = item.documentId })
                 } else {
                     Button { inventory.beginEditing(item.documentId) } label: {
-                        Text(text).frame(maxWidth: .infinity, minHeight: AppLayout.controlHeight)
-                    }.buttonStyle(.plain).disabled(inventory.state.edit != nil)
+                        Text(row.text).frame(maxWidth: .infinity, minHeight: AppLayout.controlHeight)
+                    }.buttonStyle(.plain).disabled(!row.canEdit)
                 }
             }
             .font(AppTypography.quantity).multilineTextAlignment(.center)
-            .foregroundStyle(invalid ? AppColors.critical : AppColors.text)
-            .frame(width: min(144, max(48, CGFloat(text.count) * digitWidth + 16)), height: AppLayout.controlHeight)
-            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(invalid ? AppColors.critical : editing ? AppColors.brandText : AppColors.border, lineWidth: editing ? 2 : 1))
+            .foregroundStyle(row.textColor)
+            .frame(width: AppQuantityFieldViewModel(text: row.text, scaledDigitWidth: digitWidth).width, height: AppLayout.controlHeight)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.buttonRadius))
+            .overlay(RoundedRectangle(cornerRadius: AppLayout.buttonRadius).strokeBorder(row.borderColor, lineWidth: row.borderWidth))
             .accessibilityLabel("\(item.name) quantity")
             .accessibilityIdentifier("quantity-\(item.documentId.id)")
         }

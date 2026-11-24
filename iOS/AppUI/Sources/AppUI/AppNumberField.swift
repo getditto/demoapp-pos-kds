@@ -17,7 +17,7 @@ public struct AppNumberField: UIViewRepresentable {
         field.keyboardType = .numberPad
         field.textAlignment = .center
         field.adjustsFontForContentSizeCategory = true
-        field.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont(name: "GeistMono-Regular", size: 17)!)
+        field.font = AppTypography.quantityInputFont
         field.delegate = context.coordinator
         field.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
         field.cancel = { context.coordinator.parent.onCancel() }

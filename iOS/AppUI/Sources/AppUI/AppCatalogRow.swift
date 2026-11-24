@@ -10,22 +10,22 @@ public struct AppCatalogRow<Photo: View, Controls: View>: View {
     }
     public var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) { details; Spacer(minLength: 8); controls.fixedSize(horizontal: true, vertical: false) }
-            VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: AppLayout.gap) { details; Spacer(minLength: AppLayout.gap); controls.fixedSize(horizontal: true, vertical: false) }
+            VStack(alignment: .leading, spacing: AppLayout.mediumGap) {
                 details
                 HStack { Spacer(minLength: 0); controls }
             }
         }
-        .padding(.horizontal, 8).padding(.vertical, 12)
+        .padding(.horizontal, AppLayout.gap).padding(.vertical, AppLayout.mediumGap)
         .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppLayout.radius))
     }
     private var details: some View {
-        HStack(spacing: 8) {
-            photo.frame(width: 40, height: 40)
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: AppLayout.gap) {
+            photo.frame(width: AppLayout.thumbnailSize, height: AppLayout.thumbnailSize)
+            VStack(alignment: .leading, spacing: AppLayout.smallGap) {
                 Text(name).font(AppTypography.body.weight(.medium))
                 Text(price).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
-            }.frame(minWidth: 72, alignment: .leading)
+            }.frame(minWidth: AppCatalogLayout.minimumDetailsWidth, alignment: .leading)
         }
     }
 }
@@ -42,14 +42,18 @@ public struct AppCounter<Value: View>: View {
     }
     public var body: some View {
         HStack(spacing: AppLayout.gap) {
-            step("minus", enabled: canDecrement, action: decrement)
+            step("minus", label: "Decrease quantity", enabled: canDecrement, action: decrement)
             value
-            step("plus", enabled: canIncrement, action: increment)
+            step("plus", label: "Increase quantity", enabled: canIncrement, action: increment)
         }
     }
-    private func step(_ icon: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) { AppIcon(icon, size: 22).frame(width: AppLayout.controlHeight, height: AppLayout.controlHeight) }
-            .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.38)
-            .accessibilityLabel(icon == "minus" ? "Decrease quantity" : "Increase quantity")
+    private func step(_ icon: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) { AppIcon(icon, size: AppLayout.actionIconSize).frame(width: AppLayout.controlHeight, height: AppLayout.controlHeight) }
+            .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : AppLayout.disabledOpacity)
+            .accessibilityLabel(label)
     }
+}
+
+private enum AppCatalogLayout {
+    static let minimumDetailsWidth: CGFloat = 72
 }
