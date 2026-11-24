@@ -71,7 +71,7 @@ private fun SaleItemPreview() {
             label = "Tasty Burger"
         )
     )
-    LazyVerticalGrid(columns = GridCells.Adaptive(AppLayout.productMinimumWidth)) {
+    LazyVerticalGrid(columns = GridCells.Adaptive(SaleItemsGridLayout.minimumItemWidth)) {
         items(saleItems) { saleItem ->
             SaleItem(
                 saleItemUiModel = saleItem,
