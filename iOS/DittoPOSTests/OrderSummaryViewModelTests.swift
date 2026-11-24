@@ -1,4 +1,3 @@
-@testable import DittoPOS
 import XCTest
 
 final class OrderSummaryViewModelTests: XCTestCase {
