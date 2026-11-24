@@ -23,6 +23,7 @@ public struct ComponentCatalog: View {
                     AppSurface(style: .outlined) { Text("Outlined surface").font(AppTypography.body) }
                     AppSurface(style: .compact) { Text("Compact surface").font(AppTypography.body) }
                     AppWell { Text("Empty region").foregroundStyle(AppColors.secondaryText) }
+                    AppPhoto(image: nil).frame(width: AppLayout.thumbnailSize, height: AppLayout.thumbnailSize)
                 }.padding(AppLayout.padding)
             }
         }

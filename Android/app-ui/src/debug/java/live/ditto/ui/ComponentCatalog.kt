@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +37,7 @@ fun ComponentCatalog(dark: Boolean = false) {
             AppSurface(style = AppSurfaceStyle.OUTLINED) { Text("Outlined surface") }
             AppSurface(style = AppSurfaceStyle.COMPACT) { Text("Compact surface") }
             AppWell { Text("Empty region") }
+            AppPhoto(null, Modifier.size(AppLayout.thumbnailSize))
             AppPagination("Page 1 of 2", canPrevious = false, canNext = true, previous = {}, next = {})
         }
     }

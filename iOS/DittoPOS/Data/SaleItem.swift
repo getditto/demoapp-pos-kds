@@ -13,18 +13,20 @@ struct SaleItem: Decodable, Hashable, Sendable {
     let imageName: String
     let price: Price
     let quantity: Int64?
+    let image: PhotoReference?
 
     private enum CodingKeys: String, CodingKey {
         case documentId = "_id"
-        case name, imageName, price, quantity
+        case name, imageName, price, quantity, image
     }
 
-    init(documentId: DocumentID, name: String, imageName: String, price: Price, quantity: Int64? = nil) {
+    init(documentId: DocumentID, name: String, imageName: String, price: Price, quantity: Int64? = nil, image: PhotoReference? = nil) {
         self.documentId = documentId
         self.name = name
         self.imageName = imageName
         self.price = price
         self.quantity = quantity
+        self.image = image
     }
 
     var metadata: SaleItemMetadata {
