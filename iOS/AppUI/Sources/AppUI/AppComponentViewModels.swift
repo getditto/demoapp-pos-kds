@@ -43,4 +43,3 @@ struct AppRowViewModel {
         minimumHeight = eyebrow != nil ? AppLayout.controlHeight : AppLayout.compactRowHeight
     }
 }
-

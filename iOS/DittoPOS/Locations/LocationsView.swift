@@ -20,7 +20,7 @@ struct LocationsView: View {
                 AppEmptyState("No locations available", message: "Demo locations will appear here.", icon: "map-pin")
             } else {
                 ScrollView {
-                    VStack(spacing: 12) {
+                    VStack(spacing: AppLayout.mediumGap) {
                         ForEach(viewModel.locations, id: \.id) { location in
                             Button {
                                 onSelect(location.id)
